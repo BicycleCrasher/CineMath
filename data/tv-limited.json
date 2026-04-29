@@ -1,0 +1,132 @@
+{
+  "type": "tv-limited",
+  "title": "Limited",
+  "subtitle": "Limited series and miniseries that play like long films.",
+  "sections": [
+    {
+      "name": "I. High Priority",
+      "desc": "Strongest probable fits. Calibrated to your taste signal.",
+      "items": [
+        {
+          "title": "Edge of Darkness", "year": 1985, "network": "BBC", "country": "UK",
+          "seasons": "1 series · 6 × 55 min", "commitment": "~5.5 hours", "commitmentTag": "short",
+          "priority": "high",
+          "whyPriority": "Six BAFTAs. Sci-fi-adjacent in the same way Children of Men is — speculative thriller with weight. Best entry point on this tracker.",
+          "pitch": "A police detective investigates his daughter's murder and uncovers a nuclear conspiracy. Genuinely extraordinary television.",
+          "critics": [
+            { "who": "BAFTAs 1986", "quote": "Six BAFTAs including Best Drama Serial." },
+            { "who": "Reappraisal", "quote": "The Guardian, BFI, and Mark Lawson all rank it among the greatest TV dramas ever made." }
+          ]
+        },
+        {
+          "title": "Devs", "year": 2020, "network": "FX/Hulu", "country": "USA",
+          "seasons": "1 limited series · 8 × 50 min", "commitment": "~7 hours", "commitmentTag": "medium",
+          "priority": "high",
+          "whyPriority": "Alex Garland on quantum determinism. Cold and structurally rigorous. The 'concept-with-character' balance you said you want.",
+          "pitch": "A quantum-computing tech company believes it can model all of reality. Cold, deliberate.",
+          "critics": [{ "who": "James Poniewozik · NY Times", "quote": "Strongly positive. Praised the 'patient, accumulating dread.'" }]
+        },
+        {
+          "title": "Counterpart", "year": 2017, "network": "Starz", "country": "USA",
+          "seasons": "2 seasons · 20 × 50 min", "commitment": "~17 hours", "commitmentTag": "long",
+          "priority": "high",
+          "whyPriority": "Cold-War espionage meets parallel-Earths. J.K. Simmons playing both selves. Smart structure, character-first. Cancelled but two seasons resolve.",
+          "pitch": "A man split across two parallel Earths that diverged 30 years ago.",
+          "critics": [{ "who": "Daniel Fienberg · Hollywood Reporter", "quote": "Highly positive. Called Simmons's dual performance 'a masterclass.'" }]
+        },
+        {
+          "title": "Frank Herbert's Dune", "year": 2000, "network": "Sci-Fi Channel", "country": "USA/Germany/Italy",
+          "seasons": "1 miniseries · 3 × 90 min", "commitment": "~4.5 hours", "commitmentTag": "short",
+          "priority": "high",
+          "whyPriority": "Adapts the first novel more faithfully than Lynch's 1984 film. Theatrical production design. Won two Emmys.",
+          "pitch": "John Harrison's adaptation. Slower, more political than Lynch's, with room to breathe across three nights.",
+          "critics": [
+            { "who": "Emmy Awards", "quote": "Won Outstanding Cinematography and Outstanding Visual Effects for a Miniseries." },
+            { "who": "Reappraisal", "quote": "Now treated as the most narratively complete Dune adaptation prior to Villeneuve." }
+          ]
+        },
+        {
+          "title": "Frank Herbert's Children of Dune", "year": 2003, "network": "Sci-Fi Channel", "country": "USA/Germany",
+          "seasons": "1 miniseries · 3 × 90 min", "commitment": "~4.5 hours", "commitmentTag": "short",
+          "priority": "high",
+          "whyPriority": "Adapts both Dune Messiah AND Children of Dune. The only screen adaptation of either novel. Better than the 2000 series. Early James McAvoy.",
+          "pitch": "Combines Dune Messiah and Children of Dune. Twelve years after Paul's ascension; the costs of empire come due.",
+          "critics": [{ "who": "Critical consensus", "quote": "The only viable screen treatment of the second and third Herbert novels." }]
+        }
+      ]
+    },
+    {
+      "name": "II. Medium Priority",
+      "desc": "Likely to land. Watch when high-priority queue exhausts.",
+      "items": [
+        {
+          "title": "The Day of the Triffids", "year": 1981, "network": "BBC", "country": "UK",
+          "seasons": "1 series · 6 × 30 min", "commitment": "~3 hours", "commitmentTag": "short",
+          "priority": "med",
+          "whyPriority": "BBC adaptation of Wyndham's 1951 novel. Pre-CGI practical effects. Three hours, manageable.",
+          "pitch": "A meteor shower blinds most of humanity overnight, and the carnivorous, mobile triffid plants begin moving.",
+          "critics": [{ "who": "Reappraisal", "quote": "Mark Kermode and the British genre press treat it as the definitive adaptation." }]
+        },
+        {
+          "title": "The Leftovers", "year": 2014, "network": "HBO", "country": "USA",
+          "seasons": "3 seasons · 28 × 60 min", "commitment": "~28 hours", "commitmentTag": "long",
+          "priority": "med",
+          "whyPriority": "Sci-fi-adjacent. Two percent of population vanishes. S2 widely considered one of the best TV seasons ever. Bleakness in service of grace.",
+          "pitch": "Damon Lindelof's redemption project after Lost. Bleak, but its bleakness is in service of grace.",
+          "critics": [{ "who": "Critical consensus", "quote": "Variety, NYT, Rolling Stone all rank it among the greatest TV series of the 2010s." }]
+        }
+      ]
+    },
+    {
+      "name": "III. Standard",
+      "desc": "Important entries with moderate confidence in fit.",
+      "items": [
+        {
+          "title": "The Prisoner", "year": 1967, "network": "ITV", "country": "UK",
+          "seasons": "1 series · 17 × 50 min", "commitment": "~14 hours", "commitmentTag": "medium",
+          "pitch": "Patrick McGoohan as a former secret agent abducted to a surreal coastal village.",
+          "critics": [{ "who": "Reappraisal", "quote": "Foundational to all subsequent paranoid TV." }]
+        },
+        {
+          "title": "Quatermass and the Pit", "year": 1958, "network": "BBC", "country": "UK",
+          "seasons": "1 series · 6 × 35 min", "commitment": "~3.5 hours", "commitmentTag": "short",
+          "pitch": "Construction workers unearth what looks like a Nazi bomb in London, but it's far older — and Martian.",
+          "critics": [{ "who": "Reception", "quote": "Foundational influence on Doctor Who, Alien, Carpenter's films." }]
+        },
+        {
+          "title": "Tales from the Loop", "year": 2020, "network": "Amazon", "country": "USA",
+          "seasons": "1 season · 8 × 50 min", "commitment": "~7 hours", "commitmentTag": "medium",
+          "pitch": "Anthology episodes set in a small town built atop an experimental physics facility. Adapted from Simon Stålenhag's paintings.",
+          "critics": [{ "who": "Reception", "quote": "Mixed-positive. James Poniewozik admired the patience; some found it inert." }]
+        },
+        {
+          "title": "Threads", "year": 1984, "network": "BBC", "country": "UK",
+          "seasons": "1 telefilm · 112 min", "commitment": "~2 hours", "commitmentTag": "short",
+          "pitch": "Documentary-style depiction of nuclear war's effect on Sheffield. The bleakest thing on either tracker.",
+          "critics": [{ "who": "Reappraisal", "quote": "Routinely cited as one of the most important pieces of television ever broadcast." }]
+        },
+        {
+          "title": "Black Mirror (selected episodes)", "year": 2011, "network": "Channel 4 / Netflix", "country": "UK",
+          "seasons": "Five standalone episodes", "commitment": "~5 hours", "commitmentTag": "short",
+          "pitch": "Watch only: 'The Entire History of You' (S1E3), 'Be Right Back' (S2E1), 'White Christmas' (special), 'San Junipero' (S3E4), 'USS Callister' (S4E1).",
+          "critics": [{ "who": "Emmy Awards", "quote": "'San Junipero' and 'USS Callister' both won Outstanding TV Movie." }]
+        }
+      ]
+    },
+    {
+      "name": "IV. Twin Peaks: The Return",
+      "desc": "A category of one. Demands prior knowledge of original Twin Peaks.",
+      "items": [
+        {
+          "title": "Twin Peaks: The Return", "year": 2017, "network": "Showtime", "country": "USA",
+          "seasons": "1 limited series · 18 × 60 min", "commitment": "~18 hours", "commitmentTag": "long",
+          "pitch": "Lynch returned to Twin Peaks 25 years later and made what is essentially an 18-hour film. Episode 8 is the most extraordinary single hour of TV ever broadcast.",
+          "critics": [
+            { "who": "Cahiers du Cinéma 2017", "quote": "Named #1 film (not TV) of the year." },
+            { "who": "Critical consensus", "quote": "Sight & Sound's 2022 Greatest Films poll included it." }
+          ]
+        }
+      ]
+    }
+  ]
+}
