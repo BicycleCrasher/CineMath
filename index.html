@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0e0d0b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="styles.css">
+<title>Cerebral Sci-Fi Tracker</title>
+</head>
+<body>
+<div class="grain"></div>
+
+<header id="app-header">
+  <div class="eyebrow">Curated for Lincoln</div>
+  <h1>Cerebral <em>Sci-Fi</em></h1>
+  <p class="subtitle" id="tab-subtitle">Loading...</p>
+  <div class="stats">
+    <div class="stat"><strong id="watched-count">0</strong> watched</div>
+    <div class="stat"><strong id="watching-count">0</strong> watching</div>
+    <div class="stat"><strong id="rated-count">0</strong> rated</div>
+    <div class="stat"><strong id="queued-count">0</strong> queued</div>
+    <div class="stat"><strong id="total-count">0</strong> total</div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+  <div class="header-buttons">
+    <button class="header-btn" id="reset-btn">Reset</button>
+    <button class="header-btn" id="export-btn">Export</button>
+    <button class="header-btn" id="import-btn">Import</button>
+  </div>
+</header>
+
+<nav class="tab-nav" id="tab-nav">
+  <button class="tab-btn active" data-tab="films">Films</button>
+  <button class="tab-btn" data-tab="tv-limited">Limited</button>
+  <button class="tab-btn" data-tab="tv-ongoing">Ongoing</button>
+</nav>
+
+<div class="filters" id="filters"></div>
+
+<main id="items-container"></main>
+
+<div class="modal" id="export-modal">
+  <div class="modal-content">
+    <h3>Export progress</h3>
+    <p>This contains all three trackers' data. Save it somewhere or share with Claude for new recommendations.</p>
+    <textarea class="modal-textarea" id="export-text" readonly></textarea>
+    <div class="modal-actions">
+      <button class="action-btn" id="export-copy">Copy to clipboard</button>
+      <button class="action-btn" id="export-close">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="import-modal">
+  <div class="modal-content">
+    <h3>Import progress</h3>
+    <p>Paste a previously exported text. This will replace all current progress across all three tabs.</p>
+    <textarea class="modal-textarea" id="import-text" placeholder="Paste exported JSON here..."></textarea>
+    <div class="modal-actions">
+      <button class="action-btn" id="import-confirm">Restore</button>
+      <button class="action-btn" id="import-close">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="legend">
+  <div class="legend-row">
+    <span><span class="legend-dot" style="background:var(--pri-high)"></span>High</span>
+    <span><span class="legend-dot" style="background:var(--watching)"></span>Watching</span>
+    <span><span class="legend-dot" style="background:var(--love)"></span>Loved</span>
+    <span><span class="legend-dot" style="background:var(--like)"></span>Liked</span>
+  </div>
+</div>
+
+<footer>
+  Tap a card to expand. Tap circle to cycle status.
+</footer>
+
+<script src="app.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').catch(e => console.log('SW failed:', e));
+  });
+}
+</script>
+</body>
+</html>
