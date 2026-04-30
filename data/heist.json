@@ -1,0 +1,133 @@
+{
+  "type": "heist",
+  "title": "Heist",
+  "subtitle": "Heist mechanics and con-artist character pieces — the structural rigor of crime done as craft.",
+  "sections": [
+    {
+      "name": "I. High Priority",
+      "desc": "Modern stylish heists + character-driven cons. Direct fits.",
+      "items": [
+        {
+          "title": "Inside Man", "year": 2006, "dir": "Spike Lee", "country": "USA", "runtime": "129 min",
+          "priority": "high", "tags": ["modern"],
+          "whyPriority": "Spike Lee's most accessible film. Bank heist that's actually about something else. Denzel + Owen + Foster, all at peak form. Clever structure, genuine surprises.",
+          "pitch": "An NYPD hostage negotiator (Denzel) faces off against a bank robber (Owen) whose plan is more elaborate than it appears.",
+          "critics": [{ "who": "Critical reception", "quote": "Roger Ebert: four stars. 'A heist film with literally everything you want plus a few things you didn't know you wanted.'" }]
+        },
+        {
+          "title": "The Sting", "year": 1973, "dir": "George Roy Hill", "country": "USA", "runtime": "129 min",
+          "priority": "high", "tags": ["foundational"],
+          "whyPriority": "Newman + Redford. 1930s Chicago grifters. Won 7 Oscars including Best Picture. The structural model for every con-artist film since.",
+          "pitch": "Two grifters set up an elaborate revenge against a mob boss who killed their friend.",
+          "critics": [{ "who": "Academy Awards 1974", "quote": "Won 7 Oscars including Best Picture, Best Director, Best Original Screenplay." }]
+        },
+        {
+          "title": "Catch Me If You Can", "year": 2002, "dir": "Steven Spielberg", "country": "USA", "runtime": "141 min",
+          "priority": "high", "tags": ["modern"],
+          "whyPriority": "Spielberg's most charming film. DiCaprio as Frank Abagnale Jr., Hanks as the FBI agent chasing him. A cat-and-mouse character piece more than a heist procedural.",
+          "pitch": "Based on the real Abagnale's life as a teenage check forger and impersonator. Light, fast, surprisingly emotional.",
+          "critics": [{ "who": "Reception", "quote": "Two Oscar nominations. Walken Best Supporting Actor nomination." }]
+        },
+        {
+          "title": "Logan Lucky", "year": 2017, "dir": "Steven Soderbergh", "country": "USA", "runtime": "118 min",
+          "priority": "high", "tags": ["modern"],
+          "whyPriority": "Soderbergh's working-class Ocean's Eleven. NASCAR vault heist by West Virginia brothers. Daniel Craig in a wild departure performance.",
+          "pitch": "The Logan brothers plan to rob a NASCAR speedway during a Coca-Cola 600 race. Channing Tatum, Adam Driver, Daniel Craig.",
+          "critics": [{ "who": "Critical reception", "quote": "Roger Ebert site: four stars. 'A nimble, witty heist comedy.'" }]
+        },
+        {
+          "title": "Paper Moon", "year": 1973, "dir": "Peter Bogdanovich", "country": "USA", "runtime": "102 min",
+          "priority": "high", "tags": ["foundational"],
+          "whyPriority": "Black-and-white character piece. Ryan O'Neal and his real-life daughter Tatum (who won the Oscar). Depression-era con artists, hilarious and warm.",
+          "pitch": "A Bible-selling grifter takes a recently orphaned girl across Kansas. She turns out to be a better grifter than he is.",
+          "critics": [{ "who": "Academy Awards 1974", "quote": "Tatum O'Neal won Best Supporting Actress at age 10 — youngest competitive Oscar winner ever." }]
+        }
+      ]
+    },
+    {
+      "name": "II. Medium Priority",
+      "desc": "Ocean's-style polish + character cons + a few experiments.",
+      "items": [
+        {
+          "title": "Ocean's Eleven", "year": 2001, "dir": "Steven Soderbergh", "country": "USA", "runtime": "116 min",
+          "priority": "med", "tags": ["modern"],
+          "whyPriority": "The reference modern stylish heist. Soderbergh, Clooney, Pitt, Damon, full ensemble. Mechanically elegant. The reason every other heist film has to compete.",
+          "pitch": "Eleven men plan to rob three Las Vegas casinos simultaneously.",
+          "critics": [{ "who": "Reception", "quote": "Spawned a successful franchise. The original remains the most assured." }]
+        },
+        {
+          "title": "Heat", "year": 1995, "dir": "Michael Mann", "country": "USA", "runtime": "170 min",
+          "priority": "med", "tags": ["foundational"],
+          "whyPriority": "Mann's masterpiece. De Niro vs. Pacino. The bank robbery downtown LA gunfight set the standard for action cinema. Three hours, all of them earned.",
+          "pitch": "A career thief and the LAPD detective hunting him. Procedural detail of professional crime and professional law enforcement.",
+          "critics": [{ "who": "Reception", "quote": "Routinely cited among the greatest crime films ever made. Christopher Nolan called it a primary influence on The Dark Knight." }]
+        },
+        {
+          "title": "Rififi", "year": 1955, "dir": "Jules Dassin", "country": "France", "runtime": "118 min",
+          "priority": "med", "tags": ["foundational","intl"],
+          "whyPriority": "Foundational French heist. The 30-minute silent jewel-store break-in is one of the great sequences in cinema. Influenced everything from Ocean's to Mission: Impossible.",
+          "pitch": "Aging thief plans one last job. A Parisian jewelry store. Played as documentary.",
+          "critics": [{ "who": "Cannes 1955", "quote": "Won Best Director." }]
+        },
+        {
+          "title": "American Hustle", "year": 2013, "dir": "David O. Russell", "country": "USA", "runtime": "138 min",
+          "priority": "med", "tags": ["modern"],
+          "pitch": "1970s Abscam scandal. Bale, Adams, Cooper, Lawrence, Renner. Long con as ensemble character piece.",
+          "critics": [{ "who": "Academy Awards 2014", "quote": "Tied record with 10 Oscar nominations across all four acting categories." }]
+        },
+        {
+          "title": "Nightcrawler", "year": 2014, "dir": "Dan Gilroy", "country": "USA", "runtime": "117 min",
+          "priority": "med", "tags": ["modern"],
+          "whyPriority": "Adjacent to heist but not exactly. Jake Gyllenhaal as a freelance crime journalist who escalates. Pure character study of someone gaming a system.",
+          "pitch": "An LA drifter discovers crime journalism and becomes increasingly extraordinary at it.",
+          "critics": [{ "who": "Reception", "quote": "Gyllenhaal Best Actor nomination snub widely considered one of the great Oscar omissions." }]
+        }
+      ]
+    },
+    {
+      "name": "III. Foundational You Should Know",
+      "desc": "Classics in this lane.",
+      "items": [
+        { "title": "The Killing", "year": 1956, "dir": "Stanley Kubrick", "country": "USA", "runtime": "85 min", "tags": ["foundational"],
+          "pitch": "Early Kubrick (you've seen all of him, but this fits the heist context). Race-track robbery told in fragmented, overlapping timelines. Tarantino studied it.",
+          "critics": [{ "who": "Reception", "quote": "Kubrick's first film to receive serious critical attention." }] },
+        { "title": "Dog Day Afternoon", "year": 1975, "dir": "Sidney Lumet", "country": "USA", "runtime": "125 min", "tags": ["foundational"],
+          "pitch": "Pacino and Cazale rob a Brooklyn bank. Everything goes wrong. Based on a true story. Won Best Original Screenplay.",
+          "critics": [{ "who": "Reception", "quote": "Six Oscar nominations including Best Picture. Pacino's career-best by some accounts." }] },
+        { "title": "The Italian Job (1969)", "year": 1969, "dir": "Peter Collinson", "country": "UK", "runtime": "99 min", "tags": ["foundational","intl"],
+          "pitch": "Caine. Mini Coopers. Turin gold heist. The original; the 2003 remake is also fine but the original has the swagger.",
+          "critics": [{ "who": "Reception", "quote": "British cultural touchstone. The cliffhanger ending is famous." }] },
+        { "title": "Bottle Rocket", "year": 1996, "dir": "Wes Anderson", "country": "USA", "runtime": "91 min", "tags": ["modern"],
+          "pitch": "You've seen a lot of Anderson. This is his debut — three Texan friends plan inept robberies. Worth seeing if you haven't, since it's the smallest and most overlooked.",
+          "critics": [{ "who": "Reception", "quote": "Commercial failure on release. Now considered one of the great debuts." }] },
+        { "title": "Reservoir Dogs", "year": 1992, "dir": "Quentin Tarantino", "country": "USA", "runtime": "99 min", "tags": ["foundational"],
+          "pitch": "Heist after heist film — the actual heist is offscreen. Tarantino's debut. One location, six men, one informant. The launchpad.",
+          "critics": [{ "who": "Reception", "quote": "Sundance 1992. Established Tarantino. Influence on independent crime cinema is immeasurable." }] },
+        { "title": "The Friends of Eddie Coyle", "year": 1973, "dir": "Peter Yates", "country": "USA", "runtime": "102 min", "tags": ["foundational","under"],
+          "pitch": "Robert Mitchum as a small-time Boston gunrunner trying to avoid prison by turning informant. Bleak, anti-glamorous, definitive.",
+          "critics": [{ "who": "Reception", "quote": "Critical reappraisal has elevated it to canonical status. Roger Ebert: 'A masterpiece of pessimism.'" }] }
+      ]
+    },
+    {
+      "name": "IV. International / Open to New",
+      "desc": "Where I'd push you given your 'open' answer.",
+      "items": [
+        { "title": "Le Cercle Rouge", "year": 1970, "dir": "Jean-Pierre Melville", "country": "France/Italy", "runtime": "140 min", "tags": ["foundational","intl"],
+          "pitch": "Melville's masterpiece. Three criminals, one heist, jazz score, almost no dialogue. The model for stylized minimalist crime cinema.",
+          "critics": [{ "who": "Reception", "quote": "Routinely cited among the greatest French films of the era." }] },
+        { "title": "A Prophet", "year": 2009, "dir": "Jacques Audiard", "country": "France", "runtime": "155 min", "tags": ["modern","intl"],
+          "pitch": "Young illiterate Arab man enters French prison. Six years later he runs the place. Crime-as-education.",
+          "critics": [{ "who": "Cannes 2009", "quote": "Grand Prix. Nine César Awards including Best Film." }] },
+        { "title": "Drive", "year": 2011, "dir": "Nicolas Winding Refn", "country": "USA", "runtime": "100 min", "tags": ["modern"],
+          "pitch": "Stunt driver moonlights as getaway driver. Falls for his neighbor. Things spiral. Ryan Gosling, neon-soaked LA, synth score.",
+          "critics": [{ "who": "Cannes 2011", "quote": "Won Best Director." }] },
+        { "title": "Léon: The Professional", "year": 1994, "dir": "Luc Besson", "country": "France/USA", "runtime": "110 min", "tags": ["modern","intl"],
+          "pitch": "Adjacent to heist — a hitman's character study. Reno's career-defining performance. Young Natalie Portman.",
+          "critics": [{ "who": "Reception", "quote": "Cult French-American crossover; one of the most influential 90s thrillers." }] },
+        { "title": "Headhunters", "year": 2011, "dir": "Morten Tyldum", "country": "Norway", "runtime": "100 min", "tags": ["modern","intl"],
+          "pitch": "Norwegian art thief gets in over his head. Tightly plotted, blackly funny.",
+          "critics": [{ "who": "Reception", "quote": "Norway's highest-grossing film at the time. Tyldum went on to direct The Imitation Game." }] }
+      ]
+    }
+  ]
+}

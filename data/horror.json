@@ -1,0 +1,242 @@
+{
+  "type": "horror",
+  "title": "Horror",
+  "subtitle": "Slow-burn psychological, folk, cosmic, supernatural — including vampire films. No gore-for-gore's-sake, no jump-scare-driven slashers.",
+  "sections": [
+    {
+      "name": "I. High Priority",
+      "desc": "Strongest fits given Eggers Nosferatu loved + Underworld-all-six + slow-burn-and-folk preference.",
+      "items": [
+        {
+          "title": "The Witch", "year": 2015, "dir": "Robert Eggers", "country": "USA/Canada", "runtime": "92 min",
+          "priority": "high", "tags": ["modern"],
+          "whyPriority": "Eggers' debut. 1630s New England Puritan family in the woods. Period-accurate dialogue, slow-build atmospheric horror, religious dread. Direct line to Nosferatu (2024) which you loved.",
+          "pitch": "A Puritan family is exiled from the colony. They build a farm at the edge of the woods. Something is in the woods.",
+          "critics": [
+            { "who": "Sundance 2015", "quote": "Won Best Director (Dramatic). Established Eggers as a major new director." },
+            { "who": "Critical consensus", "quote": "Routinely cited among the best horror films of the 2010s. Manohla Dargis: strongly positive." }
+          ]
+        },
+        {
+          "title": "The Lighthouse", "year": 2019, "dir": "Robert Eggers", "country": "USA/Canada", "runtime": "109 min",
+          "priority": "high", "tags": ["modern"],
+          "whyPriority": "Eggers' second. Black-and-white, 1.19:1 aspect ratio, 1890s New England lighthouse. Pattinson and Dafoe slowly losing their minds. As singular as cinema gets.",
+          "pitch": "Two lighthouse keepers stranded on a rock during a storm. Period dialogue, mythological undertones, sustained dread, dark comedy.",
+          "critics": [{ "who": "Cannes 2019", "quote": "Won FIPRESCI Prize at Directors' Fortnight." }]
+        },
+        {
+          "title": "Hereditary", "year": 2018, "dir": "Ari Aster", "country": "USA", "runtime": "127 min",
+          "priority": "high", "tags": ["modern"],
+          "whyPriority": "The decade's most acclaimed slow-burn horror. Toni Collette gives one of the great horror performances. Family grief becoming something worse.",
+          "pitch": "After the death of their secretive matriarch, a family begins to unravel. Slow first hour, devastating final hour. Watch in one sitting.",
+          "critics": [{ "who": "Critical consensus", "quote": "Widely cited as one of the most disturbing mainstream horror films ever released. Toni Collette's performance considered one of the great snubs of the 2018 Oscars." }]
+        },
+        {
+          "title": "The Shining", "year": 1980, "dir": "Stanley Kubrick", "country": "USA/UK", "runtime": "146 min",
+          "priority": "high", "tags": ["foundational"],
+          "whyPriority": "You've seen all of Kubrick — but listed here because if you haven't revisited it recently, the Steadicam tracking shots and the dread accumulate differently each time. Pre-loaded as Watched in case you have.",
+          "pitch": "Writer takes job as winter caretaker of an isolated hotel. Brings his family. Things deteriorate.",
+          "critics": [{ "who": "Reappraisal", "quote": "Initially mixed reviews; now near-universally considered one of the great horror films." }]
+        },
+        {
+          "title": "The Exorcist", "year": 1973, "dir": "William Friedkin", "country": "USA", "runtime": "122 min",
+          "priority": "high", "tags": ["foundational"],
+          "whyPriority": "Foundational supernatural horror. Restraint where modern films would cut to gore. The true horror is in waiting and dialogue.",
+          "pitch": "A young girl's possession becomes the test of faith for two priests. Won 2 Oscars; nominated for 10. Watch the original theatrical cut, not the director's cut.",
+          "critics": [{ "who": "Reception", "quote": "First horror film nominated for Best Picture. Cultural earthquake on release." }]
+        },
+        {
+          "title": "Let the Right One In", "year": 2008, "dir": "Tomas Alfredson", "country": "Sweden", "runtime": "115 min",
+          "priority": "high", "tags": ["modern","intl"],
+          "whyPriority": "Vampire film as melancholy character drama. Two children, one of them not exactly a child. Slow, snow-covered, devastating. Same director as Tinker Tailor.",
+          "pitch": "A bullied 12-year-old boy in 1980s Stockholm befriends his new neighbor, a girl who only comes out at night. The American remake (Let Me In, 2010) is also strong.",
+          "critics": [{ "who": "Critical consensus", "quote": "Widely considered one of the greatest vampire films ever made. Multiple critics' top-10 lists for 2008." }]
+        }
+      ]
+    },
+    {
+      "name": "II. Medium Priority",
+      "desc": "Likely to land. Watch when high-priority queue exhausts.",
+      "items": [
+        {
+          "title": "Midsommar", "year": 2019, "dir": "Ari Aster", "country": "USA/Sweden", "runtime": "147 min",
+          "priority": "med", "tags": ["modern","intl"],
+          "whyPriority": "Folk horror in daylight. Aster's follow-up to Hereditary. Florence Pugh anchors a film that's part breakup drama, part cult horror, part fever dream.",
+          "pitch": "Grieving young woman accompanies boyfriend and friends to a Swedish summer festival. The festival has unfamiliar customs. Watch the Director's Cut (171 min).",
+          "critics": [{ "who": "Critical consensus", "quote": "Widely considered one of the defining horror films of its decade." }]
+        },
+        {
+          "title": "Don't Look Now", "year": 1973, "dir": "Nicolas Roeg", "country": "UK/Italy", "runtime": "110 min",
+          "priority": "med", "tags": ["foundational","intl"],
+          "whyPriority": "Roeg again (you have The Man Who Fell to Earth on your sci-fi tracker). Couple in Venice after their daughter's drowning. Editing pioneers. Dread without horror conventions.",
+          "pitch": "Donald Sutherland and Julie Christie. Grief, premonition, Venice in winter. The ending is unforgettable.",
+          "critics": [{ "who": "Reception", "quote": "Routinely cited among the greatest British films. Sight & Sound Top 10 for years." }]
+        },
+        {
+          "title": "Possession", "year": 1981, "dir": "Andrzej Żuławski", "country": "France/W. Germany", "runtime": "124 min",
+          "priority": "med", "tags": ["under","intl"],
+          "whyPriority": "Already on your sci-fi tracker as Watch With Caution. Listed here because in horror context the priority shifts up — Adjani's performance is genuinely one of the most disturbing on film.",
+          "pitch": "Cold War Berlin. A marriage dissolves while something inhuman moves into the gap. Adjani won Cannes Best Actress.",
+          "critics": [{ "who": "Cannes 1981", "quote": "Adjani: Best Actress." }]
+        },
+        {
+          "title": "The Innocents", "year": 1961, "dir": "Jack Clayton", "country": "UK", "runtime": "100 min",
+          "priority": "med", "tags": ["foundational"],
+          "whyPriority": "Henry James adaptation (Turn of the Screw). Black and white, governess at a remote estate, two children who may be possessed or may not. Foundational psychological horror.",
+          "pitch": "Deborah Kerr's career-best performance. Truffaut called it 'the best British film made since Hitchcock left.'",
+          "critics": [{ "who": "Reception", "quote": "Critically beloved, commercially modest. Now considered one of the great ghost films." }]
+        },
+        {
+          "title": "Pan's Labyrinth", "year": 2006, "dir": "Guillermo del Toro", "country": "Mexico/Spain", "runtime": "118 min",
+          "priority": "med", "tags": ["modern","intl"],
+          "whyPriority": "Fantasy/horror hybrid. Post-Civil-War Spain, fascism, fairy tale ambiguity. Won 3 Oscars. Bridges horror with your fantasy interests.",
+          "pitch": "1944 Spain. A young girl meets a faun who tells her she's a princess in exile. Or maybe she's just a girl trying to survive her stepfather.",
+          "critics": [{ "who": "Academy Awards 2007", "quote": "Won 3 Oscars. Six total nominations including Best Original Screenplay." }]
+        }
+      ]
+    },
+    {
+      "name": "III. Vampire / Action-Horror",
+      "desc": "Your unprompted Underworld + Nosferatu mention told me you genuinely engage with vampires across the spectrum. Here's the lane.",
+      "items": [
+        {
+          "title": "Nosferatu", "year": 2024, "dir": "Robert Eggers", "country": "USA", "runtime": "132 min",
+          "priority": "high", "tags": ["modern"],
+          "whyPriority": "You've already seen and loved this one — pre-marked as Watched, Loved.",
+          "pitch": "Eggers' Nosferatu remake.",
+          "critics": []
+        },
+        {
+          "title": "Nosferatu the Vampyre", "year": 1979, "dir": "Werner Herzog", "country": "W. Germany", "runtime": "107 min",
+          "priority": "high", "tags": ["foundational","intl"],
+          "whyPriority": "The previous Nosferatu remake. Herzog directing Klaus Kinski. If you loved the Eggers, you owe it to yourself to see the Herzog. Different and equally extraordinary.",
+          "pitch": "Herzog's reverent, melancholy remake of Murnau's silent. Kinski as a profoundly sad Count Orlok.",
+          "critics": [{ "who": "Reception", "quote": "Roger Ebert: four stars. 'A film of great visual beauty.' Generally considered one of Herzog's finest." }]
+        },
+        {
+          "title": "Nosferatu (1922)", "year": 1922, "dir": "F.W. Murnau", "country": "Germany", "runtime": "94 min",
+          "priority": "high", "tags": ["foundational","intl"],
+          "whyPriority": "The original. Silent, German Expressionist. Watch with the Hans Erdmann score restored. Foundational text for everything vampire-related since.",
+          "pitch": "An unauthorized Dracula adaptation that became more famous than the source. Max Schreck as Count Orlok.",
+          "critics": [{ "who": "Reception", "quote": "Routinely cited among the greatest silent films and most influential horror films ever made." }]
+        },
+        {
+          "title": "Bram Stoker's Dracula", "year": 1992, "dir": "Francis Ford Coppola", "country": "USA", "runtime": "128 min",
+          "priority": "med", "tags": ["modern"],
+          "whyPriority": "The most maximalist mainstream Dracula. Practical effects, Wojciech Kilar's score, Gary Oldman as the Count. Won 3 Oscars.",
+          "pitch": "Coppola's lush, in-camera-effects take on the novel. Polarizing performances; non-polarizing visual splendor.",
+          "critics": [{ "who": "Academy Awards 1993", "quote": "Won 3 Oscars (Costume, Makeup, Sound Editing)." }]
+        },
+        {
+          "title": "Interview with the Vampire", "year": 1994, "dir": "Neil Jordan", "country": "USA", "runtime": "123 min",
+          "priority": "med", "tags": ["modern"],
+          "whyPriority": "Anne Rice adaptation. Cruise and Pitt and a young Kirsten Dunst. Gothic romance and existential despair. Decadent in the best way.",
+          "pitch": "Louis tells his vampire life story to a journalist. New Orleans, Paris, centuries.",
+          "critics": [{ "who": "Reception", "quote": "Dunst Golden Globe nomination at age 12. Originally controversial casting; aged into respect." }]
+        },
+        {
+          "title": "Near Dark", "year": 1987, "dir": "Kathryn Bigelow", "country": "USA", "runtime": "94 min",
+          "tags": ["under"],
+          "pitch": "Bigelow's vampire-Western hybrid. Family of vampires drifting through the American Southwest. Bill Paxton in his most memorable role. Cult classic.",
+          "critics": [{ "who": "Reception", "quote": "Commercial failure, cult resurrection. Now considered Bigelow's first major work." }]
+        },
+        {
+          "title": "Only Lovers Left Alive", "year": 2013, "dir": "Jim Jarmusch", "country": "UK/Germany", "runtime": "123 min",
+          "priority": "med", "tags": ["modern","intl"],
+          "whyPriority": "Jarmusch's vampire film. Tilda Swinton and Tom Hiddleston as centuries-old vampires in love, in Detroit and Tangier. Slow, atmospheric, music-saturated.",
+          "pitch": "Two ancient vampires reunite. They listen to records. They walk through abandoned Detroit. Nothing happens. Everything happens.",
+          "critics": [{ "who": "Cannes 2013", "quote": "In competition for the Palme d'Or." }]
+        },
+        {
+          "title": "Thirst", "year": 2009, "dir": "Park Chan-wook", "country": "South Korea", "runtime": "133 min",
+          "tags": ["under","intl"],
+          "pitch": "A Catholic priest becomes a vampire through a botched medical experiment. Park Chan-wook (Oldboy, The Handmaiden). Erotic, philosophical, blood-soaked.",
+          "critics": [{ "who": "Cannes 2009", "quote": "Won Jury Prize at Cannes." }]
+        },
+        {
+          "title": "Underworld series", "year": 2003, "dir": "Various", "country": "USA/UK", "runtime": "6 films",
+          "tags": ["modern"],
+          "pitch": "You've seen all six — pre-marked as Watched. Listed for completeness in the vampire section.",
+          "critics": []
+        }
+      ]
+    },
+    {
+      "name": "IV. Cosmic / Existential",
+      "desc": "The boundary with sci-fi is thin here. Annihilation-adjacent territory.",
+      "items": [
+        {
+          "title": "The Thing", "year": 1982, "dir": "John Carpenter", "country": "USA", "runtime": "109 min",
+          "priority": "high", "tags": ["foundational"],
+          "whyPriority": "Pure paranoia and practical effects. Antarctic research base, alien shapeshifter, no one trusts anyone. Carpenter's masterpiece. Genre-defining.",
+          "pitch": "A shape-shifting alien infiltrates an Antarctic research team. The horror is not the creature; it's that you don't know who's human.",
+          "critics": [{ "who": "Reappraisal", "quote": "Critically panned in 1982; now near-universally considered one of the greatest horror films." }]
+        },
+        {
+          "title": "Event Horizon", "year": 1997, "dir": "Paul W.S. Anderson", "country": "USA", "runtime": "96 min",
+          "tags": ["modern"],
+          "pitch": "Sci-fi horror. A spaceship returns from a journey to another dimension. The crew that finds it should not have looked. Cosmic, brutal, deeply unsettling.",
+          "critics": [{ "who": "Reception", "quote": "Critical and commercial failure. Cult resurrection — now widely considered the closest cinema has come to Lovecraft." }]
+        },
+        {
+          "title": "Annihilation", "year": 2018, "dir": "Alex Garland", "country": "UK/USA", "runtime": "115 min",
+          "tags": ["modern"],
+          "pitch": "Already on your sci-fi tracker. Listed here for cross-reference — the bear sequence is one of the most pure-horror sequences in modern sci-fi.",
+          "critics": []
+        },
+        {
+          "title": "Kill List", "year": 2011, "dir": "Ben Wheatley", "country": "UK", "runtime": "95 min",
+          "tags": ["under"],
+          "pitch": "British hitmen take a contract that goes very wrong. Pivots into something else entirely in the third act. Polarizing in the best way.",
+          "critics": [{ "who": "Reception", "quote": "Cult sensation. Built Wheatley's career. The third-act pivot is famous in horror circles." }]
+        }
+      ]
+    },
+    {
+      "name": "V. Folk Horror Canon",
+      "desc": "Adjacent to The Witch and Midsommar.",
+      "items": [
+        {
+          "title": "The Wicker Man", "year": 1973, "dir": "Robin Hardy", "country": "UK", "runtime": "88 min",
+          "priority": "high", "tags": ["foundational"],
+          "whyPriority": "The folk horror foundation. Christopher Lee on a Scottish island investigating a missing girl. Pagan rituals, escalating dread. The original is the only Wicker Man worth seeing.",
+          "pitch": "A devout Christian police sergeant lands on a remote Scottish island. The locals have their own beliefs. The ending is one of the most famous in horror.",
+          "critics": [{ "who": "Reception", "quote": "Routinely listed among the greatest British horror films. The 2006 Cage remake is universally considered terrible." }]
+        },
+        {
+          "title": "Lake Mungo", "year": 2008, "dir": "Joel Anderson", "country": "Australia", "runtime": "87 min",
+          "tags": ["under"],
+          "pitch": "Australian mockumentary about a family grieving their drowned daughter. Slow, restrained, devastating. The horror is in the silences.",
+          "critics": [{ "who": "Reception", "quote": "Cult standing among horror critics. Often cited as the most effective slow-burn horror of its era." }]
+        },
+        {
+          "title": "The Blair Witch Project", "year": 1999, "dir": "Daniel Myrick & Eduardo Sánchez", "country": "USA", "runtime": "81 min",
+          "tags": ["foundational"],
+          "pitch": "The found-footage progenitor. Maryland woods, three film students, missing. Whether it lands depends on patience — which you have.",
+          "critics": [{ "who": "Reception", "quote": "Cultural phenomenon on release. Now polarizing; either you find it terrifying or you don't." }]
+        }
+      ]
+    },
+    {
+      "name": "VI. Slow-Burn Modern",
+      "desc": "More from the Hereditary/Witch lane.",
+      "items": [
+        { "title": "It Follows", "year": 2014, "dir": "David Robert Mitchell", "country": "USA", "runtime": "100 min", "tags": ["modern"],
+          "pitch": "A curse passed through sex. Disasters Pictures' slow-creeping thing. Carpenter-influenced score, Carpenter-influenced patience.",
+          "critics": [{ "who": "Reception", "quote": "Cannes Critics' Week premiere. Widely cited as one of the strongest 2010s horror films." }] },
+        { "title": "The Babadook", "year": 2014, "dir": "Jennifer Kent", "country": "Australia", "runtime": "94 min", "tags": ["modern","intl"],
+          "pitch": "Grief horror. Single mother and her difficult young son. A pop-up book introduces something that won't leave.",
+          "critics": [{ "who": "Critical consensus", "quote": "William Friedkin called it 'the most terrifying film I have ever seen.'" }] },
+        { "title": "Saint Maud", "year": 2019, "dir": "Rose Glass", "country": "UK", "runtime": "84 min", "tags": ["under","modern","intl"],
+          "pitch": "A young Catholic hospice nurse becomes obsessed with saving the soul of her dying patient. Religious psychological horror, 84 mn of dread.",
+          "critics": [{ "who": "Reception", "quote": "Glass's debut. Critically beloved. Compared to early Polanski." }] },
+        { "title": "Under the Skin", "year": 2013, "dir": "Jonathan Glazer", "country": "UK", "runtime": "108 min", "tags": ["under","modern","intl"],
+          "pitch": "Sci-fi/horror hybrid. Scarlett Johansson as an alien preying on Scottish men. Mostly silent, hidden-camera footage, hypnotic.",
+          "critics": [{ "who": "Reception", "quote": "Highly polarizing on release; critical reputation has only grown." }] },
+        { "title": "The Vanishing", "year": 1988, "dir": "George Sluizer", "country": "Netherlands/France", "runtime": "107 min", "tags": ["foundational","intl"],
+          "pitch": "Dutch original. A man's girlfriend disappears at a rest stop. Three years later, he's contacted by the man who took her. The original ending is one of the most disturbing in cinema.",
+          "critics": [{ "who": "Reception", "quote": "The 1993 American remake (also by Sluizer) is universally considered to have ruined the original." }] }
+      ]
+    }
+  ]
+}

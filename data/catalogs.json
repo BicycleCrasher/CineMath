@@ -1,0 +1,11 @@
+{
+  "catalogs": [
+    { "id": "films", "label": "Films" },
+    { "id": "tv-limited", "label": "Limited" },
+    { "id": "tv-ongoing", "label": "Ongoing" },
+    { "id": "espionage", "label": "Spy" },
+    { "id": "horror", "label": "Horror" },
+    { "id": "heist", "label": "Heist" },
+    { "id": "comedy", "label": "Comedy" }
+  ]
+}
