@@ -11,14 +11,14 @@
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="stylesheet" href="styles.css">
-<title>Cerebral Sci-Fi Tracker</title>
+<title>WatchTrack</title>
 </head>
 <body>
 <div class="grain"></div>
 
 <header id="app-header">
-  <div class="eyebrow">Curated for Lincoln</div>
-  <h1>Cerebral <em>Sci-Fi</em></h1>
+  <div class="eyebrow" id="tab-eyebrow">Curated for Lincoln</div>
+  <h1 id="tab-title">WatchTrack</h1>
   <p class="subtitle" id="tab-subtitle">Loading...</p>
   <div class="stats">
     <div class="stat"><strong id="watched-count">0</strong> watched</div>
@@ -35,20 +35,14 @@
   </div>
 </header>
 
-<nav class="tab-nav" id="tab-nav">
-  <button class="tab-btn active" data-tab="films">Films</button>
-  <button class="tab-btn" data-tab="tv-limited">Limited</button>
-  <button class="tab-btn" data-tab="tv-ongoing">Ongoing</button>
-</nav>
-
+<nav class="tab-nav" id="tab-nav"></nav>
 <div class="filters" id="filters"></div>
-
 <main id="items-container"></main>
 
 <div class="modal" id="export-modal">
   <div class="modal-content">
     <h3>Export progress</h3>
-    <p>This contains all three trackers' data. Save it somewhere or share with Claude for new recommendations.</p>
+    <p>Includes all tabs. Save it or share with Claude for new recommendations.</p>
     <textarea class="modal-textarea" id="export-text" readonly></textarea>
     <div class="modal-actions">
       <button class="action-btn" id="export-copy">Copy to clipboard</button>
@@ -60,7 +54,7 @@
 <div class="modal" id="import-modal">
   <div class="modal-content">
     <h3>Import progress</h3>
-    <p>Paste a previously exported text. This will replace all current progress across all three tabs.</p>
+    <p>Paste a previously exported text. This replaces all current progress.</p>
     <textarea class="modal-textarea" id="import-text" placeholder="Paste exported JSON here..."></textarea>
     <div class="modal-actions">
       <button class="action-btn" id="import-confirm">Restore</button>

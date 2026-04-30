@@ -4,7 +4,7 @@ const NEGATIVE_TAGS = ["Too slow","Too bleak","Too cold","Style over substance",
 const STORAGE_KEY = 'scifi-tracker-state';
 const TAB_KEY = 'scifi-tracker-active-tab';
 
-// Pre-loaded ratings from the original tracker
+// Per-catalog seed data — applies on first load only
 const SEED_STATE = {
   "films": {
     "2001:-a-space-odyssey-1968": { status: "watched", rating: "loved", reactionTags: ["Rewatchable","Stayed with me","Visually stunning","Want more like this","Emotionally resonant","Smart structure"], notes: "Love this one. I've watched it many times, love it every time." },
@@ -18,77 +18,92 @@ const SEED_STATE = {
     "frank-herbert's-dune-2000": { status: "watching" },
     "frank-herbert's-children-of-dune-2003": { status: "queued" }
   },
-  "tv-ongoing": {}
+  "tv-ongoing": {},
+  "espionage": {},
+  "horror": {
+    "nosferatu-2024": { status: "watched", rating: "loved" },
+    "underworld-series-2003": { status: "watched" }
+  },
+  "heist": {},
+  "comedy": {}
 };
 
-// State organized by tab
-let state = { films: {}, "tv-limited": {}, "tv-ongoing": {} };
-let catalogs = { films: null, "tv-limited": null, "tv-ongoing": null };
+let state = {};
+let catalogs = {};
+let catalogManifest = [];
 let activeTab = 'films';
 let activeFilter = 'all';
 const expandedIds = new Set();
 
-// === Storage ===
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       state = JSON.parse(raw);
-      // Make sure all tabs exist
-      if (!state.films) state.films = {};
-      if (!state["tv-limited"]) state["tv-limited"] = {};
-      if (!state["tv-ongoing"]) state["tv-ongoing"] = {};
+      // Ensure all known tabs exist
+      catalogManifest.forEach(c => { if (!state[c.id]) state[c.id] = {}; });
       return;
     }
   } catch (e) { console.error('Load failed:', e); }
-  // First load — apply seed
   state = JSON.parse(JSON.stringify(SEED_STATE));
+  catalogManifest.forEach(c => { if (!state[c.id]) state[c.id] = {}; });
   saveState();
 }
 
 function saveState() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch (e) { console.error('Save failed:', e); }
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch (e) { console.error('Save failed:', e); }
 }
 
 function loadActiveTab() {
   try {
     const t = localStorage.getItem(TAB_KEY);
-    if (t && ['films','tv-limited','tv-ongoing'].includes(t)) activeTab = t;
+    if (t) activeTab = t;
   } catch (e) {}
 }
-
 function saveActiveTab() {
   try { localStorage.setItem(TAB_KEY, activeTab); } catch (e) {}
 }
 
-// === Catalog loading ===
+async function loadCatalogManifest() {
+  try {
+    const resp = await fetch('data/catalogs.json');
+    const data = await resp.json();
+    catalogManifest = data.catalogs;
+  } catch (e) {
+    catalogManifest = [
+      { id: "films", label: "Films" },
+      { id: "tv-limited", label: "Limited" },
+      { id: "tv-ongoing", label: "Ongoing" }
+    ];
+  }
+}
+
 async function loadCatalogs() {
-  const tabs = ['films','tv-limited','tv-ongoing'];
-  for (const tab of tabs) {
+  for (const c of catalogManifest) {
     try {
-      const resp = await fetch(`data/${tab}.json`);
-      catalogs[tab] = await resp.json();
-      // Add IDs and order to items
+      const resp = await fetch(`data/${c.id}.json`);
+      const cat = await resp.json();
       let order = 1;
-      catalogs[tab].items = [];
-      catalogs[tab].sections.forEach(section => {
+      cat.items = [];
+      cat.sections.forEach(section => {
         section.items.forEach(item => {
           item.section = section.name;
           item.sectionDesc = section.desc;
           item.order = order++;
           item.id = `${item.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-${item.year}`;
-          catalogs[tab].items.push(item);
+          cat.items.push(item);
         });
       });
+      catalogs[c.id] = cat;
     } catch (e) {
-      console.error(`Failed to load ${tab}:`, e);
+      console.error(`Failed to load ${c.id}:`, e);
     }
   }
+  // Validate active tab still exists
+  if (!catalogs[activeTab]) activeTab = catalogManifest[0]?.id || 'films';
 }
 
-// === State helpers ===
 function getEntry(id) { return (state[activeTab] && state[activeTab][id]) || {}; }
 function getStatus(id) { return getEntry(id).status || 'none'; }
 function getRating(id) { return getEntry(id).rating || 'none'; }
@@ -109,13 +124,9 @@ function setStatus(id, status) {
 function setRating(id, rating) {
   if (!state[activeTab]) state[activeTab] = {};
   if (!state[activeTab][id]) state[activeTab][id] = {};
-  if (state[activeTab][id].rating === rating) {
-    delete state[activeTab][id].rating;
-  } else {
-    state[activeTab][id].rating = rating;
-  }
-  saveState();
-  updateItemInPlace(id);
+  if (state[activeTab][id].rating === rating) delete state[activeTab][id].rating;
+  else state[activeTab][id].rating = rating;
+  saveState(); updateItemInPlace(id);
 }
 
 function toggleTag(id, tag) {
@@ -125,8 +136,7 @@ function toggleTag(id, tag) {
   const idx = state[activeTab][id].reactionTags.indexOf(tag);
   if (idx === -1) state[activeTab][id].reactionTags.push(tag);
   else state[activeTab][id].reactionTags.splice(idx, 1);
-  saveState();
-  updateItemInPlace(id);
+  saveState(); updateItemInPlace(id);
 }
 
 function setNotes(id, notes) {
@@ -146,18 +156,15 @@ function cycleStatus(id) {
   setStatus(id, next);
 }
 
-// === In-place DOM updates ===
 function updateItemInPlace(id) {
   const itemEl = document.querySelector(`.item[data-id="${id}"]`);
   if (!itemEl) return;
   const rating = getRating(id);
   const reactionTags = getTags(id);
-
   itemEl.querySelectorAll('.rating-btn').forEach(btn => {
     btn.classList.remove('active-loved','active-liked','active-mixed','active-disliked');
     if (btn.dataset.rating === rating) btn.classList.add(`active-${rating}`);
   });
-
   let badge = itemEl.querySelector('.rating-badge');
   if (rating !== 'none') {
     if (!badge) {
@@ -168,10 +175,7 @@ function updateItemInPlace(id) {
     }
     badge.className = `rating-badge ${rating}`;
     badge.textContent = ratingLabel(rating);
-  } else if (badge) {
-    badge.remove();
-  }
-
+  } else if (badge) badge.remove();
   itemEl.querySelectorAll('.tag-btn').forEach(btn => {
     btn.classList.remove('active-pos','active-neg');
     if (reactionTags.includes(btn.dataset.tag)) {
@@ -179,7 +183,6 @@ function updateItemInPlace(id) {
       btn.classList.add(isPos ? 'active-pos' : 'active-neg');
     }
   });
-
   updateStats();
 }
 
@@ -198,9 +201,19 @@ function updateStats() {
   document.getElementById('progress').style.width = `${(watched / items.length) * 100}%`;
 }
 
-// === Filter logic ===
+function buildTabs() {
+  const nav = document.getElementById('tab-nav');
+  nav.innerHTML = catalogManifest.map(c =>
+    `<button class="tab-btn ${activeTab === c.id ? 'active' : ''}" data-tab="${c.id}">${c.label}</button>`
+  ).join('');
+  nav.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  });
+}
+
 function buildFilters() {
   const isFilms = activeTab === 'films';
+  const isTV = activeTab === 'tv-limited' || activeTab === 'tv-ongoing';
   const filters = [
     { key: 'all', label: 'All' },
     { key: 'priority-high', label: 'High priority' },
@@ -212,23 +225,21 @@ function buildFilters() {
     { key: 'loved', label: 'Loved' },
     { key: 'liked', label: 'Liked+' }
   ];
-  if (isFilms) {
-    filters.push({ key: 'foundational', label: 'Foundational' });
-    filters.push({ key: 'modern', label: 'Modern' });
-    filters.push({ key: 'under', label: 'Under-radar' });
-    filters.push({ key: 'intl', label: 'International' });
-    filters.push({ key: 'adjacent', label: 'Adjacent' });
-  } else {
+  if (isTV) {
     filters.push({ key: 'short', label: 'Short' });
     filters.push({ key: 'medium', label: 'Medium' });
     filters.push({ key: 'long', label: 'Long' });
   }
+  filters.push({ key: 'foundational', label: 'Foundational' });
+  filters.push({ key: 'modern', label: 'Modern' });
+  filters.push({ key: 'under', label: 'Under-radar' });
+  filters.push({ key: 'intl', label: 'International' });
+  if (isFilms) filters.push({ key: 'adjacent', label: 'Adjacent' });
 
   const container = document.getElementById('filters');
   container.innerHTML = filters.map(f =>
     `<button class="filter-btn ${activeFilter === f.key ? 'active' : ''}" data-filter="${f.key}">${f.label}</button>`
   ).join('');
-
   container.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       container.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -264,29 +275,13 @@ function itemMatchesFilter(item) {
   }
 }
 
-function statusIcon(status) {
-  switch (status) {
-    case 'watched': return '✓';
-    case 'watching': return '▸';
-    case 'queued': return '◐';
-    case 'skip': return '✕';
-    default: return '';
-  }
-}
+function statusIcon(s) { return { watched: '✓', watching: '▸', queued: '◐', skip: '✕' }[s] || ''; }
+function ratingLabel(r) { return { loved: 'Loved', liked: 'Liked', mixed: 'Mixed', disliked: 'Disliked' }[r] || ''; }
+function priorityLabel(p) { return { high: 'High Priority', med: 'Med Priority' }[p] || ''; }
 
-function ratingLabel(rating) {
-  return { loved: 'Loved', liked: 'Liked', mixed: 'Mixed', disliked: 'Disliked' }[rating] || '';
-}
-
-function priorityLabel(p) {
-  return { high: 'High Priority', med: 'Med Priority' }[p] || '';
-}
-
-// === Render ===
 function render() {
   if (!catalogs[activeTab]) return;
   const catalog = catalogs[activeTab];
-
   document.getElementById('tab-subtitle').textContent = catalog.subtitle;
 
   const container = document.getElementById('items-container');
@@ -311,7 +306,6 @@ function render() {
       }
       lastSection = item.section;
     }
-
     if (!itemMatchesFilter(item)) return;
 
     const status = getStatus(item.id);
@@ -337,20 +331,17 @@ function render() {
     const priorityBadge = item.priority ? `<span class="priority-badge ${item.priority}">${priorityLabel(item.priority)}</span>` : '';
     const ratingBadge = rating !== 'none' ? `<span class="rating-badge ${rating}">${ratingLabel(rating)}</span>` : '';
     const commitmentBadge = item.commitment ? `<span class="commitment">${item.commitment}</span>` : '';
-
     const whyHtml = item.whyPriority ? `<div class="why-priority"><strong>Why this priority:</strong> ${item.whyPriority}</div>` : '';
 
     const posTagsHtml = POSITIVE_TAGS.map(t => {
       const active = reactionTags.includes(t);
       return `<button class="tag-btn ${active ? 'active-pos' : ''}" data-tag="${t}">${t}</button>`;
     }).join('');
-
     const negTagsHtml = NEGATIVE_TAGS.map(t => {
       const active = reactionTags.includes(t);
       return `<button class="tag-btn ${active ? 'active-neg' : ''}" data-tag="${t}">${t}</button>`;
     }).join('');
 
-    // Build meta line - films vs TV
     let metaLine = `${item.year}`;
     if (item.dir) metaLine += `<span class="dot">·</span>${item.dir}`;
     if (item.network) metaLine += `<span class="dot">·</span>${item.network}`;
@@ -399,53 +390,30 @@ function render() {
 
     itemEl.querySelector('.item-head').addEventListener('click', (e) => {
       if (e.target.classList.contains('status-pill')) return;
-      if (expandedIds.has(item.id)) {
-        expandedIds.delete(item.id);
-        itemEl.classList.remove('expanded');
-      } else {
-        expandedIds.add(item.id);
-        itemEl.classList.add('expanded');
-      }
+      if (expandedIds.has(item.id)) { expandedIds.delete(item.id); itemEl.classList.remove('expanded'); }
+      else { expandedIds.add(item.id); itemEl.classList.add('expanded'); }
     });
-
     itemEl.querySelector('.status-pill').addEventListener('click', (e) => {
-      e.stopPropagation();
-      cycleStatus(item.id);
+      e.stopPropagation(); cycleStatus(item.id);
     });
-
     itemEl.querySelectorAll('.action-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        setStatus(item.id, btn.dataset.action);
-      });
+      btn.addEventListener('click', (e) => { e.stopPropagation(); setStatus(item.id, btn.dataset.action); });
     });
-
     itemEl.querySelectorAll('.rating-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        setRating(item.id, btn.dataset.rating);
-      });
+      btn.addEventListener('click', (e) => { e.stopPropagation(); setRating(item.id, btn.dataset.rating); });
     });
-
     itemEl.querySelectorAll('.tag-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleTag(item.id, btn.dataset.tag);
-      });
+      btn.addEventListener('click', (e) => { e.stopPropagation(); toggleTag(item.id, btn.dataset.tag); });
     });
-
-    itemEl.querySelector('.notes-input').addEventListener('blur', (e) => {
-      setNotes(item.id, e.target.value);
-    });
-
+    itemEl.querySelector('.notes-input').addEventListener('blur', (e) => setNotes(item.id, e.target.value));
     container.appendChild(itemEl);
   });
 
   updateStats();
 }
 
-// === Tab switching ===
 function switchTab(tab) {
+  if (!catalogs[tab]) return;
   activeTab = tab;
   activeFilter = 'all';
   expandedIds.clear();
@@ -453,94 +421,70 @@ function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   buildFilters();
   render();
+  // Scroll active tab into view
+  const activeBtn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+  if (activeBtn && activeBtn.scrollIntoView) {
+    activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }
 }
 
-// === Modal handlers ===
 function setupModals() {
   document.getElementById('reset-btn').addEventListener('click', () => {
     if (!confirm(`Reset ${activeTab} progress? This restores seed data for this tab only.`)) return;
     state[activeTab] = JSON.parse(JSON.stringify(SEED_STATE[activeTab] || {}));
-    saveState();
-    render();
+    saveState(); render();
   });
-
   document.getElementById('export-btn').addEventListener('click', () => {
-    const out = JSON.stringify(state, null, 2);
-    document.getElementById('export-text').value = out;
+    document.getElementById('export-text').value = JSON.stringify(state, null, 2);
     document.getElementById('export-modal').classList.add('active');
   });
-
   document.getElementById('export-close').addEventListener('click', () => {
     document.getElementById('export-modal').classList.remove('active');
   });
-
   document.getElementById('export-copy').addEventListener('click', () => {
     const ta = document.getElementById('export-text');
-    ta.select();
-    ta.setSelectionRange(0, 99999);
+    ta.select(); ta.setSelectionRange(0, 99999);
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(ta.value).then(
           () => alert('Copied to clipboard.'),
           () => { document.execCommand('copy'); alert('Copied via fallback.'); }
         );
-      } else {
-        document.execCommand('copy');
-        alert('Copied.');
-      }
-    } catch (e) {
-      alert('Manually select and copy the text above.');
-    }
+      } else { document.execCommand('copy'); alert('Copied.'); }
+    } catch (e) { alert('Manually select and copy.'); }
   });
-
   document.getElementById('import-btn').addEventListener('click', () => {
     document.getElementById('import-text').value = '';
     document.getElementById('import-modal').classList.add('active');
   });
-
   document.getElementById('import-close').addEventListener('click', () => {
     document.getElementById('import-modal').classList.remove('active');
   });
-
   document.getElementById('import-confirm').addEventListener('click', () => {
     const input = document.getElementById('import-text').value;
     if (!input.trim()) { alert('Nothing to import.'); return; }
     try {
       const parsed = JSON.parse(input);
-      // Detect old format (single tab) vs new (multi-tab)
-      if (parsed.films || parsed["tv-limited"] || parsed["tv-ongoing"]) {
+      if (typeof parsed === 'object' && (parsed.films || parsed["tv-limited"] || parsed["tv-ongoing"])) {
         state = parsed;
-        if (!state.films) state.films = {};
-        if (!state["tv-limited"]) state["tv-limited"] = {};
-        if (!state["tv-ongoing"]) state["tv-ongoing"] = {};
       } else {
-        // Old format - import into current tab
         state[activeTab] = parsed;
       }
-      saveState();
-      render();
+      catalogManifest.forEach(c => { if (!state[c.id]) state[c.id] = {}; });
+      saveState(); render();
       document.getElementById('import-modal').classList.remove('active');
       alert('Progress restored.');
-    } catch (e) {
-      alert('Invalid format.');
-    }
+    } catch (e) { alert('Invalid format.'); }
   });
 }
 
-function setupTabs() {
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
-  });
-}
-
-// === Init ===
 (async () => {
+  await loadCatalogManifest();
   loadActiveTab();
   loadState();
   await loadCatalogs();
-  setupTabs();
+  buildTabs();
   setupModals();
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === activeTab));
   buildFilters();
   render();
 })();

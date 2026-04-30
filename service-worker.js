@@ -1,21 +1,24 @@
-const CACHE_NAME = 'scifi-tracker-v3';
+const CACHE_NAME = 'scifi-tracker-v4';
 const ASSETS = [
   './',
   './index.html',
   './styles.css',
   './app.js',
   './manifest.json',
+  './data/catalogs.json',
   './data/films.json',
   './data/tv-limited.json',
   './data/tv-ongoing.json',
+  './data/espionage.json',
+  './data/horror.json',
+  './data/heist.json',
+  './data/comedy.json',
   './icons/icon-192.png',
   './icons/icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
-  );
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
   self.skipWaiting();
 });
 
@@ -33,7 +36,6 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) {
-        // Network-update-cache pattern for JSON catalogs
         if (event.request.url.includes('/data/')) {
           fetch(event.request).then((resp) => {
             if (resp && resp.ok) {
