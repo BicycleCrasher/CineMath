@@ -7,25 +7,81 @@ const TAB_KEY = 'scifi-tracker-active-tab';
 // Per-catalog seed data — applies on first load only
 const SEED_STATE = {
   "films": {
-    "2001:-a-space-odyssey-1968": { status: "watched", rating: "loved", reactionTags: ["Rewatchable","Stayed with me","Visually stunning","Want more like this","Emotionally resonant","Smart structure"], notes: "Love this one. I've watched it many times, love it every time." },
-    "blade-runner-1982": { status: "watched", rating: "liked", reactionTags: ["Visually stunning","Rewatchable"], notes: "I've always been confused by this one." },
-    "timecrimes-2007": { status: "watched", rating: "loved", reactionTags: ["Rewatchable","Stayed with me","Want more like this","Smart structure"], notes: "Fantastic. Understood without subtitles." },
-    "dune-1984": { status: "watched", rating: "loved" },
-    "dune:-part-one-2021": { status: "watched", rating: "loved" },
-    "dune:-part-two-2024": { status: "watched", rating: "loved" }
+    "2001-a-space-odyssey-1968": { "status": "watched", "rating": "loved", "reactionTags": ["Rewatchable","Stayed with me","Visually stunning","Want more like this","Emotionally resonant","Smart structure"], "notes": "Love this one. I've watched it many times, love it every time." },
+    "blade-runner-1982": { "status": "watched", "rating": "liked", "reactionTags": ["Visually stunning","Rewatchable"], "notes": "I've always been confused by this one." },
+    "timecrimes-2007": { "status": "watched", "rating": "loved", "reactionTags": ["Rewatchable","Stayed with me","Want more like this","Smart structure"], "notes": "Fantastic. Understood without subtitles." },
+    "dune-1984": { "status": "watched", "rating": "loved", "reactionTags": ["Rewatchable","Stayed with me","Visually stunning","Dated badly"] },
+    "dune-part-one-2021": { "status": "watched", "rating": "loved", "reactionTags": ["Stayed with me","Rewatchable","Visually stunning","Emotionally resonant","Smart structure","Want more like this"] },
+    "dune-part-two-2024": { "status": "watched", "rating": "loved", "reactionTags": ["Rewatchable","Stayed with me","Smart structure","Want more like this","Emotionally resonant","Visually stunning"] },
+    "donnie-darko-2001": { "status": "watched" },
+    "la-jetee-1962": { "status": "queued" },
+    "primer-2004": { "status": "queued" },
+    "moon-2009": { "status": "watching" },
+    "dark-city-1998": { "status": "queued" },
+    "pi-1998": { "status": "queued" },
+    "cube-1997": { "status": "queued" },
+    "the-andromeda-strain-1971": { "status": "queued" },
+    "children-of-men-2006": { "status": "queued" },
+    "the-man-who-fell-to-earth-1976": { "status": "queued" },
+    "stalker-1979": { "status": "queued" },
+    "silent-running-1972": { "status": "queued" },
+    "phase-iv-1974": { "status": "queued" },
+    "solaris-tarkovsky-1972": { "status": "queued" },
+    "solaris-soderbergh-2002": { "status": "queued" },
+    "the-conversation-1974": { "status": "queued" }
   },
   "tv-limited": {
-    "frank-herbert's-dune-2000": { status: "watching" },
-    "frank-herbert's-children-of-dune-2003": { status: "queued" }
+    "frank-herbert-s-dune-2000": { "status": "watching" },
+    "frank-herbert-s-children-of-dune-2003": { "status": "queued" },
+    "devs-2020": { "status": "queued" },
+    "edge-of-darkness-1985": { "status": "queued" }
   },
-  "tv-ongoing": {},
-  "espionage": {},
+  "tv-ongoing": {
+    "severance-2022": { "status": "queued" },
+    "battlestar-galactica-2003-reboot-2003": { "status": "watched" },
+    "foundation-2021": { "status": "watching" },
+    "star-trek-strange-new-worlds-2022": { "status": "watching" },
+    "the-expanse-2015": { "status": "watching" },
+    "stargate-1994-film-1994": { "status": "watched" },
+    "westworld-s1-only-2016": { "status": "watched" }
+  },
+  "espionage": {
+    "the-bourne-identity-2002": { "status": "watched", "rating": "loved", "reactionTags": ["Rewatchable","Visually stunning","Stayed with me","Smart structure","Want more like this"] },
+    "the-hunt-for-red-october-1990": { "status": "watched", "rating": "loved", "reactionTags": ["Rewatchable","Smart structure","Want more like this","Emotionally resonant","Stayed with me","Visually stunning"], "notes": "One of my favorite movies of all time." },
+    "spy-game-2001": { "status": "watched", "rating": "loved", "reactionTags": ["Smart structure","Want more like this","Rewatchable","Emotionally resonant","Stayed with me","Visually stunning"], "notes": "Another one of my favorite movies of all time." },
+    "all-the-president-s-men-1976": { "status": "watched", "rating": "loved", "reactionTags": ["Smart structure","Want more like this","Rewatchable","Emotionally resonant","Stayed with me","Visually stunning"], "notes": "I love this. Political thriller at its best." }
+  },
+  "crime": {},
   "horror": {
-    "nosferatu-2024": { status: "watched", rating: "loved" },
-    "underworld-series-2003": { status: "watched" }
+    "nosferatu-2024": { "status": "watched", "rating": "loved", "reactionTags": ["Rewatchable","Stayed with me","Smart structure","Emotionally resonant","Visually stunning","Want more like this"] },
+    "nosferatu-1922-1922": { "status": "watching" },
+    "underworld-series-2003": { "status": "watched", "rating": "loved", "reactionTags": ["Rewatchable","Want more like this","Stayed with me","Visually stunning","Style over substance"] },
+    "event-horizon-1997": { "status": "watched", "rating": "liked", "reactionTags": ["Stayed with me","Rewatchable","Visually stunning","Want more like this"] }
   },
-  "heist": {},
-  "comedy": {}
+  "fantasy": {},
+  "heist": {
+    "catch-me-if-you-can-2002": { "status": "watched", "rating": "loved", "reactionTags": ["Rewatchable","Smart structure","Want more like this","Stayed with me","Emotionally resonant","Visually stunning"], "notes": "I've watched it many times. Love it every time." },
+    "ocean-s-eleven-2001": { "status": "watched", "rating": "loved", "reactionTags": ["Rewatchable","Smart structure","Want more like this","Stayed with me","Visually stunning"], "notes": "Great. Impeccable timing. A good rewatch." },
+    "reservoir-dogs-1992": { "status": "watched" },
+    "leon-the-professional-1994": { "status": "queued" },
+    "american-hustle-2013": { "status": "queued" },
+    "nightcrawler-2014": { "status": "queued" }
+  },
+  "comedy": {
+    "the-big-lebowski-1998": { "status": "watched", "rating": "loved", "reactionTags": ["Rewatchable","Stayed with me","Visually stunning","Emotionally resonant","Smart structure","Want more like this"], "notes": "Great every time. Always worth rewatching." },
+    "rushmore-1998": { "status": "watched", "rating": "liked", "reactionTags": ["Rewatchable","Smart structure","Want more like this"], "notes": "Great Wes Anderson film. One of my favorites of his." },
+    "network-1976": { "status": "watched", "rating": "loved", "reactionTags": ["Rewatchable","Smart structure","Want more like this","Emotionally resonant","Stayed with me","Visually stunning"], "notes": "I've watched this many times, and I always enjoy the rewatch." },
+    "dr-strangelove-1964": { "status": "watched", "rating": "loved", "reactionTags": ["Rewatchable","Stayed with me","Visually stunning","Emotionally resonant","Smart structure","Want more like this"], "notes": "Kubrick nailed it here. Poignant, creative, hilarious." },
+    "idiocracy-2006": { "status": "watched", "rating": "loved", "reactionTags": ["Rewatchable","Smart structure","Want more like this","Emotionally resonant","Stayed with me","Visually stunning"], "notes": "Genius. Mike Judge is always a favorite." },
+    "death-at-a-funeral-2007-2007": { "status": "watched", "rating": "loved", "reactionTags": ["Rewatchable","Smart structure","Want more like this","Emotionally resonant","Visually stunning","Stayed with me"] },
+    "this-is-spinal-tap-1984": { "status": "watched" },
+    "o-brother-where-art-thou-2000": { "status": "watched", "rating": "loved", "reactionTags": ["Rewatchable","Smart structure","Want more like this","Emotionally resonant","Stayed with me","Visually stunning"], "notes": "My first Coen Brothers picture, and I still love it." },
+    "fargo-1996": { "status": "watching" }
+  },
+  "drama": {},
+  "foreign": {},
+  "auteur": {},
+  "pre1960": {}
 };
 
 let state = {};
@@ -35,13 +91,41 @@ let activeTab = 'films';
 let activeFilter = 'all';
 const expandedIds = new Set();
 
+function normalizeId(id) {
+  // Collapse multiple separators into one, trim trailing/leading hyphens
+  return id.replace(/[^a-z0-9]+/gi, '-').toLowerCase().replace(/^-|-$/g, '');
+}
+
+function normalizeStateIds(s) {
+  // For each tab, fold duplicate IDs (caused by old separator inconsistency)
+  const out = {};
+  for (const tab of Object.keys(s)) {
+    out[tab] = {};
+    for (const id of Object.keys(s[tab])) {
+      const normalized = normalizeId(id);
+      // Merge: later entries override earlier; prefer entries with more data
+      const existing = out[tab][normalized];
+      const incoming = s[tab][id];
+      if (!existing) {
+        out[tab][normalized] = incoming;
+      } else {
+        // Prefer the entry with more fields
+        const existingFields = Object.keys(existing).length;
+        const incomingFields = Object.keys(incoming).length;
+        if (incomingFields > existingFields) out[tab][normalized] = incoming;
+      }
+    }
+  }
+  return out;
+}
+
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
-      state = JSON.parse(raw);
-      // Ensure all known tabs exist
+      state = normalizeStateIds(JSON.parse(raw));
       catalogManifest.forEach(c => { if (!state[c.id]) state[c.id] = {}; });
+      saveState();
       return;
     }
   } catch (e) { console.error('Load failed:', e); }
@@ -91,7 +175,7 @@ async function loadCatalogs() {
           item.section = section.name;
           item.sectionDesc = section.desc;
           item.order = order++;
-          item.id = `${item.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-${item.year}`;
+          item.id = `${item.title.replace(/[^a-z0-9]+/gi, '-').toLowerCase().replace(/^-|-$/g, '')}-${item.year}`;
           cat.items.push(item);
         });
       });
@@ -465,12 +549,14 @@ function setupModals() {
     if (!input.trim()) { alert('Nothing to import.'); return; }
     try {
       const parsed = JSON.parse(input);
+      let newState;
       if (typeof parsed === 'object' && (parsed.films || parsed["tv-limited"] || parsed["tv-ongoing"])) {
-        state = parsed;
+        newState = parsed;
       } else {
-        state[activeTab] = parsed;
+        newState = { ...state, [activeTab]: parsed };
       }
-      catalogManifest.forEach(c => { if (!state[c.id]) state[c.id] = {}; });
+      catalogManifest.forEach(c => { if (!newState[c.id]) newState[c.id] = {}; });
+      state = normalizeStateIds(newState);
       saveState(); render();
       document.getElementById('import-modal').classList.remove('active');
       alert('Progress restored.');

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'scifi-tracker-v4';
+const CACHE_NAME = 'scifi-tracker-v5';
 const ASSETS = [
   './',
   './index.html',
@@ -10,9 +10,15 @@ const ASSETS = [
   './data/tv-limited.json',
   './data/tv-ongoing.json',
   './data/espionage.json',
+  './data/crime.json',
   './data/horror.json',
+  './data/fantasy.json',
   './data/heist.json',
   './data/comedy.json',
+  './data/drama.json',
+  './data/foreign.json',
+  './data/auteur.json',
+  './data/pre1960.json',
   './icons/icon-192.png',
   './icons/icon-512.png'
 ];
