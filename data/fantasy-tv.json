@@ -1,0 +1,100 @@
+{
+  "type": "fantasy-tv",
+  "title": "Fantasy TV",
+  "subtitle": "Epic fantasy, mythological adaptations, prestige genre TV.",
+  "sections": [
+    {
+      "name": "I. Already Loved",
+      "desc": "Established pillars.",
+      "items": [
+        { "title": "Game of Thrones", "year": 2011, "dir": "David Benioff & D.B. Weiss", "country": "USA", "runtime": "8 seasons · 73 episodes", "seasons": "S1-S6 are peak; S7 weakened; S8 widely considered a failure", "tags": ["foundational"],
+          "pitch": "HBO. The fantasy show that defined a decade of TV. Westeros, the Iron Throne, the dragons.",
+          "critics": [{ "who": "Reception", "quote": "Won 59 Emmys. The S8 finale arc remains one of the most-discussed quality collapses in TV history." }] },
+        { "title": "American Gods", "year": 2017, "dir": "Bryan Fuller, Michael Green", "country": "USA", "runtime": "3 seasons · 26 episodes", "seasons": "S1 visually astonishing; quality collapsed after Fuller departure", "tags": ["modern"],
+          "pitch": "Gaiman novel adaptation. Cross-listed Drama TV.",
+          "critics": [] }
+      ]
+    },
+    {
+      "name": "II. High Priority",
+      "desc": "Strongest fits given GoT love + your fantasy film loves.",
+      "items": [
+        { "title": "House of the Dragon", "year": 2022, "dir": "Ryan Condal & George R.R. Martin", "country": "USA", "runtime": "2 seasons", "seasons": "Ongoing; S3 in production",
+          "priority": "high", "tags": ["modern"],
+          "whyPriority": "GoT prequel. Targaryen civil war. Tighter focus than GoT, single-house drama, dragon-heavy. Critically considered the best HBO fantasy since GoT peak.",
+          "pitch": "200 years before GoT. The Targaryens turn on each other. The Dance of Dragons.",
+          "critics": [{ "who": "Reception", "quote": "Critical and commercial hit. Considered the Targaryen show GoT fans wanted." }] },
+        { "title": "Shōgun", "year": 2024, "dir": "Rachel Kondo & Justin Marks", "country": "USA/Japan", "runtime": "1 season · 10 episodes", "seasons": "Originally limited; S2-3 announced",
+          "priority": "high", "tags": ["modern","intl"],
+          "whyPriority": "Strongest single non-GoT fantasy/historical recommendation. FX/Hulu. James Clavell adaptation. 1600s feudal Japan. Won 18 Emmys including Outstanding Drama. Sandwich of historical drama and political maneuver — direct fit for your structural-rigor pillar.",
+          "pitch": "An English navigator shipwrecks in feudal Japan and becomes pawn in a Lord Toranaga's bid for shogunate.",
+          "critics": [{ "who": "Reception", "quote": "Won 18 Emmys including Outstanding Drama Series — the most ever for a single season." }] },
+        { "title": "The Witcher", "year": 2019, "dir": "Lauren Schmidt Hissrich", "country": "USA/Poland", "runtime": "4 seasons", "seasons": "Cavill departed after S3; S4-5 with Liam Hemsworth", "tags": ["modern"],
+          "priority": "med",
+          "whyPriority": "Netflix. Sapkowski novels (also a video game franchise). Cavill's first three seasons land. The post-Cavill era is uncertain.",
+          "pitch": "A monster hunter, a princess, and a sorceress on a continent of warring kingdoms.",
+          "critics": [{ "who": "Reception", "quote": "S1-S3 considered solid epic fantasy; the post-Cavill direction is divisive." }] },
+        { "title": "The Lord of the Rings: The Rings of Power", "year": 2022, "dir": "J.D. Payne & Patrick McKay", "country": "USA/UK", "runtime": "2 seasons", "seasons": "Multi-season planned; S2 aired 2024",
+          "priority": "med", "tags": ["modern"],
+          "whyPriority": "Amazon. Most expensive TV show ever made. Second Age of Middle-earth. Critically polarizing on S1; S2 received better reviews.",
+          "pitch": "Thousands of years before Bilbo and Frodo. The forging of the Rings. Sauron\'s rise.",
+          "critics": [{ "who": "Reception", "quote": "S1 critically mixed. S2 widely considered an improvement." }] }
+      ]
+    },
+    {
+      "name": "III. Medium Priority",
+      "desc": "Strong second-tier fits.",
+      "items": [
+        { "title": "His Dark Materials", "year": 2019, "dir": "Jack Thorne", "country": "UK/USA", "runtime": "3 seasons · 23 episodes", "seasons": "All 3 (ended 2022)",
+          "priority": "med", "tags": ["modern","intl"],
+          "whyPriority": "BBC/HBO. Pullman trilogy adaptation. Daemon companions, parallel worlds, anti-religious-authoritarian fantasy. Faithful and serious.",
+          "pitch": "An orphaned girl in a parallel-world Oxford discovers a conspiracy involving stolen children and a substance called Dust.",
+          "critics": [{ "who": "Reception", "quote": "Critically warm; considered the strong adaptation that the 2007 film failed to be." }] },
+        { "title": "The Wheel of Time", "year": 2021, "dir": "Rafe Judkins", "country": "USA", "runtime": "3 seasons · 24 episodes", "seasons": "S3 aired 2025; cancelled",
+          "priority": "med", "tags": ["modern"],
+          "pitch": "Amazon. Robert Jordan novels. Critically polarizing — book purists divided. S2-S3 were stronger than S1.",
+          "critics": [{ "who": "Reception", "quote": "Cancelled after S3. Reception throughout was mixed-to-positive among critics, polarizing among book fans." }] },
+        { "title": "Hannibal", "year": 2013, "dir": "Bryan Fuller", "country": "USA", "runtime": "3 seasons · 39 episodes", "seasons": "All 3 (ended 2015)", "tags": ["modern"],
+          "priority": "high",
+          "whyPriority": "Per your request. Cross-listed primary in Horror TV. Listed here because Fuller\'s visual approach is more fantasy-painting than horror-procedural. NBC astoundingly let him make this on network.",
+          "pitch": "FBI profiler Will Graham works with psychiatrist Hannibal Lecter to catch killers. Graham doesn\'t yet know what Lecter is.",
+          "critics": [{ "who": "Reception", "quote": "Routinely cited as one of the most visually beautiful TV shows ever made on network." }] },
+        { "title": "Carnival Row", "year": 2019, "dir": "René Echevarria & Travis Beacham", "country": "USA", "runtime": "2 seasons · 18 episodes", "seasons": "All 2 (ended 2023)", "tags": ["modern","under"],
+          "priority": "med",
+          "pitch": "Amazon. Victorian noir-fantasy. Mythological refugees in a steampunk city. Orlando Bloom, Cara Delevingne. Underseen.",
+          "critics": [{ "who": "Reception", "quote": "Mixed critical reception; cult fan base." }] },
+        { "title": "Outlander", "year": 2014, "dir": "Ronald D. Moore", "country": "UK/USA", "runtime": "7+ seasons", "seasons": "Ongoing", "tags": ["modern","intl"],
+          "priority": "med",
+          "whyPriority": "Ronald D. Moore (BSG showrunner). Diana Gabaldon novels. Time-travel-romance-fantasy hybrid. Period 18th-century Scotland adventure.",
+          "pitch": "1945 British nurse is transported to 1743 Scotland and entangled in the Jacobite rebellion.",
+          "critics": [{ "who": "Reception", "quote": "Long-running critical favorite. Caitríona Balfe Globe nomination several times." }] }
+      ]
+    },
+    {
+      "name": "IV. Worth Considering",
+      "desc": "Adjacent territory or more variable.",
+      "items": [
+        { "title": "Penny Dreadful", "year": 2014, "dir": "John Logan", "country": "USA/UK", "runtime": "3 seasons · 27 episodes", "seasons": "All 3 (ended 2016)", "tags": ["modern","intl"],
+          "pitch": "Cross-listed Horror TV. Victorian London, gothic literature monsters mash-up. Eva Green carries it.",
+          "critics": [{ "who": "Reception", "quote": "Critical favorite; ratings struggled. Green Globe nomination." }] },
+        { "title": "The Sandman", "year": 2022, "dir": "Allan Heinberg & Neil Gaiman", "country": "USA/UK", "runtime": "2 seasons", "seasons": "S2 final season aired 2025", "tags": ["modern"],
+          "pitch": "Netflix. Gaiman comic adaptation. Tom Sturridge as Dream of the Endless. Anthology-flavored within a long arc.",
+          "critics": [{ "who": "Reception", "quote": "S1 critically warm. S2 ended the show." }] },
+        { "title": "Black Sails", "year": 2014, "dir": "Robert Levine & Jonathan E. Steinberg", "country": "USA", "runtime": "4 seasons · 38 episodes", "seasons": "All 4 (ended 2017)", "tags": ["modern","under"],
+          "priority": "med",
+          "pitch": "Starz. Pirate-era Caribbean. A Treasure Island prequel. Surprisingly literary, character-driven. Underseen.",
+          "critics": [{ "who": "Reception", "quote": "Critical reputation grew steadily; cult devotion strong." }] },
+        { "title": "The Last Kingdom", "year": 2015, "dir": "Bernard Cornwell adaptation", "country": "UK", "runtime": "5 seasons · 46 episodes + Seven Kings Must Die film", "seasons": "All 5 (ended 2022) + 2023 film", "tags": ["modern","intl"],
+          "priority": "med",
+          "pitch": "BBC/Netflix. Cornwell\'s Saxon Stories adaptation. 9th-century England, Vikings vs. Saxons. Procedurally tighter than Vikings.",
+          "critics": [{ "who": "Reception", "quote": "Critical favorite throughout run. Considered superior to Vikings by many medieval-historical-drama devotees." }] },
+        { "title": "Vikings", "year": 2013, "dir": "Michael Hirst", "country": "Canada/Ireland", "runtime": "6 seasons · 89 episodes", "seasons": "All 6 (ended 2020); Vikings: Valhalla is sequel", "tags": ["modern","intl"],
+          "pitch": "History Channel. Ragnar Lothbrok and Norse expansion. S1-S4 considered peak.",
+          "critics": [{ "who": "Reception", "quote": "Hugely successful internationally; critical reputation modest." }] },
+        { "title": "Good Omens", "year": 2019, "dir": "Neil Gaiman", "country": "UK/USA", "runtime": "3 seasons", "seasons": "S3 final aired 2025", "tags": ["modern","intl"],
+          "pitch": "Amazon/BBC. Pratchett-Gaiman novel adaptation. David Tennant + Michael Sheen as a demon and angel preventing Armageddon.",
+          "critics": [{ "who": "Reception", "quote": "Critical favorite. Tennant/Sheen chemistry the show." }] }
+      ]
+    }
+  ]
+}

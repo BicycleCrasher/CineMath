@@ -1,0 +1,104 @@
+{
+  "type": "horror-tv",
+  "title": "Horror TV",
+  "subtitle": "Slow-burn psychological, gothic, supernatural, anthology horror TV.",
+  "sections": [
+    {
+      "name": "I. Already Loved",
+      "desc": "Established pillar.",
+      "items": [
+        { "title": "Buffy the Vampire Slayer", "year": 1997, "dir": "Joss Whedon", "country": "USA", "runtime": "7 seasons · 144 episodes", "seasons": "All 7 (ended 2003); 'Once More With Feeling' (S6E7) is among the great hours of TV", "tags": ["foundational"],
+          "pitch": "Whedon\'s teenage vampire-slayer ensemble. The structural template for genre TV that takes its characters seriously.",
+          "critics": [{ "who": "Reception", "quote": "Routinely cited among the most influential genre TV ever made." }] }
+      ]
+    },
+    {
+      "name": "II. Queued (Per Your Request)",
+      "desc": "Per request.",
+      "items": [
+        { "title": "Hannibal", "year": 2013, "dir": "Bryan Fuller", "country": "USA", "runtime": "3 seasons · 39 episodes", "seasons": "All 3 (ended 2015)", "tags": ["modern"],
+          "pitch": "NBC. Bryan Fuller. Mads Mikkelsen as Hannibal Lecter; Hugh Dancy as Will Graham. Visually astonishing — gore as Renaissance-painting composition. The most stylized prestige horror on a major network.",
+          "critics": [{ "who": "Reception", "quote": "Critical darling throughout. S2 is Fuller's structural peak. The cancellation by NBC remains one of the most-mourned in modern TV." }] }
+      ]
+    },
+    {
+      "name": "III. High Priority",
+      "desc": "Strong fits given your slow-burn psychological horror loves (Witch, Lighthouse, Hereditary, Nosferatu 2024).",
+      "items": [
+        { "title": "The Haunting of Hill House", "year": 2018, "dir": "Mike Flanagan", "country": "USA", "runtime": "1 season · 10 episodes", "seasons": "Standalone within Flanagan's Haunting anthology",
+          "priority": "high", "tags": ["modern"],
+          "whyPriority": "Netflix. Mike Flanagan\'s breakthrough. Family-trauma horror dressed as ghost story. The single-take Episode 6 ('Two Storms') is a TV-history-grade structural achievement.",
+          "pitch": "Five adult siblings reunite after their sister\'s death and confront the haunted house they grew up in.",
+          "critics": [{ "who": "Reception", "quote": "Critical and commercial breakthrough for Flanagan." }] },
+        { "title": "Midnight Mass", "year": 2021, "dir": "Mike Flanagan", "country": "USA", "runtime": "1 season · 7 episodes", "seasons": "Limited series",
+          "priority": "high", "tags": ["modern"],
+          "whyPriority": "Netflix. Flanagan\'s most personal work. Catholicism, addiction, vampires (yes, vampires). The Riley/Erin/Father Paul triangulation is among the great TV religious dramas.",
+          "pitch": "A disgraced young man returns to his isolated island hometown. A new priest arrives. Strange miracles begin.",
+          "critics": [{ "who": "Reception", "quote": "Considered Flanagan\'s most ambitious and most divisive (in length and dialogue density)." }] },
+        { "title": "The Terror", "year": 2018, "dir": "David Kajganich & Soo Hugh", "country": "USA", "runtime": "2 seasons · anthology · 20 episodes", "seasons": "S1 strongest; S2 (Infamy) divisive; S3 in development",
+          "priority": "high", "tags": ["modern"],
+          "whyPriority": "AMC. S1 is one of the great modern horror-of-isolation pieces. The lost Franklin expedition + supernatural element. Direct fit for Eggers/Witch sensibility.",
+          "pitch": "1845. Two Royal Navy ships search for the Northwest Passage and become trapped in Arctic ice. Something is hunting them.",
+          "critics": [{ "who": "Reception", "quote": "S1 critical darling; routinely cited among the great limited-series horror works of the late 2010s." }] },
+        { "title": "Penny Dreadful", "year": 2014, "dir": "John Logan", "country": "USA/UK", "runtime": "3 seasons · 27 episodes", "seasons": "All 3 (ended 2016); spin-off City of Angels (2020) is unrelated",
+          "priority": "high", "tags": ["modern","intl"],
+          "whyPriority": "Showtime. Victorian London, gothic literature monsters mash-up. Eva Green delivers one of the great horror TV performances. Direct fit for your vampire-and-Eggers lane.",
+          "pitch": "Frankenstein, Dracula, Dorian Gray, and original characters intersect in Victorian London while a séance medium battles demonic forces.",
+          "critics": [{ "who": "Reception", "quote": "Eva Green won the Globe and was Emmy-nominated for the lead. Cult devotion." }] }
+      ]
+    },
+    {
+      "name": "IV. Medium Priority",
+      "desc": "Strong probable fits.",
+      "items": [
+        { "title": "Channel Zero", "year": 2016, "dir": "Nick Antosca", "country": "USA", "runtime": "4 seasons · anthology · 24 episodes", "seasons": "All 4 (ended 2018)",
+          "priority": "med", "tags": ["modern","under"],
+          "whyPriority": "SyFy. Anthology horror — each season adapts a different creepypasta. S2 (No-End House) considered the standout. Genuinely unsettling.",
+          "pitch": "Each season a self-contained creepypasta-derived horror. Tooth-related, structure-based, dream-based.",
+          "critics": [{ "who": "Reception", "quote": "Cult favorite. Quality varies by season; S2 widely considered the strongest." }] },
+        { "title": "Servant", "year": 2019, "dir": "Tony Basgallop", "country": "USA", "runtime": "4 seasons · 40 episodes", "seasons": "All 4 (ended 2023)",
+          "priority": "med", "tags": ["modern"],
+          "whyPriority": "Apple TV+. M. Night Shyamalan executive-produced. Slow-burn horror about a young couple, their nanny, and a doll that may not be a doll.",
+          "pitch": "A grieving Philadelphia couple uses a reborn doll to help process their infant son\'s death. The new nanny treats the doll as alive. Then it isn\'t a doll." },
+        { "title": "Stranger Things", "year": 2016, "dir": "The Duffer Brothers", "country": "USA", "runtime": "4 seasons + S5 final", "seasons": "S5 final airs 2025-26", "tags": ["modern"],
+          "priority": "med",
+          "pitch": "Netflix. 80s-set sci-fi/horror. The cultural phenomenon of mid-2010s genre TV.",
+          "critics": [{ "who": "Reception", "quote": "Critical reputation has cooled across seasons; the cultural footprint remains enormous." }] },
+        { "title": "The Haunting of Bly Manor", "year": 2020, "dir": "Mike Flanagan", "country": "USA", "runtime": "1 season · 9 episodes", "seasons": "Limited series; sequel to Hill House",
+          "priority": "med", "tags": ["modern"],
+          "pitch": "Flanagan\'s second Haunting. Henry James adaptation. Less acclaimed than Hill House but much better-written than Netflix-horror-television generally is.",
+          "critics": [{ "who": "Reception", "quote": "Critical reception softer than Hill House; defenders consider the romance arc strong." }] },
+        { "title": "Yellowjackets", "year": 2021, "dir": "Ashley Lyle & Bart Nickerson", "country": "USA", "runtime": "3 seasons · 27 episodes", "seasons": "S3 aired 2025",
+          "priority": "med", "tags": ["modern"],
+          "whyPriority": "Showtime. High school girls\' soccer team plane crashes in Canadian wilderness in 1996. The show alternates between their survival and their adult lives 25 years later.",
+          "pitch": "Survival horror with dual-timeline structure. The wilderness was supernatural. The adult lives are unraveling.",
+          "critics": [{ "who": "Reception", "quote": "Critical darling for S1-S2." }] }
+      ]
+    },
+    {
+      "name": "V. Anthology / Worth Considering",
+      "desc": "Anthology horror traditions.",
+      "items": [
+        { "title": "Inside No. 9", "year": 2014, "dir": "Reece Shearsmith & Steve Pemberton", "country": "UK", "runtime": "9 seasons · anthology · 50+ episodes", "seasons": "Ended 2024", "tags": ["modern","intl","under"],
+          "priority": "high",
+          "whyPriority": "BBC. From the League of Gentlemen creators. Each episode a self-contained 30-minute story that twists. Consistently among the most inventive things on TV.",
+          "pitch": "Each episode set in a place numbered 9. Otherwise the stories share nothing.",
+          "critics": [{ "who": "Reception", "quote": "BAFTA-winning. Cult-to-classic standing. Routinely cited among the best British TV of the 2010s-2020s." }] },
+        { "title": "Black Mirror", "year": 2011, "dir": "Charlie Brooker", "country": "UK/USA", "runtime": "7 seasons · anthology", "seasons": "Ongoing", "tags": ["modern","intl"],
+          "pitch": "Cross-listed Sci-Fi TV. Tech-paranoia anthology. Episode quality varies wildly.",
+          "critics": [] },
+        { "title": "Tales from the Loop", "year": 2020, "dir": "Nathaniel Halpern", "country": "USA", "runtime": "1 season · 8 episodes", "seasons": "Limited series", "tags": ["modern","under"],
+          "priority": "med",
+          "pitch": "Amazon. Based on Simon Stålenhag\'s painting series. Sci-fi with horror-of-the-uncanny aesthetic.",
+          "critics": [{ "who": "Reception", "quote": "Cult favorite. Visually closest TV has come to Stålenhag\'s paintings." }] },
+        { "title": "The X-Files", "year": 1993, "dir": "Chris Carter", "country": "USA", "runtime": "11 seasons · 218 episodes", "seasons": "S1-S7 are the canonical run; S8-9 weakened; S10-11 revivals", "tags": ["foundational"],
+          "pitch": "Cross-listed Sci-Fi TV. Paranormal investigations + government conspiracy. Mostly sci-fi but plenty of horror episodes.",
+          "critics": [] },
+        { "title": "30 Coins (30 Monedas)", "year": 2020, "dir": "Álex de la Iglesia", "country": "Spain", "runtime": "2 seasons · 16 episodes", "seasons": "Ongoing", "tags": ["modern","intl","under"],
+          "priority": "med",
+          "pitch": "HBO Spain. Catholic-mystical horror with a small-town priest investigating an ancient conspiracy. Maximalist.",
+          "critics": [{ "who": "Reception", "quote": "Cult international hit. Polarizing because it goes everywhere." }] }
+      ]
+    }
+  ]
+}

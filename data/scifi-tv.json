@@ -1,0 +1,900 @@
+{
+  "type": "scifi-tv",
+  "title": "Sci-Fi TV",
+  "subtitle": "Sci-fi limited and ongoing series. Limited-series first, then ongoing.",
+  "sections": [
+    {
+      "name": "A \u00b7 Already Watched",
+      "desc": "Sci-fi TV from your viewing history.",
+      "items": [
+        {
+          "title": "Firefly",
+          "year": 2002,
+          "dir": "Joss Whedon",
+          "country": "USA",
+          "runtime": "1 season \u00b7 14 episodes + Serenity (2005 film)",
+          "seasons": "Cancelled after S1; Serenity is the closing chapter",
+          "tags": [
+            "foundational"
+          ],
+          "pitch": "Whedon's space western. Cancelled by Fox after one season; the cancellation became its own legend.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Cult immortality. Voted Best TV Drama in TV Guide reader polls multiple times despite running only 14 episodes."
+            }
+          ]
+        },
+        {
+          "title": "Dollhouse",
+          "year": 2009,
+          "dir": "Joss Whedon",
+          "country": "USA",
+          "runtime": "2 seasons \u00b7 27 episodes",
+          "seasons": "All 27 (ended 2010)",
+          "tags": [
+            "under"
+          ],
+          "pitch": "Whedon's identity-and-memory sci-fi. Eliza Dushku as an \"Active\" \u2014 a person whose mind is wiped between assignments.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "S1 considered uneven; S2 considered one of the great unloved sci-fi seasons."
+            }
+          ]
+        },
+        {
+          "title": "Eureka",
+          "year": 2006,
+          "dir": "Andrew Cosby",
+          "country": "USA",
+          "runtime": "5 seasons \u00b7 76 episodes",
+          "seasons": "All 5 (ended 2012)",
+          "tags": [
+            "modern"
+          ],
+          "pitch": "SyFy. Small Pacific Northwest town secretly populated by genius scientists. Light, comedic, character-warm.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "SyFy's most beloved original drama of the era. Cult devotion."
+            }
+          ]
+        },
+        {
+          "title": "Orphan Black",
+          "year": 2013,
+          "dir": "Graeme Manson & John Fawcett",
+          "country": "Canada",
+          "runtime": "5 seasons \u00b7 50 episodes",
+          "seasons": "All 5 (ended 2017). Echoes (2023) is a spin-off without Maslany.",
+          "tags": [
+            "modern",
+            "intl"
+          ],
+          "pitch": "Tatiana Maslany plays nine clones. The clone conspiracy thriller that became a Maslany acting masterclass.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Maslany won the Outstanding Lead Actress Emmy in 2016 \u2014 historic recognition for the first Canadian-show actress to win."
+            }
+          ]
+        },
+        {
+          "title": "Legion",
+          "year": 2017,
+          "dir": "Noah Hawley",
+          "country": "USA",
+          "runtime": "3 seasons \u00b7 27 episodes",
+          "seasons": "All 3 (ended 2019)",
+          "tags": [
+            "modern"
+          ],
+          "pitch": "Noah Hawley's X-Men spinoff \u2014 visually unhinged sci-fi about a mutant with multiple personalities. Aubrey Plaza, Dan Stevens.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Critical favorite throughout. Aubrey Plaza's S2 performance among the great supporting performances on TV."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Limited \u00b7 I. High Priority",
+      "desc": "Strongest probable fits. Calibrated to your taste signal.",
+      "items": [
+        {
+          "title": "Edge of Darkness",
+          "year": 1985,
+          "network": "BBC",
+          "country": "UK",
+          "seasons": "1 series \u00b7 6 \u00d7 55 min",
+          "commitment": "~5.5 hours",
+          "commitmentTag": "short",
+          "priority": "high",
+          "whyPriority": "Six BAFTAs. Sci-fi-adjacent in the same way Children of Men is \u2014 speculative thriller with weight. Best entry point on this tracker.",
+          "pitch": "A police detective investigates his daughter's murder and uncovers a nuclear conspiracy. Genuinely extraordinary television.",
+          "critics": [
+            {
+              "who": "BAFTAs 1986",
+              "quote": "Six BAFTAs including Best Drama Serial."
+            },
+            {
+              "who": "Reappraisal",
+              "quote": "The Guardian, BFI, and Mark Lawson all rank it among the greatest TV dramas ever made."
+            }
+          ]
+        },
+        {
+          "title": "Devs",
+          "year": 2020,
+          "network": "FX/Hulu",
+          "country": "USA",
+          "seasons": "1 limited series \u00b7 8 \u00d7 50 min",
+          "commitment": "~7 hours",
+          "commitmentTag": "medium",
+          "priority": "high",
+          "whyPriority": "Alex Garland on quantum determinism. Cold and structurally rigorous. The 'concept-with-character' balance you said you want.",
+          "pitch": "A quantum-computing tech company believes it can model all of reality. Cold, deliberate.",
+          "critics": [
+            {
+              "who": "James Poniewozik \u00b7 NY Times",
+              "quote": "Strongly positive. Praised the 'patient, accumulating dread.'"
+            }
+          ]
+        },
+        {
+          "title": "Counterpart",
+          "year": 2017,
+          "network": "Starz",
+          "country": "USA",
+          "seasons": "2 seasons \u00b7 20 \u00d7 50 min",
+          "commitment": "~17 hours",
+          "commitmentTag": "long",
+          "priority": "high",
+          "whyPriority": "Cold-War espionage meets parallel-Earths. J.K. Simmons playing both selves. Smart structure, character-first. Cancelled but two seasons resolve.",
+          "pitch": "A man split across two parallel Earths that diverged 30 years ago.",
+          "critics": [
+            {
+              "who": "Daniel Fienberg \u00b7 Hollywood Reporter",
+              "quote": "Highly positive. Called Simmons's dual performance 'a masterclass.'"
+            }
+          ]
+        },
+        {
+          "title": "Frank Herbert's Dune",
+          "year": 2000,
+          "network": "Sci-Fi Channel",
+          "country": "USA/Germany/Italy",
+          "seasons": "1 miniseries \u00b7 3 \u00d7 90 min",
+          "commitment": "~4.5 hours",
+          "commitmentTag": "short",
+          "priority": "high",
+          "whyPriority": "Adapts the first novel more faithfully than Lynch's 1984 film. Theatrical production design. Won two Emmys.",
+          "pitch": "John Harrison's adaptation. Slower, more political than Lynch's, with room to breathe across three nights.",
+          "critics": [
+            {
+              "who": "Emmy Awards",
+              "quote": "Won Outstanding Cinematography and Outstanding Visual Effects for a Miniseries."
+            },
+            {
+              "who": "Reappraisal",
+              "quote": "Now treated as the most narratively complete Dune adaptation prior to Villeneuve."
+            }
+          ]
+        },
+        {
+          "title": "Frank Herbert's Children of Dune",
+          "year": 2003,
+          "network": "Sci-Fi Channel",
+          "country": "USA/Germany",
+          "seasons": "1 miniseries \u00b7 3 \u00d7 90 min",
+          "commitment": "~4.5 hours",
+          "commitmentTag": "short",
+          "priority": "high",
+          "whyPriority": "Adapts both Dune Messiah AND Children of Dune. The only screen adaptation of either novel. Better than the 2000 series. Early James McAvoy.",
+          "pitch": "Combines Dune Messiah and Children of Dune. Twelve years after Paul's ascension; the costs of empire come due.",
+          "critics": [
+            {
+              "who": "Critical consensus",
+              "quote": "The only viable screen treatment of the second and third Herbert novels."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Limited \u00b7 II. Medium Priority",
+      "desc": "Likely to land. Watch when high-priority queue exhausts.",
+      "items": [
+        {
+          "title": "The Day of the Triffids",
+          "year": 1981,
+          "network": "BBC",
+          "country": "UK",
+          "seasons": "1 series \u00b7 6 \u00d7 30 min",
+          "commitment": "~3 hours",
+          "commitmentTag": "short",
+          "priority": "med",
+          "whyPriority": "BBC adaptation of Wyndham's 1951 novel. Pre-CGI practical effects. Three hours, manageable.",
+          "pitch": "A meteor shower blinds most of humanity overnight, and the carnivorous, mobile triffid plants begin moving.",
+          "critics": [
+            {
+              "who": "Reappraisal",
+              "quote": "Mark Kermode and the British genre press treat it as the definitive adaptation."
+            }
+          ]
+        },
+        {
+          "title": "The Leftovers",
+          "year": 2014,
+          "network": "HBO",
+          "country": "USA",
+          "seasons": "3 seasons \u00b7 28 \u00d7 60 min",
+          "commitment": "~28 hours",
+          "commitmentTag": "long",
+          "priority": "med",
+          "whyPriority": "Sci-fi-adjacent. Two percent of population vanishes. S2 widely considered one of the best TV seasons ever. Bleakness in service of grace.",
+          "pitch": "Damon Lindelof's redemption project after Lost. Bleak, but its bleakness is in service of grace.",
+          "critics": [
+            {
+              "who": "Critical consensus",
+              "quote": "Variety, NYT, Rolling Stone all rank it among the greatest TV series of the 2010s."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Limited \u00b7 III. Standard",
+      "desc": "Important entries with moderate confidence in fit.",
+      "items": [
+        {
+          "title": "The Prisoner",
+          "year": 1967,
+          "network": "ITV",
+          "country": "UK",
+          "seasons": "1 series \u00b7 17 \u00d7 50 min",
+          "commitment": "~14 hours",
+          "commitmentTag": "medium",
+          "pitch": "Patrick McGoohan as a former secret agent abducted to a surreal coastal village.",
+          "critics": [
+            {
+              "who": "Reappraisal",
+              "quote": "Foundational to all subsequent paranoid TV."
+            }
+          ]
+        },
+        {
+          "title": "Quatermass and the Pit",
+          "year": 1958,
+          "network": "BBC",
+          "country": "UK",
+          "seasons": "1 series \u00b7 6 \u00d7 35 min",
+          "commitment": "~3.5 hours",
+          "commitmentTag": "short",
+          "pitch": "Construction workers unearth what looks like a Nazi bomb in London, but it's far older \u2014 and Martian.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Foundational influence on Doctor Who, Alien, Carpenter's films."
+            }
+          ]
+        },
+        {
+          "title": "Tales from the Loop",
+          "year": 2020,
+          "network": "Amazon",
+          "country": "USA",
+          "seasons": "1 season \u00b7 8 \u00d7 50 min",
+          "commitment": "~7 hours",
+          "commitmentTag": "medium",
+          "pitch": "Anthology episodes set in a small town built atop an experimental physics facility. Adapted from Simon St\u00e5lenhag's paintings.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Mixed-positive. James Poniewozik admired the patience; some found it inert."
+            }
+          ]
+        },
+        {
+          "title": "Threads",
+          "year": 1984,
+          "network": "BBC",
+          "country": "UK",
+          "seasons": "1 telefilm \u00b7 112 min",
+          "commitment": "~2 hours",
+          "commitmentTag": "short",
+          "pitch": "Documentary-style depiction of nuclear war's effect on Sheffield. The bleakest thing on either tracker.",
+          "critics": [
+            {
+              "who": "Reappraisal",
+              "quote": "Routinely cited as one of the most important pieces of television ever broadcast."
+            }
+          ]
+        },
+        {
+          "title": "Black Mirror (selected episodes)",
+          "year": 2011,
+          "network": "Channel 4 / Netflix",
+          "country": "UK",
+          "seasons": "Five standalone episodes",
+          "commitment": "~5 hours",
+          "commitmentTag": "short",
+          "pitch": "Watch only: 'The Entire History of You' (S1E3), 'Be Right Back' (S2E1), 'White Christmas' (special), 'San Junipero' (S3E4), 'USS Callister' (S4E1).",
+          "critics": [
+            {
+              "who": "Emmy Awards",
+              "quote": "'San Junipero' and 'USS Callister' both won Outstanding TV Movie."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Limited \u00b7 IV. Twin Peaks: The Return",
+      "desc": "A category of one. Demands prior knowledge of original Twin Peaks.",
+      "items": [
+        {
+          "title": "Twin Peaks: The Return",
+          "year": 2017,
+          "network": "Showtime",
+          "country": "USA",
+          "seasons": "1 limited series \u00b7 18 \u00d7 60 min",
+          "commitment": "~18 hours",
+          "commitmentTag": "long",
+          "pitch": "Lynch returned to Twin Peaks 25 years later and made what is essentially an 18-hour film. Episode 8 is the most extraordinary single hour of TV ever broadcast.",
+          "critics": [
+            {
+              "who": "Cahiers du Cin\u00e9ma 2017",
+              "quote": "Named #1 film (not TV) of the year."
+            },
+            {
+              "who": "Critical consensus",
+              "quote": "Sight & Sound's 2022 Greatest Films poll included it."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Ongoing \u00b7 I. High Priority",
+      "desc": "Strongest fits for your taste signal. Political/religious themes, character-first, smart structure.",
+      "items": [
+        {
+          "title": "Andor",
+          "year": 2022,
+          "network": "Disney+",
+          "country": "USA",
+          "seasons": "2 seasons \u00b7 24 episodes (concluded)",
+          "commitment": "~22 hours",
+          "commitmentTag": "long",
+          "priority": "high",
+          "whyPriority": "Tony Gilroy (Michael Clayton) made grown-up Star Wars. Political, structurally rigorous, no Force/Jedi. Closest thing to The Conversation in this universe. Standalone-watchable \u2014 no Star Wars knowledge required.",
+          "pitch": "Cassian Andor's path to becoming a rebel. Adult, political, structurally rigorous. The Star Wars project for people who don't usually watch Star Wars.",
+          "critics": [
+            {
+              "who": "Critical consensus",
+              "quote": "Widely treated as a high point of prestige TV in any genre."
+            },
+            {
+              "who": "Multiple critics named S1 the best TV of 2022.",
+              "quote": "S2 finished in 2025 to similar acclaim."
+            }
+          ]
+        },
+        {
+          "title": "Severance",
+          "year": 2022,
+          "network": "Apple TV+",
+          "country": "USA",
+          "seasons": "2 seasons \u00b7 19 episodes (ongoing)",
+          "commitment": "~17 hours so far",
+          "commitmentTag": "long",
+          "priority": "high",
+          "whyPriority": "Office workers undergo a procedure that severs work memories from personal memories. Closest modern descendant of The Prisoner. Bleak corporate dystopia with strange comic textures.",
+          "pitch": "Ben Stiller directs most episodes. Multiple Emmy wins. Widely considered the best new prestige sci-fi series of the 2020s.",
+          "critics": [
+            {
+              "who": "James Poniewozik \u00b7 NY Times",
+              "quote": "Strongly positive. Called it 'a precise, slow-building dread.'"
+            }
+          ]
+        },
+        {
+          "title": "Battlestar Galactica (2003 reboot)",
+          "year": 2003,
+          "network": "Sci-Fi Channel",
+          "country": "USA",
+          "seasons": "Miniseries + 4 seasons \u00b7 ~75 episodes",
+          "commitment": "~60 hours",
+          "commitmentTag": "long",
+          "priority": "high",
+          "whyPriority": "Direct fit for your political/religious Dune signal. Post-9/11 allegory, AI ethics, religious conflict. Start with the 2003 miniseries \u2014 complete in itself. S1-3 widely considered as good as cerebral sci-fi TV gets.",
+          "pitch": "Reimagining of the 1978 series as serious political drama. Set the template for sci-fi-as-political-allegory in the 2000s.",
+          "critics": [
+            {
+              "who": "Time Magazine",
+              "quote": "Named one of the 100 Best TV Shows of All Time."
+            },
+            {
+              "who": "Critical reception",
+              "quote": "Reviewed by prestige-TV critics with the seriousness usually reserved for HBO drama."
+            }
+          ]
+        },
+        {
+          "title": "Foundation",
+          "year": 2021,
+          "network": "Apple TV+",
+          "country": "USA",
+          "seasons": "3 seasons \u00b7 ongoing",
+          "commitment": "~25 hours so far",
+          "commitmentTag": "long",
+          "priority": "high",
+          "whyPriority": "Closest peer to Dune in scope and ambition. Asimov's psychohistory adapted with massive worldbuilding budget. Lee Pace as Brother Day is genuinely extraordinary. The Genetic Dynasty plotline alone is worth the watch.",
+          "pitch": "Asimov's epic about a mathematician predicting the fall of empire. Loose adaptation \u2014 purists divided. The Cleon clones storyline is universally praised even by skeptics.",
+          "critics": [
+            {
+              "who": "Critical reception",
+              "quote": "Mixed \u2014 some critics see it as a triumph of TV worldbuilding, others as overlong and uneven."
+            },
+            {
+              "who": "Lee Pace's performance",
+              "quote": "Widely considered one of the best in modern sci-fi TV."
+            }
+          ]
+        },
+        {
+          "title": "Star Trek: Strange New Worlds",
+          "year": 2022,
+          "network": "Paramount+",
+          "country": "USA",
+          "seasons": "3 seasons \u00b7 ongoing",
+          "commitment": "~28 hours so far",
+          "commitmentTag": "long",
+          "priority": "high",
+          "whyPriority": "Best modern Trek by consensus. Episodic structure (rare in modern TV), optimistic, character-driven. Anson Mount as Pike. Strong fit for your character-first preference.",
+          "pitch": "Captain Pike's Enterprise, pre-Kirk. Episodic stories let each premise breathe. Critics overwhelmingly positive.",
+          "critics": [
+            {
+              "who": "Critical consensus",
+              "quote": "Widely considered the best new Trek series since the franchise's modern relaunch. Episodic format praised as a return to Trek's strengths."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Ongoing \u00b7 II. Medium Priority",
+      "desc": "Strong probable fits with one or more variables.",
+      "items": [
+        {
+          "title": "The Expanse",
+          "year": 2015,
+          "network": "Syfy / Amazon",
+          "country": "USA",
+          "seasons": "6 seasons \u00b7 62 \u00d7 45 min (concluded)",
+          "commitment": "~46 hours",
+          "commitmentTag": "long",
+          "priority": "med",
+          "whyPriority": "Hard sci-fi space opera. Solar-system-scale political thriller. The most rigorous depiction of physics in TV space drama. Slow first three episodes; pays off enormously.",
+          "pitch": "Belters, Martians, and Earthers. Adapted from the James S.A. Corey novels. Praised by working scientists for fidelity.",
+          "critics": [
+            {
+              "who": "Critical consensus",
+              "quote": "Widely considered the best hard-sci-fi TV series of its era."
+            }
+          ]
+        },
+        {
+          "title": "Babylon 5",
+          "year": 1993,
+          "network": "PTEN/TNT",
+          "country": "USA",
+          "seasons": "5 seasons \u00b7 110 episodes",
+          "commitment": "~85 hours",
+          "commitmentTag": "long",
+          "priority": "med",
+          "whyPriority": "The original five-year-arc TV. Political/religious sci-fi years before Galactica. J. Michael Straczynski wrote 92 of 110 episodes alone. Aged production values; ageless storytelling.",
+          "pitch": "Space station as diplomatic crossroads during a coming galactic war. Pioneered serialized TV with predetermined arcs.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Considered foundational to all serialized prestige TV that followed. Some critics rank it ahead of DS9 in ambition."
+            }
+          ]
+        },
+        {
+          "title": "Star Trek: Deep Space Nine",
+          "year": 1993,
+          "network": "Syndication",
+          "country": "USA",
+          "seasons": "7 seasons \u00b7 176 episodes",
+          "commitment": "~130 hours",
+          "commitmentTag": "long",
+          "priority": "med",
+          "whyPriority": "The most morally complex Trek. Religious/political themes (Bajoran prophets, Cardassian occupation, Dominion War). The Trek series your Dune signal points toward most strongly.",
+          "pitch": "Federation officers run a station near a wormhole. Serialized starting in S3. Avery Brooks's Sisko is the deepest Trek captain.",
+          "critics": [
+            {
+              "who": "Critical reappraisal",
+              "quote": "Widely considered the artistic peak of Trek by modern critics, especially for the Dominion War arc."
+            }
+          ]
+        },
+        {
+          "title": "Fringe",
+          "year": 2008,
+          "network": "Fox",
+          "country": "USA",
+          "seasons": "5 seasons \u00b7 100 episodes (concluded)",
+          "commitment": "~75 hours",
+          "commitmentTag": "long",
+          "priority": "med",
+          "whyPriority": "Procedural-into-mythology done right. John Noble's Walter Bishop is a top-five sci-fi TV character. The pivot from monster-of-the-week to alternate-universe drama is well-executed.",
+          "pitch": "FBI fringe-science division investigates X-Files-adjacent cases that resolve into a coherent multi-season mythology. JJ Abrams produced.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Built passionate following through DVD/streaming. The S2-S3 transition into the alternate universe is widely praised."
+            }
+          ]
+        },
+        {
+          "title": "Lost",
+          "year": 2004,
+          "network": "ABC",
+          "country": "USA",
+          "seasons": "6 seasons \u00b7 121 episodes (concluded)",
+          "commitment": "~90 hours",
+          "commitmentTag": "long",
+          "priority": "med",
+          "whyPriority": "The character work is genuinely extraordinary even when the mythology frustrates. Final season divisive. Worth knowing as the show that defined 'puzzle-box prestige TV.' The Leftovers came directly out of its creators' regrets.",
+          "pitch": "Plane crash survivors on a mysterious island. Character flashbacks slowly reveal the show is a sci-fi/fantasy thriller. Cultural watershed of mid-2000s TV.",
+          "critics": [
+            {
+              "who": "Critical reception",
+              "quote": "Pilot widely considered one of the greatest in TV history. Final season polarizing \u2014 many critics defended it; many fans did not."
+            }
+          ]
+        },
+        {
+          "title": "Mr. Robot",
+          "year": 2015,
+          "network": "USA Network",
+          "country": "USA",
+          "seasons": "4 seasons \u00b7 45 episodes (concluded)",
+          "commitment": "~40 hours",
+          "commitmentTag": "long",
+          "priority": "med",
+          "whyPriority": "Tech-anxiety thriller, formally inventive (4th-wall breaks, framing experiments), Rami Malek's Emmy-winning performance. Sci-fi-adjacent \u2014 closer to The Conversation than to space opera. Smart structure.",
+          "pitch": "A hacker with dissociative identity disorder is recruited by a shadowy collective. Sam Esmail wrote and directed every S2-4 episode.",
+          "critics": [
+            {
+              "who": "Critical consensus",
+              "quote": "S1 and S4 widely considered prestige-TV high points. Multiple Emmys including Outstanding Drama nominations."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Ongoing \u00b7 III. Stargate Threads",
+      "desc": "Your stated franchise interest. Stargate is genuinely large \u2014 listed in viewing order.",
+      "items": [
+        {
+          "title": "Stargate (1994 film)",
+          "year": 1994,
+          "network": "MGM/UA (theatrical)",
+          "country": "USA",
+          "seasons": "Single film \u00b7 121 min",
+          "commitment": "~2 hours",
+          "commitmentTag": "short",
+          "pitch": "The original Emmerich/Devlin film. James Spader as the linguist, Kurt Russell as the soldier. Foundation for the entire franchise.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Mixed at release; commercial hit. Spawned the most expansive sci-fi franchise of the 90s/00s outside Trek/Wars."
+            }
+          ]
+        },
+        {
+          "title": "Stargate SG-1",
+          "year": 1997,
+          "network": "Showtime / Sci-Fi Channel",
+          "country": "USA/Canada",
+          "seasons": "10 seasons \u00b7 214 episodes",
+          "commitment": "~160 hours",
+          "commitmentTag": "long",
+          "priority": "med",
+          "whyPriority": "The flagship show. Tonally lighter than BSG or DS9 \u2014 more procedural than political. Strong character ensemble. Unusually consistent quality across 214 episodes.",
+          "pitch": "Air Force team explores planets through the gate network. Character-driven, episodic, occasionally arc-heavy.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Built a passionate fanbase. Saturn Awards repeatedly. Considered the most consistent of the major sci-fi franchises of its era."
+            }
+          ]
+        },
+        {
+          "title": "Stargate Atlantis",
+          "year": 2004,
+          "network": "Sci-Fi Channel",
+          "country": "USA/Canada",
+          "seasons": "5 seasons \u00b7 100 episodes",
+          "commitment": "~75 hours",
+          "commitmentTag": "long",
+          "pitch": "SG-1 spinoff in the Pegasus galaxy. New cast, new threat (the Wraith). Stronger arcs than SG-1 in spots.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Considered the strongest of the SG-1 spinoffs by most fans, though without the cultural reach of the parent show."
+            }
+          ]
+        },
+        {
+          "title": "Stargate Universe",
+          "year": 2009,
+          "network": "Syfy",
+          "country": "USA/Canada",
+          "seasons": "2 seasons \u00b7 40 episodes (cancelled)",
+          "commitment": "~30 hours",
+          "commitmentTag": "long",
+          "pitch": "Third spinoff. Tonally darker \u2014 closer to BSG than to SG-1. Cancelled before the story resolved. Worth knowing about; the cancellation is a real cost.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Polarizing among Stargate fans (too dark) but praised by prestige-TV critics. Cancellation widely lamented."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Ongoing \u00b7 IV. Star Trek \u2014 Modern Era",
+      "desc": "The post-2017 relaunch. Quality varies sharply by series.",
+      "items": [
+        {
+          "title": "Star Trek: Picard",
+          "year": 2020,
+          "network": "Paramount+",
+          "country": "USA",
+          "seasons": "3 seasons \u00b7 30 episodes (concluded)",
+          "commitment": "~25 hours",
+          "commitmentTag": "long",
+          "pitch": "S1 has a strong premise but is uneven. S2 is widely considered weak. S3 is a love letter to TNG and is widely praised. Skip S2.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Widely uneven across seasons. S3 considered redemptive by most TNG-era critics."
+            }
+          ]
+        },
+        {
+          "title": "Star Trek: Discovery",
+          "year": 2017,
+          "network": "Paramount+",
+          "country": "USA",
+          "seasons": "5 seasons \u00b7 65 episodes (concluded)",
+          "commitment": "~50 hours",
+          "commitmentTag": "long",
+          "pitch": "Serialized, more dramatic than traditional Trek. Polarizing among Trek fans. Worth trying S1-2, then deciding.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Polarizing. Some critics champion the serialized approach; others find it too dark for Trek."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Ongoing \u00b7 V. Older Foundation",
+      "desc": "Pre-prestige-TV sci-fi that built the genre on television.",
+      "items": [
+        {
+          "title": "The X-Files",
+          "year": 1993,
+          "network": "Fox",
+          "country": "USA",
+          "seasons": "11 seasons \u00b7 218 episodes (concluded)",
+          "commitment": "~165 hours",
+          "commitmentTag": "long",
+          "whyPriority": "The mythology gets tangled by S6, but the standalone monster-of-the-week episodes are still some of the best TV ever made. Watch the highlight episodes if not the full thing.",
+          "pitch": "FBI agents Mulder and Scully investigate paranormal cases. Cultural watershed of 1990s TV. Define your own watch order \u2014 there are episode guides for 'best of' viewings.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Routinely cited as one of the most influential TV series of the 20th century."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Ongoing \u00b7 VI. Weirder & Prestige-Adjacent",
+      "desc": "Shows that bend the genre or sit on its edges.",
+      "items": [
+        {
+          "title": "Westworld (S1 only)",
+          "year": 2016,
+          "network": "HBO",
+          "country": "USA",
+          "seasons": "S1 \u00b7 10 episodes",
+          "commitment": "~10 hours",
+          "commitmentTag": "medium",
+          "priority": "med",
+          "whyPriority": "S1 is genuinely excellent prestige sci-fi \u2014 puzzle-box structure, Anthony Hopkins, Thandiwe Newton. S2-4 widely considered to lose the thread. Watch S1 as a standalone.",
+          "pitch": "Theme park populated by lifelike androids. S1 plays as a self-contained 10-hour film about consciousness and free will.",
+          "critics": [
+            {
+              "who": "S1 reception",
+              "quote": "Multiple Emmy nominations. Widely considered one of the best HBO premieres in a decade."
+            }
+          ]
+        },
+        {
+          "title": "The OA",
+          "year": 2016,
+          "network": "Netflix",
+          "country": "USA",
+          "seasons": "2 seasons \u00b7 16 episodes (cancelled)",
+          "commitment": "~15 hours",
+          "commitmentTag": "medium",
+          "pitch": "A young woman returns after seven years missing, claiming she's been to other dimensions. Brit Marling co-wrote and stars. Cancelled before the planned five-season arc completed.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Polarizing. Critics like Emily Nussbaum strongly defended it; others found it pretentious. The cancellation provoked actual public protest."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "C \u00b7 High Priority \u2014 Recommended",
+      "desc": "Strongest fits given your loves of Foundation, BSG, Strange New Worlds, Expanse, Westworld S1, plus your Whedon engagement.",
+      "items": [
+        {
+          "title": "Mr. Robot",
+          "year": 2015,
+          "dir": "Sam Esmail",
+          "country": "USA",
+          "runtime": "4 seasons \u00b7 45 episodes",
+          "seasons": "All 4 (ended 2019)",
+          "priority": "high",
+          "tags": [
+            "modern",
+            "foundational"
+          ],
+          "whyPriority": "Cross-listed Drama TV. Hacker drama, structurally inventive, ended cleanly. The S2 fourth-wall break is one of the great structural moves on TV.",
+          "pitch": "A NYC cybersecurity engineer / vigilante hacker plans to destroy the largest corporation in the world. The \"fsociety\" hack is the structural engine.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Won Outstanding Drama Globes. Considered Esmail's breakthrough."
+            }
+          ]
+        },
+        {
+          "title": "Counterpart",
+          "year": 2017,
+          "dir": "Justin Marks",
+          "country": "USA",
+          "runtime": "2 seasons \u00b7 20 episodes",
+          "seasons": "Cancelled 2019 mid-arc",
+          "priority": "high",
+          "tags": [
+            "modern",
+            "under"
+          ],
+          "whyPriority": "Cross-listed Spy TV. Parallel-worlds + spy thriller. J.K. Simmons in two roles. Tragic that it was cancelled.",
+          "pitch": "A UN bureaucrat in Berlin discovers his agency is the gateway between two parallel Earths that diverged 30 years ago. A version of him is a spy from the other Earth."
+        },
+        {
+          "title": "Person of Interest",
+          "year": 2011,
+          "dir": "Jonathan Nolan",
+          "country": "USA",
+          "runtime": "5 seasons \u00b7 103 episodes",
+          "seasons": "All 5 (ended 2016). S1 procedural; S3-5 sci-fi acceleration.",
+          "priority": "high",
+          "tags": [
+            "modern"
+          ],
+          "whyPriority": "Jonathan Nolan (Westworld co-creator). Network procedural that becomes one of the great AI-rises stories. Structurally tighter than nearly any genre TV. Direct fit.",
+          "pitch": "A reclusive billionaire built an AI that predicts crimes. He hires an ex-CIA operative to stop them. Then the AI evolves.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Critical reputation grew across run. Now considered the most underrated network drama of its era."
+            }
+          ]
+        },
+        {
+          "title": "Devs",
+          "year": 2020,
+          "dir": "Alex Garland",
+          "country": "USA/UK",
+          "runtime": "1 season \u00b7 8 episodes",
+          "seasons": "Limited series",
+          "priority": "high",
+          "tags": [
+            "modern"
+          ],
+          "whyPriority": "Already on your queue. Garland (Annihilation, Ex Machina). Tech-startup sci-fi about determinism.",
+          "pitch": "A young software engineer investigates her boyfriend's death at her quantum-computing tech company. Determinism. Surveillance. Quietly devastating.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "FX. Critical darling. Garland's most direct philosophical exercise."
+            }
+          ]
+        },
+        {
+          "title": "Severance",
+          "year": 2022,
+          "dir": "Dan Erickson, Ben Stiller",
+          "country": "USA",
+          "runtime": "2 seasons \u00b7 19 episodes",
+          "seasons": "S2 aired 2025; ongoing",
+          "priority": "high",
+          "tags": [
+            "modern"
+          ],
+          "whyPriority": "Already on your queue. Apple TV+. Stiller-directed. Workplace sci-fi where employees have surgical separation between work and life memories.",
+          "pitch": "Lumon Industries surgically severs work memories from personal memories. Mark Scout works there. So does Innie Mark.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "S2 won Outstanding Drama Globe 2025. Considered the prestige sci-fi drama of the streaming era."
+            }
+          ]
+        },
+        {
+          "title": "Star Trek: Deep Space Nine",
+          "year": 1993,
+          "dir": "Rick Berman & Michael Piller",
+          "country": "USA",
+          "runtime": "7 seasons \u00b7 176 episodes",
+          "seasons": "All 7 (ended 1999); skip-the-pilot start",
+          "priority": "high",
+          "tags": [
+            "foundational"
+          ],
+          "whyPriority": "The most prestige-drama-coded Trek. Long-arc serialization (uncommon in 90s Trek). Religious and political themes (Bajoran/Cardassian/Dominion). If Foundation, BSG, and SNW landed, DS9 is the missing pillar.",
+          "pitch": "Federation space station guarding the only stable wormhole to the Gamma Quadrant. Religion, occupation, war.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Routinely cited by Trek devotees as the strongest series. Critical reputation has only grown."
+            }
+          ]
+        },
+        {
+          "title": "Babylon 5",
+          "year": 1994,
+          "dir": "J. Michael Straczynski",
+          "country": "USA",
+          "runtime": "5 seasons \u00b7 110 episodes",
+          "seasons": "All 5 (ended 1998); pilot was 1993 movie",
+          "priority": "high",
+          "tags": [
+            "foundational",
+            "under"
+          ],
+          "whyPriority": "The first major TV series planned as a single five-year arc. Straczynski wrote nearly every episode. Politically and religiously serious. Influence on Foundation, BSG, all modern arc-driven TV is direct.",
+          "pitch": "A space station serves as neutral ground for warring civilizations. Across five seasons one large story unfolds.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Won 2 Hugo Awards for Best Dramatic Presentation. Considered a foundational text for serialized TV."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
