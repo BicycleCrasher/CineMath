@@ -6,7 +6,7 @@ const TAB_KEY = 'scifi-tracker-active-tab';
 
 // Per-catalog seed data — applies on first load only
 const SEED_STATE = {
-  "films": {
+  "scifi": {
     "2001-a-space-odyssey-1968": { "status": "watched", "rating": "loved", "reactionTags": ["Rewatchable","Stayed with me","Visually stunning","Want more like this","Emotionally resonant","Smart structure"], "notes": "Love this one. I've watched it many times, love it every time." },
     "blade-runner-1982": { "status": "watched", "rating": "liked", "reactionTags": ["Visually stunning","Rewatchable"], "notes": "I've always been confused by this one." },
     "timecrimes-2007": { "status": "watched", "rating": "loved", "reactionTags": ["Rewatchable","Stayed with me","Want more like this","Smart structure"], "notes": "Fantastic. Understood without subtitles." },
@@ -30,20 +30,23 @@ const SEED_STATE = {
     "solaris-soderbergh-2002": { "status": "queued" },
     "the-conversation-1974": { "status": "queued" }
   },
-  "tv-limited": {
+  "scifi-tv": {
     "frank-herbert-s-dune-2000": { "status": "watching" },
     "frank-herbert-s-children-of-dune-2003": { "status": "queued" },
     "devs-2020": { "status": "queued" },
-    "edge-of-darkness-1985": { "status": "queued" }
-  },
-  "tv-ongoing": {
+    "edge-of-darkness-1985": { "status": "queued" },
     "severance-2022": { "status": "queued" },
     "battlestar-galactica-2003-reboot-2003": { "status": "watched" },
     "foundation-2021": { "status": "watching" },
     "star-trek-strange-new-worlds-2022": { "status": "watching" },
     "the-expanse-2015": { "status": "watching" },
     "stargate-1994-film-1994": { "status": "watched" },
-    "westworld-s1-only-2016": { "status": "watched" }
+    "westworld-s1-only-2016": { "status": "watched" },
+    "firefly-2002": { "status": "watched", "rating": "loved" },
+    "dollhouse-2009": { "status": "watched", "rating": "loved" },
+    "eureka-2006": { "status": "watched", "rating": "loved" },
+    "orphan-black-2013": { "status": "watched", "rating": "loved" },
+    "legion-2017": { "status": "watched", "rating": "loved" }
   },
   "espionage": {
     "the-bourne-identity-2002": { "status": "watched", "rating": "loved", "reactionTags": ["Rewatchable","Visually stunning","Stayed with me","Smart structure","Want more like this"] },
@@ -51,14 +54,38 @@ const SEED_STATE = {
     "spy-game-2001": { "status": "watched", "rating": "loved", "reactionTags": ["Smart structure","Want more like this","Rewatchable","Emotionally resonant","Stayed with me","Visually stunning"], "notes": "Another one of my favorite movies of all time." },
     "all-the-president-s-men-1976": { "status": "watched", "rating": "loved", "reactionTags": ["Smart structure","Want more like this","Rewatchable","Emotionally resonant","Stayed with me","Visually stunning"], "notes": "I love this. Political thriller at its best." }
   },
+  "spy-tv": {
+    "the-night-manager-2016": { "status": "queued" }
+  },
   "crime": {},
+  "crime-tv": {
+    "true-detective-s1-2014": { "status": "watched", "rating": "loved" },
+    "the-wire-2002": { "status": "watching" },
+    "the-sopranos-1999": { "status": "queued" },
+    "dexter-2006": { "status": "watched", "rating": "loved" },
+    "weeds-2005": { "status": "watched", "rating": "loved" },
+    "rosemary-thyme-2003": { "status": "watched", "rating": "loved" },
+    "cadfael-1994": { "status": "watched", "rating": "loved" }
+  },
+  "cons-courtroom": {},
+  "cons-courtroom-tv": {
+    "the-sticky-2024": { "status": "queued" }
+  },
   "horror": {
     "nosferatu-2024": { "status": "watched", "rating": "loved", "reactionTags": ["Rewatchable","Stayed with me","Smart structure","Emotionally resonant","Visually stunning","Want more like this"] },
     "nosferatu-1922-1922": { "status": "watching" },
     "underworld-series-2003": { "status": "watched", "rating": "loved", "reactionTags": ["Rewatchable","Want more like this","Stayed with me","Visually stunning","Style over substance"] },
     "event-horizon-1997": { "status": "watched", "rating": "liked", "reactionTags": ["Stayed with me","Rewatchable","Visually stunning","Want more like this"] }
   },
+  "horror-tv": {
+    "buffy-the-vampire-slayer-1997": { "status": "watched", "rating": "loved" },
+    "hannibal-2013": { "status": "queued" }
+  },
   "fantasy": {},
+  "fantasy-tv": {
+    "game-of-thrones-2011": { "status": "watched", "rating": "loved" },
+    "american-gods-2017": { "status": "watched", "rating": "loved" }
+  },
   "heist": {
     "catch-me-if-you-can-2002": { "status": "watched", "rating": "loved", "reactionTags": ["Rewatchable","Smart structure","Want more like this","Stayed with me","Emotionally resonant","Visually stunning"], "notes": "I've watched it many times. Love it every time." },
     "ocean-s-eleven-2001": { "status": "watched", "rating": "loved", "reactionTags": ["Rewatchable","Smart structure","Want more like this","Stayed with me","Visually stunning"], "notes": "Great. Impeccable timing. A good rewatch." },
@@ -78,7 +105,41 @@ const SEED_STATE = {
     "o-brother-where-art-thou-2000": { "status": "watched", "rating": "loved", "reactionTags": ["Rewatchable","Smart structure","Want more like this","Emotionally resonant","Stayed with me","Visually stunning"], "notes": "My first Coen Brothers picture, and I still love it." },
     "fargo-1996": { "status": "watching" }
   },
+  "comedy-tv": {
+    "schitt-s-creek-2015": { "status": "watching", "rating": "loved" },
+    "arrested-development-2003": { "status": "watched", "rating": "loved", "notes": "Watched multiple times, especially the first three seasons." },
+    "30-rock-2006": { "status": "watched", "rating": "loved" },
+    "parks-and-recreation-2009": { "status": "watched", "rating": "loved" },
+    "brooklyn-nine-nine-2013": { "status": "watched", "rating": "loved" },
+    "it-s-always-sunny-in-philadelphia-2005": { "status": "watched", "rating": "loved" },
+    "studio-60-on-the-sunset-strip-2006": { "status": "watched", "rating": "loved" },
+    "newsradio-1995": { "status": "watched", "rating": "loved", "notes": "One of my favorite sitcoms ever." },
+    "designing-women-1986": { "status": "watched", "rating": "loved" },
+    "qi-2003": { "status": "watched", "rating": "loved" },
+    "top-gear-clarkson-era-2002": { "status": "watched", "rating": "loved", "notes": "Clarkson, Hammond, May years only." },
+    "the-grand-tour-2016": { "status": "watched", "rating": "loved" },
+    "tacoma-fd-2019": { "status": "watched", "rating": "loved" },
+    "the-league-2009": { "status": "watched", "rating": "loved" },
+    "pushing-daisies-2007": { "status": "watched", "rating": "loved" },
+    "silicon-valley-2014": { "status": "watched", "rating": "loved" },
+    "alpha-house-2013": { "status": "watched", "rating": "loved" },
+    "scrubs-2001": { "status": "watched", "rating": "loved" },
+    "ted-lasso-2020": { "status": "watching" },
+    "veep-2012": { "status": "queued" },
+    "damned-2016": { "status": "queued" }
+  },
   "drama": {},
+  "drama-tv": {
+    "the-west-wing-1999": { "status": "watched", "rating": "loved" },
+    "the-newsroom-2012": { "status": "watched", "rating": "loved" },
+    "studio-60-on-the-sunset-strip-2006": { "status": "watched", "rating": "loved" },
+    "nurse-jackie-2009": { "status": "watched", "rating": "loved" },
+    "the-riches-2007": { "status": "watched", "rating": "loved" },
+    "american-gods-2017": { "status": "watched", "rating": "loved" },
+    "house-md-2004": { "status": "watched", "rating": "loved" },
+    "the-boys-2019": { "status": "queued" },
+    "landman-2024": { "status": "queued" }
+  },
   "foreign": {},
   "auteur": {},
   "pre1960": {}
@@ -87,7 +148,7 @@ const SEED_STATE = {
 let state = {};
 let catalogs = {};
 let catalogManifest = [];
-let activeTab = 'films';
+let activeTab = 'scifi';
 let activeFilter = 'all';
 const expandedIds = new Set();
 
@@ -156,9 +217,26 @@ async function loadCatalogManifest() {
     catalogManifest = data.catalogs;
   } catch (e) {
     catalogManifest = [
-      { id: "films", label: "Films" },
-      { id: "tv-limited", label: "Limited" },
-      { id: "tv-ongoing", label: "Ongoing" }
+      { id: "scifi", label: "Sci-Fi" },
+      { id: "scifi-tv", label: "Sci-Fi TV" },
+      { id: "espionage", label: "Spy" },
+      { id: "spy-tv", label: "Spy TV" },
+      { id: "crime", label: "Crime" },
+      { id: "crime-tv", label: "Crime TV" },
+      { id: "cons-courtroom", label: "Cons & Courtroom" },
+      { id: "cons-courtroom-tv", label: "Cons & Courtroom TV" },
+      { id: "horror", label: "Horror" },
+      { id: "horror-tv", label: "Horror TV" },
+      { id: "fantasy", label: "Fantasy" },
+      { id: "fantasy-tv", label: "Fantasy TV" },
+      { id: "heist", label: "Heist" },
+      { id: "comedy", label: "Comedy" },
+      { id: "comedy-tv", label: "Comedy TV" },
+      { id: "drama", label: "Drama" },
+      { id: "drama-tv", label: "Drama TV" },
+      { id: "foreign", label: "Foreign" },
+      { id: "auteur", label: "Auteur" },
+      { id: "pre1960", label: "Classics" }
     ];
   }
 }
@@ -185,7 +263,7 @@ async function loadCatalogs() {
     }
   }
   // Validate active tab still exists
-  if (!catalogs[activeTab]) activeTab = catalogManifest[0]?.id || 'films';
+  if (!catalogs[activeTab]) activeTab = catalogManifest[0]?.id || 'scifi';
 }
 
 function getEntry(id) { return (state[activeTab] && state[activeTab][id]) || {}; }
@@ -296,8 +374,8 @@ function buildTabs() {
 }
 
 function buildFilters() {
-  const isFilms = activeTab === 'films';
-  const isTV = activeTab === 'tv-limited' || activeTab === 'tv-ongoing';
+  const isFilms = !activeTab.endsWith('-tv') && activeTab !== 'scifi-tv';
+  const isTV = activeTab.endsWith('-tv') || activeTab === 'scifi-tv';
   const filters = [
     { key: 'all', label: 'All' },
     { key: 'priority-high', label: 'High priority' },
@@ -550,7 +628,7 @@ function setupModals() {
     try {
       const parsed = JSON.parse(input);
       let newState;
-      if (typeof parsed === 'object' && (parsed.films || parsed["tv-limited"] || parsed["tv-ongoing"])) {
+      if (typeof parsed === 'object' && (parsed.scifi || parsed["scifi-tv"] || parsed.films || parsed["tv-limited"] || parsed["tv-ongoing"])) {
         newState = parsed;
       } else {
         newState = { ...state, [activeTab]: parsed };
