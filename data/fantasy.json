@@ -1,0 +1,155 @@
+{
+  "type": "fantasy",
+  "title": "Fantasy",
+  "subtitle": "Tolkien-style epic and mythological retellings, plus the cousins.",
+  "sections": [
+    {
+      "name": "I. High Priority",
+      "desc": "Direct fits with your stated interests in Tolkien-epic and mythological retellings.",
+      "items": [
+        {
+          "title": "Excalibur", "year": 1981, "dir": "John Boorman", "country": "UK/USA", "runtime": "140 min",
+          "priority": "high", "tags": ["foundational"],
+          "whyPriority": "The definitive Arthurian retelling. Boorman's Wagnerian, Carl Orff-scored vision. Influence runs through Game of Thrones, Witcher, all serious modern fantasy. Adult, mythic, occasionally absurd in the best way.",
+          "pitch": "The full Arthurian cycle from Uther through Mordred. Helen Mirren as Morgana, Liam Neeson and Patrick Stewart in early roles. The visual palette is unforgettable.",
+          "critics": [{ "who": "Reception", "quote": "Critically polarizing on release; reputation has only grown. Now considered the foundational adult fantasy film." }]
+        },
+        {
+          "title": "The Green Knight", "year": 2021, "dir": "David Lowery", "country": "USA", "runtime": "130 min",
+          "priority": "high", "tags": ["modern"],
+          "whyPriority": "Modern Arthurian fantasy taken seriously. Adapted from Sir Gawain and the Green Knight. Dev Patel as Gawain. Slow, painterly, philosophically committed. Closest cousin to your Eggers/Witch lane in fantasy register.",
+          "pitch": "Gawain accepts a Christmas challenge from a green giant: strike me with my axe, and a year hence I will strike you back. The film is Gawain's journey to that meeting.",
+          "critics": [{ "who": "Critical consensus", "quote": "Widely cited among the best fantasy films of recent years. Manohla Dargis: highly positive." }]
+        },
+        {
+          "title": "Pan's Labyrinth", "year": 2006, "dir": "Guillermo del Toro", "country": "Mexico/Spain", "runtime": "118 min",
+          "priority": "high", "tags": ["modern","intl"],
+          "whyPriority": "Cross-listed from horror. Belongs here too because the fantasy framework is the heart. Post-Civil-War Spain + faun + faerie kingdom. Won 3 Oscars. Direct fit.",
+          "pitch": "1944 Spain. A young girl meets a faun who tells her she's a princess in exile. Or she's just a girl trying to survive her stepfather.",
+          "critics": [{ "who": "Academy Awards 2007", "quote": "Won 3 Oscars. Six total nominations." }]
+        },
+        {
+          "title": "Conan the Barbarian", "year": 1982, "dir": "John Milius", "country": "USA", "runtime": "129 min",
+          "priority": "high", "tags": ["foundational"],
+          "whyPriority": "Sword-and-sorcery treated with utter seriousness. Milius's mythic conception, Basil Poledouris score is one of the great film scores ever written. Schwarzenegger physical performance is genuinely iconic. Absurdly underrated as actual filmmaking.",
+          "pitch": "Robert E. Howard's barbarian seeks revenge against the cult that killed his parents. Basil Poledouris's score elevates it to mythic register.",
+          "critics": [{ "who": "Reception", "quote": "Critically dismissed at release; reputation has grown enormously. Now widely considered the great sword-and-sorcery film." }]
+        }
+      ]
+    },
+    {
+      "name": "II. Medium Priority",
+      "desc": "Strong probable fits.",
+      "items": [
+        {
+          "title": "The Princess Bride", "year": 1987, "dir": "Rob Reiner", "country": "USA", "runtime": "98 min",
+          "priority": "med", "tags": ["foundational"],
+          "whyPriority": "If you've somehow missed it. Adventure fantasy that's secretly comedy that's secretly meta-romance. William Goldman screenplay. Cary Elwes, Robin Wright, Mandy Patinkin's Inigo Montoya. Quotable.",
+          "pitch": "A grandfather reads his grandson a fairy tale. The fairy tale unfolds. The grandson is skeptical until he isn't.",
+          "critics": [{ "who": "Reception", "quote": "Initially modest performance; built into one of the most beloved fantasy films through cable and home video." }]
+        },
+        {
+          "title": "Willow", "year": 1988, "dir": "Ron Howard", "country": "USA", "runtime": "126 min",
+          "priority": "med", "tags": ["foundational"],
+          "whyPriority": "George Lucas story. Warwick Davis as a Nelwyn farmer who becomes the prophesied hero. Less polished than LOTR but with genuine sincerity that aged into respect.",
+          "pitch": "A Nelwyn farmer must protect a baby princess from an evil queen. ILM at peak practical-effects era.",
+          "critics": [{ "who": "Reappraisal", "quote": "Initially mixed; became a generational touchstone for many viewers." }]
+        },
+        {
+          "title": "Legend", "year": 1985, "dir": "Ridley Scott", "country": "UK/USA", "runtime": "94 min",
+          "priority": "med", "tags": ["foundational"],
+          "whyPriority": "Ridley Scott's pure-fantasy excursion. Tom Cruise, Mia Sara, Tim Curry as a horned demon. Watch the Director's Cut (113 min) with the Jerry Goldsmith score, not the theatrical with Tangerine Dream. Either way, visually mythic.",
+          "pitch": "A forest spirit must save the last unicorns and his beloved from the Lord of Darkness. Pure fairy-tale archetypes treated with seriousness.",
+          "critics": [{ "who": "Reappraisal", "quote": "Critical and commercial failure on release; cult resurrection. Director's Cut considered substantially superior." }]
+        },
+        {
+          "title": "Stardust", "year": 2007, "dir": "Matthew Vaughn", "country": "UK/USA", "runtime": "127 min",
+          "priority": "med", "tags": ["modern"],
+          "whyPriority": "Neil Gaiman adaptation. Romantic adventure fantasy that's smarter than it looks. Robert De Niro plays a sky pirate; that's not a typo.",
+          "pitch": "A young man crosses a wall into a magical kingdom to retrieve a fallen star and bring it back to his beloved. The star turns out to be a person.",
+          "critics": [{ "who": "Reception", "quote": "Strong cult following. Ran behind expectations theatrically; built into a beloved film through streaming." }]
+        },
+        {
+          "title": "The Last Unicorn", "year": 1982, "dir": "Jules Bass & Arthur Rankin Jr.", "country": "USA/Japan", "runtime": "92 min",
+          "priority": "med", "tags": ["under"],
+          "whyPriority": "Animated. Peter S. Beagle's novel. Adult fantasy in animated form, decades before Pixar. Voice cast includes Christopher Lee, Mia Farrow, Jeff Bridges.",
+          "pitch": "A unicorn discovers she may be the last and goes searching for the others.",
+          "critics": [{ "who": "Reception", "quote": "Cult devotion. Considered by many fantasy literature fans the best Beagle adaptation." }]
+        }
+      ]
+    },
+    {
+      "name": "III. Mythological Retellings",
+      "desc": "The Greek/Norse/Asian myth specifically.",
+      "items": [
+        {
+          "title": "Jason and the Argonauts", "year": 1963, "dir": "Don Chaffey", "country": "UK/USA", "runtime": "104 min",
+          "priority": "med", "tags": ["foundational"],
+          "whyPriority": "Ray Harryhausen's stop-motion masterpiece. The skeleton fight is one of cinema's great practical effects sequences. Old-school but ageless mythological adventure.",
+          "pitch": "Jason quests for the Golden Fleece, encountering harpies, hydras, talking statues, and the famous skeleton army.",
+          "critics": [{ "who": "Reception", "quote": "Tom Hanks called it 'the best movie ever made' in his Oscar acceptance speech. Harryhausen widely revered." }]
+        },
+        {
+          "title": "Clash of the Titans (1981)", "year": 1981, "dir": "Desmond Davis", "country": "UK/USA", "runtime": "118 min",
+          "priority": "med", "tags": ["foundational"],
+          "whyPriority": "Harryhausen's final film. Greek myth as adventure. Laurence Olivier as Zeus, Maggie Smith as Thetis. Watch the original; the 2010 remake is a different movie entirely.",
+          "pitch": "Perseus quests to save Andromeda from the Kraken. Medusa, the Stygian witches, Pegasus.",
+          "critics": [{ "who": "Reception", "quote": "Box office hit; critically warm. The 2010 remake widely considered inferior." }]
+        },
+        {
+          "title": "Troy", "year": 2004, "dir": "Wolfgang Petersen", "country": "USA", "runtime": "163 min",
+          "priority": "med", "tags": ["modern"],
+          "whyPriority": "Iliad without the gods. Brad Pitt's Achilles, Eric Bana's Hector. Watch the Director's Cut (196 min) — the theatrical lost the texture. Bana vs. Pitt duel is one of the best in modern cinema.",
+          "pitch": "The Trojan War as a humans-only story. Mortals making mortal decisions.",
+          "critics": [{ "who": "Reception", "quote": "Mixed critical reception. Director's Cut considered substantially better." }]
+        },
+        {
+          "title": "Beowulf", "year": 2007, "dir": "Robert Zemeckis", "country": "USA", "runtime": "115 min",
+          "priority": "med", "tags": ["modern"],
+          "whyPriority": "Neil Gaiman + Roger Avary screenplay. Motion-capture animated. The poem treated with full mythic weight. Crispin Glover as Grendel.",
+          "pitch": "Beowulf comes to a Danish hall to slay a monster. The mother of the monster has her own designs.",
+          "critics": [{ "who": "Reception", "quote": "Polarizing for the motion-capture aesthetic. Screenplay highly praised." }]
+        }
+      ]
+    },
+    {
+      "name": "IV. Tolkien Cousins",
+      "desc": "If you want more of LOTR's specific feeling.",
+      "items": [
+        { "title": "Dragonslayer", "year": 1981, "dir": "Matthew Robbins", "country": "USA/UK", "runtime": "110 min", "tags": ["foundational","under"],
+          "pitch": "Pre-CGI dragon film with effects that still look great. Sword-and-sorcery taken seriously. George R.R. Martin cited it as a direct influence on ASOIAF.",
+          "critics": [{ "who": "Reception", "quote": "Two Oscar nominations including Visual Effects. Critical/commercial underperformer; cult resurrection." }] },
+        { "title": "Ladyhawke", "year": 1985, "dir": "Richard Donner", "country": "USA", "runtime": "121 min", "tags": ["foundational","under"],
+          "pitch": "Romantic medieval fantasy. Pfeiffer and Hauer as cursed lovers — by day she's a hawk, by night he's a wolf. Goldsmith score, again.",
+          "critics": [{ "who": "Reception", "quote": "Mixed reviews on release; warm reappraisal. The Andrew Powell synth score is divisive." }] },
+        { "title": "Time Bandits", "year": 1981, "dir": "Terry Gilliam", "country": "UK", "runtime": "110 min", "tags": ["foundational"],
+          "pitch": "Gilliam's first masterpiece. A boy joins six dwarves time-traveling through history. Inventive, weird, ends darkly.",
+          "critics": [{ "who": "Reception", "quote": "Both a critical and commercial hit. Established Gilliam's career as solo director." }] },
+        { "title": "Krull", "year": 1983, "dir": "Peter Yates", "country": "UK/USA", "runtime": "121 min", "tags": ["under"],
+          "pitch": "Sci-fi/fantasy hybrid. A prince must rescue his bride from the Beast. James Horner score. Cult standing.",
+          "critics": [{ "who": "Reception", "quote": "Box office failure; built cult following on cable." }] },
+        { "title": "Watership Down", "year": 1978, "dir": "Martin Rosen", "country": "UK", "runtime": "91 min", "tags": ["foundational"],
+          "pitch": "Animated rabbit epic. Adams's novel adapted with full seriousness — religious mythology, war, exodus, all rabbits. Famously not for children despite the medium.",
+          "critics": [{ "who": "Reception", "quote": "Critically beloved. The 'children's animation that traumatized a generation.'" }] }
+      ]
+    },
+    {
+      "name": "V. Already Watched / Cross-Listed",
+      "desc": "Listed for completeness.",
+      "items": [
+        { "title": "The Lord of the Rings: The Fellowship of the Ring", "year": 2001, "dir": "Peter Jackson", "country": "USA/NZ", "runtime": "228 min · Extended", "tags": ["foundational"],
+          "pitch": "You've seen the extended editions. Pre-listed.",
+          "critics": [] },
+        { "title": "The Lord of the Rings: The Two Towers", "year": 2002, "dir": "Peter Jackson", "country": "USA/NZ", "runtime": "235 min · Extended", "tags": ["foundational"],
+          "pitch": "You've seen the extended editions. Pre-listed.",
+          "critics": [] },
+        { "title": "The Lord of the Rings: The Return of the King", "year": 2003, "dir": "Peter Jackson", "country": "USA/NZ", "runtime": "263 min · Extended", "tags": ["foundational"],
+          "pitch": "You've seen the extended editions. Pre-listed.",
+          "critics": [] },
+        { "title": "The Hobbit trilogy", "year": 2012, "dir": "Peter Jackson", "country": "USA/NZ", "runtime": "~9 hrs total", "tags": ["modern"],
+          "pitch": "You've seen all three. Pre-listed.",
+          "critics": [] }
+      ]
+    }
+  ]
+}

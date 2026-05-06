@@ -4,8 +4,14 @@
     { "id": "tv-limited", "label": "Limited" },
     { "id": "tv-ongoing", "label": "Ongoing" },
     { "id": "espionage", "label": "Spy" },
+    { "id": "crime", "label": "Crime" },
     { "id": "horror", "label": "Horror" },
+    { "id": "fantasy", "label": "Fantasy" },
     { "id": "heist", "label": "Heist" },
-    { "id": "comedy", "label": "Comedy" }
+    { "id": "comedy", "label": "Comedy" },
+    { "id": "drama", "label": "Drama" },
+    { "id": "foreign", "label": "Foreign" },
+    { "id": "auteur", "label": "Auteur" },
+    { "id": "pre1960", "label": "Classics" }
   ]
 }

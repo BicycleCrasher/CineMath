@@ -1,0 +1,240 @@
+{
+  "type": "foreign",
+  "title": "Foreign",
+  "subtitle": "World cinema survey — French, Italian, Japanese, Scandinavian, Latin American, Korean, Eastern European starting points.",
+  "sections": [
+    {
+      "name": "I. French",
+      "desc": "From Renoir through New Wave to modern.",
+      "items": [
+        {
+          "title": "The Rules of the Game", "year": 1939, "dir": "Jean Renoir", "country": "France", "runtime": "110 min",
+          "priority": "high", "tags": ["foundational","intl"],
+          "whyPriority": "Routinely listed among the greatest films ever made. Sight & Sound poll mainstay. Country house weekend among the French aristocracy on the eve of WWII. Devastating despite the comedy.",
+          "pitch": "Aristocrats and servants gather at a country estate. Affairs, hunts, secrets, deaths. Pre-war French society laid bare.",
+          "critics": [{ "who": "Sight & Sound 2022", "quote": "#11 in Greatest Films of All Time poll." }]
+        },
+        {
+          "title": "The 400 Blows", "year": 1959, "dir": "François Truffaut", "country": "France", "runtime": "99 min",
+          "priority": "high", "tags": ["foundational","intl"],
+          "whyPriority": "French New Wave's most accessible founding text. Truffaut's autobiographical first feature. The final freeze-frame is among cinema's greatest endings.",
+          "pitch": "A neglected Parisian boy of about 12 drifts toward delinquency. Truffaut's debut.",
+          "critics": [{ "who": "Cannes 1959", "quote": "Won Best Director." }]
+        },
+        {
+          "title": "Breathless", "year": 1960, "dir": "Jean-Luc Godard", "country": "France", "runtime": "90 min",
+          "priority": "high", "tags": ["foundational","intl"],
+          "whyPriority": "The other founding New Wave text. Jump cuts, handheld, jazz. The film that showed cinema didn't have to follow the rules.",
+          "pitch": "A small-time French criminal kills a cop and tries to convince his American girlfriend to flee with him.",
+          "critics": [{ "who": "Reception", "quote": "Berlin Silver Bear. Routinely cited as one of the most influential films ever made." }]
+        },
+        {
+          "title": "A Prophet", "year": 2009, "dir": "Jacques Audiard", "country": "France", "runtime": "155 min",
+          "priority": "high", "tags": ["modern","intl"],
+          "whyPriority": "Cross-listed from heist. Modern French masterpiece.",
+          "pitch": "Six years in a French prison. Crime as education.",
+          "critics": [{ "who": "Cannes 2009", "quote": "Grand Prix." }]
+        },
+        {
+          "title": "Le Samouraï", "year": 1967, "dir": "Jean-Pierre Melville", "country": "France/Italy", "runtime": "105 min",
+          "priority": "high", "tags": ["foundational","intl"],
+          "whyPriority": "Alain Delon as a near-silent hitman. Minimalism, ritual, blue-grey Paris. Influence on Tarantino, Mann, Refn directly stated.",
+          "pitch": "A hitman kills a club owner. Witnesses give conflicting descriptions. The police and his employers begin to close in.",
+          "critics": [{ "who": "Reception", "quote": "Routinely cited among the greatest crime films. Sight & Sound canonical." }]
+        }
+      ]
+    },
+    {
+      "name": "II. Italian",
+      "desc": "Neo-realism through Fellini through modern.",
+      "items": [
+        {
+          "title": "Bicycle Thieves", "year": 1948, "dir": "Vittorio De Sica", "country": "Italy", "runtime": "89 min",
+          "priority": "high", "tags": ["foundational","intl"],
+          "whyPriority": "Italian neo-realism's masterpiece. Postwar Rome. A father and son search for a stolen bicycle. Devastating in its smallness.",
+          "pitch": "A man finally lands a job that requires a bicycle. His bicycle is stolen on the first day. He and his son search the city.",
+          "critics": [{ "who": "Reception", "quote": "Routinely cited among the greatest films ever made. Sight & Sound canonical." }]
+        },
+        {
+          "title": "8½", "year": 1963, "dir": "Federico Fellini", "country": "Italy", "runtime": "138 min",
+          "priority": "high", "tags": ["foundational","intl"],
+          "whyPriority": "Cross-listed with Fellini auteur. The film about being unable to make a film. Mastroianni as Fellini's stand-in. Routinely top-10 of all time.",
+          "pitch": "A film director suffers creative block while preparing his next picture. His memories, dreams, and women converge.",
+          "critics": [{ "who": "Sight & Sound 2022", "quote": "Top 10 in critics' polls historically." }]
+        },
+        {
+          "title": "L'Avventura", "year": 1960, "dir": "Michelangelo Antonioni", "country": "Italy/France", "runtime": "143 min",
+          "priority": "med", "tags": ["foundational","intl"],
+          "whyPriority": "A woman disappears on a Mediterranean island. Her boyfriend and best friend search but the search becomes something else. The film that proved cinema didn't need narrative resolution.",
+          "pitch": "A yacht trip. A woman disappears. Nobody finds her. Or seems particularly to mind.",
+          "critics": [{ "who": "Reception", "quote": "Booed at Cannes; immediately rehabilitated. Sight & Sound canonical." }]
+        },
+        {
+          "title": "Cinema Paradiso", "year": 1988, "dir": "Giuseppe Tornatore", "country": "Italy/France", "runtime": "124 min",
+          "priority": "med", "tags": ["foundational","intl"],
+          "whyPriority": "A boy and a small-town projectionist. Adult/young versions. The 'kissing scene' montage is one of cinema's beloved moments. Unabashedly emotional.",
+          "pitch": "A successful filmmaker returns home to Sicily upon hearing of an old friend's death.",
+          "critics": [{ "who": "Academy Awards 1990", "quote": "Won Best Foreign Language Film." }]
+        },
+        {
+          "title": "Il Postino", "year": 1994, "dir": "Michael Radford", "country": "Italy/France/Belgium", "runtime": "108 min",
+          "priority": "med", "tags": ["modern","intl"],
+          "pitch": "A postman in 1950s Italy delivers mail to exiled Pablo Neruda. They become friends. Massimo Troisi died days after filming.",
+          "critics": [{ "who": "Academy Awards 1996", "quote": "Five Oscar nominations including Best Picture." }]
+        }
+      ]
+    },
+    {
+      "name": "III. Japanese",
+      "desc": "Cross-listed heavily with Kurosawa auteur tracker.",
+      "items": [
+        {
+          "title": "Tokyo Story", "year": 1953, "dir": "Yasujirō Ozu", "country": "Japan", "runtime": "136 min",
+          "priority": "high", "tags": ["foundational","intl"],
+          "whyPriority": "Often named among the greatest films ever made. Aging parents visit their adult children in Tokyo. The children are too busy to give them time. Quiet, devastating.",
+          "pitch": "An elderly couple travel from rural Japan to Tokyo to see their grown children, who don't have time for them.",
+          "critics": [{ "who": "Sight & Sound 2012", "quote": "Voted #1 by directors in the Greatest Films of All Time poll." }]
+        },
+        {
+          "title": "Seven Samurai", "year": 1954, "dir": "Akira Kurosawa", "country": "Japan", "runtime": "207 min",
+          "priority": "high", "tags": ["foundational","intl"],
+          "whyPriority": "Kurosawa's biggest film. The template for every 'team gathered to defend a town' story since. Cross-listed with Kurosawa auteur.",
+          "pitch": "A 16th-century Japanese village hires seven masterless samurai to defend them against bandits.",
+          "critics": [{ "who": "Reception", "quote": "Routinely top of Japanese-cinema and world-cinema lists." }]
+        },
+        {
+          "title": "Rashomon", "year": 1950, "dir": "Akira Kurosawa", "country": "Japan", "runtime": "88 min",
+          "priority": "high", "tags": ["foundational","intl"],
+          "pitch": "Cross-listed with Kurosawa auteur. The film that introduced Japanese cinema to the West.",
+          "critics": [{ "who": "Reception", "quote": "Won Golden Lion at Venice. Honorary Oscar for Best Foreign Language Film." }]
+        },
+        {
+          "title": "Ugetsu", "year": 1953, "dir": "Kenji Mizoguchi", "country": "Japan", "runtime": "94 min",
+          "priority": "med", "tags": ["foundational","intl"],
+          "whyPriority": "Mizoguchi's ghost story. 16th century, two peasants pursue ambition during civil war. Visually transcendent.",
+          "pitch": "Two peasants leave their village during a war for fortune and military glory. Their wives suffer the consequences.",
+          "critics": [{ "who": "Reception", "quote": "Won Silver Lion at Venice. Mizoguchi widely considered one of cinema's greatest stylists." }]
+        },
+        {
+          "title": "Spirited Away", "year": 2001, "dir": "Hayao Miyazaki", "country": "Japan", "runtime": "125 min",
+          "priority": "med", "tags": ["modern","intl"],
+          "whyPriority": "You said no anime, but Miyazaki occupies different territory than what most people mean by anime — and Spirited Away regularly tops greatest-of-the-21st-century lists. Worth flagging in case the word 'anime' was the issue, not the work.",
+          "pitch": "A 10-year-old girl wanders into a spirit world. To save her parents, she must work in a bathhouse for the gods.",
+          "critics": [{ "who": "Academy Awards 2003", "quote": "Won Best Animated Feature. Routinely top of best-of-21st-century polls." }]
+        }
+      ]
+    },
+    {
+      "name": "IV. Scandinavian",
+      "desc": "Bergman + von Trier + others.",
+      "items": [
+        {
+          "title": "The Seventh Seal", "year": 1957, "dir": "Ingmar Bergman", "country": "Sweden", "runtime": "96 min",
+          "priority": "high", "tags": ["foundational","intl"],
+          "whyPriority": "Cross-listed with Bergman auteur. The chess game with Death. Among the most parodied images in cinema, but the film itself is profound.",
+          "pitch": "A knight returns from the Crusades to plague-ravaged Sweden and plays chess with Death.",
+          "critics": [{ "who": "Cannes 1957", "quote": "Special Jury Prize." }]
+        },
+        {
+          "title": "Wild Strawberries", "year": 1957, "dir": "Ingmar Bergman", "country": "Sweden", "runtime": "91 min",
+          "priority": "high", "tags": ["foundational","intl"],
+          "whyPriority": "Cross-listed with Bergman auteur. An old professor confronts his life. Bergman's most accessible.",
+          "pitch": "An aging Swedish professor drives to receive an honorary degree. The journey becomes a confrontation with his past.",
+          "critics": [{ "who": "Reception", "quote": "Berlin Golden Bear. Routinely cited as Bergman's most accessible great film." }]
+        },
+        {
+          "title": "Songs from the Second Floor", "year": 2000, "dir": "Roy Andersson", "country": "Sweden/Denmark", "runtime": "98 min",
+          "priority": "med", "tags": ["modern","intl"],
+          "whyPriority": "Andersson's deadpan absurdist style. Tableaux of human desolation that are also somehow funny. Like nothing else in cinema.",
+          "pitch": "A loosely connected series of static-camera scenes about modern alienation, played as dark comedy.",
+          "critics": [{ "who": "Cannes 2000", "quote": "Jury Prize. Andersson's international breakthrough." }]
+        },
+        {
+          "title": "The Hunt", "year": 2012, "dir": "Thomas Vinterberg", "country": "Denmark", "runtime": "115 min",
+          "priority": "med", "tags": ["modern","intl"],
+          "whyPriority": "Mads Mikkelsen as a kindergarten teacher falsely accused of abuse. Slow-build mob horror in a small town. Devastating.",
+          "pitch": "A village rallies against a man one of its children has accused. The child cannot recant; the village will not listen.",
+          "critics": [{ "who": "Cannes 2012", "quote": "Mikkelsen won Best Actor." }]
+        }
+      ]
+    },
+    {
+      "name": "V. Latin American",
+      "desc": "The new wave that produced Cuarón, del Toro, Iñárritu.",
+      "items": [
+        {
+          "title": "City of God", "year": 2002, "dir": "Fernando Meirelles & Kátia Lund", "country": "Brazil", "runtime": "130 min",
+          "priority": "high", "tags": ["modern","intl"],
+          "whyPriority": "Brazilian masterpiece. Decades of life in a Rio favela. Kinetic, structurally inventive, devastating.",
+          "pitch": "A young man tries to escape gang life in 1970s Rio while his peers fall deeper in.",
+          "critics": [{ "who": "Academy Awards 2004", "quote": "Four Oscar nominations including Best Director, Best Adapted Screenplay." }]
+        },
+        {
+          "title": "Y Tu Mamá También", "year": 2001, "dir": "Alfonso Cuarón", "country": "Mexico", "runtime": "106 min",
+          "priority": "high", "tags": ["modern","intl"],
+          "whyPriority": "Pre-Hollywood Cuarón. Two teenage boys take a road trip with an older woman. Mexico as character. The narration is one of the great choices in 21st-century cinema.",
+          "pitch": "Two upper-middle-class Mexican teenagers and a woman in her late 20s take a beach road trip. Mexico is dying around them.",
+          "critics": [{ "who": "Reception", "quote": "Two Oscar nominations including Best Original Screenplay." }]
+        },
+        {
+          "title": "The Motorcycle Diaries", "year": 2004, "dir": "Walter Salles", "country": "Argentina/USA", "runtime": "126 min",
+          "priority": "med", "tags": ["modern","intl"],
+          "pitch": "Young Che Guevara's pre-revolutionary South American road trip. Gael García Bernal.",
+          "critics": [{ "who": "Academy Awards 2005", "quote": "Won Best Original Song. Two nominations." }]
+        },
+        {
+          "title": "Roma", "year": 2018, "dir": "Alfonso Cuarón", "country": "Mexico", "runtime": "135 min",
+          "priority": "high", "tags": ["modern","intl"],
+          "whyPriority": "Cuarón's autobiographical black-and-white masterpiece. A family's domestic worker in 1970s Mexico City. Won Best Foreign Language Film + Best Director + Best Cinematography.",
+          "pitch": "A year in the life of a middle-class Mexican family and their indigenous housekeeper.",
+          "critics": [{ "who": "Academy Awards 2019", "quote": "Won 3 Oscars. Ten total nominations including Best Picture." }]
+        }
+      ]
+    },
+    {
+      "name": "VI. Korean Modern",
+      "desc": "The most consistent national cinema of the 21st century.",
+      "items": [
+        {
+          "title": "Parasite", "year": 2019, "dir": "Bong Joon-ho", "country": "South Korea", "runtime": "132 min",
+          "priority": "high", "tags": ["modern","intl"],
+          "whyPriority": "Won Best Picture. The first non-English-language film to do so. Class-warfare thriller that pivots multiple times. If you've somehow missed it.",
+          "pitch": "A poor family schemes their way into employment with a wealthy family. Things escalate.",
+          "critics": [{ "who": "Academy Awards 2020", "quote": "Won 4 Oscars including Best Picture." }]
+        },
+        {
+          "title": "Memories of Murder", "year": 2003, "dir": "Bong Joon-ho", "country": "South Korea", "runtime": "131 min",
+          "priority": "high", "tags": ["modern","intl"],
+          "pitch": "Cross-listed from crime. Bong's pre-Parasite masterpiece.",
+          "critics": [] }
+      ]
+    },
+    {
+      "name": "VII. Eastern European",
+      "desc": "Tarkovsky beyond Solaris/Stalker, Kieślowski, Tarr.",
+      "items": [
+        {
+          "title": "Andrei Rublev", "year": 1966, "dir": "Andrei Tarkovsky", "country": "USSR", "runtime": "205 min",
+          "priority": "high", "tags": ["foundational","intl"],
+          "whyPriority": "Cross-listed with Tarkovsky auteur. Three-and-a-half hours about a 15th-century Russian icon painter. Spiritual, brutal, beautiful. Tarkovsky's masterpiece.",
+          "pitch": "Episodes from the life of medieval icon painter Andrei Rublev. Russian feudalism, faith, art.",
+          "critics": [{ "who": "Reception", "quote": "Routinely listed among the greatest films ever made. Sight & Sound canonical." }]
+        },
+        {
+          "title": "Three Colors trilogy: Blue, White, Red", "year": 1993, "dir": "Krzysztof Kieślowski", "country": "France/Poland", "runtime": "~290 min total",
+          "priority": "high", "tags": ["foundational","intl"],
+          "whyPriority": "Polish-French. Three films loosely on liberty, equality, fraternity. Three Colors: Red is generally considered the masterpiece. Watch in order or just watch Red.",
+          "pitch": "Three thematically connected films about loss, justice, and connection in 1990s Europe.",
+          "critics": [{ "who": "Reception", "quote": "Red received 3 Oscar nominations including Best Director — extraordinary for a foreign-language film." }]
+        },
+        {
+          "title": "Sátántangó", "year": 1994, "dir": "Béla Tarr", "country": "Hungary", "runtime": "439 min",
+          "priority": "med", "tags": ["under","intl"],
+          "whyPriority": "Seven-and-a-half hours, black-and-white, Hungarian collective farm in collapse. Tarr's most extreme film. Either a mountain to climb or genuinely transcendent.",
+          "pitch": "Late communism. A failed collective farm. The arrival of a charismatic con man.",
+          "critics": [{ "who": "Reception", "quote": "Routinely cited as a high point of slow cinema. Susan Sontag wrote that she'd be willing to see it once a year for the rest of her life." }]
+        }
+      ]
+    }
+  ]
+}
