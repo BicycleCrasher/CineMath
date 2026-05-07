@@ -102,6 +102,28 @@ h1 em { font-style: italic; color: var(--accent); }
 }
 .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #1a1612; font-weight: 600; }
 
+.categories {
+  position: sticky; top: 47px; z-index: 51;
+  background: var(--bg-elev); border-bottom: 1px solid var(--rule);
+  padding: 10px 12px; display: flex; gap: 6px;
+  overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+}
+.categories::-webkit-scrollbar { display: none; }
+.categories:empty { display: none; }
+.categories.hidden { display: none; }
+.category-btn {
+  flex-shrink: 0; background: transparent;
+  border: 1px solid var(--accent-dim); color: var(--accent);
+  padding: 6px 12px; border-radius: 999px;
+  font-family: 'Helvetica Neue', sans-serif;
+  font-size: 11px; letter-spacing: 0.08em;
+  text-transform: uppercase; cursor: pointer;
+  transition: all 0.2s ease; touch-action: manipulation;
+  font-weight: 500;
+}
+.category-btn.active { background: var(--love); border-color: var(--love); color: #1a1612; font-weight: 600; }
+.categories + .filters { top: 95px; }
+
 main { padding: 8px 0 80px; }
 .section-header {
   padding: 28px 20px 8px;

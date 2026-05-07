@@ -1,4 +1,4 @@
-const CACHE_NAME = 'scifi-tracker-v6';
+const CACHE_NAME = 'scifi-tracker-v7';
 const ASSETS = [
   './',
   './index.html',
@@ -21,6 +21,7 @@ const ASSETS = [
   './data/heist.json',
   './data/comedy.json',
   './data/comedy-tv.json',
+  './data/british-comedy.json',
   './data/drama.json',
   './data/drama-tv.json',
   './data/foreign.json',

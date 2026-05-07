@@ -128,6 +128,18 @@ const SEED_STATE = {
     "veep-2012": { "status": "queued" },
     "damned-2016": { "status": "queued" }
   },
+  "british-comedy": {
+    "qi-2003": { "status": "watched", "rating": "loved", "notes": "Watched every episode ever. Loved every minute." },
+    "8-out-of-10-cats-does-countdown-2012": { "status": "watched", "rating": "loved" },
+    "would-i-lie-to-you-2007": { "status": "watched", "rating": "loved" },
+    "taskmaster-2015": { "status": "watched", "rating": "loved" },
+    "vicious-2013": { "status": "watched", "rating": "loved" },
+    "pointless-2009": { "status": "watched", "rating": "loved" },
+    "only-connect-2008": { "status": "watched", "rating": "loved" },
+    "university-challenge-1962": { "status": "watched", "rating": "loved" },
+    "big-fat-quiz-of-the-year-2004": { "status": "watched", "rating": "loved" },
+    "8-out-of-10-cats-2005": { "status": "watched", "rating": "mixed", "notes": "Doesn't land for me." }
+  },
   "drama": {},
   "drama-tv": {
     "the-west-wing-1999": { "status": "watched", "rating": "loved" },
@@ -150,6 +162,86 @@ let catalogs = {};
 let catalogManifest = [];
 let activeTab = 'scifi';
 let activeFilter = 'all';
+
+// === Category filter (in-memory only; never persisted to localStorage) ===
+const activeCategoryByTab = {};        // { tabId: 'panel' | 'all' }
+const categoryClearTimers = {};        // { tabId: timeoutId } — 30s "left tab" timer
+let appHiddenClearTimer = null;        // 5min "app backgrounded" timer
+const TAB_LEAVE_GRACE_MS = 30 * 1000;
+const APP_HIDDEN_GRACE_MS = 5 * 60 * 1000;
+const CATEGORY_LABELS = {
+  // Pretty labels for category keys; defaults to title-cased key if absent
+  'panel': 'Panel',
+  'sitcom': 'Sitcom',
+  'game': 'Game Show',
+  'news-comedy': 'News Comedy',
+  'specials': 'Specials',
+  'sorkin': 'Sorkin',
+  'hbo-prestige': 'HBO Prestige',
+  'amc': 'AMC',
+  'british-cozy': 'British Cozy',
+  'nordic-noir': 'Nordic Noir',
+  'procedural': 'Procedural',
+  'international': 'International',
+  'cold-war': 'Cold War',
+  'modern': 'Modern Era',
+  'historical': 'Historical',
+  'limited': 'Limited',
+  'ongoing': 'Ongoing',
+  'already-watched': 'Already Watched',
+  'recommended': 'Recommended',
+  'mainstream': 'Mainstream',
+  'arthouse': 'Arthouse',
+  'cerebral': 'Cerebral',
+  'apocalyptic': 'Apocalyptic',
+  'foundational': 'Foundational',
+  'twist': 'Twist',
+  'con-artist': 'Con Artist',
+  'courtroom': 'Courtroom',
+  'ensemble': 'Ensemble',
+  'dark': 'Dark',
+  'classic': 'Classic',
+  'streaming': 'Streaming',
+  'network': 'Network',
+  'coens': 'Coens',
+  'nolan': 'Nolan',
+  'kubrick': 'Kubrick',
+  'scorsese': 'Scorsese',
+  'whedon': 'Whedon',
+  'fuller': 'Fuller'
+};
+function prettyCategory(key) {
+  if (CATEGORY_LABELS[key]) return CATEGORY_LABELS[key];
+  return key.split('-').map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(' ');
+}
+function getActiveCategory(tab) {
+  return activeCategoryByTab[tab] || 'all';
+}
+function setActiveCategory(tab, cat) {
+  if (cat === 'all') delete activeCategoryByTab[tab];
+  else activeCategoryByTab[tab] = cat;
+}
+function scheduleTabCategoryClear(tab) {
+  // 30-second timer: if user doesn't return to this tab within 30s, clear its category filter
+  cancelTabCategoryClear(tab);
+  categoryClearTimers[tab] = setTimeout(() => {
+    delete activeCategoryByTab[tab];
+    delete categoryClearTimers[tab];
+  }, TAB_LEAVE_GRACE_MS);
+}
+function cancelTabCategoryClear(tab) {
+  if (categoryClearTimers[tab]) {
+    clearTimeout(categoryClearTimers[tab]);
+    delete categoryClearTimers[tab];
+  }
+}
+function clearAllCategoryMemory() {
+  for (const k of Object.keys(activeCategoryByTab)) delete activeCategoryByTab[k];
+  for (const k of Object.keys(categoryClearTimers)) {
+    clearTimeout(categoryClearTimers[k]);
+    delete categoryClearTimers[k];
+  }
+}
 const expandedIds = new Set();
 
 function normalizeId(id) {
@@ -232,6 +324,7 @@ async function loadCatalogManifest() {
       { id: "heist", label: "Heist" },
       { id: "comedy", label: "Comedy" },
       { id: "comedy-tv", label: "Comedy TV" },
+      { id: "british-comedy", label: "British Comedy" },
       { id: "drama", label: "Drama" },
       { id: "drama-tv", label: "Drama TV" },
       { id: "foreign", label: "Foreign" },
@@ -252,6 +345,7 @@ async function loadCatalogs() {
         section.items.forEach(item => {
           item.section = section.name;
           item.sectionDesc = section.desc;
+          item.categories = section.categories || [];
           item.order = order++;
           item.id = `${item.title.replace(/[^a-z0-9]+/gi, '-').toLowerCase().replace(/^-|-$/g, '')}-${item.year}`;
           cat.items.push(item);
@@ -373,6 +467,51 @@ function buildTabs() {
   });
 }
 
+function buildCategoryFilters() {
+  const container = document.getElementById('categories');
+  if (!container) return;
+  if (!catalogs[activeTab]) { container.innerHTML = ''; return; }
+
+  // Collect unique categories across all sections of this catalog, preserving section order
+  const seen = new Set();
+  const categories = [];
+  catalogs[activeTab].sections.forEach(section => {
+    (section.categories || []).forEach(cat => {
+      if (!seen.has(cat)) { seen.add(cat); categories.push(cat); }
+    });
+  });
+
+  // Hide entire bar if catalog has 0 or 1 distinct categories
+  if (categories.length < 2) {
+    container.innerHTML = '';
+    container.classList.add('hidden');
+    return;
+  }
+  container.classList.remove('hidden');
+
+  const active = getActiveCategory(activeTab);
+  const pills = [{ key: 'all', label: 'All' }].concat(
+    categories.map(k => ({ key: k, label: prettyCategory(k) }))
+  );
+  container.innerHTML = pills.map(p =>
+    `<button class="category-btn ${active === p.key ? 'active' : ''}" data-category="${p.key}">${p.label}</button>`
+  ).join('');
+  container.querySelectorAll('.category-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      container.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      setActiveCategory(activeTab, btn.dataset.category);
+      render();
+    });
+  });
+}
+
+function itemMatchesCategory(item) {
+  const active = getActiveCategory(activeTab);
+  if (active === 'all') return true;
+  return Array.isArray(item.categories) && item.categories.includes(active);
+}
+
 function buildFilters() {
   const isFilms = !activeTab.endsWith('-tv') && activeTab !== 'scifi-tv';
   const isTV = activeTab.endsWith('-tv') || activeTab === 'scifi-tv';
@@ -453,7 +592,7 @@ function render() {
   catalog.items.forEach(item => {
     if (item.section !== lastSection) {
       const sectionItems = catalog.items.filter(f => f.section === item.section);
-      const visibleCount = sectionItems.filter(itemMatchesFilter).length;
+      const visibleCount = sectionItems.filter(it => itemMatchesFilter(it) && itemMatchesCategory(it)).length;
       if (visibleCount > 0) {
         const sectionEl = document.createElement('div');
         sectionEl.className = 'section-header';
@@ -469,6 +608,7 @@ function render() {
       lastSection = item.section;
     }
     if (!itemMatchesFilter(item)) return;
+    if (!itemMatchesCategory(item)) return;
 
     const status = getStatus(item.id);
     const rating = getRating(item.id);
@@ -576,11 +716,20 @@ function render() {
 
 function switchTab(tab) {
   if (!catalogs[tab]) return;
+  const previousTab = activeTab;
   activeTab = tab;
   activeFilter = 'all';
   expandedIds.clear();
   saveActiveTab();
+  // Category-filter memory management:
+  // When leaving a tab with a non-default category set, start a 30s clear timer.
+  // When entering a tab, cancel any pending clear timer for it (we're back).
+  if (previousTab && previousTab !== tab && getActiveCategory(previousTab) !== 'all') {
+    scheduleTabCategoryClear(previousTab);
+  }
+  cancelTabCategoryClear(tab);
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  buildCategoryFilters();
   buildFilters();
   render();
   // Scroll active tab into view
@@ -649,6 +798,30 @@ function setupModals() {
   await loadCatalogs();
   buildTabs();
   setupModals();
+  buildCategoryFilters();
   buildFilters();
   render();
+
+  // App-backgrounded handling: clear ALL category memory after 5 minutes hidden.
+  // If the app becomes visible again before 5 minutes, cancel the clear.
+  // This ONLY clears the category sort filter — never ratings, status, or any other state.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      if (appHiddenClearTimer) clearTimeout(appHiddenClearTimer);
+      appHiddenClearTimer = setTimeout(() => {
+        clearAllCategoryMemory();
+        appHiddenClearTimer = null;
+        // Refresh the category pill row in case the user returns
+        if (typeof buildCategoryFilters === 'function') {
+          buildCategoryFilters();
+          render();
+        }
+      }, APP_HIDDEN_GRACE_MS);
+    } else if (document.visibilityState === 'visible') {
+      if (appHiddenClearTimer) {
+        clearTimeout(appHiddenClearTimer);
+        appHiddenClearTimer = null;
+      }
+    }
+  });
 })();
