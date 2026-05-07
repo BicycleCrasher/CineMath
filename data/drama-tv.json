@@ -7,160 +7,577 @@
       "name": "I. Already Loved",
       "desc": "Your established drama TV pillars.",
       "items": [
-        { "title": "The West Wing", "year": 1999, "dir": "Aaron Sorkin", "country": "USA", "runtime": "7 seasons · 156 episodes", "seasons": "S1-S4 are Sorkin (loved); S5-S7 are post-Sorkin under John Wells", "tags": ["foundational"],
-          "pitch": "The Bartlet White House. Sorkin's masterpiece — workplace ensemble plus political idealism plus dialogue at his peak.",
-          "critics": [{ "who": "Reception", "quote": "Won 26 Emmys including four consecutive Outstanding Drama Series for S1-S4. Routinely cited among the greatest American TV series." }] },
-        { "title": "The Newsroom", "year": 2012, "dir": "Aaron Sorkin", "country": "USA", "runtime": "3 seasons · 25 episodes", "seasons": "All 3 complete (ended 2014)", "tags": ["modern"],
+        {
+          "title": "The West Wing",
+          "year": 1999,
+          "dir": "Aaron Sorkin",
+          "country": "USA",
+          "runtime": "7 seasons \u00b7 156 episodes",
+          "seasons": "S1-S4 are Sorkin (loved); S5-S7 are post-Sorkin under John Wells",
+          "tags": [
+            "foundational"
+          ],
+          "pitch": "The Bartlet White House. Sorkin's masterpiece \u2014 workplace ensemble plus political idealism plus dialogue at his peak.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Won 26 Emmys including four consecutive Outstanding Drama Series for S1-S4. Routinely cited among the greatest American TV series."
+            }
+          ]
+        },
+        {
+          "title": "The Newsroom",
+          "year": 2012,
+          "dir": "Aaron Sorkin",
+          "country": "USA",
+          "runtime": "3 seasons \u00b7 25 episodes",
+          "seasons": "All 3 complete (ended 2014)",
+          "tags": [
+            "modern"
+          ],
           "pitch": "Sorkin's HBO show. Behind-the-scenes of a cable news anchor and his team trying to do a better newscast. The opening monologue is famous.",
-          "critics": [{ "who": "Reception", "quote": "Polarizing critically — strong defenders and strong detractors. Won three Emmys." }] }
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Polarizing critically \u2014 strong defenders and strong detractors. Won three Emmys."
+            }
+          ]
+        }
       ]
     },
     {
-      "name": "II. High Priority — HBO Crime-Drama Pillar",
+      "name": "II. High Priority \u2014 HBO Crime-Drama Pillar",
       "desc": "You loved Sopranos territory and True Detective S1. Direct fits.",
       "items": [
-        { "title": "Mad Men", "year": 2007, "dir": "Matthew Weiner", "country": "USA", "runtime": "7 seasons · 92 episodes", "seasons": "All 7 (ended 2015)",
-          "priority": "high", "tags": ["foundational"],
+        {
+          "title": "Mad Men",
+          "year": 2007,
+          "dir": "Matthew Weiner",
+          "country": "USA",
+          "runtime": "7 seasons \u00b7 92 episodes",
+          "seasons": "All 7 (ended 2015)",
+          "priority": "high",
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "AMC's prestige peak. 1960s NYC ad agency. Slow-burn character drama at its most rigorous. Routinely top-three on every great-American-TV list.",
           "pitch": "Don Draper. Sterling Cooper. The decade that changed America rendered through a Madison Avenue ad firm.",
-          "critics": [{ "who": "Reception", "quote": "Four consecutive Outstanding Drama Emmys. Generally considered the AMC-era prestige drama equal to any HBO production." }] },
-        { "title": "Breaking Bad", "year": 2008, "dir": "Vince Gilligan", "country": "USA", "runtime": "5 seasons · 62 episodes", "seasons": "All 5 (ended 2013)",
-          "priority": "high", "tags": ["foundational"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Four consecutive Outstanding Drama Emmys. Generally considered the AMC-era prestige drama equal to any HBO production."
+            }
+          ]
+        },
+        {
+          "title": "Breaking Bad",
+          "year": 2008,
+          "dir": "Vince Gilligan",
+          "country": "USA",
+          "runtime": "5 seasons \u00b7 62 episodes",
+          "seasons": "All 5 (ended 2013)",
+          "priority": "high",
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "If you haven't seen this, it's the highest-priority drama TV recommendation possible. Tighter structure than nearly any TV ever made. The 'Ozymandias' episode is among the great hours of television.",
           "pitch": "Albuquerque chemistry teacher diagnosed with cancer cooks meth to provide for his family.",
-          "critics": [{ "who": "Reception", "quote": "Holds the highest aggregate critical score of any TV series in modern review history." }] },
-        { "title": "Six Feet Under", "year": 2001, "dir": "Alan Ball", "country": "USA", "runtime": "5 seasons · 63 episodes", "seasons": "All 5 (ended 2005)",
-          "priority": "high", "tags": ["foundational"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Holds the highest aggregate critical score of any TV series in modern review history."
+            }
+          ]
+        },
+        {
+          "title": "Six Feet Under",
+          "year": 2001,
+          "dir": "Alan Ball",
+          "country": "USA",
+          "runtime": "5 seasons \u00b7 63 episodes",
+          "seasons": "All 5 (ended 2005)",
+          "priority": "high",
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "HBO's other turn-of-the-century masterpiece alongside Sopranos. Family-run funeral home in LA. The series finale is widely considered the greatest finale in television.",
           "pitch": "The Fishers run a Los Angeles funeral home. Each episode begins with a death.",
-          "critics": [{ "who": "Reception", "quote": "Nine Emmys. Series finale 'Everyone's Waiting' tops most-greatest-finale lists." }] },
-        { "title": "Halt and Catch Fire", "year": 2014, "dir": "Christopher Cantwell & Christopher C. Rogers", "country": "USA", "runtime": "4 seasons · 40 episodes", "seasons": "All 4 (ended 2017)",
-          "priority": "high", "tags": ["modern","under"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Nine Emmys. Series finale 'Everyone's Waiting' tops most-greatest-finale lists."
+            }
+          ]
+        },
+        {
+          "title": "Halt and Catch Fire",
+          "year": 2014,
+          "dir": "Christopher Cantwell & Christopher C. Rogers",
+          "country": "USA",
+          "runtime": "4 seasons \u00b7 40 episodes",
+          "seasons": "All 4 (ended 2017)",
+          "priority": "high",
+          "tags": [
+            "modern",
+            "under"
+          ],
           "whyPriority": "AMC, ended cleanly, badly underwatched at the time. Four characters in tech from 1983 PC clones to 1990s internet. The S2-S4 stretch is one of the great character-arc trajectories in TV.",
           "pitch": "1980s Texas. A salesman wants to clone the IBM PC. Across four seasons the show follows him and his collaborators through Silicon Valley's birth.",
-          "critics": [{ "who": "Reception", "quote": "Critical darling that never found audience. Routinely cited as the most underwatched great show of its era." }] },
-        { "title": "Rectify", "year": 2013, "dir": "Ray McKinnon", "country": "USA", "runtime": "4 seasons · 30 episodes", "seasons": "All 4 (ended 2016)",
-          "priority": "high", "tags": ["modern","under"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Critical darling that never found audience. Routinely cited as the most underwatched great show of its era."
+            }
+          ]
+        },
+        {
+          "title": "Rectify",
+          "year": 2013,
+          "dir": "Ray McKinnon",
+          "country": "USA",
+          "runtime": "4 seasons \u00b7 30 episodes",
+          "seasons": "All 4 (ended 2016)",
+          "priority": "high",
+          "tags": [
+            "modern",
+            "under"
+          ],
           "whyPriority": "SundanceTV. Almost no one saw it. Routinely listed by serious TV critics among the greatest American dramas. Slow, devastating, beautiful.",
           "pitch": "A man released from death row after 19 years tries to return to small-town Georgia life.",
-          "critics": [{ "who": "Reception", "quote": "Metacritic among the highest-rated dramas in the site's history. Audience never matched the reviews." }] }
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Metacritic among the highest-rated dramas in the site's history. Audience never matched the reviews."
+            }
+          ]
+        }
       ]
     },
     {
       "name": "III. Already Watched",
       "desc": "On record from your viewing history.",
       "items": [
-        { "title": "Studio 60 on the Sunset Strip", "year": 2006, "dir": "Aaron Sorkin", "country": "USA", "runtime": "1 season · 22 episodes", "seasons": "Cancelled after S1", "tags": ["under"],
+        {
+          "title": "Studio 60 on the Sunset Strip",
+          "year": 2006,
+          "dir": "Aaron Sorkin",
+          "country": "USA",
+          "runtime": "1 season \u00b7 22 episodes",
+          "seasons": "Cancelled after S1",
+          "tags": [
+            "under"
+          ],
           "pitch": "Sorkin's failed follow-up. Cross-listed in Comedy TV.",
-          "critics": [] },
-        { "title": "Nurse Jackie", "year": 2009, "dir": "Liz Brixius, Linda Wallem, Evan Dunsky", "country": "USA", "runtime": "7 seasons · 80 episodes", "seasons": "All 7 (ended 2015)", "tags": ["modern"],
+          "critics": [],
+          "contentType": "tv-prestige"
+        },
+        {
+          "title": "Nurse Jackie",
+          "year": 2009,
+          "dir": "Liz Brixius, Linda Wallem, Evan Dunsky",
+          "country": "USA",
+          "runtime": "7 seasons \u00b7 80 episodes",
+          "seasons": "All 7 (ended 2015)",
+          "tags": [
+            "modern"
+          ],
           "pitch": "Edie Falco as a NYC ER nurse with an opioid addiction. Showtime half-hour drama with comedic texture.",
-          "critics": [{ "who": "Reception", "quote": "Falco won the Emmy for Lead Actress in a Comedy in 2010 — controversial because the show is not a comedy." }] },
-        { "title": "The Riches", "year": 2007, "dir": "Dmitry Lipkin", "country": "USA", "runtime": "2 seasons · 20 episodes", "seasons": "Cancelled by 2008 writers strike", "tags": ["modern","under"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Falco won the Emmy for Lead Actress in a Comedy in 2010 \u2014 controversial because the show is not a comedy."
+            }
+          ]
+        },
+        {
+          "title": "The Riches",
+          "year": 2007,
+          "dir": "Dmitry Lipkin",
+          "country": "USA",
+          "runtime": "2 seasons \u00b7 20 episodes",
+          "seasons": "Cancelled by 2008 writers strike",
+          "tags": [
+            "modern",
+            "under"
+          ],
           "pitch": "Eddie Izzard and Minnie Driver as Irish Travelers who steal the identities of a wealthy family. Tragic that it was cancelled mid-arc.",
-          "critics": [{ "who": "Reception", "quote": "Critical favorite. Izzard's first major dramatic role." }] },
-        { "title": "American Gods", "year": 2017, "dir": "Bryan Fuller, Michael Green", "country": "USA", "runtime": "3 seasons · 26 episodes", "seasons": "Cancelled mid-arc; Gaiman novel ending never reached", "tags": ["modern"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Critical favorite. Izzard's first major dramatic role."
+            }
+          ]
+        },
+        {
+          "title": "American Gods",
+          "year": 2017,
+          "dir": "Bryan Fuller, Michael Green",
+          "country": "USA",
+          "runtime": "3 seasons \u00b7 26 episodes",
+          "seasons": "Cancelled mid-arc; Gaiman novel ending never reached",
+          "tags": [
+            "modern"
+          ],
           "pitch": "Neil Gaiman adaptation. Bryan Fuller's first two seasons are visually astonishing; S3 collapsed after Fuller departure.",
-          "critics": [{ "who": "Reception", "quote": "S1 critically acclaimed; quality declined with each showrunner change." }] },
-        { "title": "House MD", "year": 2004, "dir": "David Shore", "country": "USA", "runtime": "8 seasons · 177 episodes", "seasons": "All 8 (ended 2012)", "tags": ["foundational"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "S1 critically acclaimed; quality declined with each showrunner change."
+            }
+          ]
+        },
+        {
+          "title": "House MD",
+          "year": 2004,
+          "dir": "David Shore",
+          "country": "USA",
+          "runtime": "8 seasons \u00b7 177 episodes",
+          "seasons": "All 8 (ended 2012)",
+          "tags": [
+            "foundational"
+          ],
           "pitch": "Sherlock Holmes as a diagnostic medicine doctor. Hugh Laurie as an American with a cane and a limp. Long-running procedural with character depth.",
-          "critics": [{ "who": "Reception", "quote": "Most-watched TV show in the world during peak years (2008). Laurie won six SAG/Globe awards combined." }] }
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Most-watched TV show in the world during peak years (2008). Laurie won six SAG/Globe awards combined."
+            }
+          ]
+        }
       ]
     },
     {
       "name": "IV. Queued (Per Your Request)",
       "desc": "You added these to queue.",
       "items": [
-        { "title": "The Boys", "year": 2019, "dir": "Eric Kripke", "country": "USA", "runtime": "4 seasons · 32 episodes", "seasons": "S5 will be final", "tags": ["modern"],
+        {
+          "title": "The Boys",
+          "year": 2019,
+          "dir": "Eric Kripke",
+          "country": "USA",
+          "runtime": "4 seasons \u00b7 32 episodes",
+          "seasons": "S5 will be final",
+          "tags": [
+            "modern"
+          ],
           "pitch": "Amazon. Garth Ennis adaptation. Superheroes are awful corporate-owned monsters; ordinary people fight back.",
-          "critics": [{ "who": "Reception", "quote": "Multiple Emmy nominations. Considered the prestige-superhero antithesis to MCU." }] },
-        { "title": "Landman", "year": 2024, "dir": "Taylor Sheridan", "country": "USA", "runtime": "Multi-season", "seasons": "S1 aired 2024-25; S2 in production", "tags": ["modern"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Multiple Emmy nominations. Considered the prestige-superhero antithesis to MCU."
+            }
+          ]
+        },
+        {
+          "title": "Landman",
+          "year": 2024,
+          "dir": "Taylor Sheridan",
+          "country": "USA",
+          "runtime": "Multi-season",
+          "seasons": "S1 aired 2024-25; S2 in production",
+          "tags": [
+            "modern"
+          ],
           "pitch": "Sheridan's Texas oil show. Billy Bob Thornton anchors. Sheridan does Texas-elite-and-blue-collar like nobody else.",
-          "critics": [{ "who": "Reception", "quote": "Largest cable drama premiere of 2024. Critically warm." }] }
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Largest cable drama premiere of 2024. Critically warm."
+            }
+          ]
+        }
       ]
     },
     {
-      "name": "V. High Priority — Recommended (Ended)",
+      "name": "V. High Priority \u2014 Recommended (Ended)",
       "desc": "Strongest probable fits given your taste signal.",
       "items": [
-        { "title": "Deadwood", "year": 2004, "dir": "David Milch", "country": "USA", "runtime": "3 seasons · 36 episodes + 2019 film", "seasons": "Cancelled mid-arc 2006; closing film 2019",
-          "priority": "high", "tags": ["foundational"],
+        {
+          "title": "Deadwood",
+          "year": 2004,
+          "dir": "David Milch",
+          "country": "USA",
+          "runtime": "3 seasons \u00b7 36 episodes + 2019 film",
+          "seasons": "Cancelled mid-arc 2006; closing film 2019",
+          "priority": "high",
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "HBO Western. David Milch's Shakespearean-prose dialogue. Ian McShane's Al Swearengen is among the great TV characters.",
           "pitch": "1870s Dakota mining town. Lawless. Profane. Characters argue ethics and economics in language that reads like Elizabethan blank verse.",
-          "critics": [{ "who": "Reception", "quote": "Widely cited among the greatest American TV series. Eight Emmys." }] },
-        { "title": "Friday Night Lights", "year": 2006, "dir": "Peter Berg & Jason Katims", "country": "USA", "runtime": "5 seasons · 76 episodes", "seasons": "All 5 (ended 2011)",
-          "priority": "high", "tags": ["foundational"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Widely cited among the greatest American TV series. Eight Emmys."
+            }
+          ]
+        },
+        {
+          "title": "Friday Night Lights",
+          "year": 2006,
+          "dir": "Peter Berg & Jason Katims",
+          "country": "USA",
+          "runtime": "5 seasons \u00b7 76 episodes",
+          "seasons": "All 5 (ended 2011)",
+          "priority": "high",
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "Texas high school football show that's actually about a marriage and a town. If you're a Texan watching shows about Texas you should not skip this.",
           "pitch": "Coach Eric Taylor and his wife Tami in Dillon, Texas. Football is the entry point; marriage and community are the substance.",
-          "critics": [{ "who": "Reception", "quote": "Critical darling never matched by audience. Final season won the Peabody." }] },
-        { "title": "Show Me a Hero", "year": 2015, "dir": "David Simon", "country": "USA", "runtime": "1 season · 6 episodes", "seasons": "Limited series",
-          "priority": "high", "tags": ["modern","under"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Critical darling never matched by audience. Final season won the Peabody."
+            }
+          ]
+        },
+        {
+          "title": "Show Me a Hero",
+          "year": 2015,
+          "dir": "David Simon",
+          "country": "USA",
+          "runtime": "1 season \u00b7 6 episodes",
+          "seasons": "Limited series",
+          "priority": "high",
+          "tags": [
+            "modern",
+            "under"
+          ],
           "whyPriority": "David Simon (The Wire) on 1980s Yonkers housing desegregation. Six episodes. Oscar Isaac as the mayor. Direct fit for All The President's Men + West Wing political-process intersection.",
           "pitch": "1987 Yonkers. A 28-year-old mayor inherits a federal court order to build public housing in white neighborhoods. The political costs play out across his term.",
-          "critics": [{ "who": "Reception", "quote": "Critical praise from the start. Routinely cited as among the strongest miniseries of its decade." }] },
-        { "title": "Treme", "year": 2010, "dir": "David Simon & Eric Overmyer", "country": "USA", "runtime": "4 seasons · 36 episodes", "seasons": "All 4 (ended 2013)",
-          "priority": "med", "tags": ["modern","under"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Critical praise from the start. Routinely cited as among the strongest miniseries of its decade."
+            }
+          ]
+        },
+        {
+          "title": "Treme",
+          "year": 2010,
+          "dir": "David Simon & Eric Overmyer",
+          "country": "USA",
+          "runtime": "4 seasons \u00b7 36 episodes",
+          "seasons": "All 4 (ended 2013)",
+          "priority": "med",
+          "tags": [
+            "modern",
+            "under"
+          ],
           "whyPriority": "Simon's post-Katrina New Orleans show. Slower than The Wire, music-saturated, a meditation rather than a procedural.",
           "pitch": "New Orleans residents rebuild after Hurricane Katrina across four years. Music is the through-line.",
-          "critics": [{ "who": "Reception", "quote": "Critical favorite. Audience smaller than The Wire's. Beloved by Simon devotees." }] },
-        { "title": "Boardwalk Empire", "year": 2010, "dir": "Terence Winter", "country": "USA", "runtime": "5 seasons · 56 episodes", "seasons": "All 5 (ended 2014)",
-          "priority": "med", "tags": ["foundational"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Critical favorite. Audience smaller than The Wire's. Beloved by Simon devotees."
+            }
+          ]
+        },
+        {
+          "title": "Boardwalk Empire",
+          "year": 2010,
+          "dir": "Terence Winter",
+          "country": "USA",
+          "runtime": "5 seasons \u00b7 56 episodes",
+          "seasons": "All 5 (ended 2014)",
+          "priority": "med",
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "HBO Prohibition-era Atlantic City crime drama. Steve Buscemi anchors. Considered the strongest tier-2 HBO drama (just below Sopranos/Wire).",
           "pitch": "Nucky Thompson runs Atlantic City during Prohibition. Real historical figures (Capone, Luciano, Rothstein) cycle through.",
-          "critics": [{ "who": "Reception", "quote": "Twenty Emmys across run. Pilot directed by Scorsese remains a benchmark." }] }
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Twenty Emmys across run. Pilot directed by Scorsese remains a benchmark."
+            }
+          ]
+        }
       ]
     },
     {
       "name": "VI. Medium Priority",
       "desc": "Strong probable fits.",
       "items": [
-        { "title": "Succession", "year": 2018, "dir": "Jesse Armstrong", "country": "USA", "runtime": "4 seasons · 39 episodes", "seasons": "All 4 (ended 2023)",
-          "priority": "med", "tags": ["modern"],
+        {
+          "title": "Succession",
+          "year": 2018,
+          "dir": "Jesse Armstrong",
+          "country": "USA",
+          "runtime": "4 seasons \u00b7 39 episodes",
+          "seasons": "All 4 (ended 2023)",
+          "priority": "med",
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "Logan Roy's media empire and his children jockeying to inherit it. Black-comic but structurally a tragedy. Won Outstanding Drama three times.",
           "pitch": "Aging media mogul + four awful children + an empire too big to share. Shakespearean.",
-          "critics": [{ "who": "Reception", "quote": "Routinely cited among the greatest TV dramas of the streaming era." }] },
-        { "title": "Ozark", "year": 2017, "dir": "Bill Dubuque", "country": "USA", "runtime": "4 seasons · 44 episodes", "seasons": "All 4 (ended 2022)",
-          "priority": "med", "tags": ["modern"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Routinely cited among the greatest TV dramas of the streaming era."
+            }
+          ]
+        },
+        {
+          "title": "Ozark",
+          "year": 2017,
+          "dir": "Bill Dubuque",
+          "country": "USA",
+          "runtime": "4 seasons \u00b7 44 episodes",
+          "seasons": "All 4 (ended 2022)",
+          "priority": "med",
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "Often described as Breaking Bad with more institutional dread. Marty Byrde launders cartel money in the Missouri Ozarks. Laura Linney's Wendy is the real center.",
           "pitch": "Chicago financial advisor relocates his family to the Ozarks to launder money for a Mexican cartel.",
-          "critics": [{ "who": "Reception", "quote": "Multiple Emmy wins for Bateman and Garner." }] },
-        { "title": "The Americans", "year": 2013, "dir": "Joe Weisberg", "country": "USA", "runtime": "6 seasons · 75 episodes", "seasons": "All 6 (ended 2018)",
-          "priority": "high", "tags": ["modern"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Multiple Emmy wins for Bateman and Garner."
+            }
+          ]
+        },
+        {
+          "title": "The Americans",
+          "year": 2013,
+          "dir": "Joe Weisberg",
+          "country": "USA",
+          "runtime": "6 seasons \u00b7 75 episodes",
+          "seasons": "All 6 (ended 2018)",
+          "priority": "high",
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "Cross-listed in Spy TV. The marriage drama is what makes it a Drama; the Cold War espionage is texture. If Sopranos appeals, this is the next-tier prestige-drama-with-genre-engine.",
           "pitch": "Two KGB officers planted as a married couple in 1980s Washington DC suburbs.",
-          "critics": [{ "who": "Reception", "quote": "Final season widely considered one of the best closing seasons in TV." }] },
-        { "title": "Better Things", "year": 2016, "dir": "Pamela Adlon & Louis CK (S1-2)", "country": "USA", "runtime": "5 seasons · 52 episodes", "seasons": "All 5 (ended 2022)", "tags": ["modern","under"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Final season widely considered one of the best closing seasons in TV."
+            }
+          ]
+        },
+        {
+          "title": "Better Things",
+          "year": 2016,
+          "dir": "Pamela Adlon & Louis CK (S1-2)",
+          "country": "USA",
+          "runtime": "5 seasons \u00b7 52 episodes",
+          "seasons": "All 5 (ended 2022)",
+          "tags": [
+            "modern",
+            "under"
+          ],
           "priority": "med",
           "whyPriority": "Pamela Adlon as a single mother and working actress in LA. Categorized as comedy by Emmys but is dramatic in everything but length. Adlon took over as showrunner after CK's removal in 2017.",
           "pitch": "Sam Fox raises three daughters alone. Half-hour. Looser structure than most prestige drama; episodes feel like life rather than story.",
-          "critics": [{ "who": "Reception", "quote": "Critically beloved. Adlon won Peabody and was four-time Emmy nominee." }] },
-        { "title": "Mr. Robot", "year": 2015, "dir": "Sam Esmail", "country": "USA", "runtime": "4 seasons · 45 episodes", "seasons": "All 4 (ended 2019)",
-          "priority": "med", "tags": ["modern"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Critically beloved. Adlon won Peabody and was four-time Emmy nominee."
+            }
+          ]
+        },
+        {
+          "title": "Mr. Robot",
+          "year": 2015,
+          "dir": "Sam Esmail",
+          "country": "USA",
+          "runtime": "4 seasons \u00b7 45 episodes",
+          "seasons": "All 4 (ended 2019)",
+          "priority": "med",
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "Cross-listed in Sci-Fi TV (you may already have it tracked there). Hacker drama, structurally inventive, ended cleanly. Drama-first, sci-fi-adjacent.",
-          "pitch": "NYC cybersecurity engineer / vigilante hacker plans to take down the largest corporation in the world." },
-        { "title": "Justified", "year": 2010, "dir": "Graham Yost", "country": "USA", "runtime": "6 seasons · 78 episodes", "seasons": "All 6 (ended 2015)",
-          "priority": "med", "tags": ["modern"],
+          "pitch": "NYC cybersecurity engineer / vigilante hacker plans to take down the largest corporation in the world."
+        },
+        {
+          "title": "Justified",
+          "year": 2010,
+          "dir": "Graham Yost",
+          "country": "USA",
+          "runtime": "6 seasons \u00b7 78 episodes",
+          "seasons": "All 6 (ended 2015)",
+          "priority": "med",
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "Elmore Leonard adaptation. Timothy Olyphant as a US Marshal in eastern Kentucky. Smart procedural-and-character hybrid.",
           "pitch": "Raylan Givens. Cowboy boots. Backwoods crime. Rocking dialogue.",
-          "critics": [{ "who": "Reception", "quote": "Critical favorite throughout run. Followed by Justified: City Primeval (2023, limited)." }] }
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Critical favorite throughout run. Followed by Justified: City Primeval (2023, limited)."
+            }
+          ]
+        }
       ]
     },
     {
       "name": "VII. Worth Considering",
       "desc": "More variable but worth flagging.",
       "items": [
-        { "title": "Fargo (TV)", "year": 2014, "dir": "Noah Hawley", "country": "USA", "runtime": "5 seasons · 51 episodes (anthology)", "seasons": "Each season standalone; S1, S2, S5 considered strongest", "tags": ["modern"],
+        {
+          "title": "Fargo (TV)",
+          "year": 2014,
+          "dir": "Noah Hawley",
+          "country": "USA",
+          "runtime": "5 seasons \u00b7 51 episodes (anthology)",
+          "seasons": "Each season standalone; S1, S2, S5 considered strongest",
+          "tags": [
+            "modern"
+          ],
           "pitch": "Cross-listed in Crime TV. Noah Hawley's Coen-toned anthology. Each season a self-contained Coens-flavored crime story.",
-          "critics": [{ "who": "Reception", "quote": "Won Outstanding Limited Series twice. Considered the Coens' best TV adaptation." }] },
-        { "title": "True Detective S1", "year": 2014, "dir": "Nic Pizzolatto", "country": "USA", "runtime": "1 season · 8 episodes", "seasons": "S1 only — your love. S2-S4 anthology, varying quality.", "tags": ["foundational"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Won Outstanding Limited Series twice. Considered the Coens' best TV adaptation."
+            }
+          ]
+        },
+        {
+          "title": "True Detective S1",
+          "year": 2014,
+          "dir": "Nic Pizzolatto",
+          "country": "USA",
+          "runtime": "1 season \u00b7 8 episodes",
+          "seasons": "S1 only \u2014 your love. S2-S4 anthology, varying quality.",
+          "tags": [
+            "foundational"
+          ],
           "pitch": "Cross-listed in Crime TV. Marked Loved per your record.",
-          "critics": [] },
-        { "title": "The Wire", "year": 2002, "dir": "David Simon", "country": "USA", "runtime": "5 seasons · 60 episodes", "seasons": "S1 in progress. S2 Polarizing, S3-S4 transcendent, S5 weakest.", "tags": ["foundational"],
+          "critics": []
+        },
+        {
+          "title": "The Wire",
+          "year": 2002,
+          "dir": "David Simon",
+          "country": "USA",
+          "runtime": "5 seasons \u00b7 60 episodes",
+          "seasons": "S1 in progress. S2 Polarizing, S3-S4 transcendent, S5 weakest.",
+          "tags": [
+            "foundational"
+          ],
           "pitch": "Cross-listed in Crime TV. Currently watching.",
-          "critics": [] },
-        { "title": "The Sopranos", "year": 1999, "dir": "David Chase", "country": "USA", "runtime": "6 seasons · 86 episodes", "seasons": "Queued. All 6 + 2021 prequel film.", "tags": ["foundational"],
+          "critics": []
+        },
+        {
+          "title": "The Sopranos",
+          "year": 1999,
+          "dir": "David Chase",
+          "country": "USA",
+          "runtime": "6 seasons \u00b7 86 episodes",
+          "seasons": "Queued. All 6 + 2021 prequel film.",
+          "tags": [
+            "foundational"
+          ],
           "pitch": "Cross-listed in Crime TV. Queued.",
-          "critics": [] }
+          "critics": []
+        }
       ]
     }
   ]
