@@ -10,6 +10,55 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.6.0 — 2026-05-07
+**Service worker cache:** `scifi-tracker-v17` → `v18`
+
+### Added — Stage 5a: TMDB ID enrichment foundation
+
+This release builds the foundation for upcoming features (recommendation engine, gap analysis) by ensuring every catalog item has a stable TMDB ID. Streaming-provider badges now load instantly on item expand instead of doing a search step every time.
+
+#### Worker upgrades (v4)
+- `tmdbLookup` now accepts an optional `tmdbId` parameter. When provided, fetches that ID directly from TMDB without a search step. Eliminates ambiguity for items already enriched.
+- `/metadata/lookup` and `/metadata/bulk` endpoints accept `tmdbId` in their inputs.
+- TMDB results now include `recommendations` and `similar` arrays (top 10 each) — preparation for Stage 5e (recommendation engine) and Stage 5f (gap analysis).
+- Cache keys now use `tmdb-{id}` prefix when looking up by ID, separate from title-based keys.
+
+#### Catalog enrichment storage (WatchTrack)
+- New localStorage namespace: `watchtrack-catalog-enrichment`
+- Maps `item.id` → `{ tmdbId, type, year, posterPath, numberOfEpisodes, genres, lastEnriched }`
+- Loaded at app bootstrap, stays in memory
+- Auto-populated on first streaming-badge load for each item (lazy enrichment continues to work)
+
+#### Pre-enrich catalog button
+- New **"Pre-enrich catalog"** button in Settings → Plex Integration
+- Sweeps every catalog item, batches lookups to Worker (20 per call)
+- Skips items enriched within last 30 days (idempotent / re-runnable)
+- Progress modal shows live position
+- Result modal shows: total items, processed this run, found on TMDB, errors
+- Recommended one-time run after deploying v5.6 — subsequent runs are quick
+- Roughly 30-90 seconds for 650 items
+
+#### `tmdbLookupById` client helper
+- Direct lookup by tmdbId, bypasses search step on Worker
+- Used by streaming-provider rendering when enrichment index already has the tmdbId
+
+### Pending for Stage 5b
+- Persistent orphan promotions via Cloudflare KV + GitHub patch generation (hybrid model approved)
+
+### Pending for Stage 5c
+- TWA APK packaging via PWABuilder
+
+### Pending for Stage 5d
+- Multi-select tag operations (#5)
+- Year-in-review / monthly export (#6)
+
+### Pending for Stage 5e + 5f
+- Recommendation engine ("what to watch tonight" + "more like X") drawing on `recommendations` and `similar` TMDB data
+- Catalog gap analysis surfacing items similar to your loved set that aren't yet catalogued
+- Promote-to-catalog workflow on suggestions (overlap with 5b)
+
+---
+
 ## 5.5.0 — 2026-05-07
 **Service worker cache:** `scifi-tracker-v16` → `v17`
 

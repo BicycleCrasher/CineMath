@@ -944,6 +944,110 @@ function streamingSearchUrl(providerName, title) {
   return `https://www.google.com/search?q=${encodeURIComponent(providerName + ' ' + title)}`;
 }
 
+// =====================================================================
+// Catalog enrichment index — maps catalog item.id → { tmdbId, type, lastEnriched }
+// Stored in localStorage for instant streaming-badge resolution.
+// =====================================================================
+const CATALOG_ENRICHMENT_KEY = 'watchtrack-catalog-enrichment';
+
+function loadCatalogEnrichment() {
+  try {
+    const raw = localStorage.getItem(CATALOG_ENRICHMENT_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+function saveCatalogEnrichment(idx) {
+  try {
+    localStorage.setItem(CATALOG_ENRICHMENT_KEY, JSON.stringify(idx));
+  } catch (e) {
+    console.warn('Catalog enrichment save failed:', e);
+  }
+}
+let catalogEnrichmentIdx = {};   // populated on bootstrap
+
+function getEnrichmentForItem(itemId) {
+  return catalogEnrichmentIdx[itemId] || null;
+}
+function setEnrichmentForItem(itemId, payload) {
+  catalogEnrichmentIdx[itemId] = { ...payload, lastEnriched: Date.now() };
+  saveCatalogEnrichment(catalogEnrichmentIdx);
+}
+
+// Run a full enrichment pass over every loaded catalog item.
+// Calls Worker /metadata/bulk in batches of 20.
+// Skips items already enriched within last 30 days.
+async function enrichEntireCatalog(progressCb) {
+  if (!isWebhookConfigured()) throw new Error('Configure Plex Webhook Bridge in Settings first.');
+  const tvTabs = new Set(['comedy-tv','crime-tv','spy-tv','drama-tv','horror-tv','fantasy-tv','scifi-tv','cons-courtroom-tv','british-comedy']);
+  const STALE_MS = 30 * 24 * 60 * 60 * 1000;
+
+  const lookups = [];
+  for (const tabId in catalogs) {
+    if (tabId === 'watchlist') continue;
+    const cat = catalogs[tabId];
+    const isTvTab = tvTabs.has(tabId);
+    cat.items.forEach(item => {
+      const existing = getEnrichmentForItem(item.id);
+      if (existing && existing.lastEnriched && (Date.now() - existing.lastEnriched < STALE_MS) && existing.tmdbId) return;
+      lookups.push({
+        itemId: item.id,
+        title: item.title,
+        year: item.year || null,
+        type: isTvTab ? 'tv' : 'movie',
+      });
+    });
+  }
+
+  const total = lookups.length;
+  if (total === 0) return { processed: 0, found: 0, errors: 0, total: 0, skipped: 0 };
+
+  const BATCH = 20;
+  const url = getWebhookUrl();
+  const secret = getWebhookSecret();
+  let processed = 0, found = 0, errors = 0;
+  for (let i = 0; i < lookups.length; i += BATCH) {
+    const slice = lookups.slice(i, i + BATCH);
+    if (progressCb) progressCb(i, total);
+    try {
+      const resp = await fetch(`${url}/metadata/bulk`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          secret,
+          items: slice.map(s => ({ title: s.title, year: s.year, type: s.type })),
+        }),
+      });
+      if (!resp.ok) { errors += slice.length; continue; }
+      const data = await resp.json();
+      // Map results back to itemIds (in same order as slice)
+      (data.results || []).forEach((r, idx) => {
+        processed++;
+        const lookup = slice[idx];
+        if (r.result && r.result.found) {
+          setEnrichmentForItem(lookup.itemId, {
+            tmdbId: r.result.tmdbId,
+            type: lookup.type,
+            year: r.result.year,
+            posterPath: r.result.posterPath,
+            numberOfEpisodes: r.result.numberOfEpisodes,
+            genres: r.result.genres,
+          });
+          found++;
+        }
+      });
+      errors += data.errors || 0;
+    } catch {
+      errors += slice.length;
+    }
+  }
+  if (progressCb) progressCb(total, total);
+  return {
+    processed, found, errors,
+    total: Object.keys(catalogEnrichmentIdx).length,
+    skipped: 0,
+  };
+}
+
 // Lazy-load streaming providers for an item card and render them.
 async function loadStreamingProviders(itemEl, item) {
   const slot = itemEl.querySelector('.streaming-providers');
@@ -954,19 +1058,56 @@ async function loadStreamingProviders(itemEl, item) {
     slot.innerHTML = '';
     return;
   }
-  // TV vs movie type
   const tvTabs = ['comedy-tv','crime-tv','spy-tv','drama-tv','horror-tv','fantasy-tv','scifi-tv','cons-courtroom-tv','british-comedy'];
   const sourceTab = item._watchlist_source_tab || activeTab;
   const type = tvTabs.includes(sourceTab) ? 'tv' : 'movie';
-  // Render placeholder
   slot.innerHTML = '<div class="streaming-loading">Looking up streaming availability...</div>';
-  // Look up
-  const data = await tmdbLookup(item.title, item.year, type);
+  // Use enrichment tmdbId if available — saves a search step
+  const enrich = getEnrichmentForItem(item.id);
+  const data = enrich && enrich.tmdbId
+    ? await tmdbLookupById(enrich.tmdbId, type)
+    : await tmdbLookup(item.title, item.year, type);
   if (!data || !data.found) {
     slot.innerHTML = '';
     return;
   }
+  // Cache the tmdbId on the enrichment index if not already there
+  if (!enrich || !enrich.tmdbId) {
+    setEnrichmentForItem(item.id, {
+      tmdbId: data.tmdbId, type, year: data.year,
+      posterPath: data.posterPath, numberOfEpisodes: data.numberOfEpisodes,
+      genres: data.genres,
+    });
+  }
   renderStreamingProviders(slot, data, item.title);
+}
+
+// Direct lookup by tmdbId — bypasses search step on Worker
+async function tmdbLookupById(tmdbId, type) {
+  if (!isWebhookConfigured()) return null;
+  // Cache key
+  const cacheKey = `${TMDB_CACHE_PREFIX}${type}-id:${tmdbId}`;
+  try {
+    const raw = localStorage.getItem(cacheKey);
+    if (raw) {
+      const obj = JSON.parse(raw);
+      if (obj.cachedAt && (Date.now() - obj.cachedAt < TMDB_CACHE_TTL_MS)) return obj.data;
+    }
+  } catch {}
+  const url = getWebhookUrl();
+  const secret = getWebhookSecret();
+  const params = new URLSearchParams({ secret, tmdbId, type });
+  // Title is required by /lookup endpoint pre-v4 worker; pass dummy to satisfy old workers
+  params.set('title', 'lookup');
+  try {
+    const resp = await fetch(`${url}/metadata/lookup?${params}`);
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify({ cachedAt: Date.now(), data }));
+    } catch {}
+    return data;
+  } catch { return null; }
 }
 
 function renderStreamingProviders(slot, tmdbData, title) {
@@ -2113,6 +2254,42 @@ function setupModals() {
     document.getElementById('bulk-sync-result-modal').classList.remove('active');
   });
 
+  document.getElementById('catalog-enrich').addEventListener('click', async () => {
+    if (!isWebhookConfigured()) {
+      alert('Configure Plex Webhook Bridge first.');
+      return;
+    }
+    if (!confirm('Pre-enrich entire catalog with TMDB IDs and metadata?\n\nThis will:\n• Look up every catalog item on TMDB\n• Cache the results for 30 days\n• Make streaming-provider badges appear instantly when you open items\n\nSkips items already enriched in the last 30 days. Safe to run multiple times.')) return;
+
+    const progressModal = document.getElementById('enrichment-progress-modal');
+    const statusEl = document.getElementById('enrichment-status');
+    const barEl = document.getElementById('enrichment-bar');
+    progressModal.classList.add('active');
+    document.getElementById('settings-modal').classList.remove('active');
+    try {
+      const report = await enrichEntireCatalog((n, total) => {
+        statusEl.textContent = `Looking up TMDB metadata... ${n} / ${total}`;
+        barEl.style.width = `${total ? Math.round((n / total) * 100) : 0}%`;
+      });
+      progressModal.classList.remove('active');
+      const html = `
+        <div class="stat-line"><span>Total catalog items</span><strong>${report.total}</strong></div>
+        <div class="stat-line"><span>Processed this run</span><strong>${report.processed}</strong></div>
+        <div class="stat-line"><span>Found on TMDB</span><strong>${report.found}</strong></div>
+        <div class="stat-line"><span>Errors</span><strong>${report.errors}</strong></div>
+        <p class="settings-help" style="margin-top:12px">Catalog enrichment cached locally. Streaming-provider badges will now load instantly on item expand. Re-run after 30 days or when adding new catalog items to refresh.</p>
+      `;
+      document.getElementById('enrichment-result-content').innerHTML = html;
+      document.getElementById('enrichment-result-modal').classList.add('active');
+    } catch (e) {
+      progressModal.classList.remove('active');
+      alert('Enrichment failed: ' + e.message);
+    }
+  });
+  document.getElementById('enrichment-result-close').addEventListener('click', () => {
+    document.getElementById('enrichment-result-modal').classList.remove('active');
+  });
+
   document.getElementById('webhook-test').addEventListener('click', async () => {
     const url = document.getElementById('webhook-url').value.trim().replace(/\/$/, '');
     const secret = document.getElementById('webhook-secret').value.trim();
@@ -2842,6 +3019,7 @@ function triageAction(act) {
   loadActiveTab();
   loadState();
   await loadCatalogs();
+  catalogEnrichmentIdx = loadCatalogEnrichment();
   applyDisplayMode();
   buildTabs();
   setupModals();

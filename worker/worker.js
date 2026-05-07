@@ -49,69 +49,77 @@ async function checkSecret(env, providedSecret) {
   return real && providedSecret === real;
 }
 
-async function tmdbLookup(env, title, year, type) {
+async function tmdbLookup(env, title, year, type, tmdbId) {
   // type: 'movie' or 'tv'
+  // tmdbId: optional — if provided, fetches that ID directly without searching
   const tmdbToken = await env.CONFIG.get('tmdb_token');
   if (!tmdbToken) return { error: 'TMDB token not configured' };
 
-  // Cache key
-  const cacheKey = `lookup:${type}:${normalizeTitle(title)}:${year || ''}`;
+  // Cache key — uses tmdbId when available, otherwise normalized title+year
+  const cacheKey = tmdbId
+    ? `lookup:${type}:tmdb-${tmdbId}`
+    : `lookup:${type}:${normalizeTitle(title)}:${year || ''}`;
   const cached = await env.METADATA.get(cacheKey);
   if (cached) {
     try { return { ...JSON.parse(cached), cached: true }; } catch {}
   }
 
-  // TMDB search
-  const searchPath = type === 'tv' ? '/search/tv' : '/search/movie';
-  const yearParam = type === 'tv'
-    ? (year ? `&first_air_date_year=${year}` : '')
-    : (year ? `&year=${year}` : '');
-  const searchUrl = `${TMDB_BASE}${searchPath}?query=${encodeURIComponent(title)}${yearParam}&include_adult=false`;
-  const searchResp = await fetch(searchUrl, {
-    headers: { 'Authorization': `Bearer ${tmdbToken}`, 'Accept': 'application/json' },
-  });
-  if (!searchResp.ok) return { error: `TMDB search ${searchResp.status}` };
-  const searchData = await searchResp.json();
-  const results = searchData.results || [];
-  if (results.length === 0) {
-    // Cache the negative result too — don't keep retrying
-    const negResult = { found: false, query: { title, year, type } };
-    await env.METADATA.put(cacheKey, JSON.stringify(negResult), { expirationTtl: METADATA_TTL });
-    return negResult;
-  }
-  const top = results[0];
-  const tmdbId = top.id;
+  let resolvedId = tmdbId;
 
-  // Fetch details + watch providers
-  const detailsPath = type === 'tv' ? `/tv/${tmdbId}` : `/movie/${tmdbId}`;
-  const detailsResp = await fetch(`${TMDB_BASE}${detailsPath}?append_to_response=watch/providers,credits`, {
+  // If no tmdbId provided, search for one
+  if (!resolvedId) {
+    const searchPath = type === 'tv' ? '/search/tv' : '/search/movie';
+    const yearParam = type === 'tv'
+      ? (year ? `&first_air_date_year=${year}` : '')
+      : (year ? `&year=${year}` : '');
+    const searchUrl = `${TMDB_BASE}${searchPath}?query=${encodeURIComponent(title)}${yearParam}&include_adult=false`;
+    const searchResp = await fetch(searchUrl, {
+      headers: { 'Authorization': `Bearer ${tmdbToken}`, 'Accept': 'application/json' },
+    });
+    if (!searchResp.ok) return { error: `TMDB search ${searchResp.status}` };
+    const searchData = await searchResp.json();
+    const results = searchData.results || [];
+    if (results.length === 0) {
+      const negResult = { found: false, query: { title, year, type } };
+      await env.METADATA.put(cacheKey, JSON.stringify(negResult), { expirationTtl: METADATA_TTL });
+      return negResult;
+    }
+    resolvedId = results[0].id;
+  }
+
+  // Fetch details + watch providers + credits
+  const detailsPath = type === 'tv' ? `/tv/${resolvedId}` : `/movie/${resolvedId}`;
+  const detailsResp = await fetch(`${TMDB_BASE}${detailsPath}?append_to_response=watch/providers,credits,recommendations,similar`, {
     headers: { 'Authorization': `Bearer ${tmdbToken}`, 'Accept': 'application/json' },
   });
   let details = {};
   if (detailsResp.ok) details = await detailsResp.json();
 
-  // Compact the result — strip giant fields, keep what's useful
   const result = {
     found: true,
-    tmdbId,
+    tmdbId: resolvedId,
     type,
-    title: details.title || details.name || top.title || top.name,
+    title: details.title || details.name || title,
     originalTitle: details.original_title || details.original_name || null,
     year: (details.release_date || details.first_air_date || '').slice(0, 4) || null,
-    overview: details.overview || top.overview || '',
+    overview: details.overview || '',
     runtime: details.runtime || (details.episode_run_time && details.episode_run_time[0]) || null,
     genres: (details.genres || []).map(g => g.name),
-    posterPath: details.poster_path || top.poster_path || null,
+    posterPath: details.poster_path || null,
     voteAverage: details.vote_average || null,
-    // TV-specific
     numberOfSeasons: details.number_of_seasons || null,
     numberOfEpisodes: details.number_of_episodes || null,
     inProduction: details.in_production || null,
     networks: (details.networks || []).map(n => n.name),
-    // Watch providers (region-aware) — keep all regions, not just US (user has VPN)
     watchProviders: (details['watch/providers'] && details['watch/providers'].results) || {},
-    // Compact credits — top 5 cast only
     cast: ((details.credits && details.credits.cast) || []).slice(0, 5).map(c => c.name),
+    // For Stage 5e (recommendation engine) — keep the IDs only, slim
+    recommendations: ((details.recommendations && details.recommendations.results) || []).slice(0, 10).map(r => ({
+      id: r.id, title: r.title || r.name, year: (r.release_date || r.first_air_date || '').slice(0, 4) || null,
+    })),
+    similar: ((details.similar && details.similar.results) || []).slice(0, 10).map(r => ({
+      id: r.id, title: r.title || r.name, year: (r.release_date || r.first_air_date || '').slice(0, 4) || null,
+    })),
     cachedAt: Date.now(),
   };
   await env.METADATA.put(cacheKey, JSON.stringify(result), { expirationTtl: METADATA_TTL });
@@ -128,7 +136,7 @@ export default {
 
     // Health
     if (path === '/' || path === '/health') {
-      return new Response('WatchTrack-Plex bridge online (v3 — TMDB + history + bulk metadata)', { headers: cors });
+      return new Response('WatchTrack-Plex bridge online (v4 — TMDB ID lookup + recommendations)', { headers: cors });
     }
 
     // === Plex webhook receiver ===
@@ -218,15 +226,14 @@ export default {
       const title = url.searchParams.get('title');
       const year = url.searchParams.get('year') || '';
       const type = url.searchParams.get('type') === 'tv' ? 'tv' : 'movie';
-      if (!title) return new Response('Missing title', { status: 400, headers: cors });
-      const result = await tmdbLookup(env, title, year, type);
+      const tmdbId = url.searchParams.get('tmdbId') || null;
+      if (!title && !tmdbId) return new Response('Missing title or tmdbId', { status: 400, headers: cors });
+      const result = await tmdbLookup(env, title, year, type, tmdbId);
       return jsonResponse(result);
     }
 
     // === Bulk TMDB metadata lookup ===
-    // POST { secret, items: [{ title, year, type }, ...] }
-    // Returns { results: [{...}, {...}], errors: 0 }
-    // Capped at 50 items per call. Each is cached individually.
+    // POST { secret, items: [{ title, year, type, tmdbId? }, ...] }
     if (path === '/metadata/bulk' && method === 'POST') {
       try {
         const body = await request.json();
@@ -236,7 +243,7 @@ export default {
         let errors = 0;
         for (const it of items) {
           try {
-            const r = await tmdbLookup(env, it.title, it.year || '', it.type === 'tv' ? 'tv' : 'movie');
+            const r = await tmdbLookup(env, it.title, it.year || '', it.type === 'tv' ? 'tv' : 'movie', it.tmdbId || null);
             results.push({ query: it, result: r });
           } catch (e) {
             errors++;

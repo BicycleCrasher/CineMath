@@ -131,6 +131,25 @@
   </div>
 </div>
 
+<div class="modal" id="enrichment-progress-modal">
+  <div class="modal-content">
+    <h3>Enriching catalog</h3>
+    <p id="enrichment-status">Starting...</p>
+    <div class="bulk-progress-bar"><div class="bulk-progress-fill" id="enrichment-bar"></div></div>
+    <p class="settings-help">Looking up TMDB IDs and metadata for every catalog item. ~30-90 seconds for 650 items. Items already enriched within 30 days are skipped. Don't close the app.</p>
+  </div>
+</div>
+
+<div class="modal" id="enrichment-result-modal">
+  <div class="modal-content">
+    <h3>Enrichment complete</h3>
+    <div class="stats-content" id="enrichment-result-content"></div>
+    <div class="modal-actions">
+      <button class="action-btn" id="enrichment-result-close">Close</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal" id="bulk-sync-result-modal">
   <div class="modal-content">
     <h3>Sync complete</h3>
@@ -221,6 +240,7 @@
         <button class="action-btn" id="plex-test">Test connection</button>
         <button class="action-btn" id="plex-refresh">Refresh library</button>
         <button class="action-btn" id="plex-bulk-sync">Sync from Plex history</button>
+        <button class="action-btn" id="catalog-enrich">Pre-enrich catalog</button>
       </div>
       <p class="settings-status" id="plex-status">Not configured.</p>
     </div>
