@@ -333,3 +333,90 @@ footer {
   font-size: 11px; min-height: 200px; resize: vertical;
 }
 .modal-actions { display: flex; gap: 8px; margin-top: 12px; }
+
+/* === V8 additions: Sort, Search, Stats, Triage, Source badge === */
+.sort-select {
+  background: var(--bg-elev); color: var(--ink);
+  border: 1px solid var(--rule); border-radius: 999px;
+  padding: 6px 10px; font-size: 11px; letter-spacing: 0.05em;
+  font-family: 'Helvetica Neue', sans-serif; cursor: pointer;
+  flex-shrink: 0; margin-right: 4px;
+}
+.modal-input {
+  width: 100%; background: var(--bg);
+  border: 1px solid var(--rule); color: var(--ink);
+  padding: 10px 12px; border-radius: 4px;
+  font-size: 14px; font-family: 'Helvetica Neue', sans-serif;
+  margin-bottom: 8px; box-sizing: border-box;
+}
+.modal-input:focus { outline: none; border-color: var(--accent); }
+.search-results {
+  max-height: 50vh; overflow-y: auto;
+  border-top: 1px solid var(--rule);
+}
+.search-result {
+  padding: 10px 4px; border-bottom: 1px solid var(--rule);
+  cursor: pointer; transition: background 0.15s;
+}
+.search-result:hover { background: var(--bg-elev); }
+.search-result:last-child { border-bottom: none; }
+.search-result-title {
+  color: var(--ink); font-weight: 500; font-size: 14px;
+  margin-bottom: 2px;
+}
+.search-result-meta {
+  color: var(--ink-dim); font-size: 11px; letter-spacing: 0.04em;
+}
+.search-result-empty {
+  padding: 20px; text-align: center; color: var(--ink-dim); font-size: 12px;
+}
+.search-result mark {
+  background: var(--accent); color: #1a1612; padding: 0 2px;
+}
+.source-badge {
+  background: transparent; color: var(--ink-dim);
+  border: 1px solid var(--rule);
+  padding: 2px 7px; border-radius: 3px;
+  font-size: 9px; letter-spacing: 0.08em;
+  text-transform: uppercase; font-weight: 500;
+}
+.stats-content {
+  font-size: 13px; line-height: 1.6;
+  max-height: 60vh; overflow-y: auto;
+}
+.stats-content h4 {
+  margin: 12px 0 6px; color: var(--accent);
+  font-size: 12px; letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.stats-content .stat-line {
+  display: flex; justify-content: space-between;
+  padding: 3px 0; border-bottom: 1px dotted var(--rule);
+}
+.stats-content .stat-line:last-child { border-bottom: none; }
+.stats-content strong { color: var(--ink); }
+.triage-progress {
+  font-size: 11px; color: var(--ink-dim);
+  letter-spacing: 0.05em; text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.triage-card {
+  background: var(--bg); padding: 14px; border-radius: 4px;
+  border: 1px solid var(--rule); margin-bottom: 12px;
+}
+.triage-card .source-badge { margin-bottom: 6px; display: inline-block; }
+.triage-card h4 {
+  margin: 4px 0 6px; color: var(--ink); font-size: 16px;
+}
+.triage-card .meta {
+  color: var(--ink-dim); font-size: 11px;
+  letter-spacing: 0.05em; margin-bottom: 8px;
+}
+.triage-card p {
+  font-size: 13px; line-height: 1.5; color: var(--ink-dim); margin: 6px 0;
+}
+.triage-card .why {
+  background: var(--bg-elev); padding: 8px;
+  border-left: 2px solid var(--accent);
+  font-size: 12px; margin: 8px 0; color: var(--ink);
+}

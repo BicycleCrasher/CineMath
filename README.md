@@ -97,13 +97,29 @@ That's it. The app:
 
 ### Tabs and categories
 
-The top nav has 21 tabs, organized roughly by film/TV pairs (Sci-Fi / Sci-Fi TV, Spy / Spy TV, etc.) plus standalone tabs (Heist, Auteur, Classics, British Comedy).
+The top nav has 22 tabs. **Watchlist** is first; the other 21 are alphabetical (Auteur, British Comedy, Classics, Comedy, Comedy TV, Cons & Courtroom, Cons & Courtroom TV, Crime, Crime TV, Drama, Drama TV, Fantasy, Fantasy TV, Foreign, Heist, Horror, Horror TV, Sci-Fi, Sci-Fi TV, Spy, Spy TV).
 
-Inside each tab, two pill rows above the content:
+**Watchlist** is the "what now" view. It aggregates across every catalog into three sections:
+- **Currently Watching** — what you've marked as in-progress
+- **Your Queue** — what you've marked as queued, sorted most-recently-touched first
+- **System Suggestions** — items I've flagged high or medium priority that you haven't engaged with yet
+
+Tap any item from the Watchlist and changes route back to that item's source tab.
+
+Inside each genre tab, two pill rows above the content:
 - **Top row (warm coral):** category filter — narrow to a sub-genre (e.g., Drama TV → "Sorkin", Foreign → "Korean", Auteur → "Coens"). Tap "All" to clear.
-- **Bottom row (gold):** status filter — All / Queued / Watching / Watched / Skipped / Rated.
+- **Bottom row (gold):** status filter — All / Queued / Watching / Watched / Skipped / Rated. The first item on this row is a **Sort dropdown** (Default / Recently updated / Year / Title / My rating).
 
 Category filters remember your selection per tab as you switch between tabs. They auto-clear after 30 seconds away from a tab and after 5 minutes of the app being backgrounded — never affecting ratings or status.
+
+### Header buttons
+
+- **Search** — search by title, director, country, section, or pitch text across every tab
+- **Notes** — full-text search across your saved notes
+- **Stats** — read-only dashboard with status counts, rating distribution, activity, top tags, per-tab progress
+- **Triage Queue** — focused single-item review of your queued items
+- **Triage Suggested** — focused review of system suggestions
+- **Reset / Export / Import** — same as before. Import now shows a diagnostic summary instead of a generic confirmation.
 
 ### Reaction tags
 

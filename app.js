@@ -252,7 +252,7 @@ const SEED_STATE = {
 let state = {};
 let catalogs = {};
 let catalogManifest = [];
-let activeTab = 'scifi';
+let activeTab = 'watchlist';
 let activeFilter = 'all';
 
 // === Category filter (in-memory only; never persisted to localStorage) ===
@@ -261,6 +261,40 @@ const categoryClearTimers = {};        // { tabId: timeoutId } — 30s "left tab
 let appHiddenClearTimer = null;        // 5min "app backgrounded" timer
 const TAB_LEAVE_GRACE_MS = 30 * 1000;
 const APP_HIDDEN_GRACE_MS = 5 * 60 * 1000;
+
+// === Sort filter (in-memory only; never persisted) ===
+const activeSortByTab = {};            // { tabId: 'default' | 'year' | 'title' | 'rating' | 'updated' }
+function getActiveSort(tab) { return activeSortByTab[tab] || 'default'; }
+function setActiveSort(tab, sort) {
+  if (sort === 'default') delete activeSortByTab[tab];
+  else activeSortByTab[tab] = sort;
+}
+function sortItems(items) {
+  const sort = getActiveSort(activeTab);
+  if (sort === 'default') return items;  // catalog/section order preserved
+  const arr = items.slice();
+  if (sort === 'year') {
+    arr.sort((a, b) => (b.year || 0) - (a.year || 0) || a.title.localeCompare(b.title));
+  } else if (sort === 'title') {
+    arr.sort((a, b) => a.title.localeCompare(b.title));
+  } else if (sort === 'rating') {
+    const rorder = { 'loved': 0, 'liked': 1, 'mixed': 2, 'disliked': 3, 'none': 4 };
+    arr.sort((a, b) => {
+      const ta = a._watchlist_source_tab || activeTab;
+      const tb = b._watchlist_source_tab || activeTab;
+      const ra = rorder[getRating(a.id, ta)] ?? 4;
+      const rb = rorder[getRating(b.id, tb)] ?? 4;
+      return ra - rb || a.title.localeCompare(b.title);
+    });
+  } else if (sort === 'updated') {
+    arr.sort((a, b) => {
+      const ta = a._watchlist_source_tab || activeTab;
+      const tb = b._watchlist_source_tab || activeTab;
+      return (getLastUpdated(b.id, tb) || 0) - (getLastUpdated(a.id, ta) || 0) || a.title.localeCompare(b.title);
+    });
+  }
+  return arr;
+}
 const CATEGORY_LABELS = {
   // British Comedy
   'panel': 'Panel',
@@ -268,6 +302,10 @@ const CATEGORY_LABELS = {
   'game': 'Game Show',
   'news-comedy': 'News Comedy',
   'specials': 'Specials',
+  // Watchlist sections (virtual tab)
+  'watching': 'Watching',
+  'queued': 'Queued',
+  'suggested': 'Suggested',
   // Sci-Fi
   'mainstream': 'Mainstream',
   'cerebral': 'Cerebral',
@@ -462,33 +500,35 @@ async function loadCatalogManifest() {
     catalogManifest = data.catalogs;
   } catch (e) {
     catalogManifest = [
+      { id: "watchlist", label: "Watchlist", virtual: true },
+      { id: "auteur", label: "Auteur" },
+      { id: "british-comedy", label: "British Comedy" },
+      { id: "pre1960", label: "Classics" },
+      { id: "comedy", label: "Comedy" },
+      { id: "comedy-tv", label: "Comedy TV" },
+      { id: "cons-courtroom", label: "Cons & Courtroom" },
+      { id: "cons-courtroom-tv", label: "Cons & Courtroom TV" },
+      { id: "crime", label: "Crime" },
+      { id: "crime-tv", label: "Crime TV" },
+      { id: "drama", label: "Drama" },
+      { id: "drama-tv", label: "Drama TV" },
+      { id: "fantasy", label: "Fantasy" },
+      { id: "fantasy-tv", label: "Fantasy TV" },
+      { id: "foreign", label: "Foreign" },
+      { id: "heist", label: "Heist" },
+      { id: "horror", label: "Horror" },
+      { id: "horror-tv", label: "Horror TV" },
       { id: "scifi", label: "Sci-Fi" },
       { id: "scifi-tv", label: "Sci-Fi TV" },
       { id: "espionage", label: "Spy" },
-      { id: "spy-tv", label: "Spy TV" },
-      { id: "crime", label: "Crime" },
-      { id: "crime-tv", label: "Crime TV" },
-      { id: "cons-courtroom", label: "Cons & Courtroom" },
-      { id: "cons-courtroom-tv", label: "Cons & Courtroom TV" },
-      { id: "horror", label: "Horror" },
-      { id: "horror-tv", label: "Horror TV" },
-      { id: "fantasy", label: "Fantasy" },
-      { id: "fantasy-tv", label: "Fantasy TV" },
-      { id: "heist", label: "Heist" },
-      { id: "comedy", label: "Comedy" },
-      { id: "comedy-tv", label: "Comedy TV" },
-      { id: "british-comedy", label: "British Comedy" },
-      { id: "drama", label: "Drama" },
-      { id: "drama-tv", label: "Drama TV" },
-      { id: "foreign", label: "Foreign" },
-      { id: "auteur", label: "Auteur" },
-      { id: "pre1960", label: "Classics" }
+      { id: "spy-tv", label: "Spy TV" }
     ];
   }
 }
 
 async function loadCatalogs() {
   for (const c of catalogManifest) {
+    if (c.virtual) continue;  // Watchlist and other virtual tabs have no JSON file
     try {
       const resp = await fetch(`data/${c.id}.json`);
       const cat = await resp.json();
@@ -499,6 +539,8 @@ async function loadCatalogs() {
           item.section = section.name;
           item.sectionDesc = section.desc;
           item.categories = section.categories || [];
+          item.sourceTab = c.id;
+          item.sourceTabLabel = c.label;
           item.order = order++;
           item.id = `${item.title.replace(/[^a-z0-9]+/gi, '-').toLowerCase().replace(/^-|-$/g, '')}-${item.year}`;
           cat.items.push(item);
@@ -509,67 +551,85 @@ async function loadCatalogs() {
       console.error(`Failed to load ${c.id}:`, e);
     }
   }
-  // Validate active tab still exists
-  if (!catalogs[activeTab]) activeTab = catalogManifest[0]?.id || 'scifi';
+  // Validate active tab still exists (or is virtual)
+  const exists = catalogs[activeTab] || catalogManifest.find(c => c.id === activeTab && c.virtual);
+  if (!exists) activeTab = catalogManifest[0]?.id || 'watchlist';
 }
 
-function getEntry(id) { return (state[activeTab] && state[activeTab][id]) || {}; }
-function getStatus(id) { return getEntry(id).status || 'none'; }
-function getRating(id) { return getEntry(id).rating || 'none'; }
-function getTags(id) { return getEntry(id).reactionTags || []; }
-function getNotes(id) { return getEntry(id).notes || ''; }
+function getEntry(id, tab) { tab = tab || activeTab; return (state[tab] && state[tab][id]) || {}; }
+function getStatus(id, tab) { return getEntry(id, tab).status || 'none'; }
+function getRating(id, tab) { return getEntry(id, tab).rating || 'none'; }
+function getTags(id, tab) { return getEntry(id, tab).reactionTags || []; }
+function getNotes(id, tab) { return getEntry(id, tab).notes || ''; }
+function getLastUpdated(id, tab) { return getEntry(id, tab).lastUpdated || 0; }
 
-function setStatus(id, status) {
-  if (!state[activeTab]) state[activeTab] = {};
-  if (!state[activeTab][id]) state[activeTab][id] = {};
-  state[activeTab][id].status = status;
+function touchEntry(tab, id) {
+  if (!state[tab]) state[tab] = {};
+  if (!state[tab][id]) state[tab][id] = {};
+  state[tab][id].lastUpdated = Date.now();
+}
+
+function setStatus(id, status, tab) {
+  tab = tab || activeTab;
+  if (!state[tab]) state[tab] = {};
+  if (!state[tab][id]) state[tab][id] = {};
+  state[tab][id].status = status;
   if (status !== 'watched' && status !== 'watching') {
-    delete state[activeTab][id].rating;
-    delete state[activeTab][id].reactionTags;
+    delete state[tab][id].rating;
+    delete state[tab][id].reactionTags;
   }
+  touchEntry(tab, id);
   saveState(); render();
 }
 
-function setRating(id, rating) {
-  if (!state[activeTab]) state[activeTab] = {};
-  if (!state[activeTab][id]) state[activeTab][id] = {};
-  if (state[activeTab][id].rating === rating) delete state[activeTab][id].rating;
-  else state[activeTab][id].rating = rating;
+function setRating(id, rating, tab) {
+  tab = tab || activeTab;
+  if (!state[tab]) state[tab] = {};
+  if (!state[tab][id]) state[tab][id] = {};
+  if (state[tab][id].rating === rating) delete state[tab][id].rating;
+  else state[tab][id].rating = rating;
+  touchEntry(tab, id);
   saveState(); updateItemInPlace(id);
 }
 
-function toggleTag(id, tag) {
-  if (!state[activeTab]) state[activeTab] = {};
-  if (!state[activeTab][id]) state[activeTab][id] = {};
-  if (!state[activeTab][id].reactionTags) state[activeTab][id].reactionTags = [];
-  const idx = state[activeTab][id].reactionTags.indexOf(tag);
-  if (idx === -1) state[activeTab][id].reactionTags.push(tag);
-  else state[activeTab][id].reactionTags.splice(idx, 1);
+function toggleTag(id, tag, tab) {
+  tab = tab || activeTab;
+  if (!state[tab]) state[tab] = {};
+  if (!state[tab][id]) state[tab][id] = {};
+  if (!state[tab][id].reactionTags) state[tab][id].reactionTags = [];
+  const idx = state[tab][id].reactionTags.indexOf(tag);
+  if (idx === -1) state[tab][id].reactionTags.push(tag);
+  else state[tab][id].reactionTags.splice(idx, 1);
+  touchEntry(tab, id);
   saveState(); updateItemInPlace(id);
 }
 
-function setNotes(id, notes) {
-  if (!state[activeTab]) state[activeTab] = {};
-  if (!state[activeTab][id]) state[activeTab][id] = {};
-  state[activeTab][id].notes = notes;
+function setNotes(id, notes, tab) {
+  tab = tab || activeTab;
+  if (!state[tab]) state[tab] = {};
+  if (!state[tab][id]) state[tab][id] = {};
+  state[tab][id].notes = notes;
+  touchEntry(tab, id);
   saveState();
 }
 
-function cycleStatus(id) {
-  const cur = getStatus(id);
+function cycleStatus(id, tab) {
+  tab = tab || activeTab;
+  const cur = getStatus(id, tab);
   const next = cur === 'none' ? 'queued'
              : cur === 'queued' ? 'watching'
              : cur === 'watching' ? 'watched'
              : cur === 'watched' ? 'skip'
              : 'none';
-  setStatus(id, next);
+  setStatus(id, next, tab);
 }
 
-function updateItemInPlace(id) {
+function updateItemInPlace(id, tab) {
+  tab = tab || activeTab;
   const itemEl = document.querySelector(`.item[data-id="${id}"]`);
   if (!itemEl) return;
-  const rating = getRating(id);
-  const reactionTags = getTags(id);
+  const rating = getRating(id, tab);
+  const reactionTags = getTags(id, tab);
   itemEl.querySelectorAll('.rating-btn').forEach(btn => {
     btn.classList.remove('active-loved','active-liked','active-mixed','active-disliked');
     if (btn.dataset.rating === rating) btn.classList.add(`active-${rating}`);
@@ -588,7 +648,9 @@ function updateItemInPlace(id) {
   itemEl.querySelectorAll('.tag-btn').forEach(btn => {
     btn.classList.remove('active-pos','active-neg');
     if (reactionTags.includes(btn.dataset.tag)) {
-      const item = catalogs[activeTab] && catalogs[activeTab].items.find(it => it.id === id);
+      // Look up item in active catalog (or watchlist proxy) for tag-set resolution
+      const cat = activeTab === 'watchlist' ? catalogs['watchlist'] : catalogs[activeTab];
+      const item = cat && cat.items.find(it => it.id === id);
       const set = item ? getTagSetForItem(item) : TAG_SETS['film-narrative'];
       const isPos = set.positive.includes(btn.dataset.tag);
       btn.classList.add(isPos ? 'active-pos' : 'active-neg');
@@ -598,12 +660,28 @@ function updateItemInPlace(id) {
 }
 
 function updateStats() {
-  if (!catalogs[activeTab]) return;
-  const items = catalogs[activeTab].items;
-  const watched = items.filter(f => getStatus(f.id) === 'watched').length;
-  const watching = items.filter(f => getStatus(f.id) === 'watching').length;
-  const rated = items.filter(f => getRating(f.id) !== 'none').length;
-  const queued = items.filter(f => getStatus(f.id) === 'queued').length;
+  // For Watchlist, stats come from the synthetic catalog (which spans all tabs);
+  // for other tabs, stats come from the catalog's items using tab-local state.
+  const cat = activeTab === 'watchlist' ? catalogs['watchlist'] : catalogs[activeTab];
+  if (!cat) return;
+  const items = cat.items;
+  const tab = activeTab;
+  const watched = items.filter(f => {
+    const t = f._watchlist_source_tab || tab;
+    return getStatus(f.id, t) === 'watched';
+  }).length;
+  const watching = items.filter(f => {
+    const t = f._watchlist_source_tab || tab;
+    return getStatus(f.id, t) === 'watching';
+  }).length;
+  const rated = items.filter(f => {
+    const t = f._watchlist_source_tab || tab;
+    return getRating(f.id, t) !== 'none';
+  }).length;
+  const queued = items.filter(f => {
+    const t = f._watchlist_source_tab || tab;
+    return getStatus(f.id, t) === 'queued';
+  }).length;
   document.getElementById('watched-count').textContent = watched;
   document.getElementById('watching-count').textContent = watching;
   document.getElementById('rated-count').textContent = rated;
@@ -625,14 +703,22 @@ function buildTabs() {
 function buildCategoryFilters() {
   const container = document.getElementById('categories');
   if (!container) return;
-  if (!catalogs[activeTab]) { container.innerHTML = ''; return; }
+  // Ensure catalog is built (handles virtual watchlist tab)
+  let cat;
+  if (activeTab === 'watchlist') {
+    catalogs['watchlist'] = buildWatchlistCatalog();
+    cat = catalogs['watchlist'];
+  } else {
+    cat = catalogs[activeTab];
+  }
+  if (!cat) { container.innerHTML = ''; return; }
 
   // Collect unique categories across all sections of this catalog, preserving section order
   const seen = new Set();
   const categories = [];
-  catalogs[activeTab].sections.forEach(section => {
-    (section.categories || []).forEach(cat => {
-      if (!seen.has(cat)) { seen.add(cat); categories.push(cat); }
+  cat.sections.forEach(section => {
+    (section.categories || []).forEach(c => {
+      if (!seen.has(c)) { seen.add(c); categories.push(c); }
     });
   });
 
@@ -693,9 +779,24 @@ function buildFilters() {
   if (isFilms) filters.push({ key: 'adjacent', label: 'Adjacent' });
 
   const container = document.getElementById('filters');
-  container.innerHTML = filters.map(f =>
+  const currentSort = getActiveSort(activeTab);
+  const sortHtml = `<select class="sort-select" id="sort-select">
+    <option value="default" ${currentSort==='default'?'selected':''}>Sort: Default</option>
+    <option value="updated" ${currentSort==='updated'?'selected':''}>Recently updated</option>
+    <option value="year" ${currentSort==='year'?'selected':''}>Year (newest)</option>
+    <option value="title" ${currentSort==='title'?'selected':''}>Title (A→Z)</option>
+    <option value="rating" ${currentSort==='rating'?'selected':''}>My rating</option>
+  </select>`;
+  container.innerHTML = sortHtml + filters.map(f =>
     `<button class="filter-btn ${activeFilter === f.key ? 'active' : ''}" data-filter="${f.key}">${f.label}</button>`
   ).join('');
+  const sortSelect = container.querySelector('#sort-select');
+  if (sortSelect) {
+    sortSelect.addEventListener('change', (e) => {
+      setActiveSort(activeTab, e.target.value);
+      render();
+    });
+  }
   container.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       container.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -707,8 +808,9 @@ function buildFilters() {
 }
 
 function itemMatchesFilter(item) {
-  const status = getStatus(item.id);
-  const rating = getRating(item.id);
+  const tab = item._watchlist_source_tab || activeTab;
+  const status = getStatus(item.id, tab);
+  const rating = getRating(item.id, tab);
   switch (activeFilter) {
     case 'all': return true;
     case 'priority-high': return item.priority === 'high';
@@ -735,16 +837,105 @@ function statusIcon(s) { return { watched: '✓', watching: '▸', queued: '◐'
 function ratingLabel(r) { return { loved: 'Loved', liked: 'Liked', mixed: 'Mixed', disliked: 'Disliked' }[r] || ''; }
 function priorityLabel(p) { return { high: 'High Priority', med: 'Med Priority' }[p] || ''; }
 
+// === Watchlist (virtual tab) generator ===
+// Build a synthetic catalog object with three sections:
+//   A. Currently watching (status = watching)
+//   B. Your queue (status = queued)
+//   C. System suggestions (status = none, priority = high or med)
+function buildWatchlistCatalog() {
+  const watching = [];
+  const queued = [];
+  const suggested = [];
+  // Walk every loaded catalog
+  for (const tabId in catalogs) {
+    const cat = catalogs[tabId];
+    cat.items.forEach(item => {
+      const entry = (state[tabId] && state[tabId][item.id]) || {};
+      const st = entry.status || 'none';
+      // Tag the item with metadata so the watchlist render knows where it came from
+      const proxy = Object.assign({}, item, {
+        _watchlist_source_tab: tabId,
+        _watchlist_source_label: cat.title || tabId,
+        _watchlist_status: st,
+        _watchlist_lastUpdated: entry.lastUpdated || 0
+      });
+      if (st === 'watching') watching.push(proxy);
+      else if (st === 'queued') queued.push(proxy);
+      else if (st === 'none' && (item.priority === 'high' || item.priority === 'med')) suggested.push(proxy);
+    });
+  }
+  // Sort: most-recently-touched first within Watching/Queued; priority-then-source-then-title for Suggested
+  watching.sort((a, b) => (b._watchlist_lastUpdated || 0) - (a._watchlist_lastUpdated || 0) || a.title.localeCompare(b.title));
+  queued.sort((a, b) => (b._watchlist_lastUpdated || 0) - (a._watchlist_lastUpdated || 0) || a.title.localeCompare(b.title));
+  suggested.sort((a, b) => {
+    const pri = (x) => x.priority === 'high' ? 0 : x.priority === 'med' ? 1 : 2;
+    if (pri(a) !== pri(b)) return pri(a) - pri(b);
+    if (a._watchlist_source_label !== b._watchlist_source_label) return a._watchlist_source_label.localeCompare(b._watchlist_source_label);
+    return a.title.localeCompare(b.title);
+  });
+
+  // Distinct categories present in result for the category filter row
+  const sectionA = { name: 'A. Currently Watching', desc: 'Items you marked as in-progress.', items: watching, categories: ['watching'] };
+  const sectionB = { name: 'B. Your Queue', desc: 'Items you marked as queued, sorted most-recently-touched first.', items: queued, categories: ['queued'] };
+  const sectionC = { name: 'C. System Suggestions', desc: 'Curated high/medium-priority recommendations across genres you have not yet engaged with.', items: suggested, categories: ['suggested'] };
+
+  // Each item gets the section-level category for filter purposes
+  watching.forEach(it => { it.section = sectionA.name; it.sectionDesc = sectionA.desc; it.categories = (it.categories || []).concat(['watching']); });
+  queued.forEach(it => { it.section = sectionB.name; it.sectionDesc = sectionB.desc; it.categories = (it.categories || []).concat(['queued']); });
+  suggested.forEach(it => { it.section = sectionC.name; it.sectionDesc = sectionC.desc; it.categories = (it.categories || []).concat(['suggested']); });
+
+  const allItems = [...watching, ...queued, ...suggested];
+  return {
+    type: 'watchlist',
+    title: 'Watchlist',
+    subtitle: `${watching.length} watching · ${queued.length} queued · ${suggested.length} suggested`,
+    sections: [sectionA, sectionB, sectionC].filter(s => s.items.length > 0),
+    items: allItems
+  };
+}
+
+function isVirtualTab(tabId) {
+  const def = catalogManifest.find(c => c.id === tabId);
+  return def && def.virtual;
+}
+
+function getActiveCatalog() {
+  if (activeTab === 'watchlist') {
+    catalogs['watchlist'] = buildWatchlistCatalog();
+    return catalogs['watchlist'];
+  }
+  return catalogs[activeTab];
+}
+
 function render() {
-  if (!catalogs[activeTab]) return;
-  const catalog = catalogs[activeTab];
+  if (activeTab !== 'watchlist' && !catalogs[activeTab]) return;
+  const catalog = getActiveCatalog();
   document.getElementById('tab-subtitle').textContent = catalog.subtitle;
 
   const container = document.getElementById('items-container');
   container.innerHTML = '';
   let lastSection = null;
 
-  catalog.items.forEach(item => {
+  // Apply per-section sort if a non-default sort is active
+  const sort = getActiveSort(activeTab);
+  let renderItems;
+  if (sort === 'default') {
+    renderItems = catalog.items;
+  } else {
+    // Group by section then sort within group, preserving section order
+    const sectionOrder = [];
+    const grouped = {};
+    catalog.items.forEach(it => {
+      if (!(it.section in grouped)) { grouped[it.section] = []; sectionOrder.push(it.section); }
+      grouped[it.section].push(it);
+    });
+    renderItems = [];
+    sectionOrder.forEach(sec => {
+      sortItems(grouped[sec]).forEach(it => renderItems.push(it));
+    });
+  }
+
+  renderItems.forEach(item => {
     if (item.section !== lastSection) {
       const sectionItems = catalog.items.filter(f => f.section === item.section);
       const visibleCount = sectionItems.filter(it => itemMatchesFilter(it) && itemMatchesCategory(it)).length;
@@ -765,10 +956,13 @@ function render() {
     if (!itemMatchesFilter(item)) return;
     if (!itemMatchesCategory(item)) return;
 
-    const status = getStatus(item.id);
-    const rating = getRating(item.id);
-    const reactionTags = getTags(item.id);
-    const notes = getNotes(item.id);
+    // For watchlist virtual tab, items operate on their source tab's state
+    const itemTab = item._watchlist_source_tab || activeTab;
+
+    const status = getStatus(item.id, itemTab);
+    const rating = getRating(item.id, itemTab);
+    const reactionTags = getTags(item.id, itemTab);
+    const notes = getNotes(item.id, itemTab);
     const itemEl = document.createElement('div');
     let priorityClass = '';
     if (item.priority === 'high') priorityClass = ' priority-high';
@@ -788,6 +982,7 @@ function render() {
     const priorityBadge = item.priority ? `<span class="priority-badge ${item.priority}">${priorityLabel(item.priority)}</span>` : '';
     const ratingBadge = rating !== 'none' ? `<span class="rating-badge ${rating}">${ratingLabel(rating)}</span>` : '';
     const commitmentBadge = item.commitment ? `<span class="commitment">${item.commitment}</span>` : '';
+    const sourceBadge = (activeTab === 'watchlist' && item._watchlist_source_label) ? `<span class="source-badge">${item._watchlist_source_label}</span>` : '';
     const whyHtml = item.whyPriority ? `<div class="why-priority"><strong>Why this priority:</strong> ${item.whyPriority}</div>` : '';
 
     const itemTagSet = getTagSetForItem(item);
@@ -816,7 +1011,7 @@ function render() {
           <h3 class="item-title">${item.title}</h3>
           <div class="item-meta">${metaLine}</div>
           ${seasonsLine}
-          <div class="badge-row">${commitmentBadge}${priorityBadge}${ratingBadge}</div>
+          <div class="badge-row">${sourceBadge}${commitmentBadge}${priorityBadge}${ratingBadge}</div>
         </div>
         <div class="status-pill ${status === 'none' ? '' : status}">${statusIcon(status)}</div>
       </div>
@@ -854,18 +1049,18 @@ function render() {
       else { expandedIds.add(item.id); itemEl.classList.add('expanded'); }
     });
     itemEl.querySelector('.status-pill').addEventListener('click', (e) => {
-      e.stopPropagation(); cycleStatus(item.id);
+      e.stopPropagation(); cycleStatus(item.id, itemTab);
     });
     itemEl.querySelectorAll('.action-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => { e.stopPropagation(); setStatus(item.id, btn.dataset.action); });
+      btn.addEventListener('click', (e) => { e.stopPropagation(); setStatus(item.id, btn.dataset.action, itemTab); });
     });
     itemEl.querySelectorAll('.rating-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => { e.stopPropagation(); setRating(item.id, btn.dataset.rating); });
+      btn.addEventListener('click', (e) => { e.stopPropagation(); setRating(item.id, btn.dataset.rating, itemTab); });
     });
     itemEl.querySelectorAll('.tag-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => { e.stopPropagation(); toggleTag(item.id, btn.dataset.tag); });
+      btn.addEventListener('click', (e) => { e.stopPropagation(); toggleTag(item.id, btn.dataset.tag, itemTab); });
     });
-    itemEl.querySelector('.notes-input').addEventListener('blur', (e) => setNotes(item.id, e.target.value));
+    itemEl.querySelector('.notes-input').addEventListener('blur', (e) => setNotes(item.id, e.target.value, itemTab));
     container.appendChild(itemEl);
   });
 
@@ -873,7 +1068,9 @@ function render() {
 }
 
 function switchTab(tab) {
-  if (!catalogs[tab]) return;
+  const def = catalogManifest.find(c => c.id === tab);
+  if (!def) return;
+  if (!def.virtual && !catalogs[tab]) return;
   const previousTab = activeTab;
   activeTab = tab;
   activeFilter = 'all';
@@ -899,6 +1096,10 @@ function switchTab(tab) {
 
 function setupModals() {
   document.getElementById('reset-btn').addEventListener('click', () => {
+    if (isVirtualTab(activeTab)) {
+      alert('The Watchlist tab is virtual and cannot be reset directly. Reset individual tabs to clear their data.');
+      return;
+    }
     if (!confirm(`Reset ${activeTab} progress? This restores seed data for this tab only.`)) return;
     state[activeTab] = JSON.parse(JSON.stringify(SEED_STATE[activeTab] || {}));
     saveState(); render();
@@ -941,12 +1142,385 @@ function setupModals() {
         newState = { ...state, [activeTab]: parsed };
       }
       catalogManifest.forEach(c => { if (!newState[c.id]) newState[c.id] = {}; });
-      state = normalizeStateIds(newState);
+      newState = normalizeStateIds(newState);
+
+      // Build diagnostic before commit
+      const diagnostic = buildImportDiagnostic(newState);
+
+      state = newState;
       saveState(); render();
       document.getElementById('import-modal').classList.remove('active');
-      alert('Progress restored.');
-    } catch (e) { alert('Invalid format.'); }
+
+      // Show import summary modal instead of generic alert
+      document.getElementById('import-summary-content').innerHTML = renderImportDiagnostic(diagnostic);
+      document.getElementById('import-summary-modal').classList.add('active');
+    } catch (e) { alert('Invalid format: ' + e.message); }
   });
+  document.getElementById('import-summary-close').addEventListener('click', () => {
+    document.getElementById('import-summary-modal').classList.remove('active');
+  });
+
+  // === Search modal ===
+  document.getElementById('search-btn').addEventListener('click', () => {
+    document.getElementById('search-input').value = '';
+    document.getElementById('search-results').innerHTML = '';
+    document.getElementById('search-modal').classList.add('active');
+    setTimeout(() => document.getElementById('search-input').focus(), 50);
+  });
+  document.getElementById('search-close').addEventListener('click', () => {
+    document.getElementById('search-modal').classList.remove('active');
+  });
+  let searchDebounce = null;
+  document.getElementById('search-input').addEventListener('input', (e) => {
+    if (searchDebounce) clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(() => doSearch(e.target.value), 100);
+  });
+
+  // === Notes search modal ===
+  document.getElementById('notes-search-btn').addEventListener('click', () => {
+    document.getElementById('notes-search-input').value = '';
+    document.getElementById('notes-search-results').innerHTML = '';
+    document.getElementById('notes-search-modal').classList.add('active');
+    setTimeout(() => document.getElementById('notes-search-input').focus(), 50);
+  });
+  document.getElementById('notes-search-close').addEventListener('click', () => {
+    document.getElementById('notes-search-modal').classList.remove('active');
+  });
+  let notesDebounce = null;
+  document.getElementById('notes-search-input').addEventListener('input', (e) => {
+    if (notesDebounce) clearTimeout(notesDebounce);
+    notesDebounce = setTimeout(() => doNotesSearch(e.target.value), 100);
+  });
+
+  // === Stats modal ===
+  document.getElementById('stats-btn').addEventListener('click', () => {
+    document.getElementById('stats-content').innerHTML = renderStats();
+    document.getElementById('stats-modal').classList.add('active');
+  });
+  document.getElementById('stats-close').addEventListener('click', () => {
+    document.getElementById('stats-modal').classList.remove('active');
+  });
+
+  // === Triage modals ===
+  document.getElementById('triage-queue-btn').addEventListener('click', () => startTriage('queue'));
+  document.getElementById('triage-suggest-btn').addEventListener('click', () => startTriage('suggest'));
+}
+
+// === Import diagnostic ===
+function buildImportDiagnostic(newState) {
+  let totalEntries = 0, knownIds = 0, unknownIds = 0, withRating = 0, withTags = 0, withNotes = 0;
+  const unknownByTab = {};
+  const tabsTouched = new Set();
+
+  for (const tab in newState) {
+    const tabState = newState[tab];
+    if (!tabState || typeof tabState !== 'object') continue;
+    tabsTouched.add(tab);
+    const cat = catalogs[tab];
+    const validIds = cat ? new Set(cat.items.map(it => it.id)) : new Set();
+    for (const id in tabState) {
+      const e = tabState[id];
+      if (!e || typeof e !== 'object') continue;
+      totalEntries++;
+      if (cat && validIds.has(id)) knownIds++;
+      else { unknownIds++; (unknownByTab[tab] = unknownByTab[tab] || []).push(id); }
+      if (e.rating) withRating++;
+      if (e.reactionTags && e.reactionTags.length) withTags++;
+      if (e.notes) withNotes++;
+    }
+  }
+  return { totalEntries, knownIds, unknownIds, unknownByTab, withRating, withTags, withNotes, tabCount: tabsTouched.size };
+}
+
+function renderImportDiagnostic(d) {
+  let html = '';
+  html += `<div class="stat-line"><span>Total entries imported</span><strong>${d.totalEntries}</strong></div>`;
+  html += `<div class="stat-line"><span>Tabs covered</span><strong>${d.tabCount}</strong></div>`;
+  html += `<div class="stat-line"><span>Matched to catalog</span><strong>${d.knownIds}</strong></div>`;
+  html += `<div class="stat-line"><span>Unknown IDs (orphaned)</span><strong>${d.unknownIds}</strong></div>`;
+  html += `<div class="stat-line"><span>With rating</span><strong>${d.withRating}</strong></div>`;
+  html += `<div class="stat-line"><span>With reaction tags</span><strong>${d.withTags}</strong></div>`;
+  html += `<div class="stat-line"><span>With notes</span><strong>${d.withNotes}</strong></div>`;
+  if (d.unknownIds > 0) {
+    html += `<h4>Orphaned IDs (preserved but won't render)</h4>`;
+    for (const tab in d.unknownByTab) {
+      html += `<div style="margin-top:6px"><strong>${tab}:</strong> ${d.unknownByTab[tab].slice(0,5).join(', ')}${d.unknownByTab[tab].length > 5 ? ` (+${d.unknownByTab[tab].length - 5} more)` : ''}</div>`;
+    }
+  }
+  return html;
+}
+
+// === Title/director/country/section/pitch search ===
+function doSearch(query) {
+  const q = (query || '').trim().toLowerCase();
+  const out = document.getElementById('search-results');
+  if (q.length < 2) { out.innerHTML = '<div class="search-result-empty">Type at least 2 characters.</div>'; return; }
+
+  const matches = [];
+  for (const tabId in catalogs) {
+    const cat = catalogs[tabId];
+    cat.items.forEach(item => {
+      let score = -1;
+      const t = (item.title || '').toLowerCase();
+      const d = (item.dir || '').toLowerCase();
+      const c = (item.country || '').toLowerCase();
+      const s = (item.section || '').toLowerCase();
+      const p = (item.pitch || '').toLowerCase();
+      if (t.startsWith(q)) score = 0;
+      else if (t.includes(q)) score = 1;
+      else if (d.includes(q)) score = 2;
+      else if (c.includes(q)) score = 3;
+      else if (s.includes(q)) score = 4;
+      else if (p.includes(q)) score = 5;
+      if (score >= 0) matches.push({ item, tabId, tabLabel: cat.title || tabId, score });
+    });
+  }
+  matches.sort((a, b) => a.score - b.score || a.item.title.localeCompare(b.item.title));
+  if (matches.length === 0) { out.innerHTML = '<div class="search-result-empty">No matches.</div>'; return; }
+
+  out.innerHTML = matches.slice(0, 50).map(m => {
+    const it = m.item;
+    const meta = [it.year, it.dir, m.tabLabel].filter(Boolean).join(' · ');
+    return `<div class="search-result" data-tab="${m.tabId}" data-id="${it.id}">
+      <div class="search-result-title">${highlightMatch(it.title, q)}</div>
+      <div class="search-result-meta">${highlightMatch(meta, q)}</div>
+    </div>`;
+  }).join('');
+  out.querySelectorAll('.search-result').forEach(el => {
+    el.addEventListener('click', () => {
+      const targetTab = el.dataset.tab;
+      const targetId = el.dataset.id;
+      document.getElementById('search-modal').classList.remove('active');
+      switchTab(targetTab);
+      setTimeout(() => {
+        const target = document.querySelector(`.item[data-id="${targetId}"]`);
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          target.classList.add('expanded');
+          target.style.outline = '2px solid var(--accent)';
+          setTimeout(() => target.style.outline = '', 1500);
+        }
+      }, 100);
+    });
+  });
+}
+function highlightMatch(text, q) {
+  if (!text || !q) return text;
+  const idx = text.toLowerCase().indexOf(q);
+  if (idx === -1) return text;
+  return text.slice(0, idx) + '<mark>' + text.slice(idx, idx + q.length) + '</mark>' + text.slice(idx + q.length);
+}
+
+// === Notes search ===
+function doNotesSearch(query) {
+  const q = (query || '').trim().toLowerCase();
+  const out = document.getElementById('notes-search-results');
+  if (q.length < 2) { out.innerHTML = '<div class="search-result-empty">Type at least 2 characters.</div>'; return; }
+
+  const matches = [];
+  for (const tab in state) {
+    const tabState = state[tab];
+    if (!tabState) continue;
+    for (const id in tabState) {
+      const notes = (tabState[id] && tabState[id].notes) || '';
+      if (notes && notes.toLowerCase().includes(q)) {
+        const cat = catalogs[tab];
+        const item = cat ? cat.items.find(it => it.id === id) : null;
+        if (item) {
+          matches.push({ item, tab, tabLabel: cat.title || tab, snippet: notes });
+        }
+      }
+    }
+  }
+  matches.sort((a, b) => a.item.title.localeCompare(b.item.title));
+  if (matches.length === 0) { out.innerHTML = '<div class="search-result-empty">No matches in your notes.</div>'; return; }
+
+  out.innerHTML = matches.map(m => {
+    return `<div class="search-result" data-tab="${m.tab}" data-id="${m.item.id}">
+      <div class="search-result-title">${m.item.title} <span class="source-badge">${m.tabLabel}</span></div>
+      <div class="search-result-meta" style="margin-top:4px;font-style:italic">"${highlightMatch(m.snippet, q)}"</div>
+    </div>`;
+  }).join('');
+  out.querySelectorAll('.search-result').forEach(el => {
+    el.addEventListener('click', () => {
+      const targetTab = el.dataset.tab;
+      const targetId = el.dataset.id;
+      document.getElementById('notes-search-modal').classList.remove('active');
+      switchTab(targetTab);
+      setTimeout(() => {
+        const target = document.querySelector(`.item[data-id="${targetId}"]`);
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          target.classList.add('expanded');
+          target.style.outline = '2px solid var(--accent)';
+          setTimeout(() => target.style.outline = '', 1500);
+        }
+      }, 100);
+    });
+  });
+}
+
+// === Stats engine ===
+function renderStats() {
+  let totalCatalogItems = 0, watched = 0, watching = 0, queued = 0, skip = 0, rated = 0;
+  const ratingCounts = { loved: 0, liked: 0, mixed: 0, disliked: 0 };
+  const tagCounts = {};
+  const perTab = {};
+  let longestQueue = { tab: '-', count: 0 };
+
+  for (const tab in catalogs) {
+    const cat = catalogs[tab];
+    const tabSt = { watched: 0, watching: 0, queued: 0, total: cat.items.length };
+    cat.items.forEach(item => {
+      totalCatalogItems++;
+      const e = (state[tab] && state[tab][item.id]) || {};
+      const st = e.status || 'none';
+      if (st === 'watched') { watched++; tabSt.watched++; }
+      else if (st === 'watching') { watching++; tabSt.watching++; }
+      else if (st === 'queued') { queued++; tabSt.queued++; }
+      else if (st === 'skip') skip++;
+      if (e.rating && ratingCounts.hasOwnProperty(e.rating)) { rated++; ratingCounts[e.rating]++; }
+      if (e.reactionTags) {
+        e.reactionTags.forEach(t => { tagCounts[t] = (tagCounts[t] || 0) + 1; });
+      }
+    });
+    perTab[tab] = tabSt;
+    if (tabSt.queued > longestQueue.count) longestQueue = { tab: cat.title || tab, count: tabSt.queued };
+  }
+
+  const topTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  const totalRated = rated;
+
+  // Recent activity: items touched in last 7/30 days
+  const now = Date.now();
+  const day = 24 * 60 * 60 * 1000;
+  let updated7 = 0, updated30 = 0;
+  for (const tab in state) {
+    for (const id in state[tab]) {
+      const lu = (state[tab][id] && state[tab][id].lastUpdated) || 0;
+      if (lu) {
+        if (now - lu < 7 * day) updated7++;
+        if (now - lu < 30 * day) updated30++;
+      }
+    }
+  }
+
+  let html = '<h4>Status</h4>';
+  html += `<div class="stat-line"><span>Total catalogued</span><strong>${totalCatalogItems}</strong></div>`;
+  html += `<div class="stat-line"><span>Watched</span><strong>${watched}</strong></div>`;
+  html += `<div class="stat-line"><span>Watching</span><strong>${watching}</strong></div>`;
+  html += `<div class="stat-line"><span>Queued</span><strong>${queued}</strong></div>`;
+  html += `<div class="stat-line"><span>Skipped</span><strong>${skip}</strong></div>`;
+  html += `<div class="stat-line"><span>Rated</span><strong>${rated}</strong></div>`;
+  html += '<h4>Ratings distribution</h4>';
+  html += `<div class="stat-line"><span>Loved</span><strong>${ratingCounts.loved}${totalRated ? ` (${Math.round(ratingCounts.loved * 100 / totalRated)}%)` : ''}</strong></div>`;
+  html += `<div class="stat-line"><span>Liked</span><strong>${ratingCounts.liked}${totalRated ? ` (${Math.round(ratingCounts.liked * 100 / totalRated)}%)` : ''}</strong></div>`;
+  html += `<div class="stat-line"><span>Mixed</span><strong>${ratingCounts.mixed}${totalRated ? ` (${Math.round(ratingCounts.mixed * 100 / totalRated)}%)` : ''}</strong></div>`;
+  html += `<div class="stat-line"><span>Disliked</span><strong>${ratingCounts.disliked}${totalRated ? ` (${Math.round(ratingCounts.disliked * 100 / totalRated)}%)` : ''}</strong></div>`;
+  html += '<h4>Activity</h4>';
+  html += `<div class="stat-line"><span>Updated last 7 days</span><strong>${updated7}</strong></div>`;
+  html += `<div class="stat-line"><span>Updated last 30 days</span><strong>${updated30}</strong></div>`;
+  html += `<div class="stat-line"><span>Longest queue</span><strong>${longestQueue.tab} (${longestQueue.count})</strong></div>`;
+  if (topTags.length) {
+    html += '<h4>Top reaction tags</h4>';
+    topTags.forEach(([tag, n]) => {
+      html += `<div class="stat-line"><span>${tag}</span><strong>${n}</strong></div>`;
+    });
+  }
+  html += '<h4>Per tab</h4>';
+  Object.entries(perTab).sort((a, b) => b[1].watched - a[1].watched).slice(0, 10).forEach(([tab, s]) => {
+    const cat = catalogs[tab];
+    html += `<div class="stat-line"><span>${cat ? cat.title : tab}</span><strong>${s.watched}/${s.total} watched</strong></div>`;
+  });
+  return html;
+}
+
+// === Triage mode ===
+let triageState = null;  // { mode, queue, idx }
+function startTriage(mode) {
+  // Build the queue from watchlist sections
+  const wl = buildWatchlistCatalog();
+  const sectionItems = mode === 'queue'
+    ? wl.sections.find(s => s.name.startsWith('B.'))?.items
+    : wl.sections.find(s => s.name.startsWith('C.'))?.items;
+  if (!sectionItems || sectionItems.length === 0) {
+    alert(mode === 'queue' ? 'Your queue is empty.' : 'No system suggestions to review.');
+    return;
+  }
+  triageState = { mode, queue: sectionItems.slice(), idx: 0 };
+  document.getElementById('triage-modal').classList.add('active');
+  renderTriage();
+}
+function renderTriage() {
+  if (!triageState) return;
+  const { mode, queue, idx } = triageState;
+  if (idx >= queue.length) {
+    // Done
+    document.getElementById('triage-card').innerHTML = '<p style="text-align:center;padding:20px">Triage complete.</p>';
+    document.getElementById('triage-progress').textContent = `${queue.length} reviewed`;
+    document.getElementById('triage-actions').innerHTML = `<button class="action-btn" id="triage-done">Close</button>`;
+    document.getElementById('triage-done').addEventListener('click', () => {
+      document.getElementById('triage-modal').classList.remove('active');
+      triageState = null;
+      render();
+    });
+    return;
+  }
+  const item = queue[idx];
+  const sourceTab = item._watchlist_source_tab;
+  const titleEl = document.getElementById('triage-title');
+  titleEl.textContent = mode === 'queue' ? 'Triage your queue' : 'Triage suggested items';
+  document.getElementById('triage-progress').textContent = `${idx + 1} / ${queue.length}`;
+
+  const meta = [item.year, item.dir, item.country, item.runtime].filter(Boolean).join(' · ');
+  const why = item.whyPriority ? `<div class="why">${item.whyPriority}</div>` : '';
+  document.getElementById('triage-card').innerHTML = `
+    <span class="source-badge">${item._watchlist_source_label}</span>
+    ${item.priority ? `<span class="priority-badge ${item.priority}" style="margin-left:6px">${priorityLabel(item.priority)}</span>` : ''}
+    <h4>${item.title}</h4>
+    <div class="meta">${meta}</div>
+    ${why}
+    <p>${item.pitch || ''}</p>
+  `;
+
+  if (mode === 'queue') {
+    // Triaging YOUR queue: keep / drop / mark-watching
+    document.getElementById('triage-actions').innerHTML = `
+      <button class="action-btn" data-act="keep">Keep queued</button>
+      <button class="action-btn" data-act="watching">Start watching</button>
+      <button class="action-btn" data-act="drop">Drop (clear)</button>
+      <button class="action-btn" data-act="skip">Pass</button>
+    `;
+  } else {
+    // Triaging SUGGESTIONS: queue / start watching / not for me
+    document.getElementById('triage-actions').innerHTML = `
+      <button class="action-btn" data-act="queue">Queue</button>
+      <button class="action-btn" data-act="watching">Start watching</button>
+      <button class="action-btn" data-act="skip">Not for me</button>
+      <button class="action-btn" data-act="next">Skip for now</button>
+    `;
+  }
+  document.querySelectorAll('#triage-actions .action-btn').forEach(btn => {
+    btn.addEventListener('click', () => triageAction(btn.dataset.act));
+  });
+}
+function triageAction(act) {
+  if (!triageState) return;
+  const item = triageState.queue[triageState.idx];
+  const tab = item._watchlist_source_tab;
+  if (act === 'keep' || act === 'next') {
+    // No state change
+  } else if (act === 'watching') {
+    setStatus(item.id, 'watching', tab);
+  } else if (act === 'queue') {
+    setStatus(item.id, 'queued', tab);
+  } else if (act === 'drop') {
+    setStatus(item.id, 'none', tab);
+  } else if (act === 'skip') {
+    setStatus(item.id, 'skip', tab);
+  }
+  triageState.idx++;
+  renderTriage();
 }
 
 (async () => {

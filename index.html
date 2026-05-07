@@ -29,6 +29,11 @@
   </div>
   <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
   <div class="header-buttons">
+    <button class="header-btn" id="search-btn">Search</button>
+    <button class="header-btn" id="notes-search-btn">Notes</button>
+    <button class="header-btn" id="stats-btn">Stats</button>
+    <button class="header-btn" id="triage-queue-btn">Triage Queue</button>
+    <button class="header-btn" id="triage-suggest-btn">Triage Suggested</button>
     <button class="header-btn" id="reset-btn">Reset</button>
     <button class="header-btn" id="export-btn">Export</button>
     <button class="header-btn" id="import-btn">Import</button>
@@ -60,6 +65,57 @@
     <div class="modal-actions">
       <button class="action-btn" id="import-confirm">Restore</button>
       <button class="action-btn" id="import-close">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="search-modal">
+  <div class="modal-content">
+    <h3>Search</h3>
+    <input type="text" class="modal-input" id="search-input" placeholder="Title, director, country, section, pitch..." autocomplete="off">
+    <div class="search-results" id="search-results"></div>
+    <div class="modal-actions">
+      <button class="action-btn" id="search-close">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="notes-search-modal">
+  <div class="modal-content">
+    <h3>Search notes</h3>
+    <input type="text" class="modal-input" id="notes-search-input" placeholder="Search across all your notes..." autocomplete="off">
+    <div class="search-results" id="notes-search-results"></div>
+    <div class="modal-actions">
+      <button class="action-btn" id="notes-search-close">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="stats-modal">
+  <div class="modal-content">
+    <h3>Stats</h3>
+    <div class="stats-content" id="stats-content"></div>
+    <div class="modal-actions">
+      <button class="action-btn" id="stats-close">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="triage-modal">
+  <div class="modal-content">
+    <h3 id="triage-title">Triage</h3>
+    <div class="triage-progress" id="triage-progress"></div>
+    <div class="triage-card" id="triage-card"></div>
+    <div class="modal-actions" id="triage-actions"></div>
+  </div>
+</div>
+
+<div class="modal" id="import-summary-modal">
+  <div class="modal-content">
+    <h3>Import summary</h3>
+    <div class="stats-content" id="import-summary-content"></div>
+    <div class="modal-actions">
+      <button class="action-btn" id="import-summary-close">Close</button>
     </div>
   </div>
 </div>
