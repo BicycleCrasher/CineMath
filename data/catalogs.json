@@ -15,6 +15,7 @@
     { "id": "heist", "label": "Heist" },
     { "id": "comedy", "label": "Comedy" },
     { "id": "comedy-tv", "label": "Comedy TV" },
+    { "id": "british-comedy", "label": "British Comedy" },
     { "id": "drama", "label": "Drama" },
     { "id": "drama-tv", "label": "Drama TV" },
     { "id": "foreign", "label": "Foreign" },
