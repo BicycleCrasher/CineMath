@@ -1,5 +1,97 @@
-const POSITIVE_TAGS = ["Rewatchable","Stayed with me","Visually stunning","Smart structure","Emotionally resonant","Want more like this"];
-const NEGATIVE_TAGS = ["Too slow","Too bleak","Too cold","Style over substance","Premise didn't land","Dated badly"];
+// === Reaction tag taxonomy by content type ===
+// Each item resolves to ONE content type. The UI shows the matching set.
+// Tags stored on items that aren't in the current type's set are preserved silently.
+const TAG_SETS = {
+  'film-narrative': {
+    positive: ["Rewatchable","Stayed with me","Visually stunning","Smart structure","Emotionally resonant","Want more like this"],
+    negative: ["Too slow","Too bleak","Too cold","Style over substance","Premise didn't land","Dated badly"]
+  },
+  'tv-prestige': {
+    positive: ["Stuck the landing","Stayed with me","Performance-driven","Smart structure","Emotionally resonant","Want more like this","Rewatchable"],
+    negative: ["Lost steam","Late-season decline","Too bleak","Stretched thin","Premise wore out","Dated badly"]
+  },
+  'tv-limited': {
+    positive: ["Stuck the landing","Stayed with me","Performance-driven","Tight structure","Emotionally resonant","Visually stunning","Want more like this"],
+    negative: ["Padded","Too bleak","Premise didn't land","Style over substance","Dated badly"]
+  },
+  'tv-sitcom': {
+    positive: ["Rewatchable","Quotable","Ensemble warmth","Joke density","Smart structure","Stayed with me","Emotionally resonant","Want more like this","Stuck the landing"],
+    negative: ["Cringe-driven","Sentimental","Dated badly","Premise wore thin","Lead overworked"]
+  },
+  'tv-panel': {
+    positive: ["Host chemistry","Quotable","Comfort watch","Strong recurring guests","Joke density","Format works","Want more like this"],
+    negative: ["Host doesn't land","Too topical","Format wears thin","Guests don't gel","Mean-spirited"]
+  },
+  'tv-game': {
+    positive: ["Great host","Format design","Difficulty pitched right","Comfort watch","Contestant chemistry","Quotable moments","Want more like this"],
+    negative: ["Host weak","Too easy","Too hard","Format dated","Lifeless"]
+  },
+  'tv-doc-reality': {
+    positive: ["Host chemistry","Visually stunning","Stayed with me","Educational","Comfort watch","Rewatchable","Want more like this"],
+    negative: ["Talking-heads heavy","Padded","Sensationalized","Style over substance","Dated badly"]
+  },
+  'tv-anthology': {
+    positive: ["Variable but rewards","Quotable","Stayed with me","Smart structure","Emotionally resonant","Rewatchable","Want more like this"],
+    negative: ["Inconsistent","Style over substance","Premise didn't land","Stretched thin","Aged badly"]
+  }
+};
+
+// Backwards compatibility: legacy POSITIVE_TAGS/NEGATIVE_TAGS still referenced from import code.
+const POSITIVE_TAGS = TAG_SETS['film-narrative'].positive;
+const NEGATIVE_TAGS = TAG_SETS['film-narrative'].negative;
+
+// Default content type per tab. Items in British Comedy resolve via category.
+// Items can override at the catalog level via `contentType` on the item or section.
+const TAB_DEFAULT_CONTENT_TYPE = {
+  'scifi': 'film-narrative',
+  'scifi-tv': 'tv-prestige',
+  'espionage': 'film-narrative',
+  'spy-tv': 'tv-prestige',
+  'crime': 'film-narrative',
+  'crime-tv': 'tv-prestige',
+  'cons-courtroom': 'film-narrative',
+  'cons-courtroom-tv': 'tv-prestige',
+  'horror': 'film-narrative',
+  'horror-tv': 'tv-prestige',
+  'fantasy': 'film-narrative',
+  'fantasy-tv': 'tv-prestige',
+  'heist': 'film-narrative',
+  'comedy': 'film-narrative',
+  'comedy-tv': 'tv-sitcom',
+  'british-comedy': 'tv-sitcom',
+  'drama': 'film-narrative',
+  'drama-tv': 'tv-prestige',
+  'foreign': 'film-narrative',
+  'auteur': 'film-narrative',
+  'pre1960': 'film-narrative'
+};
+
+// British-comedy category → content type mapping (when item has categories[]).
+// `specials` is intentionally absent so it falls through to the OTHER category in the array.
+const CATEGORY_TO_CONTENT_TYPE = {
+  'panel': 'tv-panel',
+  'news-comedy': 'tv-panel',
+  'game': 'tv-game',
+  'sitcom': 'tv-sitcom'
+};
+
+function resolveContentType(item) {
+  // 1. Explicit item override wins
+  if (item && item.contentType) return item.contentType;
+  // 2. British Comedy: look at item categories
+  if (item && Array.isArray(item.categories) && item.categories.length > 0) {
+    for (const cat of item.categories) {
+      if (CATEGORY_TO_CONTENT_TYPE[cat]) return CATEGORY_TO_CONTENT_TYPE[cat];
+    }
+  }
+  // 3. Tab default
+  return TAB_DEFAULT_CONTENT_TYPE[activeTab] || 'film-narrative';
+}
+
+function getTagSetForItem(item) {
+  const t = resolveContentType(item);
+  return TAG_SETS[t] || TAG_SETS['film-narrative'];
+}
 
 const STORAGE_KEY = 'scifi-tracker-state';
 const TAB_KEY = 'scifi-tracker-active-tab';
@@ -435,7 +527,9 @@ function updateItemInPlace(id) {
   itemEl.querySelectorAll('.tag-btn').forEach(btn => {
     btn.classList.remove('active-pos','active-neg');
     if (reactionTags.includes(btn.dataset.tag)) {
-      const isPos = POSITIVE_TAGS.includes(btn.dataset.tag);
+      const item = catalogs[activeTab] && catalogs[activeTab].items.find(it => it.id === id);
+      const set = item ? getTagSetForItem(item) : TAG_SETS['film-narrative'];
+      const isPos = set.positive.includes(btn.dataset.tag);
       btn.classList.add(isPos ? 'active-pos' : 'active-neg');
     }
   });
@@ -635,11 +729,14 @@ function render() {
     const commitmentBadge = item.commitment ? `<span class="commitment">${item.commitment}</span>` : '';
     const whyHtml = item.whyPriority ? `<div class="why-priority"><strong>Why this priority:</strong> ${item.whyPriority}</div>` : '';
 
-    const posTagsHtml = POSITIVE_TAGS.map(t => {
+    const itemTagSet = getTagSetForItem(item);
+    const itemPositive = itemTagSet.positive;
+    const itemNegative = itemTagSet.negative;
+    const posTagsHtml = itemPositive.map(t => {
       const active = reactionTags.includes(t);
       return `<button class="tag-btn ${active ? 'active-pos' : ''}" data-tag="${t}">${t}</button>`;
     }).join('');
-    const negTagsHtml = NEGATIVE_TAGS.map(t => {
+    const negTagsHtml = itemNegative.map(t => {
       const active = reactionTags.includes(t);
       return `<button class="tag-btn ${active ? 'active-neg' : ''}" data-tag="${t}">${t}</button>`;
     }).join('');
