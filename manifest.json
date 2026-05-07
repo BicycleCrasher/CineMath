@@ -1,7 +1,7 @@
 {
-  "name": "Cerebral Sci-Fi Tracker",
-  "short_name": "Sci-Fi",
-  "description": "Personal tracker for cerebral sci-fi films and TV.",
+  "name": "WatchTrack: Personal Film & TV Tracker",
+  "short_name": "WatchTrack",
+  "description": "Personal tracker for films and TV.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
