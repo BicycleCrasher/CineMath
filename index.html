@@ -121,6 +121,25 @@
   </div>
 </div>
 
+<div class="modal" id="bulk-sync-progress-modal">
+  <div class="modal-content">
+    <h3>Syncing from Plex</h3>
+    <p id="bulk-sync-status">Starting...</p>
+    <div class="bulk-progress-bar"><div class="bulk-progress-fill" id="bulk-sync-bar"></div></div>
+    <p class="settings-help">This may take 10-60 seconds depending on history size. Don't close the app.</p>
+  </div>
+</div>
+
+<div class="modal" id="bulk-sync-result-modal">
+  <div class="modal-content">
+    <h3>Sync complete</h3>
+    <div class="stats-content" id="bulk-sync-result-content"></div>
+    <div class="modal-actions">
+      <button class="action-btn" id="bulk-sync-result-close">Close</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal" id="settings-modal">
   <div class="modal-content">
     <h3>Settings</h3>
@@ -158,6 +177,7 @@
       <div class="settings-row">
         <button class="action-btn" id="plex-test">Test connection</button>
         <button class="action-btn" id="plex-refresh">Refresh library</button>
+        <button class="action-btn" id="plex-bulk-sync">Sync from Plex history</button>
       </div>
       <p class="settings-status" id="plex-status">Not configured.</p>
     </div>

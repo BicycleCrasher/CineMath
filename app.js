@@ -473,9 +473,6 @@ async function pollPlexWebhookEvents() {
 }
 
 // Apply a single webhook event to WatchTrack state.
-// For movies: match by title+year, mark watched in source tab.
-// For TV episodes: match the show by grandparentTitle+year, mark show as watching (not "watched"
-// since one episode doesn't equal a whole series).
 function applyPlexEvent(evt) {
   if (evt.event !== 'media.scrobble') return false;
   if (evt.type !== 'movie' && evt.type !== 'episode' && evt.type !== 'show') return false;
@@ -520,6 +517,239 @@ function applyPlexEvent(evt) {
     }
   }
   return false;
+}
+
+// =====================================================================
+// BULK SYNC: fetch full Plex history → apply rules → log to Worker KV
+// =====================================================================
+
+// Library whitelist (hardcoded — matches Worker config).
+const PLEX_BULK_LIBRARY_WHITELIST = new Set(['1', '2']);
+
+// Fetch the full Plex history in pages. Returns array of raw entry objects.
+async function fetchFullPlexHistory(progressCb) {
+  if (!isPlexConfigured()) throw new Error('Plex not configured');
+  const url = getPlexServerUrl();
+  const token = getPlexToken();
+  const pageSize = 500;
+  let start = 0;
+  const all = [];
+  while (true) {
+    const fetchUrl = `${url}/status/sessions/history/all?sort=viewedAt:asc&X-Plex-Token=${encodeURIComponent(token)}&X-Plex-Container-Start=${start}&X-Plex-Container-Size=${pageSize}`;
+    const resp = await fetch(fetchUrl, { headers: { 'Accept': 'application/json' } });
+    if (!resp.ok) throw new Error(`Plex history fetch ${resp.status}`);
+    const data = await resp.json();
+    const mc = data?.MediaContainer || {};
+    const items = mc.Metadata || [];
+    if (items.length === 0) break;
+    all.push(...items);
+    if (progressCb) progressCb(all.length, mc.totalSize || mc.size || all.length);
+    if (items.length < pageSize) break;
+    start += pageSize;
+    // Safety stop
+    if (start > 100000) break;
+  }
+  return all;
+}
+
+// Send the entries to the Worker for durable storage.
+async function postViewedIngest(entries) {
+  if (!isWebhookConfigured()) return { stored: 0, filtered: 0 };
+  const workerUrl = getWebhookUrl();
+  const secret = getWebhookSecret();
+  // Strip to compact shape — Worker doesn't need everything
+  const compact = entries.map(e => ({
+    librarySectionID: String(e.librarySectionID || ''),
+    title: e.title || '',
+    year: e.year || (e.originallyAvailableAt ? parseInt(String(e.originallyAvailableAt).slice(0, 4)) : null),
+    type: e.type || '',
+    grandparentTitle: e.grandparentTitle || null,
+    parentIndex: e.parentIndex != null ? parseInt(e.parentIndex) : null,
+    index: e.index != null ? parseInt(e.index) : null,
+    viewedAt: e.viewedAt || null,
+  }));
+  // Post in batches of 200 to stay well under Cloudflare's request size limits
+  const BATCH = 200;
+  let totalStored = 0, totalFiltered = 0;
+  for (let i = 0; i < compact.length; i += BATCH) {
+    const slice = compact.slice(i, i + BATCH);
+    const resp = await fetch(`${workerUrl}/viewed/ingest`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ secret, entries: slice }),
+    });
+    if (!resp.ok) {
+      const txt = await resp.text();
+      throw new Error(`Worker ingest failed: ${resp.status} ${txt}`);
+    }
+    const data = await resp.json();
+    totalStored += data.stored || 0;
+    totalFiltered += data.filtered || 0;
+  }
+  return { stored: totalStored, filtered: totalFiltered };
+}
+
+// Apply bulk-sync rules to WatchTrack state given the full filtered history.
+// Returns a structured report.
+function applyBulkSyncRules(entries) {
+  // Filter to whitelisted libraries first
+  const filtered = entries.filter(e => PLEX_BULK_LIBRARY_WHITELIST.has(String(e.librarySectionID || '')));
+
+  // Group: movies by (norm_title, year); episodes by show
+  const movieMap = new Map();   // norm_title|year -> { entries: [], title, year }
+  const showMap = new Map();    // norm_title -> { episodes: Set('s_e'), title, latestPlay, totalPlays }
+
+  filtered.forEach(e => {
+    if (e.type === 'movie') {
+      const yearVal = e.year || (e.originallyAvailableAt ? parseInt(String(e.originallyAvailableAt).slice(0, 4)) : null);
+      const key = plexNormalizeKey(e.title, yearVal);
+      if (!movieMap.has(key)) movieMap.set(key, { entries: [], title: e.title, year: yearVal });
+      movieMap.get(key).entries.push(e);
+    } else if (e.type === 'episode') {
+      const show = e.grandparentTitle || e.title;
+      if (!show) return;
+      const key = plexNormalizeKeyTitleOnly(show);
+      if (!showMap.has(key)) showMap.set(key, { episodes: new Set(), title: show, latestPlay: 0, totalPlays: 0 });
+      const epId = `${e.parentIndex || '0'}_${e.index || '0'}`;
+      const data = showMap.get(key);
+      data.episodes.add(epId);
+      data.totalPlays++;
+      const ts = (e.viewedAt ? parseInt(e.viewedAt) * 1000 : 0);
+      if (ts > data.latestPlay) data.latestPlay = ts;
+    }
+  });
+
+  const report = {
+    moviesProcessed: 0,
+    moviesMatchedToCatalog: 0,
+    moviesOrphan: 0,
+    moviesMarkedWatched: 0,
+    showsProcessed: 0,
+    showsMatchedToCatalog: 0,
+    showsOrphan: 0,
+    showsMarkedWatched: 0,
+    showsMarkedWatching: 0,
+    showsMarkedLoved: 0,
+    movieMatches: [],     // [{title, year, tab}]
+    movieOrphans: [],     // [{title, year, plays}]
+    showMatches: [],      // [{show, distinct, tab, finalStatus, finalRating}]
+    showOrphans: [],      // [{show, distinct, plays}]
+  };
+
+  // === MOVIES: each match → mark watched in source tab ===
+  for (const [key, data] of movieMap.entries()) {
+    report.moviesProcessed++;
+    let matched = false;
+    for (const tabId in catalogs) {
+      const cat = catalogs[tabId];
+      for (const item of cat.items) {
+        const titlesToCheck = [item.title].concat(Array.isArray(item.aliases) ? item.aliases : []);
+        let thisMatch = false;
+        for (const t of titlesToCheck) {
+          if (plexNormalizeKey(t, item.year) === key) { thisMatch = true; break; }
+          for (const dy of [-1, 1]) {
+            if (plexNormalizeKey(t, item.year ? item.year + dy : null) === key) { thisMatch = true; break; }
+          }
+          if (thisMatch) break;
+        }
+        if (thisMatch) {
+          // Skip if already watched
+          if (getStatus(item.id, tabId) !== 'watched') {
+            setStatus(item.id, 'watched', tabId);
+            report.moviesMarkedWatched++;
+          }
+          report.moviesMatchedToCatalog++;
+          report.movieMatches.push({ title: data.title, year: data.year, tab: tabId });
+          matched = true;
+          break;
+        }
+      }
+      if (matched) break;
+    }
+    if (!matched) {
+      report.moviesOrphan++;
+      report.movieOrphans.push({ title: data.title, year: data.year, plays: data.entries.length });
+    }
+  }
+
+  // === TV SHOWS: distinct-episode rule + completion-mode rule ===
+  for (const [key, data] of showMap.entries()) {
+    report.showsProcessed++;
+    const distinctCount = data.episodes.size;
+    let matched = false;
+    for (const tabId in catalogs) {
+      const cat = catalogs[tabId];
+      for (const item of cat.items) {
+        const titlesToCheck = [item.title].concat(Array.isArray(item.aliases) ? item.aliases : []);
+        let thisMatch = false;
+        for (const t of titlesToCheck) {
+          if (plexNormalizeKeyTitleOnly(t) === key) { thisMatch = true; break; }
+        }
+        if (thisMatch) {
+          report.showsMatchedToCatalog++;
+          // Determine status
+          const mode = item.tvCompletionMode || 'strict';
+          let setWatched = false;
+          if (mode !== 'episodic') {
+            // We don't know total episodes from this code path alone — we'd need TMDB.
+            // For now: 5+ distinct = watching (not auto-watched). Total-episodes calc happens in Stage 4c via TMDB.
+            // CONSERVATIVE: never auto-mark series watched in bulk-sync; only watching + loved.
+            // The user can mark watched manually. This avoids false positives.
+          }
+          // Set status
+          const cur = getStatus(item.id, tabId);
+          if (cur !== 'watched') {
+            if (setWatched) {
+              setStatus(item.id, 'watched', tabId);
+              report.showsMarkedWatched++;
+            } else {
+              if (cur !== 'watching') {
+                setStatus(item.id, 'watching', tabId);
+                report.showsMarkedWatching++;
+              }
+            }
+          }
+          // Loved rule: 5+ distinct episodes
+          if (distinctCount >= 5 && getRating(item.id, tabId) !== 'loved') {
+            setRating(item.id, 'loved', tabId);
+            report.showsMarkedLoved++;
+          }
+          report.showMatches.push({
+            show: data.title, distinct: distinctCount, tab: tabId,
+            finalStatus: getStatus(item.id, tabId), finalRating: getRating(item.id, tabId),
+          });
+          matched = true;
+          break;
+        }
+      }
+      if (matched) break;
+    }
+    if (!matched) {
+      report.showsOrphan++;
+      report.showOrphans.push({ show: data.title, distinct: distinctCount, plays: data.totalPlays });
+    }
+  }
+
+  return report;
+}
+
+// Top-level orchestrator — runs the full bulk-sync. Calls progressCb at each phase.
+async function runBulkSync(progressCb) {
+  if (!isPlexConfigured()) throw new Error('Configure Plex in Settings first.');
+  if (!isWebhookConfigured()) throw new Error('Configure Plex Webhook Bridge in Settings first.');
+  progressCb('Fetching Plex history...', 0);
+  const all = await fetchFullPlexHistory((loaded, total) => {
+    progressCb(`Fetching Plex history... ${loaded}${total ? ' / ' + total : ''}`, 0);
+  });
+  progressCb(`Fetched ${all.length} entries. Sending to Worker for durable storage...`, 33);
+  const ingestResult = await postViewedIngest(all);
+  progressCb(`Stored ${ingestResult.stored}, filtered ${ingestResult.filtered}. Applying rules to WatchTrack...`, 66);
+  const report = applyBulkSyncRules(all);
+  report.totalEntries = all.length;
+  report.workerStored = ingestResult.stored;
+  report.workerFiltered = ingestResult.filtered;
+  progressCb('Done.', 100);
+  return report;
 }
 
 // === Category filter (in-memory only; never persisted to localStorage) ===
@@ -1570,6 +1800,38 @@ function setupModals() {
     status.className = 'settings-status ok';
   });
 
+  document.getElementById('plex-bulk-sync').addEventListener('click', async () => {
+    if (!isPlexConfigured() || !isWebhookConfigured()) {
+      alert('Configure both Plex Integration and Plex Webhook Bridge before bulk sync.');
+      return;
+    }
+    if (!confirm('Bulk-sync your full Plex history into WatchTrack? This will:\n\n• Fetch every item you\'ve watched on Plex\n• Mark matched movies as Watched\n• Mark TV shows as Watching, with Loved if you\'ve watched 5+ distinct episodes\n• Log all viewing to durable cloud storage\n\nSafe to run multiple times.')) return;
+
+    const progressModal = document.getElementById('bulk-sync-progress-modal');
+    const statusEl = document.getElementById('bulk-sync-status');
+    const barEl = document.getElementById('bulk-sync-bar');
+    progressModal.classList.add('active');
+    document.getElementById('settings-modal').classList.remove('active');
+
+    try {
+      const report = await runBulkSync((msg, pct) => {
+        statusEl.textContent = msg;
+        barEl.style.width = `${pct}%`;
+      });
+      progressModal.classList.remove('active');
+      // Show result
+      document.getElementById('bulk-sync-result-content').innerHTML = renderBulkSyncReport(report);
+      document.getElementById('bulk-sync-result-modal').classList.add('active');
+      render();  // Refresh the visible UI to reflect new statuses
+    } catch (e) {
+      progressModal.classList.remove('active');
+      alert('Bulk sync failed: ' + e.message);
+    }
+  });
+  document.getElementById('bulk-sync-result-close').addEventListener('click', () => {
+    document.getElementById('bulk-sync-result-modal').classList.remove('active');
+  });
+
   document.getElementById('webhook-test').addEventListener('click', async () => {
     const url = document.getElementById('webhook-url').value.trim().replace(/\/$/, '');
     const secret = document.getElementById('webhook-secret').value.trim();
@@ -1683,6 +1945,45 @@ function renderImportDiagnostic(d) {
       html += `<div style="margin-top:6px"><strong>${tab}:</strong> ${d.unknownByTab[tab].slice(0,5).join(', ')}${d.unknownByTab[tab].length > 5 ? ` (+${d.unknownByTab[tab].length - 5} more)` : ''}</div>`;
     }
   }
+  return html;
+}
+
+// === Bulk-sync results ===
+function renderBulkSyncReport(r) {
+  let html = '';
+  html += '<h4>Overall</h4>';
+  html += `<div class="stat-line"><span>Plex history entries fetched</span><strong>${r.totalEntries}</strong></div>`;
+  html += `<div class="stat-line"><span>Stored to durable history</span><strong>${r.workerStored}</strong></div>`;
+  html += `<div class="stat-line"><span>Filtered (excluded library)</span><strong>${r.workerFiltered}</strong></div>`;
+  html += '<h4>Movies</h4>';
+  html += `<div class="stat-line"><span>Distinct movies seen on Plex</span><strong>${r.moviesProcessed}</strong></div>`;
+  html += `<div class="stat-line"><span>Matched to WatchTrack catalog</span><strong>${r.moviesMatchedToCatalog}</strong></div>`;
+  html += `<div class="stat-line"><span>Newly marked Watched</span><strong>${r.moviesMarkedWatched}</strong></div>`;
+  html += `<div class="stat-line"><span>Orphans (not in catalog, logged to history)</span><strong>${r.moviesOrphan}</strong></div>`;
+  html += '<h4>TV shows</h4>';
+  html += `<div class="stat-line"><span>Distinct shows seen on Plex</span><strong>${r.showsProcessed}</strong></div>`;
+  html += `<div class="stat-line"><span>Matched to WatchTrack catalog</span><strong>${r.showsMatchedToCatalog}</strong></div>`;
+  html += `<div class="stat-line"><span>Marked Watching</span><strong>${r.showsMarkedWatching}</strong></div>`;
+  html += `<div class="stat-line"><span>Marked Loved (5+ distinct episodes)</span><strong>${r.showsMarkedLoved}</strong></div>`;
+  html += `<div class="stat-line"><span>Orphans (not in catalog, logged to history)</span><strong>${r.showsOrphan}</strong></div>`;
+  if (r.movieOrphans.length > 0) {
+    html += '<h4>Movie orphans (top 15)</h4>';
+    r.movieOrphans
+      .sort((a, b) => b.plays - a.plays)
+      .slice(0, 15)
+      .forEach(o => {
+        html += `<div class="stat-line"><span>${o.title} (${o.year || '?'})</span><strong>${o.plays} play${o.plays === 1 ? '' : 's'}</strong></div>`;
+      });
+  }
+  if (r.showOrphans.length > 0) {
+    html += '<h4>TV orphans</h4>';
+    r.showOrphans
+      .sort((a, b) => b.distinct - a.distinct)
+      .forEach(o => {
+        html += `<div class="stat-line"><span>${o.show}</span><strong>${o.distinct} ep / ${o.plays} play${o.plays === 1 ? '' : 's'}</strong></div>`;
+      });
+  }
+  html += '<p class="settings-help" style="margin-top:12px">Orphans were logged to your durable Plex history (Cloudflare KV). Future versions will surface them in a Plex History modal where you can promote frequently-watched items into the catalog.</p>';
   return html;
 }
 

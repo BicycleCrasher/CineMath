@@ -591,3 +591,14 @@ body.tv-mode #settings-modal .modal-content {
   max-width: 900px;
   max-height: 85vh;
 }
+
+/* Bulk sync progress bar */
+.bulk-progress-bar {
+  width: 100%; height: 6px; background: var(--bg);
+  border: 1px solid var(--rule); border-radius: 3px;
+  overflow: hidden; margin: 12px 0 4px;
+}
+.bulk-progress-fill {
+  height: 100%; background: var(--accent);
+  width: 0%; transition: width 0.3s ease;
+}

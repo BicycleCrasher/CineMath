@@ -10,6 +10,44 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.4.0 — 2026-05-07
+**Service worker cache:** `scifi-tracker-v15` → `v16`
+
+### Added — Stage 4b: Bulk-sync from Plex history
+- New **"Sync from Plex history"** button in Settings → Plex Integration
+- Fetches the full Plex history (`/status/sessions/history/all`, paginated, 500/page)
+- Posts every entry to the Worker for durable storage in `WATCHTRACK_VIEWED` KV
+- Applies state-change rules to WatchTrack catalog matches:
+  - **Movies**: any matched movie → marked Watched
+  - **TV shows** with 5+ distinct episodes watched → marked Loved
+  - **TV shows** with any matched episode → marked Watching (does not auto-mark Watched in this stage; deferred to Stage 4c when TMDB provides total-episode counts for the 95%/80% rules)
+- **Idempotent**: safe to re-run. Already-watched movies stay watched; already-loved shows stay loved.
+- **Library whitelist** enforced both client-side and Worker-side (sections 1, 2 only)
+
+### UI
+- Progress modal during sync (status text + progress bar)
+- Detailed results modal showing:
+  - Total entries fetched / stored / filtered
+  - Movies: distinct seen, matched, newly-watched, orphan count
+  - TV: distinct shows, matched, watching, loved, orphan count
+  - Top 15 movie orphans (by play count)
+  - All TV orphans (by distinct episode count)
+- Confirmation dialog before run (explains what will happen, says safe to re-run)
+
+### Architecture notes
+- Bulk sync calls Plex directly (CORS works on your seedbox) for paginated history fetch
+- Then POSTs to Worker `/viewed/ingest` in batches of 200 entries
+- State changes happen client-side after ingest succeeds (rule application)
+- Orphans (items watched on Plex but not in WT catalog) live only in the Worker's `VIEWED` KV — they don't pollute WT state, but persist for Stage 4c's Plex History modal
+
+### Pending for Stage 4c
+- Total-episode-count lookup via TMDB for the 95%/80% completion thresholds (currently only "watching + loved" applies, never auto-marks series as watched)
+- Streaming-provider badges on items
+- Plex History modal showing all logged views including orphans
+- Catalog-promotion workflow ("Promote orphan to catalog" buttons)
+
+---
+
 ## 5.3.0 — 2026-05-07
 **Service worker cache:** `scifi-tracker-v14` → `v15`
 
