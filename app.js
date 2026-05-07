@@ -591,7 +591,7 @@ async function postViewedIngest(entries) {
 
 // Apply bulk-sync rules to WatchTrack state given the full filtered history.
 // Returns a structured report.
-function applyBulkSyncRules(entries) {
+function applyBulkSyncRules(entries, episodeCounts) {
   // Filter to whitelisted libraries first
   const filtered = entries.filter(e => PLEX_BULK_LIBRARY_WHITELIST.has(String(e.librarySectionID || '')));
 
@@ -687,16 +687,19 @@ function applyBulkSyncRules(entries) {
         }
         if (thisMatch) {
           report.showsMatchedToCatalog++;
-          // Determine status
           const mode = item.tvCompletionMode || 'strict';
           let setWatched = false;
           if (mode !== 'episodic') {
-            // We don't know total episodes from this code path alone — we'd need TMDB.
-            // For now: 5+ distinct = watching (not auto-watched). Total-episodes calc happens in Stage 4c via TMDB.
-            // CONSERVATIVE: never auto-mark series watched in bulk-sync; only watching + loved.
-            // The user can mark watched manually. This avoids false positives.
+            // Look up total episode count for this show (passed in from TMDB pre-fetch)
+            const tmdb = (episodeCounts || {})[plexNormalizeKeyTitleOnly(item.title)] ||
+                         (episodeCounts || {})[plexNormalizeKeyTitleOnly(data.title)];
+            if (tmdb && tmdb > 0) {
+              const ratio = distinctCount / tmdb;
+              const threshold = mode === 'flexible' ? 0.80 : 0.95;
+              if (ratio >= threshold) setWatched = true;
+            }
           }
-          // Set status
+          // Apply status
           const cur = getStatus(item.id, tabId);
           if (cur !== 'watched') {
             if (setWatched) {
@@ -741,15 +744,284 @@ async function runBulkSync(progressCb) {
   const all = await fetchFullPlexHistory((loaded, total) => {
     progressCb(`Fetching Plex history... ${loaded}${total ? ' / ' + total : ''}`, 0);
   });
-  progressCb(`Fetched ${all.length} entries. Sending to Worker for durable storage...`, 33);
+  progressCb(`Fetched ${all.length} entries. Sending to Worker for durable storage...`, 25);
   const ingestResult = await postViewedIngest(all);
-  progressCb(`Stored ${ingestResult.stored}, filtered ${ingestResult.filtered}. Applying rules to WatchTrack...`, 66);
-  const report = applyBulkSyncRules(all);
+  progressCb(`Stored ${ingestResult.stored}, filtered ${ingestResult.filtered}. Looking up TV episode counts...`, 50);
+
+  // Pre-fetch TMDB metadata for all distinct TV shows in history (for the 95%/80% rule)
+  const tvShowSet = new Set();
+  for (const e of all) {
+    if (e.type === 'episode') {
+      const show = e.grandparentTitle || e.title;
+      if (show) tvShowSet.add(show);
+    }
+  }
+  const tvLookups = Array.from(tvShowSet).map(show => ({ title: show, year: null, type: 'tv' }));
+  const episodeCounts = {};
+  if (tvLookups.length > 0) {
+    const bulk = await tmdbBulkLookup(tvLookups, (n, total) => {
+      progressCb(`Looking up TV episode counts... ${n} / ${total}`, 50 + Math.round((n / total) * 25));
+    });
+    bulk.results.forEach(r => {
+      if (r.result && r.result.found && r.result.numberOfEpisodes) {
+        const key = plexNormalizeKeyTitleOnly(r.query.title);
+        episodeCounts[key] = r.result.numberOfEpisodes;
+      }
+    });
+  }
+
+  progressCb('Applying rules to WatchTrack...', 80);
+  const report = applyBulkSyncRules(all, episodeCounts);
   report.totalEntries = all.length;
   report.workerStored = ingestResult.stored;
   report.workerFiltered = ingestResult.filtered;
+  report.tvCountsLookedUp = Object.keys(episodeCounts).length;
   progressCb('Done.', 100);
   return report;
+}
+
+// =====================================================================
+// TMDB metadata client — calls Worker, caches in localStorage
+// =====================================================================
+
+const TMDB_CACHE_PREFIX = 'wt-tmdb-';
+const TMDB_CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000;  // 30 days
+
+function tmdbCacheKey(title, year, type) {
+  // Normalize same way as Worker
+  const t = (title || '').toLowerCase()
+    .replace(/\s*\([^)]*\)\s*/g, ' ')
+    .replace(/&/g, ' and ')
+    .replace(/[\u2019\u2018'`]/g, '')
+    .replace(/[^a-z0-9]+/g, '')
+    .slice(0, 60);
+  return `${TMDB_CACHE_PREFIX}${type}:${t}:${year || ''}`;
+}
+
+function tmdbGetCached(title, year, type) {
+  try {
+    const raw = localStorage.getItem(tmdbCacheKey(title, year, type));
+    if (!raw) return null;
+    const obj = JSON.parse(raw);
+    if (obj.cachedAt && (Date.now() - obj.cachedAt > TMDB_CACHE_TTL_MS)) return null;
+    return obj.data;
+  } catch { return null; }
+}
+
+function tmdbSetCached(title, year, type, data) {
+  try {
+    localStorage.setItem(tmdbCacheKey(title, year, type), JSON.stringify({
+      cachedAt: Date.now(), data,
+    }));
+  } catch {}  // localStorage may be full; ignore quietly
+}
+
+// Single lookup — uses cache, falls back to Worker
+async function tmdbLookup(title, year, type) {
+  if (!isWebhookConfigured()) return null;
+  const cached = tmdbGetCached(title, year, type);
+  if (cached) return cached;
+  const url = getWebhookUrl();
+  const secret = getWebhookSecret();
+  const params = new URLSearchParams({
+    secret, title, year: year || '', type: type === 'tv' ? 'tv' : 'movie',
+  });
+  try {
+    const resp = await fetch(`${url}/metadata/lookup?${params}`);
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    tmdbSetCached(title, year, type, data);
+    return data;
+  } catch { return null; }
+}
+
+// Bulk lookup — for catalog enrichment passes
+async function tmdbBulkLookup(items, progressCb) {
+  if (!isWebhookConfigured()) return { results: [], errors: 0 };
+  // Filter out items already cached
+  const needFetch = [];
+  const cachedResults = [];
+  items.forEach(it => {
+    const c = tmdbGetCached(it.title, it.year, it.type);
+    if (c) cachedResults.push({ query: it, result: c });
+    else needFetch.push(it);
+  });
+  const url = getWebhookUrl();
+  const secret = getWebhookSecret();
+  const BATCH = 20;
+  const allResults = [...cachedResults];
+  let errors = 0;
+  for (let i = 0; i < needFetch.length; i += BATCH) {
+    const slice = needFetch.slice(i, i + BATCH);
+    if (progressCb) progressCb(i, needFetch.length);
+    try {
+      const resp = await fetch(`${url}/metadata/bulk`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ secret, items: slice }),
+      });
+      if (!resp.ok) { errors += slice.length; continue; }
+      const data = await resp.json();
+      (data.results || []).forEach(r => {
+        if (r.result && !r.result.error) {
+          tmdbSetCached(r.query.title, r.query.year || '', r.query.type, r.result);
+        }
+        allResults.push(r);
+      });
+      errors += data.errors || 0;
+    } catch {
+      errors += slice.length;
+    }
+  }
+  if (progressCb) progressCb(needFetch.length, needFetch.length);
+  return { results: allResults, errors };
+}
+
+// =====================================================================
+// Region selection for streaming-provider data
+// =====================================================================
+const REGION_KEY = 'watchtrack-streaming-region';
+function getStreamingRegion() {
+  return localStorage.getItem(REGION_KEY) || 'US';
+}
+function setStreamingRegion(r) {
+  localStorage.setItem(REGION_KEY, r || 'US');
+}
+// All regions TMDB supports for watch providers (ISO 3166-1 alpha-2 country codes).
+// Sorted, with common ones at top for the dropdown.
+const STREAMING_REGIONS = [
+  { code: 'US', name: 'United States' },
+  { code: 'GB', name: 'United Kingdom' },
+  { code: 'CA', name: 'Canada' },
+  { code: 'AU', name: 'Australia' },
+  { code: 'DE', name: 'Germany' },
+  { code: 'FR', name: 'France' },
+  { code: 'JP', name: 'Japan' },
+  { code: 'KR', name: 'South Korea' },
+  { code: 'IT', name: 'Italy' },
+  { code: 'ES', name: 'Spain' },
+  { code: 'BR', name: 'Brazil' },
+  { code: 'MX', name: 'Mexico' },
+  { code: 'IN', name: 'India' },
+  { code: 'NL', name: 'Netherlands' },
+  { code: 'SE', name: 'Sweden' },
+  { code: 'NO', name: 'Norway' },
+  { code: 'DK', name: 'Denmark' },
+  { code: 'FI', name: 'Finland' },
+  { code: 'PL', name: 'Poland' },
+  { code: 'IE', name: 'Ireland' },
+  { code: 'NZ', name: 'New Zealand' },
+  { code: 'ZA', name: 'South Africa' },
+];
+
+// Search-on-service URL templates (used when user clicks a provider badge).
+// Maps TMDB provider name → URL template with {q} placeholder for search query.
+const STREAMING_SEARCH_TEMPLATES = {
+  'Netflix': 'https://www.netflix.com/search?q={q}',
+  'Hulu': 'https://www.hulu.com/search?q={q}',
+  'Max': 'https://play.max.com/search?q={q}',
+  'Disney Plus': 'https://www.disneyplus.com/search?q={q}',
+  'Disney+': 'https://www.disneyplus.com/search?q={q}',
+  'Amazon Prime Video': 'https://www.amazon.com/s?k={q}&i=instant-video',
+  'Apple TV Plus': 'https://tv.apple.com/search?term={q}',
+  'Apple TV+': 'https://tv.apple.com/search?term={q}',
+  'Apple TV': 'https://tv.apple.com/search?term={q}',
+  'Paramount Plus': 'https://www.paramountplus.com/search/{q}',
+  'Paramount+': 'https://www.paramountplus.com/search/{q}',
+  'Peacock': 'https://www.peacocktv.com/search?q={q}',
+  'BBC iPlayer': 'https://www.bbc.co.uk/iplayer/search?q={q}',
+  'Crunchyroll': 'https://www.crunchyroll.com/search?q={q}',
+  'YouTube': 'https://www.youtube.com/results?search_query={q}',
+  'Google Play Movies': 'https://play.google.com/store/search?q={q}&c=movies',
+  'Vudu': 'https://www.vudu.com/content/movies/search?searchString={q}',
+  // For unknown providers, fall back to Google search
+};
+
+function streamingSearchUrl(providerName, title) {
+  const template = STREAMING_SEARCH_TEMPLATES[providerName];
+  const q = encodeURIComponent(title);
+  if (template) return template.replace('{q}', q);
+  return `https://www.google.com/search?q=${encodeURIComponent(providerName + ' ' + title)}`;
+}
+
+// Lazy-load streaming providers for an item card and render them.
+async function loadStreamingProviders(itemEl, item) {
+  const slot = itemEl.querySelector('.streaming-providers');
+  if (!slot) return;
+  if (slot.dataset.streamingLoaded === 'true') return;
+  slot.dataset.streamingLoaded = 'true';
+  if (!isWebhookConfigured()) {
+    slot.innerHTML = '';
+    return;
+  }
+  // TV vs movie type
+  const tvTabs = ['comedy-tv','crime-tv','spy-tv','drama-tv','horror-tv','fantasy-tv','scifi-tv','cons-courtroom-tv','british-comedy'];
+  const sourceTab = item._watchlist_source_tab || activeTab;
+  const type = tvTabs.includes(sourceTab) ? 'tv' : 'movie';
+  // Render placeholder
+  slot.innerHTML = '<div class="streaming-loading">Looking up streaming availability...</div>';
+  // Look up
+  const data = await tmdbLookup(item.title, item.year, type);
+  if (!data || !data.found) {
+    slot.innerHTML = '';
+    return;
+  }
+  renderStreamingProviders(slot, data, item.title);
+}
+
+function renderStreamingProviders(slot, tmdbData, title) {
+  const providers = tmdbData.watchProviders || {};
+  const region = getStreamingRegion();
+  const regionData = providers[region];
+
+  // Build the region selector
+  const regionOptions = STREAMING_REGIONS.map(r => {
+    const has = providers[r.code] ? '' : ' (none)';
+    return `<option value="${r.code}" ${r.code === region ? 'selected' : ''}>${r.name}${has}</option>`;
+  }).join('');
+
+  // Get providers for selected region. TMDB groups by flatrate / rent / buy / free / ads.
+  // We prefer flatrate (subscription) and free, then ads, then rent/buy.
+  let html = `<div class="streaming-header">
+    <span class="streaming-label">Streaming</span>
+    <select class="streaming-region-select">${regionOptions}</select>
+  </div>`;
+
+  if (!regionData) {
+    html += `<div class="streaming-none">Not available in ${region}</div>`;
+  } else {
+    const tiers = [
+      { key: 'flatrate', label: 'Subscription' },
+      { key: 'free', label: 'Free' },
+      { key: 'ads', label: 'Ads' },
+      { key: 'rent', label: 'Rent' },
+      { key: 'buy', label: 'Buy' },
+    ];
+    let any = false;
+    tiers.forEach(t => {
+      const provs = regionData[t.key];
+      if (!provs || provs.length === 0) return;
+      any = true;
+      const buttons = provs.map(p => {
+        const search = streamingSearchUrl(p.provider_name, title);
+        return `<a class="streaming-btn" href="${search}" target="_blank" rel="noopener">${p.provider_name}</a>`;
+      }).join('');
+      html += `<div class="streaming-tier"><span class="streaming-tier-label">${t.label}:</span> ${buttons}</div>`;
+    });
+    if (!any) html += `<div class="streaming-none">Not available in ${region}</div>`;
+  }
+  slot.innerHTML = html;
+
+  // Wire region selector
+  const select = slot.querySelector('.streaming-region-select');
+  if (select) {
+    select.addEventListener('change', (e) => {
+      e.stopPropagation();
+      setStreamingRegion(e.target.value);
+      renderStreamingProviders(slot, tmdbData, title);
+    });
+    select.addEventListener('click', (e) => e.stopPropagation());
+  }
 }
 
 // === Category filter (in-memory only; never persisted to localStorage) ===
@@ -1468,7 +1740,11 @@ function render() {
     itemEl.dataset.id = item.id;
     itemEl.dataset.status = status;
     itemEl.tabIndex = 0;  // Focusable for D-pad nav
-    if (expandedIds.has(item.id)) itemEl.classList.add('expanded');
+    if (expandedIds.has(item.id)) {
+      itemEl.classList.add('expanded');
+      // Load streaming providers since item is already expanded
+      setTimeout(() => loadStreamingProviders(itemEl, item), 0);
+    }
 
     const criticsHtml = (item.critics || []).map(c => `
       <div class="critic-block">
@@ -1519,6 +1795,7 @@ function render() {
         ${whyHtml}
         <p class="pitch">${item.pitch || ''}</p>
         ${criticsHtml}
+        <div class="streaming-providers" data-streaming-loaded="false"></div>
         <div class="actions">
           <button class="action-btn ${status === 'queued' ? 'active-queued' : ''}" data-action="queued">Queue</button>
           <button class="action-btn ${status === 'watching' ? 'active-watching' : ''}" data-action="watching">Watching</button>
@@ -1547,7 +1824,11 @@ function render() {
     itemEl.querySelector('.item-head').addEventListener('click', (e) => {
       if (e.target.classList.contains('status-pill')) return;
       if (expandedIds.has(item.id)) { expandedIds.delete(item.id); itemEl.classList.remove('expanded'); }
-      else { expandedIds.add(item.id); itemEl.classList.add('expanded'); }
+      else {
+        expandedIds.add(item.id); itemEl.classList.add('expanded');
+        // Lazy-load streaming providers when item first expands
+        loadStreamingProviders(itemEl, item);
+      }
     });
     itemEl.querySelector('.status-pill').addEventListener('click', (e) => {
       e.stopPropagation(); cycleStatus(item.id, itemTab);
@@ -1870,6 +2151,302 @@ function setupModals() {
       status.className = 'settings-status err';
     }
   });
+
+  // === Plex History modal ===
+  document.getElementById('history-btn').addEventListener('click', () => {
+    openHistoryModal();
+  });
+  document.getElementById('history-close').addEventListener('click', () => {
+    document.getElementById('history-modal').classList.remove('active');
+  });
+  document.getElementById('history-refresh').addEventListener('click', () => {
+    plexHistoryCache = null;
+    openHistoryModal();
+  });
+  document.getElementById('history-search').addEventListener('input', () => renderHistoryList());
+  document.getElementById('history-filter').addEventListener('change', () => renderHistoryList());
+  document.getElementById('history-sort').addEventListener('change', () => renderHistoryList());
+
+  // Promote modal
+  document.getElementById('promote-cancel').addEventListener('click', () => {
+    document.getElementById('promote-modal').classList.remove('active');
+  });
+  document.getElementById('promote-confirm').addEventListener('click', confirmPromote);
+}
+
+// =====================================================================
+// Plex History modal
+// =====================================================================
+
+let plexHistoryCache = null;       // { records: [...], aggregated: {...} }
+let pendingPromote = null;         // { type, title, year, plays }
+
+async function openHistoryModal() {
+  const modal = document.getElementById('history-modal');
+  const status = document.getElementById('history-status');
+  const list = document.getElementById('history-list');
+  modal.classList.add('active');
+  if (!isWebhookConfigured()) {
+    status.textContent = 'Configure Plex Webhook Bridge in Settings first.';
+    list.innerHTML = '';
+    return;
+  }
+  if (plexHistoryCache) {
+    renderHistoryList();
+    return;
+  }
+  status.textContent = 'Fetching history from cloud...';
+  list.innerHTML = '';
+  try {
+    const records = await fetchAllViewedRecords();
+    plexHistoryCache = aggregateHistory(records);
+    renderHistoryList();
+  } catch (e) {
+    status.textContent = `Failed to fetch: ${e.message}`;
+  }
+}
+
+async function fetchAllViewedRecords() {
+  const url = getWebhookUrl();
+  const secret = getWebhookSecret();
+  let cursor = null;
+  const all = [];
+  let safetyStop = 0;
+  while (true) {
+    safetyStop++;
+    if (safetyStop > 20) break;
+    const params = new URLSearchParams({ secret });
+    if (cursor) params.set('cursor', cursor);
+    const resp = await fetch(`${url}/viewed/list?${params}`);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    all.push(...(data.records || []));
+    if (!data.cursor) break;
+    cursor = data.cursor;
+  }
+  return all;
+}
+
+// Aggregate raw view records into a per-title or per-show summary.
+function aggregateHistory(records) {
+  const movies = new Map();   // key -> { title, year, plays, lastViewed, type:'movie' }
+  const shows = new Map();    // key -> { title, episodes:Set, plays, lastViewed, type:'tv' }
+  records.forEach(r => {
+    const ts = r.ts || 0;
+    if (r.type === 'movie') {
+      const yearVal = r.year || null;
+      const key = plexNormalizeKey(r.title, yearVal);
+      const existing = movies.get(key) || { title: r.title, year: yearVal, plays: 0, lastViewed: 0, type: 'movie' };
+      existing.plays++;
+      if (ts > existing.lastViewed) existing.lastViewed = ts;
+      movies.set(key, existing);
+    } else if (r.type === 'episode') {
+      const show = r.grandparentTitle || r.title;
+      if (!show) return;
+      const key = plexNormalizeKeyTitleOnly(show);
+      const existing = shows.get(key) || { title: show, episodes: new Set(), plays: 0, lastViewed: 0, type: 'tv' };
+      existing.plays++;
+      const epId = `${r.parentIndex || 0}_${r.index || 0}`;
+      existing.episodes.add(epId);
+      if (ts > existing.lastViewed) existing.lastViewed = ts;
+      shows.set(key, existing);
+    }
+  });
+
+  // Convert to array, mark catalog matches
+  const items = [];
+  movies.forEach(m => {
+    const inCatalog = isInCatalog(m.title, m.year, 'movie');
+    items.push({ ...m, distinct: 1, inCatalog });
+  });
+  shows.forEach(s => {
+    const inCatalog = isInCatalog(s.title, null, 'tv');
+    items.push({ ...s, distinct: s.episodes.size, inCatalog });
+  });
+  return { records, items };
+}
+
+function isInCatalog(title, year, type) {
+  const tvTabs = new Set(['comedy-tv','crime-tv','spy-tv','drama-tv','horror-tv','fantasy-tv','scifi-tv','cons-courtroom-tv','british-comedy']);
+  for (const tabId in catalogs) {
+    const isTvTab = tvTabs.has(tabId);
+    if (type === 'movie' && isTvTab) continue;
+    if (type === 'tv' && !isTvTab) continue;
+    const cat = catalogs[tabId];
+    for (const item of cat.items) {
+      const titles = [item.title].concat(Array.isArray(item.aliases) ? item.aliases : []);
+      for (const t of titles) {
+        if (type === 'movie') {
+          if (plexNormalizeKey(t, item.year) === plexNormalizeKey(title, year)) {
+            return { tabId, itemId: item.id, item };
+          }
+          for (const dy of [-1, 1]) {
+            if (plexNormalizeKey(t, item.year ? item.year + dy : null) === plexNormalizeKey(title, year)) {
+              return { tabId, itemId: item.id, item };
+            }
+          }
+        } else {
+          if (plexNormalizeKeyTitleOnly(t) === plexNormalizeKeyTitleOnly(title)) {
+            return { tabId, itemId: item.id, item };
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
+
+function renderHistoryList() {
+  const list = document.getElementById('history-list');
+  const status = document.getElementById('history-status');
+  if (!plexHistoryCache) { list.innerHTML = ''; return; }
+  const search = (document.getElementById('history-search').value || '').toLowerCase().trim();
+  const filter = document.getElementById('history-filter').value;
+  const sort = document.getElementById('history-sort').value;
+
+  let items = plexHistoryCache.items.slice();
+  if (filter === 'orphans') items = items.filter(it => !it.inCatalog);
+  else if (filter === 'matched') items = items.filter(it => it.inCatalog);
+  else if (filter === 'movies') items = items.filter(it => it.type === 'movie');
+  else if (filter === 'tv') items = items.filter(it => it.type === 'tv');
+  if (search) items = items.filter(it => it.title.toLowerCase().includes(search));
+
+  if (sort === 'recent') items.sort((a, b) => b.lastViewed - a.lastViewed);
+  else if (sort === 'title') items.sort((a, b) => a.title.localeCompare(b.title));
+  else if (sort === 'plays') items.sort((a, b) => b.plays - a.plays);
+
+  status.textContent = `${items.length} item(s) shown · ${plexHistoryCache.items.length} total`;
+
+  list.innerHTML = items.slice(0, 500).map(it => {
+    const dateStr = it.lastViewed ? new Date(it.lastViewed).toLocaleDateString() : '';
+    const meta = it.type === 'movie'
+      ? `${it.year || '?'} · ${it.plays} play${it.plays === 1 ? '' : 's'}${dateStr ? ' · ' + dateStr : ''}`
+      : `${it.distinct} ep · ${it.plays} play${it.plays === 1 ? '' : 's'}${dateStr ? ' · ' + dateStr : ''}`;
+    let badges = '';
+    if (it.inCatalog) {
+      badges = `<span class="source-badge">${it.inCatalog.tabId}</span>`;
+    }
+    const promoteBtn = !it.inCatalog
+      ? `<button class="history-promote-btn" data-type="${it.type}" data-title="${escapeHtml(it.title)}" data-year="${it.year || ''}" data-plays="${it.plays}" data-distinct="${it.distinct}">Promote</button>`
+      : '';
+    return `<div class="history-row">
+      <div class="history-row-info">
+        <div class="history-row-title">${escapeHtml(it.title)}</div>
+        <div class="history-row-meta">${meta}</div>
+      </div>
+      <div class="badge-row">${badges}</div>
+      ${promoteBtn}
+    </div>`;
+  }).join('');
+
+  list.querySelectorAll('.history-promote-btn').forEach(btn => {
+    btn.addEventListener('click', () => openPromoteModal(btn));
+  });
+  list.querySelectorAll('.history-row').forEach(row => {
+    row.addEventListener('click', (e) => {
+      // Don't fire on button clicks
+      if (e.target.closest('.history-promote-btn')) return;
+      // Find the catalog match if any, navigate to it
+      const titleEl = row.querySelector('.history-row-title');
+      const title = titleEl ? titleEl.textContent : '';
+      const item = plexHistoryCache.items.find(i => i.title === title);
+      if (item && item.inCatalog) {
+        document.getElementById('history-modal').classList.remove('active');
+        switchTab(item.inCatalog.tabId);
+        setTimeout(() => {
+          const target = document.querySelector(`.item[data-id="${item.inCatalog.itemId}"]`);
+          if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            target.classList.add('expanded');
+            target.style.outline = '2px solid var(--accent)';
+            setTimeout(() => target.style.outline = '', 1500);
+          }
+        }, 100);
+      }
+    });
+  });
+}
+
+function escapeHtml(s) {
+  return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function openPromoteModal(btn) {
+  pendingPromote = {
+    type: btn.dataset.type,
+    title: btn.dataset.title,
+    year: btn.dataset.year || null,
+    plays: parseInt(btn.dataset.plays) || 1,
+    distinct: parseInt(btn.dataset.distinct) || 1,
+  };
+  document.getElementById('promote-info').textContent =
+    `Promote "${pendingPromote.title}" (${pendingPromote.year || '?'}) to a WatchTrack catalog tab. ${pendingPromote.plays} plays detected.`;
+  // Populate tab dropdown
+  const tvTabs = new Set(['comedy-tv','crime-tv','spy-tv','drama-tv','horror-tv','fantasy-tv','scifi-tv','cons-courtroom-tv','british-comedy']);
+  const select = document.getElementById('promote-tab');
+  select.innerHTML = catalogManifest
+    .filter(c => !c.virtual)
+    .filter(c => pendingPromote.type === 'movie' ? !tvTabs.has(c.id) : tvTabs.has(c.id))
+    .map(c => `<option value="${c.id}">${c.label}</option>`).join('');
+  document.getElementById('promote-modal').classList.add('active');
+}
+
+function confirmPromote() {
+  if (!pendingPromote) return;
+  const tab = document.getElementById('promote-tab').value;
+  if (!catalogs[tab]) { alert('Tab not found.'); return; }
+
+  // Build a minimal item
+  const cat = catalogs[tab];
+  const sectionName = pendingPromote.type === 'movie' ? 'X. Plex History (Promoted)' : 'X. Plex History (Promoted)';
+  let section = cat.sections.find(s => s.name === sectionName);
+  if (!section) {
+    section = {
+      name: sectionName,
+      desc: 'Items added from your Plex viewing history.',
+      categories: [],
+      items: [],
+    };
+    cat.sections.push(section);
+  }
+  const newItem = {
+    title: pendingPromote.title,
+    year: pendingPromote.year ? parseInt(pendingPromote.year) : null,
+    pitch: `Promoted from Plex history. ${pendingPromote.plays} play(s) detected${pendingPromote.type === 'tv' ? `, ${pendingPromote.distinct} distinct episode(s)` : ''}.`,
+    priority: 'low',
+    whyPriority: 'Auto-added from your Plex viewing history.',
+    section: sectionName,
+    sectionDesc: section.desc,
+    categories: [],
+    sourceTab: tab,
+    sourceTabLabel: cat.title || tab,
+    order: cat.items.length + 1,
+    contentType: pendingPromote.type === 'tv' ? 'tv-prestige' : 'film-narrative',
+    tvCompletionMode: 'flexible',
+  };
+  newItem.id = `${newItem.title.replace(/[^a-z0-9]+/gi, '-').toLowerCase().replace(/^-|-$/g, '')}-${newItem.year || 'unknown'}`;
+  section.items.push(newItem);
+  cat.items.push(newItem);
+
+  // Mark watched/watching
+  if (pendingPromote.type === 'movie') {
+    setStatus(newItem.id, 'watched', tab);
+  } else {
+    setStatus(newItem.id, 'watching', tab);
+    if (pendingPromote.distinct >= 5) {
+      setRating(newItem.id, 'loved', tab);
+    }
+  }
+
+  // Refresh state
+  plexHistoryCache = null;  // force re-aggregate so it now shows as in-catalog
+  document.getElementById('promote-modal').classList.remove('active');
+  alert(`Added "${pendingPromote.title}" to ${cat.title || tab}.`);
+  pendingPromote = null;
+  // Re-render history modal
+  setTimeout(() => openHistoryModal(), 100);
+  // Re-render main UI
+  render();
 }
 
 function updateWebhookStatusLine() {

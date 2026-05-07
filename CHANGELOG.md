@@ -10,6 +10,63 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.5.0 — 2026-05-07
+**Service worker cache:** `scifi-tracker-v16` → `v17`
+
+### Added — Stage 4c: TMDB enrichment + Plex History modal + orphan promotion
+This release closes out the Plex/Stage 4 initiative. WatchTrack is now a full curation, viewing, and recommendation system around Plex.
+
+#### Worker upgrades (v3)
+- New endpoint: `POST /metadata/bulk` — batch TMDB lookups (≤50 items per call); used by bulk-sync and catalog enrichment
+- All previous endpoints retained
+
+#### TMDB client in WatchTrack
+- `tmdbLookup(title, year, type)` — single async lookup with localStorage cache (30-day TTL)
+- `tmdbBulkLookup(items, progressCb)` — batched fetch through Worker `/metadata/bulk`
+- Cache stored under `wt-tmdb-{type}:{normalized}:{year}` keys
+
+#### Streaming-provider badges (on item cards)
+- Lazily fetched from TMDB when item card expands
+- Shows providers grouped by tier: Subscription / Free / Ads / Rent / Buy
+- **Region selector dropdown** with 22 countries (US, GB, CA, AU, DE, FR, JP, KR, IT, ES, BR, MX, IN, NL, SE, NO, DK, FI, PL, IE, NZ, ZA)
+- Each provider button is a clickable link to that service's search page (Netflix/Hulu/Max/Disney+/Prime/AppleTV+/Paramount+/Peacock/BBC iPlayer/Crunchyroll/YouTube/etc.)
+- Region preference persists per device in localStorage
+- For unknown providers, falls back to a Google search
+
+#### TV completion rule (now active)
+- Bulk-sync now fetches total-episode counts via TMDB during sync
+- Applies completion threshold per `tvCompletionMode`:
+  - `strict` (default): 95% of episodes watched → mark series Watched
+  - `flexible`: 80% threshold (for long-running shows like House, Always Sunny)
+  - `episodic`: never auto-mark watched (Top Gear, panel shows, SNL-style series)
+- Runs alongside the existing 5+ distinct episodes → Loved rule
+
+#### Plex History modal
+- New header button: **Plex History**
+- Displays every Plex view from the durable VIEWED KV
+- Aggregated per-title (movies) and per-show (TV) with play counts and last-viewed dates
+- **Filter dropdown**: All / Orphans only / In catalog / Movies / TV
+- **Sort dropdown**: Most recent / Title A-Z / Most plays
+- **Search input** for filtering by title
+- Click a matched item → jumps to it in the catalog with highlight animation
+- Refresh button re-fetches from Worker
+
+#### Orphan promotion workflow
+- Orphan items in History modal show a **Promote** button
+- Promote modal: pick destination tab → adds item to a "Plex History (Promoted)" section in that tab
+- Auto-marks watched (movies) or watching+loved (TV with 5+ distinct)
+- After promote, history modal refreshes to reflect the new catalog match
+- Catalog promotions live only in the device's runtime — not persisted to JSON files (that requires a Git push). Promotions add value for current session; for permanent additions, the catalog files in the repo would need updating.
+
+### Architecture notes
+- TMDB enrichment is purely additive — never modifies WatchTrack state directly
+- All TMDB calls go through the Worker (single source of truth, single cache)
+- Streaming-provider data updates as TMDB updates (30-day cache TTL)
+- History modal data lives in Cloudflare KV; cache-on-fetch in WatchTrack avoids repeated network calls
+- Promotion creates runtime catalog entries that work for the current session but don't persist across devices — the long-term path is to surface frequently-watched orphans for manual catalog curation
+
+---
+
 ## 5.4.0 — 2026-05-07
 **Service worker cache:** `scifi-tracker-v15` → `v16`
 

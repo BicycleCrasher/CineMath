@@ -128,7 +128,7 @@ export default {
 
     // Health
     if (path === '/' || path === '/health') {
-      return new Response('WatchTrack-Plex bridge online (v2 — TMDB + history)', { headers: cors });
+      return new Response('WatchTrack-Plex bridge online (v3 — TMDB + history + bulk metadata)', { headers: cors });
     }
 
     // === Plex webhook receiver ===
@@ -221,6 +221,32 @@ export default {
       if (!title) return new Response('Missing title', { status: 400, headers: cors });
       const result = await tmdbLookup(env, title, year, type);
       return jsonResponse(result);
+    }
+
+    // === Bulk TMDB metadata lookup ===
+    // POST { secret, items: [{ title, year, type }, ...] }
+    // Returns { results: [{...}, {...}], errors: 0 }
+    // Capped at 50 items per call. Each is cached individually.
+    if (path === '/metadata/bulk' && method === 'POST') {
+      try {
+        const body = await request.json();
+        if (!(await checkSecret(env, body.secret))) return new Response('Forbidden', { status: 403, headers: cors });
+        const items = (body.items || []).slice(0, 50);
+        const results = [];
+        let errors = 0;
+        for (const it of items) {
+          try {
+            const r = await tmdbLookup(env, it.title, it.year || '', it.type === 'tv' ? 'tv' : 'movie');
+            results.push({ query: it, result: r });
+          } catch (e) {
+            errors++;
+            results.push({ query: it, result: { error: e.message } });
+          }
+        }
+        return jsonResponse({ results, errors });
+      } catch (e) {
+        return new Response('Bad request: ' + e.message, { status: 400, headers: cors });
+      }
     }
 
     // === Bulk-ingest historical Plex viewing data ===

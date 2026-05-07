@@ -35,6 +35,7 @@
     <button class="header-btn" id="triage-queue-btn">Triage Queue</button>
     <button class="header-btn" id="triage-suggest-btn">Triage Suggested</button>
     <button class="header-btn" id="settings-btn">Settings</button>
+    <button class="header-btn" id="history-btn">Plex History</button>
     <button class="header-btn" id="reset-btn">Reset</button>
     <button class="header-btn" id="export-btn">Export</button>
     <button class="header-btn" id="import-btn">Import</button>
@@ -136,6 +137,48 @@
     <div class="stats-content" id="bulk-sync-result-content"></div>
     <div class="modal-actions">
       <button class="action-btn" id="bulk-sync-result-close">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="history-modal">
+  <div class="modal-content">
+    <h3>Plex History</h3>
+    <div class="history-controls">
+      <input type="text" id="history-search" placeholder="Search title or show...">
+      <select id="history-filter">
+        <option value="all">All views</option>
+        <option value="orphans">Orphans only</option>
+        <option value="matched">In catalog</option>
+        <option value="movies">Movies</option>
+        <option value="tv">TV episodes</option>
+      </select>
+      <select id="history-sort">
+        <option value="recent">Most recent</option>
+        <option value="title">Title A-Z</option>
+        <option value="plays">Most plays</option>
+      </select>
+    </div>
+    <p class="settings-help" id="history-status">Loading...</p>
+    <div class="history-list" id="history-list"></div>
+    <div class="modal-actions">
+      <button class="action-btn" id="history-refresh">Refresh from cloud</button>
+      <button class="action-btn" id="history-close">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="promote-modal">
+  <div class="modal-content">
+    <h3>Promote to catalog</h3>
+    <p class="settings-help" id="promote-info"></p>
+    <div class="settings-section">
+      <label>Pick a tab</label>
+      <select id="promote-tab" class="modal-input"></select>
+    </div>
+    <div class="modal-actions">
+      <button class="action-btn" id="promote-confirm">Add to catalog</button>
+      <button class="action-btn" id="promote-cancel">Cancel</button>
     </div>
   </div>
 </div>
