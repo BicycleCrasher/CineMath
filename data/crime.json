@@ -1,174 +1,572 @@
 {
   "type": "crime",
   "title": "Crime",
-  "subtitle": "Crime, noir, and detective films — cerebral over violent. No gore for gore's sake.",
+  "subtitle": "Crime, noir, and detective films \u2014 cerebral over violent. No gore for gore's sake.",
   "sections": [
     {
-      "name": "I. High Priority — Best Entry Points",
+      "name": "I. High Priority \u2014 Best Entry Points",
       "desc": "Given your love of structurally rigorous thrillers (All the President's Men, Hunt for Red October), these will land.",
       "items": [
         {
-          "title": "Chinatown", "year": 1974, "dir": "Roman Polanski", "country": "USA", "runtime": "131 min",
-          "priority": "high", "tags": ["foundational"],
+          "title": "Chinatown",
+          "year": 1974,
+          "dir": "Roman Polanski",
+          "country": "USA",
+          "runtime": "131 min",
+          "priority": "high",
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "The neo-noir foundation. Robert Towne's screenplay is widely considered the greatest ever written. Nicholson at peak form, Faye Dunaway, John Huston as one of cinema's great villains. Procedural intelligence + devastating ending. Direct descendant of All the President's Men's investigative DNA.",
           "pitch": "Private detective Jake Gittes investigates an adultery case in 1937 Los Angeles. The case becomes something much larger involving water, land, and family.",
           "critics": [
-            { "who": "Academy Awards 1975", "quote": "Won Best Original Screenplay. Eleven nominations including Best Picture." },
-            { "who": "Critical canon", "quote": "Routinely cited among the greatest American films. AFI Top 25." }
+            {
+              "who": "Academy Awards 1975",
+              "quote": "Won Best Original Screenplay. Eleven nominations including Best Picture."
+            },
+            {
+              "who": "Critical canon",
+              "quote": "Routinely cited among the greatest American films. AFI Top 25."
+            }
           ]
         },
         {
-          "title": "L.A. Confidential", "year": 1997, "dir": "Curtis Hanson", "country": "USA", "runtime": "138 min",
-          "priority": "high", "tags": ["modern"],
+          "title": "L.A. Confidential",
+          "year": 1997,
+          "dir": "Curtis Hanson",
+          "country": "USA",
+          "runtime": "138 min",
+          "priority": "high",
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "James Ellroy adaptation. Three LAPD detectives in 1950s Los Angeles. Crowe and Pearce career-launching, Spacey at peak charm, Kim Basinger Oscar-winning. Smart structure, ensemble character work, full LA-as-character craftsmanship.",
           "pitch": "Three very different cops investigate a coffee-shop massacre in 1953 LA. The investigation reveals corruption at every level.",
-          "critics": [{ "who": "Academy Awards 1998", "quote": "Won 2 Oscars (Adapted Screenplay, Supporting Actress). Nine total nominations including Best Picture." }]
+          "critics": [
+            {
+              "who": "Academy Awards 1998",
+              "quote": "Won 2 Oscars (Adapted Screenplay, Supporting Actress). Nine total nominations including Best Picture."
+            }
+          ]
         },
         {
-          "title": "Zodiac", "year": 2007, "dir": "David Fincher", "country": "USA", "runtime": "157 min",
-          "priority": "high", "tags": ["modern"],
-          "whyPriority": "Fincher's procedural masterpiece. The Zodiac killer investigation across decades. All the President's Men is its DNA — patient, evidence-driven, character-grounded. Gyllenhaal, Downey Jr., Ruffalo. Slow-burn and richly rewarding.",
+          "title": "Zodiac",
+          "year": 2007,
+          "dir": "David Fincher",
+          "country": "USA",
+          "runtime": "157 min",
+          "priority": "high",
+          "tags": [
+            "modern"
+          ],
+          "whyPriority": "Fincher's procedural masterpiece. The Zodiac killer investigation across decades. All the President's Men is its DNA \u2014 patient, evidence-driven, character-grounded. Gyllenhaal, Downey Jr., Ruffalo. Slow-burn and richly rewarding.",
           "pitch": "A San Francisco newspaper cartoonist, a reporter, and an SFPD detective spend decades chasing the Zodiac killer. The case is never officially solved.",
-          "critics": [{ "who": "Critical reception", "quote": "Widely considered Fincher's masterpiece. Multiple critics' top-10 lists for the 2000s." }]
+          "critics": [
+            {
+              "who": "Critical reception",
+              "quote": "Widely considered Fincher's masterpiece. Multiple critics' top-10 lists for the 2000s."
+            }
+          ]
         },
         {
-          "title": "Memories of Murder", "year": 2003, "dir": "Bong Joon-ho", "country": "South Korea", "runtime": "131 min",
-          "priority": "high", "tags": ["modern","intl"],
+          "title": "Memories of Murder",
+          "year": 2003,
+          "dir": "Bong Joon-ho",
+          "country": "South Korea",
+          "runtime": "131 min",
+          "priority": "high",
+          "tags": [
+            "modern",
+            "intl"
+          ],
           "whyPriority": "Bong's pre-Parasite masterpiece. Two rural detectives investigate Korea's first serial killer. Procedural that becomes character study that becomes elegy. The case was unsolved for 30 years; Bong made the film before the killer was caught.",
           "pitch": "1986 South Korea. Two detectives investigate a rural serial killing. Tonal mastery between procedural, dark comedy, and quiet horror.",
-          "critics": [{ "who": "Critical reception", "quote": "Routinely cited as one of the greatest Korean films. Bong's career-launching work." }]
+          "critics": [
+            {
+              "who": "Critical reception",
+              "quote": "Routinely cited as one of the greatest Korean films. Bong's career-launching work."
+            }
+          ]
         },
         {
-          "title": "Prisoners", "year": 2013, "dir": "Denis Villeneuve", "country": "USA", "runtime": "153 min",
-          "priority": "high", "tags": ["modern"],
+          "title": "Prisoners",
+          "year": 2013,
+          "dir": "Denis Villeneuve",
+          "country": "USA",
+          "runtime": "153 min",
+          "priority": "high",
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "Villeneuve before Sicario/Arrival/Dune. Two girls go missing on Thanksgiving; the desperate father and the meticulous detective converge from opposite ends. Hugh Jackman + Jake Gyllenhaal at career peaks. Roger Deakins cinematography.",
           "pitch": "Two children disappear. Their father is convinced the police suspect knows where they are. The detective on the case is the most patient character in modern crime cinema.",
-          "critics": [{ "who": "Critical reception", "quote": "Roger Deakins Oscar nomination. Many critics named it the best film of 2013." }]
+          "critics": [
+            {
+              "who": "Critical reception",
+              "quote": "Roger Deakins Oscar nomination. Many critics named it the best film of 2013."
+            }
+          ]
         }
+      ],
+      "categories": [
+        "neo-noir",
+        "gritty"
       ]
     },
     {
-      "name": "II. Medium Priority — Strong Probable Fits",
+      "name": "II. Medium Priority \u2014 Strong Probable Fits",
       "desc": "Likely to land. The detective character pieces and procedurals.",
       "items": [
         {
-          "title": "The Long Goodbye", "year": 1973, "dir": "Robert Altman", "country": "USA", "runtime": "112 min",
-          "priority": "med", "tags": ["foundational"],
-          "whyPriority": "Altman's Marlowe — anachronistic, mumbling, cat-loving. Elliott Gould as Chandler's detective dropped into 1970s LA. Polarizing then, beloved now. The most idiosyncratic detective film of its era.",
+          "title": "The Long Goodbye",
+          "year": 1973,
+          "dir": "Robert Altman",
+          "country": "USA",
+          "runtime": "112 min",
+          "priority": "med",
+          "tags": [
+            "foundational"
+          ],
+          "whyPriority": "Altman's Marlowe \u2014 anachronistic, mumbling, cat-loving. Elliott Gould as Chandler's detective dropped into 1970s LA. Polarizing then, beloved now. The most idiosyncratic detective film of its era.",
           "pitch": "Philip Marlowe drives a friend to Tijuana. The friend's wife is found dead. Marlowe is a suspect. Improvisation and cigarettes follow.",
-          "critics": [{ "who": "Reappraisal", "quote": "Initially divisive; reputation has only grown. Routinely cited among Altman's best." }]
+          "critics": [
+            {
+              "who": "Reappraisal",
+              "quote": "Initially divisive; reputation has only grown. Routinely cited among Altman's best."
+            }
+          ]
         },
         {
-          "title": "The Maltese Falcon", "year": 1941, "dir": "John Huston", "country": "USA", "runtime": "100 min",
-          "priority": "med", "tags": ["foundational"],
+          "title": "The Maltese Falcon",
+          "year": 1941,
+          "dir": "John Huston",
+          "country": "USA",
+          "runtime": "100 min",
+          "priority": "med",
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "The classic noir foundation. Bogart as Sam Spade. Sydney Greenstreet's debut. Mary Astor. Every detective film since owes it a debt. Tight, dialogue-driven, definitive.",
           "pitch": "Private detective Sam Spade is hired by a woman to follow her sister. The sister isn't real. Several murders later, a black bird becomes important.",
-          "critics": [{ "who": "Reception", "quote": "Routinely cited as the foundational American noir. Three Oscar nominations." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Routinely cited as the foundational American noir. Three Oscar nominations."
+            }
+          ]
         },
         {
-          "title": "Double Indemnity", "year": 1944, "dir": "Billy Wilder", "country": "USA", "runtime": "107 min",
-          "priority": "med", "tags": ["foundational"],
+          "title": "Double Indemnity",
+          "year": 1944,
+          "dir": "Billy Wilder",
+          "country": "USA",
+          "runtime": "107 min",
+          "priority": "med",
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "Wilder + Chandler screenplay. Insurance salesman seduced into murdering a woman's husband. The dialogue is Chandler at his sharpest. The structure is Wilder's gift. Co-listed in pre-1960 classics.",
           "pitch": "Insurance investigator Walter Neff tells the story of how a woman convinced him to kill her husband for the policy.",
-          "critics": [{ "who": "Reception", "quote": "Seven Oscar nominations. Routinely listed among the greatest noir films." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Seven Oscar nominations. Routinely listed among the greatest noir films."
+            }
+          ]
         },
         {
-          "title": "Heat", "year": 1995, "dir": "Michael Mann", "country": "USA", "runtime": "170 min",
-          "priority": "med", "tags": ["foundational"],
-          "whyPriority": "Listed on heist tracker too. Mann's procedural about parallel professionals — De Niro's career thief and Pacino's career detective. The downtown LA shootout reset action cinema.",
+          "title": "Heat",
+          "year": 1995,
+          "dir": "Michael Mann",
+          "country": "USA",
+          "runtime": "170 min",
+          "priority": "med",
+          "tags": [
+            "foundational"
+          ],
+          "whyPriority": "Listed on heist tracker too. Mann's procedural about parallel professionals \u2014 De Niro's career thief and Pacino's career detective. The downtown LA shootout reset action cinema.",
           "pitch": "Cross-listed with the heist tracker. Three hours of professional crime and professional detection.",
-          "critics": [{ "who": "Reception", "quote": "Routinely cited among the greatest crime films ever made." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Routinely cited among the greatest crime films ever made."
+            }
+          ]
         },
         {
-          "title": "The Departed", "year": 2006, "dir": "Martin Scorsese", "country": "USA", "runtime": "151 min",
-          "priority": "med", "tags": ["modern"],
+          "title": "The Departed",
+          "year": 2006,
+          "dir": "Martin Scorsese",
+          "country": "USA",
+          "runtime": "151 min",
+          "priority": "med",
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "Scorsese's Boston remake of Infernal Affairs. Won Best Picture (his first). DiCaprio, Damon, Nicholson, Wahlberg. The mole-and-rat double-narrative is structurally satisfying.",
           "pitch": "An undercover cop infiltrates a Boston mob. A mob plant rises through Boston PD. The two converge.",
-          "critics": [{ "who": "Academy Awards 2007", "quote": "Won 4 Oscars including Best Picture, Best Director (Scorsese's first), Best Adapted Screenplay." }]
+          "critics": [
+            {
+              "who": "Academy Awards 2007",
+              "quote": "Won 4 Oscars including Best Picture, Best Director (Scorsese's first), Best Adapted Screenplay."
+            }
+          ],
+          "categories": [
+            "scorsese-lane",
+            "neo-noir"
+          ]
         },
         {
-          "title": "Drive", "year": 2011, "dir": "Nicolas Winding Refn", "country": "USA", "runtime": "100 min",
-          "priority": "med", "tags": ["modern"],
+          "title": "Drive",
+          "year": 2011,
+          "dir": "Nicolas Winding Refn",
+          "country": "USA",
+          "runtime": "100 min",
+          "priority": "med",
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "Listed on heist tracker too. Refn's neo-noir. Gosling's stunt driver. Synth score, neon, slow then sudden violence.",
           "pitch": "Cross-listed with heist tracker.",
-          "critics": [{ "who": "Cannes 2011", "quote": "Best Director." }]
+          "critics": [
+            {
+              "who": "Cannes 2011",
+              "quote": "Best Director."
+            }
+          ]
         },
         {
-          "title": "The Secret in Their Eyes", "year": 2009, "dir": "Juan José Campanella", "country": "Argentina", "runtime": "129 min",
-          "priority": "med", "tags": ["modern","intl"],
+          "title": "The Secret in Their Eyes",
+          "year": 2009,
+          "dir": "Juan Jos\u00e9 Campanella",
+          "country": "Argentina",
+          "runtime": "129 min",
+          "priority": "med",
+          "tags": [
+            "modern",
+            "intl"
+          ],
           "whyPriority": "Argentine. A retired investigator returns to a 25-year-old murder case. Won Best Foreign Language Film. Slow-burn, structural, devastating.",
           "pitch": "A retired federal investigator returns to write about a 1974 murder case. The investigation continues alongside a love story he never resolved.",
-          "critics": [{ "who": "Academy Awards 2010", "quote": "Won Best Foreign Language Film." }]
+          "critics": [
+            {
+              "who": "Academy Awards 2010",
+              "quote": "Won Best Foreign Language Film."
+            }
+          ]
         }
+      ],
+      "categories": [
+        "neo-noir"
       ]
     },
     {
-      "name": "III. Standard — Foundational",
+      "name": "III. Standard \u2014 Foundational",
       "desc": "Important entries to know.",
       "items": [
-        { "title": "Mulholland Drive", "year": 2001, "dir": "David Lynch", "country": "USA/France", "runtime": "147 min", "tags": ["modern"],
-          "pitch": "Lynch's masterpiece — also lives on the auteur tracker. Detective story dissolved into dream-logic about Hollywood. Regularly tops 21st-century best-of polls.",
-          "critics": [{ "who": "Sight & Sound 2022", "quote": "Voted #8 in the Greatest Films of All Time poll." }] },
-        { "title": "Touch of Evil", "year": 1958, "dir": "Orson Welles", "country": "USA", "runtime": "95 min", "tags": ["foundational"],
+        {
+          "title": "Mulholland Drive",
+          "year": 2001,
+          "dir": "David Lynch",
+          "country": "USA/France",
+          "runtime": "147 min",
+          "tags": [
+            "modern"
+          ],
+          "pitch": "Lynch's masterpiece \u2014 also lives on the auteur tracker. Detective story dissolved into dream-logic about Hollywood. Regularly tops 21st-century best-of polls.",
+          "critics": [
+            {
+              "who": "Sight & Sound 2022",
+              "quote": "Voted #8 in the Greatest Films of All Time poll."
+            }
+          ]
+        },
+        {
+          "title": "Touch of Evil",
+          "year": 1958,
+          "dir": "Orson Welles",
+          "country": "USA",
+          "runtime": "95 min",
+          "tags": [
+            "foundational"
+          ],
           "pitch": "Welles directing himself as a corrupt Mexican border-town detective. The opening tracking shot is one of the most studied in cinema. Cross-listed with Welles auteur and pre-1960.",
-          "critics": [{ "who": "Reception", "quote": "Considered one of the greatest noir films and one of Welles's best." }] },
-        { "title": "Se7en", "year": 1995, "dir": "David Fincher", "country": "USA", "runtime": "127 min", "tags": ["modern"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Considered one of the greatest noir films and one of Welles's best."
+            }
+          ]
+        },
+        {
+          "title": "Se7en",
+          "year": 1995,
+          "dir": "David Fincher",
+          "country": "USA",
+          "runtime": "127 min",
+          "tags": [
+            "modern"
+          ],
           "pitch": "Fincher's serial-killer breakthrough. Pitt and Freeman. The ending is famous; the procedural intelligence around it is what makes it last.",
-          "critics": [{ "who": "Reception", "quote": "Major commercial and critical hit. Established Fincher's career." }] },
-        { "title": "Mystic River", "year": 2003, "dir": "Clint Eastwood", "country": "USA", "runtime": "138 min", "tags": ["modern"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Major commercial and critical hit. Established Fincher's career."
+            }
+          ]
+        },
+        {
+          "title": "Mystic River",
+          "year": 2003,
+          "dir": "Clint Eastwood",
+          "country": "USA",
+          "runtime": "138 min",
+          "tags": [
+            "modern"
+          ],
           "pitch": "Eastwood adapting Dennis Lehane. Three childhood friends in Boston after one of their daughters is murdered. Penn won Best Actor.",
-          "critics": [{ "who": "Academy Awards 2004", "quote": "Won 2 Oscars (Penn Best Actor, Robbins Best Supporting). Six total nominations." }] },
-        { "title": "Gone Baby Gone", "year": 2007, "dir": "Ben Affleck", "country": "USA", "runtime": "114 min", "tags": ["modern"],
+          "critics": [
+            {
+              "who": "Academy Awards 2004",
+              "quote": "Won 2 Oscars (Penn Best Actor, Robbins Best Supporting). Six total nominations."
+            }
+          ]
+        },
+        {
+          "title": "Gone Baby Gone",
+          "year": 2007,
+          "dir": "Ben Affleck",
+          "country": "USA",
+          "runtime": "114 min",
+          "tags": [
+            "modern"
+          ],
           "pitch": "Affleck's directorial debut, also Lehane. Boston PI investigates a missing child. Casey Affleck's career-launching role.",
-          "critics": [{ "who": "Reception", "quote": "Critical breakthrough for Affleck-as-director. Amy Ryan Oscar nomination." }] },
-        { "title": "Insomnia (2002)", "year": 2002, "dir": "Christopher Nolan", "country": "USA", "runtime": "118 min", "tags": ["modern"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Critical breakthrough for Affleck-as-director. Amy Ryan Oscar nomination."
+            }
+          ]
+        },
+        {
+          "title": "Insomnia (2002)",
+          "year": 2002,
+          "dir": "Christopher Nolan",
+          "country": "USA",
+          "runtime": "118 min",
+          "tags": [
+            "modern"
+          ],
           "pitch": "Nolan's pre-Batman remake of a Norwegian thriller. Pacino + Robin Williams (cast against type). Alaska, sleep deprivation, moral compromise.",
-          "critics": [{ "who": "Reception", "quote": "Underrated in the Nolan filmography. Better-regarded as time passes." }] },
-        { "title": "Insomnia (1997)", "year": 1997, "dir": "Erik Skjoldbjærg", "country": "Norway", "runtime": "97 min", "tags": ["foundational","intl"],
-          "pitch": "The Norwegian original. Stellan Skarsgård. Generally considered superior to Nolan's remake.",
-          "critics": [{ "who": "Reception", "quote": "Critically beloved on release; established Skjoldbjærg as a major Nordic filmmaker." }] },
-        { "title": "Wind River", "year": 2017, "dir": "Taylor Sheridan", "country": "USA", "runtime": "111 min", "tags": ["modern"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Underrated in the Nolan filmography. Better-regarded as time passes."
+            }
+          ]
+        },
+        {
+          "title": "Insomnia (1997)",
+          "year": 1997,
+          "dir": "Erik Skjoldbj\u00e6rg",
+          "country": "Norway",
+          "runtime": "97 min",
+          "tags": [
+            "foundational",
+            "intl"
+          ],
+          "pitch": "The Norwegian original. Stellan Skarsg\u00e5rd. Generally considered superior to Nolan's remake.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Critically beloved on release; established Skjoldbj\u00e6rg as a major Nordic filmmaker."
+            }
+          ]
+        },
+        {
+          "title": "Wind River",
+          "year": 2017,
+          "dir": "Taylor Sheridan",
+          "country": "USA",
+          "runtime": "111 min",
+          "tags": [
+            "modern"
+          ],
           "pitch": "Sheridan directing himself. Wyoming Indian reservation, FBI, a young woman dead. Jeremy Renner career-best.",
-          "critics": [{ "who": "Reception", "quote": "Strong critical reception. Sheridan's directorial breakthrough." }] },
-        { "title": "Hell or High Water", "year": 2016, "dir": "David Mackenzie", "country": "USA", "runtime": "102 min", "tags": ["modern"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Strong critical reception. Sheridan's directorial breakthrough."
+            }
+          ]
+        },
+        {
+          "title": "Hell or High Water",
+          "year": 2016,
+          "dir": "David Mackenzie",
+          "country": "USA",
+          "runtime": "102 min",
+          "tags": [
+            "modern"
+          ],
           "pitch": "West Texas brothers rob banks; Bridges's ranger pursues. Modern Western-crime hybrid. Sheridan screenplay.",
-          "critics": [{ "who": "Academy Awards 2017", "quote": "Four Oscar nominations including Best Picture." }] }
+          "critics": [
+            {
+              "who": "Academy Awards 2017",
+              "quote": "Four Oscar nominations including Best Picture."
+            }
+          ]
+        }
+      ],
+      "categories": [
+        "neo-noir",
+        "gritty"
       ]
     },
     {
       "name": "IV. Detective Character Pieces",
       "desc": "Where the investigation matters less than who's investigating.",
       "items": [
-        { "title": "The Big Lebowski", "year": 1998, "dir": "Joel & Ethan Coen", "country": "USA", "runtime": "117 min", "tags": ["foundational"],
-          "pitch": "Cross-listed from comedy where you've already loved it. Belongs here too — it's a detective story (kidnapping, ransom, severed toe) wrapped in stoner comedy.",
-          "critics": [] },
-        { "title": "Inherent Vice", "year": 2014, "dir": "Paul Thomas Anderson", "country": "USA", "runtime": "148 min", "tags": ["modern"],
+        {
+          "title": "The Big Lebowski",
+          "year": 1998,
+          "dir": "Joel & Ethan Coen",
+          "country": "USA",
+          "runtime": "117 min",
+          "tags": [
+            "foundational"
+          ],
+          "pitch": "Cross-listed from comedy where you've already loved it. Belongs here too \u2014 it's a detective story (kidnapping, ransom, severed toe) wrapped in stoner comedy.",
+          "critics": []
+        },
+        {
+          "title": "Inherent Vice",
+          "year": 2014,
+          "dir": "Paul Thomas Anderson",
+          "country": "USA",
+          "runtime": "148 min",
+          "tags": [
+            "modern"
+          ],
           "pitch": "PTA adapting Pynchon. 1970 Los Angeles, hippie PI Doc Sportello, a missing real-estate mogul. Closest spiritual descendant of The Long Goodbye.",
-          "critics": [{ "who": "Reception", "quote": "Polarizing. Either you sync with the rhythm or you don't." }] },
-        { "title": "The Nice Guys", "year": 2016, "dir": "Shane Black", "country": "USA", "runtime": "116 min", "tags": ["modern"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Polarizing. Either you sync with the rhythm or you don't."
+            }
+          ]
+        },
+        {
+          "title": "The Nice Guys",
+          "year": 2016,
+          "dir": "Shane Black",
+          "country": "USA",
+          "runtime": "116 min",
+          "tags": [
+            "modern"
+          ],
           "pitch": "Crowe and Gosling as 1977 LA private detectives. Buddy comedy + neo-noir. Underseen.",
-          "critics": [{ "who": "Reception", "quote": "Critical hit, commercial underperformer. Strong cult following." }] },
-        { "title": "Brick", "year": 2005, "dir": "Rian Johnson", "country": "USA", "runtime": "110 min", "tags": ["under","modern"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Critical hit, commercial underperformer. Strong cult following."
+            }
+          ]
+        },
+        {
+          "title": "Brick",
+          "year": 2005,
+          "dir": "Rian Johnson",
+          "country": "USA",
+          "runtime": "110 min",
+          "tags": [
+            "under",
+            "modern"
+          ],
           "pitch": "Johnson's debut. High-school noir. Hard-boiled detective dialogue from teenage characters. Concept could fail; execution is superb.",
-          "critics": [{ "who": "Sundance 2005", "quote": "Originality of Vision Award. Cult standing." }] }
+          "critics": [
+            {
+              "who": "Sundance 2005",
+              "quote": "Originality of Vision Award. Cult standing."
+            }
+          ]
+        }
+      ],
+      "categories": [
+        "neo-noir",
+        "gritty"
       ]
     },
     {
       "name": "V. International",
       "desc": "Foreign crime cinema worth knowing.",
       "items": [
-        { "title": "Oldboy", "year": 2003, "dir": "Park Chan-wook", "country": "South Korea", "runtime": "120 min", "tags": ["modern","intl"],
-          "pitch": "Korean revenge masterpiece. Vengeance trilogy middle film. Stylized, brutal, structurally clever. The hammer hallway sequence is famous. Some violence intensity — but never gratuitous.",
-          "critics": [{ "who": "Cannes 2004", "quote": "Won the Grand Prix." }] },
-        { "title": "The Vanishing (1988)", "year": 1988, "dir": "George Sluizer", "country": "Netherlands/France", "runtime": "107 min", "tags": ["foundational","intl"],
+        {
+          "title": "Oldboy",
+          "year": 2003,
+          "dir": "Park Chan-wook",
+          "country": "South Korea",
+          "runtime": "120 min",
+          "tags": [
+            "modern",
+            "intl"
+          ],
+          "pitch": "Korean revenge masterpiece. Vengeance trilogy middle film. Stylized, brutal, structurally clever. The hammer hallway sequence is famous. Some violence intensity \u2014 but never gratuitous.",
+          "critics": [
+            {
+              "who": "Cannes 2004",
+              "quote": "Won the Grand Prix."
+            }
+          ]
+        },
+        {
+          "title": "The Vanishing (1988)",
+          "year": 1988,
+          "dir": "George Sluizer",
+          "country": "Netherlands/France",
+          "runtime": "107 min",
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "pitch": "Cross-listed from horror. Crime/thriller at its most patient and devastating.",
-          "critics": [] },
-        { "title": "I Saw the Devil", "year": 2010, "dir": "Kim Jee-woon", "country": "South Korea", "runtime": "144 min", "tags": ["modern","intl"],
-          "pitch": "Korean revenge film. Secret agent hunts the serial killer who murdered his fiancée. Considerably more violent than most on this list — flagged accordingly.",
-          "critics": [{ "who": "Reception", "quote": "Polarizing for violence. Critically beloved by genre critics; mainstream audiences split." }] },
-        { "title": "A Prophet", "year": 2009, "dir": "Jacques Audiard", "country": "France", "runtime": "155 min", "tags": ["modern","intl"],
+          "critics": []
+        },
+        {
+          "title": "I Saw the Devil",
+          "year": 2010,
+          "dir": "Kim Jee-woon",
+          "country": "South Korea",
+          "runtime": "144 min",
+          "tags": [
+            "modern",
+            "intl"
+          ],
+          "pitch": "Korean revenge film. Secret agent hunts the serial killer who murdered his fianc\u00e9e. Considerably more violent than most on this list \u2014 flagged accordingly.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Polarizing for violence. Critically beloved by genre critics; mainstream audiences split."
+            }
+          ]
+        },
+        {
+          "title": "A Prophet",
+          "year": 2009,
+          "dir": "Jacques Audiard",
+          "country": "France",
+          "runtime": "155 min",
+          "tags": [
+            "modern",
+            "intl"
+          ],
           "pitch": "Cross-listed from heist. Six years in a French prison. Slow-build crime epic.",
-          "critics": [] }
+          "critics": []
+        }
+      ],
+      "categories": [
+        "gritty"
       ]
     }
   ]

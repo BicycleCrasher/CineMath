@@ -23,6 +23,10 @@
               "who": "Reception",
               "quote": "Won 26 Emmys including four consecutive Outstanding Drama Series for S1-S4. Routinely cited among the greatest American TV series."
             }
+          ],
+          "categories": [
+            "sorkin",
+            "network"
           ]
         },
         {
@@ -41,8 +45,15 @@
               "who": "Reception",
               "quote": "Polarizing critically \u2014 strong defenders and strong detractors. Won three Emmys."
             }
+          ],
+          "categories": [
+            "sorkin",
+            "hbo"
           ]
         }
+      ],
+      "categories": [
+        "sorkin"
       ]
     },
     {
@@ -67,6 +78,9 @@
               "who": "Reception",
               "quote": "Four consecutive Outstanding Drama Emmys. Generally considered the AMC-era prestige drama equal to any HBO production."
             }
+          ],
+          "categories": [
+            "amc"
           ]
         },
         {
@@ -87,6 +101,9 @@
               "who": "Reception",
               "quote": "Holds the highest aggregate critical score of any TV series in modern review history."
             }
+          ],
+          "categories": [
+            "amc"
           ]
         },
         {
@@ -107,6 +124,9 @@
               "who": "Reception",
               "quote": "Nine Emmys. Series finale 'Everyone's Waiting' tops most-greatest-finale lists."
             }
+          ],
+          "categories": [
+            "hbo"
           ]
         },
         {
@@ -128,6 +148,9 @@
               "who": "Reception",
               "quote": "Critical darling that never found audience. Routinely cited as the most underwatched great show of its era."
             }
+          ],
+          "categories": [
+            "amc"
           ]
         },
         {
@@ -149,8 +172,15 @@
               "who": "Reception",
               "quote": "Metacritic among the highest-rated dramas in the site's history. Audience never matched the reviews."
             }
+          ],
+          "categories": [
+            "amc"
           ]
         }
+      ],
+      "categories": [
+        "hbo",
+        "amc"
       ]
     },
     {
@@ -169,7 +199,11 @@
           ],
           "pitch": "Sorkin's failed follow-up. Cross-listed in Comedy TV.",
           "critics": [],
-          "contentType": "tv-prestige"
+          "contentType": "tv-prestige",
+          "categories": [
+            "sorkin",
+            "network"
+          ]
         },
         {
           "title": "Nurse Jackie",
@@ -187,6 +221,9 @@
               "who": "Reception",
               "quote": "Falco won the Emmy for Lead Actress in a Comedy in 2010 \u2014 controversial because the show is not a comedy."
             }
+          ],
+          "categories": [
+            "streaming"
           ]
         },
         {
@@ -206,6 +243,9 @@
               "who": "Reception",
               "quote": "Critical favorite. Izzard's first major dramatic role."
             }
+          ],
+          "categories": [
+            "amc"
           ]
         },
         {
@@ -224,6 +264,9 @@
               "who": "Reception",
               "quote": "S1 critically acclaimed; quality declined with each showrunner change."
             }
+          ],
+          "categories": [
+            "streaming"
           ]
         },
         {
@@ -242,8 +285,15 @@
               "who": "Reception",
               "quote": "Most-watched TV show in the world during peak years (2008). Laurie won six SAG/Globe awards combined."
             }
+          ],
+          "categories": [
+            "network"
           ]
         }
+      ],
+      "categories": [
+        "network",
+        "sorkin"
       ]
     },
     {
@@ -266,6 +316,9 @@
               "who": "Reception",
               "quote": "Multiple Emmy nominations. Considered the prestige-superhero antithesis to MCU."
             }
+          ],
+          "categories": [
+            "streaming"
           ]
         },
         {
@@ -284,8 +337,15 @@
               "who": "Reception",
               "quote": "Largest cable drama premiere of 2024. Critically warm."
             }
+          ],
+          "categories": [
+            "streaming"
           ]
         }
+      ],
+      "categories": [
+        "streaming",
+        "amc"
       ]
     },
     {
@@ -310,6 +370,9 @@
               "who": "Reception",
               "quote": "Widely cited among the greatest American TV series. Eight Emmys."
             }
+          ],
+          "categories": [
+            "hbo"
           ]
         },
         {
@@ -330,6 +393,9 @@
               "who": "Reception",
               "quote": "Critical darling never matched by audience. Final season won the Peabody."
             }
+          ],
+          "categories": [
+            "network"
           ]
         },
         {
@@ -351,6 +417,9 @@
               "who": "Reception",
               "quote": "Critical praise from the start. Routinely cited as among the strongest miniseries of its decade."
             }
+          ],
+          "categories": [
+            "hbo"
           ]
         },
         {
@@ -372,6 +441,9 @@
               "who": "Reception",
               "quote": "Critical favorite. Audience smaller than The Wire's. Beloved by Simon devotees."
             }
+          ],
+          "categories": [
+            "hbo"
           ]
         },
         {
@@ -392,8 +464,15 @@
               "who": "Reception",
               "quote": "Twenty Emmys across run. Pilot directed by Scorsese remains a benchmark."
             }
+          ],
+          "categories": [
+            "hbo"
           ]
         }
+      ],
+      "categories": [
+        "hbo",
+        "amc"
       ]
     },
     {
@@ -418,6 +497,9 @@
               "who": "Reception",
               "quote": "Routinely cited among the greatest TV dramas of the streaming era."
             }
+          ],
+          "categories": [
+            "hbo"
           ]
         },
         {
@@ -438,6 +520,9 @@
               "who": "Reception",
               "quote": "Multiple Emmy wins for Bateman and Garner."
             }
+          ],
+          "categories": [
+            "streaming"
           ]
         },
         {
@@ -458,6 +543,9 @@
               "who": "Reception",
               "quote": "Final season widely considered one of the best closing seasons in TV."
             }
+          ],
+          "categories": [
+            "amc"
           ]
         },
         {
@@ -479,6 +567,9 @@
               "who": "Reception",
               "quote": "Critically beloved. Adlon won Peabody and was four-time Emmy nominee."
             }
+          ],
+          "categories": [
+            "amc"
           ]
         },
         {
@@ -493,7 +584,10 @@
             "modern"
           ],
           "whyPriority": "Cross-listed in Sci-Fi TV (you may already have it tracked there). Hacker drama, structurally inventive, ended cleanly. Drama-first, sci-fi-adjacent.",
-          "pitch": "NYC cybersecurity engineer / vigilante hacker plans to take down the largest corporation in the world."
+          "pitch": "NYC cybersecurity engineer / vigilante hacker plans to take down the largest corporation in the world.",
+          "categories": [
+            "amc"
+          ]
         },
         {
           "title": "Justified",
@@ -513,8 +607,15 @@
               "who": "Reception",
               "quote": "Critical favorite throughout run. Followed by Justified: City Primeval (2023, limited)."
             }
+          ],
+          "categories": [
+            "amc"
           ]
         }
+      ],
+      "categories": [
+        "hbo",
+        "streaming"
       ]
     },
     {
@@ -578,6 +679,10 @@
           "pitch": "Cross-listed in Crime TV. Queued.",
           "critics": []
         }
+      ],
+      "categories": [
+        "hbo",
+        "amc"
       ]
     }
   ]

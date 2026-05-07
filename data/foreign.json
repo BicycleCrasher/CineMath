@@ -4,155 +4,774 @@
   "subtitle": "International cinema, organized by accessibility. Thriller-leaning and structurally rigorous; less deep arthouse.",
   "sections": [
     {
-      "name": "I. High Priority — International Thriller",
+      "name": "I. High Priority \u2014 International Thriller",
       "desc": "Direct fits given your structural-rigor + cons + crime film loves. The international tradition closest to what you've already loved.",
       "items": [
-        { "title": "Parasite", "year": 2019, "dir": "Bong Joon-ho", "country": "South Korea", "runtime": "132 min",
-          "priority": "high", "tags": ["modern","intl","foundational"],
+        {
+          "title": "Parasite",
+          "year": 2019,
+          "dir": "Bong Joon-ho",
+          "country": "South Korea",
+          "runtime": "132 min",
+          "priority": "high",
+          "tags": [
+            "modern",
+            "intl",
+            "foundational"
+          ],
           "whyPriority": "First non-English film to win Best Picture. Class warfare via long con. Direct fit for your Cons & Courtroom + thriller pillars.",
           "pitch": "A poor family schemes to become servants of a wealthy family. The film changes shape three times.",
-          "critics": [{ "who": "Academy Awards 2020", "quote": "Won 4 Oscars including Best Picture, Director, Original Screenplay, International Feature." }] },
-        { "title": "Memories of Murder", "year": 2003, "dir": "Bong Joon-ho", "country": "South Korea", "runtime": "131 min",
-          "priority": "high", "tags": ["foundational","intl"],
+          "critics": [
+            {
+              "who": "Academy Awards 2020",
+              "quote": "Won 4 Oscars including Best Picture, Director, Original Screenplay, International Feature."
+            }
+          ],
+          "categories": [
+            "korean",
+            "thriller"
+          ]
+        },
+        {
+          "title": "Memories of Murder",
+          "year": 2003,
+          "dir": "Bong Joon-ho",
+          "country": "South Korea",
+          "runtime": "131 min",
+          "priority": "high",
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "whyPriority": "Bong's earlier masterpiece. True-crime serial killer investigation procedural. Considered by Korean cinema scholars his greatest film.",
           "pitch": "Two rural detectives investigate Korea's first serial killings (1986-91). The case was unsolved for 30 years.",
-          "critics": [{ "who": "Reception", "quote": "Routinely cited among the greatest South Korean films and procedural crime films ever made." }] },
-        { "title": "Tell No One", "year": 2006, "dir": "Guillaume Canet", "country": "France", "runtime": "131 min",
-          "priority": "high", "tags": ["modern","intl","under"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Routinely cited among the greatest South Korean films and procedural crime films ever made."
+            }
+          ],
+          "categories": [
+            "korean",
+            "thriller"
+          ]
+        },
+        {
+          "title": "Tell No One",
+          "year": 2006,
+          "dir": "Guillaume Canet",
+          "country": "France",
+          "runtime": "131 min",
+          "priority": "high",
+          "tags": [
+            "modern",
+            "intl",
+            "under"
+          ],
           "whyPriority": "Harlan Coben adaptation. Tightly plotted thriller. The 8-minute foot chase is one of the great chase sequences. Direct fit for your twist-architecture pillar.",
           "pitch": "Eight years after his wife's murder, a Parisian doctor receives an email that suggests she's still alive.",
-          "critics": [{ "who": "Reception", "quote": "Won 4 Césars including Best Director." }] },
-        { "title": "The Secret in Their Eyes", "year": 2009, "dir": "Juan José Campanella", "country": "Argentina", "runtime": "129 min",
-          "priority": "high", "tags": ["modern","intl"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Won 4 C\u00e9sars including Best Director."
+            }
+          ],
+          "categories": [
+            "french",
+            "thriller"
+          ]
+        },
+        {
+          "title": "The Secret in Their Eyes",
+          "year": 2009,
+          "dir": "Juan Jos\u00e9 Campanella",
+          "country": "Argentina",
+          "runtime": "129 min",
+          "priority": "high",
+          "tags": [
+            "modern",
+            "intl"
+          ],
           "whyPriority": "Won Best Foreign Film. Argentine retired investigator returns to a 25-year-old unsolved case. Direct fit for thriller + structural rigor.",
           "pitch": "A retired Buenos Aires legal investigator writes a novel about a case that haunted him for decades.",
-          "critics": [{ "who": "Academy Awards 2010", "quote": "Won Best Foreign Language Film." }] },
-        { "title": "Z", "year": 1969, "dir": "Costa-Gavras", "country": "France/Algeria", "runtime": "127 min",
-          "priority": "high", "tags": ["foundational","intl"],
+          "critics": [
+            {
+              "who": "Academy Awards 2010",
+              "quote": "Won Best Foreign Language Film."
+            }
+          ],
+          "categories": [
+            "argentine",
+            "thriller"
+          ]
+        },
+        {
+          "title": "Z",
+          "year": 1969,
+          "dir": "Costa-Gavras",
+          "country": "France/Algeria",
+          "runtime": "127 min",
+          "priority": "high",
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "whyPriority": "Political thriller masterpiece. Loosely fictionalized Greek assassination. Won Best Foreign Film and Best Editing at the Oscars.",
           "pitch": "A leftist politician is assassinated; an investigating magistrate uncovers a state conspiracy.",
-          "critics": [{ "who": "Academy Awards 1970", "quote": "Won 2 Oscars. Five nominations including Best Picture — rare for a foreign film at the time." }] },
-        { "title": "The Wages of Fear", "year": 1953, "dir": "Henri-Georges Clouzot", "country": "France", "runtime": "131 min",
-          "priority": "high", "tags": ["foundational","intl"],
+          "critics": [
+            {
+              "who": "Academy Awards 1970",
+              "quote": "Won 2 Oscars. Five nominations including Best Picture \u2014 rare for a foreign film at the time."
+            }
+          ],
+          "categories": [
+            "french",
+            "thriller"
+          ]
+        },
+        {
+          "title": "The Wages of Fear",
+          "year": 1953,
+          "dir": "Henri-Georges Clouzot",
+          "country": "France",
+          "runtime": "131 min",
+          "priority": "high",
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "whyPriority": "Considered one of the most suspenseful films ever made. Four desperate men drive trucks of nitroglycerin across South American mountains.",
           "pitch": "Four destitute Europeans in South America take a near-suicidal job: drive trucks of unstable explosives over treacherous roads.",
-          "critics": [{ "who": "Cannes 1953 / BAFTA 1955", "quote": "Won the Palme d'Or and BAFTA Best Film." }] },
-        { "title": "Diabolique", "year": 1955, "dir": "Henri-Georges Clouzot", "country": "France", "runtime": "117 min",
-          "priority": "high", "tags": ["foundational","intl"],
+          "critics": [
+            {
+              "who": "Cannes 1953 / BAFTA 1955",
+              "quote": "Won the Palme d'Or and BAFTA Best Film."
+            }
+          ],
+          "categories": [
+            "french",
+            "thriller"
+          ]
+        },
+        {
+          "title": "Diabolique",
+          "year": 1955,
+          "dir": "Henri-Georges Clouzot",
+          "country": "France",
+          "runtime": "117 min",
+          "priority": "high",
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "whyPriority": "Clouzot's other masterpiece. The structural template Hitchcock himself studied. Twist-driven thriller.",
           "pitch": "A boarding-school headmaster's wife and mistress conspire to murder him. The body disappears.",
-          "critics": [{ "who": "Reception", "quote": "Hitchcock attempted to buy the rights and was outbid; he then bought Psycho's source novel out of frustration." }] },
-        { "title": "Le Samouraï", "year": 1967, "dir": "Jean-Pierre Melville", "country": "France", "runtime": "105 min",
-          "priority": "high", "tags": ["foundational","intl"],
-          "whyPriority": "Alain Delon as a Parisian hitman. Influential on virtually every cool-killer film since (Drive, Ghost Dog, Léon, John Wick all cite it).",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Hitchcock attempted to buy the rights and was outbid; he then bought Psycho's source novel out of frustration."
+            }
+          ],
+          "categories": [
+            "french",
+            "thriller"
+          ]
+        },
+        {
+          "title": "Le Samoura\u00ef",
+          "year": 1967,
+          "dir": "Jean-Pierre Melville",
+          "country": "France",
+          "runtime": "105 min",
+          "priority": "high",
+          "tags": [
+            "foundational",
+            "intl"
+          ],
+          "whyPriority": "Alain Delon as a Parisian hitman. Influential on virtually every cool-killer film since (Drive, Ghost Dog, L\u00e9on, John Wick all cite it).",
           "pitch": "A Parisian contract killer tries to evade police after being seen at the scene of his latest hit.",
-          "critics": [{ "who": "Reception", "quote": "Routinely cited among the most influential French films of the 1960s." }] },
-        { "title": "A Prophet", "year": 2009, "dir": "Jacques Audiard", "country": "France", "runtime": "155 min",
-          "priority": "high", "tags": ["modern","intl"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Routinely cited among the most influential French films of the 1960s."
+            }
+          ],
+          "categories": [
+            "french",
+            "thriller"
+          ]
+        },
+        {
+          "title": "A Prophet",
+          "year": 2009,
+          "dir": "Jacques Audiard",
+          "country": "France",
+          "runtime": "155 min",
+          "priority": "high",
+          "tags": [
+            "modern",
+            "intl"
+          ],
           "whyPriority": "Cannes Grand Prix 2009. Young Arab inmate rises in the French prison hierarchy. Direct fit for your crime + structure pillar.",
           "pitch": "A 19-year-old French Arab is sentenced to six years in prison. He educates himself, gains protectors, and rises within the system.",
-          "critics": [{ "who": "Cannes 2009", "quote": "Grand Prix. Nine Césars including Best Film." }] },
-        { "title": "Headhunters", "year": 2011, "dir": "Morten Tyldum", "country": "Norway", "runtime": "100 min",
-          "priority": "high", "tags": ["modern","intl","under"],
-          "whyPriority": "Jo Nesbø adaptation. Twisty corporate-espionage thriller from director who later made The Imitation Game.",
+          "critics": [
+            {
+              "who": "Cannes 2009",
+              "quote": "Grand Prix. Nine C\u00e9sars including Best Film."
+            }
+          ],
+          "categories": [
+            "french",
+            "thriller"
+          ]
+        },
+        {
+          "title": "Headhunters",
+          "year": 2011,
+          "dir": "Morten Tyldum",
+          "country": "Norway",
+          "runtime": "100 min",
+          "priority": "high",
+          "tags": [
+            "modern",
+            "intl",
+            "under"
+          ],
+          "whyPriority": "Jo Nesb\u00f8 adaptation. Twisty corporate-espionage thriller from director who later made The Imitation Game.",
           "pitch": "A Norwegian executive recruiter steals art from his clients to support a lifestyle beyond his means. He picks the wrong target.",
-          "critics": [{ "who": "Reception", "quote": "Norway's biggest box office hit at the time. Considered the strongest Nesbø adaptation." }] },
-        { "title": "Burning", "year": 2018, "dir": "Lee Chang-dong", "country": "South Korea", "runtime": "148 min",
-          "priority": "high", "tags": ["modern","intl"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Norway's biggest box office hit at the time. Considered the strongest Nesb\u00f8 adaptation."
+            }
+          ],
+          "categories": [
+            "thriller"
+          ]
+        },
+        {
+          "title": "Burning",
+          "year": 2018,
+          "dir": "Lee Chang-dong",
+          "country": "South Korea",
+          "runtime": "148 min",
+          "priority": "high",
+          "tags": [
+            "modern",
+            "intl"
+          ],
           "whyPriority": "Murakami short-story adaptation. Slow-burn psychological thriller. Tied with Memories of Murder among critics' top Korean films of the 2010s.",
           "pitch": "A young aspiring writer in Seoul reconnects with a childhood friend who introduces him to her wealthy new boyfriend.",
-          "critics": [{ "who": "Cannes 2018", "quote": "FIPRESCI Prize. Highest score in Cannes Critics' history at the time." }] },
-        { "title": "Oldboy", "year": 2003, "dir": "Park Chan-wook", "country": "South Korea", "runtime": "120 min",
-          "priority": "high", "tags": ["foundational","intl"],
+          "critics": [
+            {
+              "who": "Cannes 2018",
+              "quote": "FIPRESCI Prize. Highest score in Cannes Critics' history at the time."
+            }
+          ],
+          "categories": [
+            "korean",
+            "thriller"
+          ]
+        },
+        {
+          "title": "Oldboy",
+          "year": 2003,
+          "dir": "Park Chan-wook",
+          "country": "South Korea",
+          "runtime": "120 min",
+          "priority": "high",
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "whyPriority": "Park's revenge masterpiece. The hallway hammer-fight sequence is among the most influential action setpieces ever filmed. Twist ending is foundational.",
           "pitch": "A Seoul businessman is imprisoned in a hotel-room cell for 15 years without explanation. Then he's released.",
-          "critics": [{ "who": "Cannes 2004", "quote": "Grand Prix from a jury chaired by Quentin Tarantino." }] },
-        { "title": "The Handmaiden", "year": 2016, "dir": "Park Chan-wook", "country": "South Korea", "runtime": "144 min",
-          "priority": "high", "tags": ["modern","intl"],
+          "critics": [
+            {
+              "who": "Cannes 2004",
+              "quote": "Grand Prix from a jury chaired by Quentin Tarantino."
+            }
+          ],
+          "categories": [
+            "korean",
+            "thriller"
+          ]
+        },
+        {
+          "title": "The Handmaiden",
+          "year": 2016,
+          "dir": "Park Chan-wook",
+          "country": "South Korea",
+          "runtime": "144 min",
+          "priority": "high",
+          "tags": [
+            "modern",
+            "intl"
+          ],
           "whyPriority": "Park's Sarah Waters adaptation. Korean colonial-era con-artist plot with three perspective shifts. Direct fit for your cons + structural-rigor pillar.",
           "pitch": "A Korean conwoman is hired as handmaiden to a wealthy Japanese heiress. She and her partner plan to steal the heiress's fortune.",
-          "critics": [{ "who": "Reception", "quote": "BAFTA Best Foreign Film. Considered Park's most accomplished post-Oldboy work." }] }
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "BAFTA Best Foreign Film. Considered Park's most accomplished post-Oldboy work."
+            }
+          ],
+          "categories": [
+            "korean",
+            "thriller"
+          ]
+        }
+      ],
+      "categories": [
+        "thriller"
       ]
     },
     {
-      "name": "II. Medium Priority — Foundational International",
+      "name": "II. Medium Priority \u2014 Foundational International",
       "desc": "Major canonical works that fit your sensibility without being deep arthouse.",
       "items": [
-        { "title": "The Rules of the Game", "year": 1939, "dir": "Jean Renoir", "country": "France", "runtime": "110 min",
-          "priority": "med", "tags": ["foundational","intl"],
+        {
+          "title": "The Rules of the Game",
+          "year": 1939,
+          "dir": "Jean Renoir",
+          "country": "France",
+          "runtime": "110 min",
+          "priority": "med",
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "whyPriority": "Routinely listed among the greatest films ever made. Sight & Sound poll mainstay. Pre-war French society laid bare.",
           "pitch": "Aristocrats and servants gather at a country estate. Affairs, hunts, secrets, deaths.",
-          "critics": [{ "who": "Sight & Sound 2022", "quote": "#11 in Greatest Films of All Time poll." }] },
-        { "title": "The 400 Blows", "year": 1959, "dir": "François Truffaut", "country": "France", "runtime": "99 min",
-          "priority": "med", "tags": ["foundational","intl"],
+          "critics": [
+            {
+              "who": "Sight & Sound 2022",
+              "quote": "#11 in Greatest Films of All Time poll."
+            }
+          ],
+          "categories": [
+            "french",
+            "foundational"
+          ]
+        },
+        {
+          "title": "The 400 Blows",
+          "year": 1959,
+          "dir": "Fran\u00e7ois Truffaut",
+          "country": "France",
+          "runtime": "99 min",
+          "priority": "med",
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "pitch": "French New Wave's most accessible founding text. Truffaut's autobiographical first feature.",
-          "critics": [{ "who": "Cannes 1959", "quote": "Won Best Director." }] },
-        { "title": "Breathless", "year": 1960, "dir": "Jean-Luc Godard", "country": "France", "runtime": "90 min",
-          "priority": "med", "tags": ["foundational","intl"],
-          "pitch": "Godard's debut. The film that broke film grammar — jump cuts, casual delivery, hand-held camera.",
-          "critics": [{ "who": "Reception", "quote": "Routinely cited as among the most influential debuts in film history." }] },
-        { "title": "Bicycle Thieves", "year": 1948, "dir": "Vittorio De Sica", "country": "Italy", "runtime": "89 min",
-          "priority": "med", "tags": ["foundational","intl"],
+          "critics": [
+            {
+              "who": "Cannes 1959",
+              "quote": "Won Best Director."
+            }
+          ],
+          "categories": [
+            "french",
+            "foundational"
+          ]
+        },
+        {
+          "title": "Breathless",
+          "year": 1960,
+          "dir": "Jean-Luc Godard",
+          "country": "France",
+          "runtime": "90 min",
+          "priority": "med",
+          "tags": [
+            "foundational",
+            "intl"
+          ],
+          "pitch": "Godard's debut. The film that broke film grammar \u2014 jump cuts, casual delivery, hand-held camera.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Routinely cited as among the most influential debuts in film history."
+            }
+          ],
+          "categories": [
+            "french",
+            "foundational"
+          ]
+        },
+        {
+          "title": "Bicycle Thieves",
+          "year": 1948,
+          "dir": "Vittorio De Sica",
+          "country": "Italy",
+          "runtime": "89 min",
+          "priority": "med",
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "pitch": "Italian Neorealism founding text. A Roman father and son search for a stolen bicycle that he needs for work.",
-          "critics": [{ "who": "Academy Awards 1950", "quote": "Honorary Oscar before the Foreign Film category existed." }] },
-        { "title": "8½", "year": 1963, "dir": "Federico Fellini", "country": "Italy", "runtime": "138 min",
-          "priority": "med", "tags": ["foundational","intl"],
+          "critics": [
+            {
+              "who": "Academy Awards 1950",
+              "quote": "Honorary Oscar before the Foreign Film category existed."
+            }
+          ],
+          "categories": [
+            "italian",
+            "foundational"
+          ]
+        },
+        {
+          "title": "8\u00bd",
+          "year": 1963,
+          "dir": "Federico Fellini",
+          "country": "Italy",
+          "runtime": "138 min",
+          "priority": "med",
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "pitch": "Fellini's most personal film about a director's creative paralysis.",
-          "critics": [{ "who": "Sight & Sound 2022", "quote": "Top-30 Greatest Films of All Time." }] },
-        { "title": "Seven Samurai", "year": 1954, "dir": "Akira Kurosawa", "country": "Japan", "runtime": "207 min",
-          "priority": "med", "tags": ["foundational","intl"],
+          "critics": [
+            {
+              "who": "Sight & Sound 2022",
+              "quote": "Top-30 Greatest Films of All Time."
+            }
+          ],
+          "categories": [
+            "italian",
+            "foundational"
+          ]
+        },
+        {
+          "title": "Seven Samurai",
+          "year": 1954,
+          "dir": "Akira Kurosawa",
+          "country": "Japan",
+          "runtime": "207 min",
+          "priority": "med",
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "pitch": "Kurosawa's masterpiece. A village hires seven samurai to defend against bandits. Direct ancestor of nearly every team-assembly action film.",
-          "critics": [{ "who": "Sight & Sound 2022", "quote": "Top-25 Greatest Films of All Time." }] },
-        { "title": "Yojimbo", "year": 1961, "dir": "Akira Kurosawa", "country": "Japan", "runtime": "110 min",
-          "priority": "med", "tags": ["foundational","intl"],
+          "critics": [
+            {
+              "who": "Sight & Sound 2022",
+              "quote": "Top-25 Greatest Films of All Time."
+            }
+          ],
+          "categories": [
+            "japanese",
+            "foundational"
+          ]
+        },
+        {
+          "title": "Yojimbo",
+          "year": 1961,
+          "dir": "Akira Kurosawa",
+          "country": "Japan",
+          "runtime": "110 min",
+          "priority": "med",
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "pitch": "Kurosawa's most playful samurai film. Mifune as a wandering ronin who plays two warring factions against each other. Remade as A Fistful of Dollars.",
-          "critics": [{ "who": "Reception", "quote": "Considered one of Kurosawa's most accessible works." }] },
-        { "title": "Ran", "year": 1985, "dir": "Akira Kurosawa", "country": "Japan", "runtime": "162 min",
-          "priority": "med", "tags": ["foundational","intl"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Considered one of Kurosawa's most accessible works."
+            }
+          ],
+          "categories": [
+            "japanese",
+            "foundational"
+          ]
+        },
+        {
+          "title": "Ran",
+          "year": 1985,
+          "dir": "Akira Kurosawa",
+          "country": "Japan",
+          "runtime": "162 min",
+          "priority": "med",
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "pitch": "Kurosawa's King Lear. Visually astonishing late-career masterpiece.",
-          "critics": [{ "who": "Reception", "quote": "Best Costume Oscar. Routinely cited as one of the great late-career works in cinema." }] },
-        { "title": "City of God", "year": 2002, "dir": "Fernando Meirelles & Kátia Lund", "country": "Brazil", "runtime": "130 min",
-          "priority": "med", "tags": ["foundational","intl"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Best Costume Oscar. Routinely cited as one of the great late-career works in cinema."
+            }
+          ],
+          "categories": [
+            "japanese",
+            "foundational"
+          ]
+        },
+        {
+          "title": "City of God",
+          "year": 2002,
+          "dir": "Fernando Meirelles & K\u00e1tia Lund",
+          "country": "Brazil",
+          "runtime": "130 min",
+          "priority": "med",
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "pitch": "Rio de Janeiro favela crime drama spanning 20 years. The Goodfellas of Brazilian cinema.",
-          "critics": [{ "who": "Academy Awards 2004", "quote": "Four Oscar nominations including Best Director." }] },
-        { "title": "Y Tu Mamá También", "year": 2001, "dir": "Alfonso Cuarón", "country": "Mexico", "runtime": "106 min",
-          "priority": "med", "tags": ["foundational","intl"],
-          "pitch": "Cuarón's road movie. Two teenage boys and an older woman drive across Mexico to a beach.",
-          "critics": [{ "who": "Reception", "quote": "Oscar-nominated for Original Screenplay. Established Cuarón globally." }] },
-        { "title": "Pan's Labyrinth", "year": 2006, "dir": "Guillermo del Toro", "country": "Spain/Mexico", "runtime": "118 min",
-          "priority": "med", "tags": ["foundational","intl"],
+          "critics": [
+            {
+              "who": "Academy Awards 2004",
+              "quote": "Four Oscar nominations including Best Director."
+            }
+          ],
+          "categories": [
+            "brazilian",
+            "thriller"
+          ]
+        },
+        {
+          "title": "Y Tu Mam\u00e1 Tambi\u00e9n",
+          "year": 2001,
+          "dir": "Alfonso Cuar\u00f3n",
+          "country": "Mexico",
+          "runtime": "106 min",
+          "priority": "med",
+          "tags": [
+            "foundational",
+            "intl"
+          ],
+          "pitch": "Cuar\u00f3n's road movie. Two teenage boys and an older woman drive across Mexico to a beach.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Oscar-nominated for Original Screenplay. Established Cuar\u00f3n globally."
+            }
+          ],
+          "categories": [
+            "spanish-lang",
+            "foundational"
+          ]
+        },
+        {
+          "title": "Pan's Labyrinth",
+          "year": 2006,
+          "dir": "Guillermo del Toro",
+          "country": "Spain/Mexico",
+          "runtime": "118 min",
+          "priority": "med",
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "pitch": "Cross-listed in Fantasy. 1944 fascist Spain. A young girl encounters a mythological labyrinth.",
-          "critics": [{ "who": "Academy Awards 2007", "quote": "Won 3 Oscars. Six nominations including Best Foreign Language Film." }] }
+          "critics": [
+            {
+              "who": "Academy Awards 2007",
+              "quote": "Won 3 Oscars. Six nominations including Best Foreign Language Film."
+            }
+          ],
+          "categories": [
+            "spanish-lang",
+            "foundational"
+          ]
+        }
+      ],
+      "categories": [
+        "foundational"
       ]
     },
     {
       "name": "III. Worth Considering",
       "desc": "Adjacent territory. Festival prestige fits less squarely with your loves but still rewarding.",
       "items": [
-        { "title": "Drive My Car", "year": 2021, "dir": "Ryusuke Hamaguchi", "country": "Japan", "runtime": "179 min", "tags": ["modern","intl"],
+        {
+          "title": "Drive My Car",
+          "year": 2021,
+          "dir": "Ryusuke Hamaguchi",
+          "country": "Japan",
+          "runtime": "179 min",
+          "tags": [
+            "modern",
+            "intl"
+          ],
           "pitch": "Murakami adaptation. Slow, contemplative, theater-driven. Tonally meditative but structurally rigorous.",
-          "critics": [{ "who": "Academy Awards 2022", "quote": "Won Best International Feature. Best Picture nominee." }] },
-        { "title": "Roma", "year": 2018, "dir": "Alfonso Cuarón", "country": "Mexico", "runtime": "135 min", "tags": ["modern","intl"],
-          "pitch": "Cuarón's autobiographical film about the housekeeper who raised him in 1970s Mexico City. Black-and-white, 65mm.",
-          "critics": [{ "who": "Academy Awards 2019", "quote": "Won 3 Oscars including Best Director and Best Foreign Language Film." }] },
-        { "title": "Cold War", "year": 2018, "dir": "Paweł Pawlikowski", "country": "Poland", "runtime": "89 min", "tags": ["modern","intl"],
+          "critics": [
+            {
+              "who": "Academy Awards 2022",
+              "quote": "Won Best International Feature. Best Picture nominee."
+            }
+          ],
+          "categories": [
+            "japanese",
+            "foundational"
+          ]
+        },
+        {
+          "title": "Roma",
+          "year": 2018,
+          "dir": "Alfonso Cuar\u00f3n",
+          "country": "Mexico",
+          "runtime": "135 min",
+          "tags": [
+            "modern",
+            "intl"
+          ],
+          "pitch": "Cuar\u00f3n's autobiographical film about the housekeeper who raised him in 1970s Mexico City. Black-and-white, 65mm.",
+          "critics": [
+            {
+              "who": "Academy Awards 2019",
+              "quote": "Won 3 Oscars including Best Director and Best Foreign Language Film."
+            }
+          ],
+          "categories": [
+            "spanish-lang",
+            "foundational"
+          ]
+        },
+        {
+          "title": "Cold War",
+          "year": 2018,
+          "dir": "Pawe\u0142 Pawlikowski",
+          "country": "Poland",
+          "runtime": "89 min",
+          "tags": [
+            "modern",
+            "intl"
+          ],
           "pitch": "Black-and-white tragic romance across post-WWII Poland and Paris. 89 minutes, every shot composed.",
-          "critics": [{ "who": "Cannes 2018", "quote": "Best Director. Three Oscar nominations." }] },
-        { "title": "Ida", "year": 2013, "dir": "Paweł Pawlikowski", "country": "Poland", "runtime": "82 min", "tags": ["modern","intl"],
+          "critics": [
+            {
+              "who": "Cannes 2018",
+              "quote": "Best Director. Three Oscar nominations."
+            }
+          ],
+          "categories": [
+            "polish",
+            "foundational"
+          ]
+        },
+        {
+          "title": "Ida",
+          "year": 2013,
+          "dir": "Pawe\u0142 Pawlikowski",
+          "country": "Poland",
+          "runtime": "82 min",
+          "tags": [
+            "modern",
+            "intl"
+          ],
           "pitch": "Pawlikowski's earlier black-and-white masterpiece. A young Polish nun discovers she is Jewish on the eve of taking her vows.",
-          "critics": [{ "who": "Academy Awards 2015", "quote": "Won Best Foreign Language Film." }] },
-        { "title": "The Lives of Others", "year": 2006, "dir": "Florian Henckel von Donnersmarck", "country": "Germany", "runtime": "137 min", "tags": ["foundational","intl"],
+          "critics": [
+            {
+              "who": "Academy Awards 2015",
+              "quote": "Won Best Foreign Language Film."
+            }
+          ],
+          "categories": [
+            "polish",
+            "foundational"
+          ]
+        },
+        {
+          "title": "The Lives of Others",
+          "year": 2006,
+          "dir": "Florian Henckel von Donnersmarck",
+          "country": "Germany",
+          "runtime": "137 min",
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "pitch": "Cross-listed in Spy. East German Stasi officer surveils a playwright. Direct fit for spy + drama.",
-          "critics": [{ "who": "Academy Awards 2007", "quote": "Won Best Foreign Language Film." }] },
-        { "title": "Amour", "year": 2012, "dir": "Michael Haneke", "country": "France/Austria", "runtime": "127 min", "tags": ["modern","intl"],
+          "critics": [
+            {
+              "who": "Academy Awards 2007",
+              "quote": "Won Best Foreign Language Film."
+            }
+          ],
+          "categories": [
+            "german",
+            "thriller"
+          ]
+        },
+        {
+          "title": "Amour",
+          "year": 2012,
+          "dir": "Michael Haneke",
+          "country": "France/Austria",
+          "runtime": "127 min",
+          "tags": [
+            "modern",
+            "intl"
+          ],
           "pitch": "Haneke's most humane film. An elderly Parisian couple's marriage in its final stage.",
-          "critics": [{ "who": "Cannes 2012", "quote": "Palme d'Or. Won Best Foreign Language Film." }] },
-        { "title": "Tokyo Story", "year": 1953, "dir": "Yasujirō Ozu", "country": "Japan", "runtime": "136 min", "tags": ["foundational","intl"],
+          "critics": [
+            {
+              "who": "Cannes 2012",
+              "quote": "Palme d'Or. Won Best Foreign Language Film."
+            }
+          ],
+          "categories": [
+            "french",
+            "foundational"
+          ]
+        },
+        {
+          "title": "Tokyo Story",
+          "year": 1953,
+          "dir": "Yasujir\u014d Ozu",
+          "country": "Japan",
+          "runtime": "136 min",
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "pitch": "Routinely listed among the greatest films ever made. Aging parents visit their grown children in Tokyo.",
-          "critics": [{ "who": "Sight & Sound 2022", "quote": "Top-5 Greatest Films of All Time." }] },
-        { "title": "In the Mood for Love", "year": 2000, "dir": "Wong Kar-wai", "country": "Hong Kong", "runtime": "98 min", "tags": ["foundational","intl"],
+          "critics": [
+            {
+              "who": "Sight & Sound 2022",
+              "quote": "Top-5 Greatest Films of All Time."
+            }
+          ],
+          "categories": [
+            "japanese",
+            "foundational"
+          ]
+        },
+        {
+          "title": "In the Mood for Love",
+          "year": 2000,
+          "dir": "Wong Kar-wai",
+          "country": "Hong Kong",
+          "runtime": "98 min",
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "pitch": "Hong Kong romance. Two neighbors in 1962 Hong Kong realize their spouses are having an affair with each other.",
-          "critics": [{ "who": "Sight & Sound 2022", "quote": "#5 Greatest Film of All Time." }] }
+          "critics": [
+            {
+              "who": "Sight & Sound 2022",
+              "quote": "#5 Greatest Film of All Time."
+            }
+          ],
+          "categories": [
+            "hk-chinese",
+            "foundational"
+          ]
+        }
+      ],
+      "categories": [
+        "foundational"
       ]
     }
   ]

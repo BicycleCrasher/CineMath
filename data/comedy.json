@@ -4,120 +4,312 @@
   "subtitle": "Cerebral, dry, dark, formally inventive comedy. Intelligence over volume.",
   "sections": [
     {
-      "name": "I. High Priority — Coen Brothers",
+      "name": "I. High Priority \u2014 Coen Brothers",
       "desc": "You said yes to Big Lebowski / Burn After Reading / Hail Caesar territory. Here's the comedic Coens canon, prioritized.",
       "items": [
         {
-          "title": "The Big Lebowski", "year": 1998, "dir": "Joel & Ethan Coen", "country": "USA", "runtime": "117 min",
-          "priority": "high", "tags": ["foundational"],
+          "title": "The Big Lebowski",
+          "year": 1998,
+          "dir": "Joel & Ethan Coen",
+          "country": "USA",
+          "runtime": "117 min",
+          "priority": "high",
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "The Coens' most beloved. Bowling, White Russians, Sam Elliott narrating, Bridges as the Dude. Stoner Chandler. Watch if you haven't, rewatch if you have.",
           "pitch": "The Dude wants his rug back. Then a kidnapping. Then a severed toe. Then a marmot.",
-          "critics": [{ "who": "Reappraisal", "quote": "Critically mixed in 1998; now considered one of the great American comedies." }]
+          "critics": [
+            {
+              "who": "Reappraisal",
+              "quote": "Critically mixed in 1998; now considered one of the great American comedies."
+            }
+          ]
         },
         {
-          "title": "Burn After Reading", "year": 2008, "dir": "Joel & Ethan Coen", "country": "USA", "runtime": "96 min",
-          "priority": "high", "tags": ["modern"],
+          "title": "Burn After Reading",
+          "year": 2008,
+          "dir": "Joel & Ethan Coen",
+          "country": "USA",
+          "runtime": "96 min",
+          "priority": "high",
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "Coens' nihilist espionage farce. Pitt, Clooney, McDormand, Malkovich. The CIA mostly confused. The ending is the joke.",
           "pitch": "Two gym employees find a CD with what appears to be CIA secrets. They try to extort the owner. Things escalate to no purpose.",
-          "critics": [{ "who": "Reception", "quote": "Polarizing initially; widely beloved now. Brad Pitt's strongest comedic performance." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Polarizing initially; widely beloved now. Brad Pitt's strongest comedic performance."
+            }
+          ]
         },
         {
-          "title": "Hail, Caesar!", "year": 2016, "dir": "Joel & Ethan Coen", "country": "USA", "runtime": "106 min",
-          "priority": "high", "tags": ["modern"],
+          "title": "Hail, Caesar!",
+          "year": 2016,
+          "dir": "Joel & Ethan Coen",
+          "country": "USA",
+          "runtime": "106 min",
+          "priority": "high",
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "Coens' love letter to 1950s Hollywood. Brolin as a fixer at a major studio. Tatum tap dancing. Ehrenreich's 'Would that it were so simple' scene is classic.",
           "pitch": "A studio fixer in 1951 Hollywood deals with kidnappings, pregnancies, communism, and a mediocre Western star.",
-          "critics": [{ "who": "Reception", "quote": "Critically warm. 'Would that it were so simple' became a cult phrase." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Critically warm. 'Would that it were so simple' became a cult phrase."
+            }
+          ]
         },
         {
-          "title": "Fargo", "year": 1996, "dir": "Joel & Ethan Coen", "country": "USA", "runtime": "98 min",
-          "priority": "high", "tags": ["foundational"],
-          "whyPriority": "Coens at their tonal peak — comedy and brutality intertwined. McDormand as Marge Gunderson. Won Best Original Screenplay and Best Actress.",
+          "title": "Fargo",
+          "year": 1996,
+          "dir": "Joel & Ethan Coen",
+          "country": "USA",
+          "runtime": "98 min",
+          "priority": "high",
+          "tags": [
+            "foundational"
+          ],
+          "whyPriority": "Coens at their tonal peak \u2014 comedy and brutality intertwined. McDormand as Marge Gunderson. Won Best Original Screenplay and Best Actress.",
           "pitch": "A car salesman hires two men to kidnap his wife so he can collect ransom from her father. A pregnant police chief gets involved.",
-          "critics": [{ "who": "Academy Awards 1997", "quote": "Won 2 Oscars. Seven nominations including Best Picture and Best Director." }]
+          "critics": [
+            {
+              "who": "Academy Awards 1997",
+              "quote": "Won 2 Oscars. Seven nominations including Best Picture and Best Director."
+            }
+          ]
         },
         {
-          "title": "O Brother, Where Art Thou?", "year": 2000, "dir": "Joel & Ethan Coen", "country": "USA", "runtime": "107 min",
-          "priority": "med", "tags": ["foundational"],
+          "title": "O Brother, Where Art Thou?",
+          "year": 2000,
+          "dir": "Joel & Ethan Coen",
+          "country": "USA",
+          "runtime": "107 min",
+          "priority": "med",
+          "tags": [
+            "foundational"
+          ],
           "pitch": "Loose Odyssey adaptation set in Depression-era Mississippi. Clooney leading three escaped convicts. The soundtrack outsold the film and won Album of the Year.",
-          "critics": [{ "who": "Reception", "quote": "Two Oscar nominations including Best Adapted Screenplay." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Two Oscar nominations including Best Adapted Screenplay."
+            }
+          ]
         },
         {
-          "title": "Raising Arizona", "year": 1987, "dir": "Joel & Ethan Coen", "country": "USA", "runtime": "94 min",
-          "priority": "med", "tags": ["foundational"],
+          "title": "Raising Arizona",
+          "year": 1987,
+          "dir": "Joel & Ethan Coen",
+          "country": "USA",
+          "runtime": "94 min",
+          "priority": "med",
+          "tags": [
+            "foundational"
+          ],
           "pitch": "Early Coens. Cage and Holly Hunter as a couple who can't have children, so they steal one. Manic, slapstick, original.",
-          "critics": [{ "who": "Reception", "quote": "Initially divisive; aged into respect. Considered the launching pad for Cage's idiosyncratic period." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Initially divisive; aged into respect. Considered the launching pad for Cage's idiosyncratic period."
+            }
+          ]
         }
+      ],
+      "categories": [
+        "satire",
+        "dark"
       ]
     },
     {
-      "name": "II. High Priority — Wes Anderson (the deeper cuts)",
-      "desc": "You've seen 'a lot' — listed for completeness with priority on the ones often overlooked.",
+      "name": "II. High Priority \u2014 Wes Anderson (the deeper cuts)",
+      "desc": "You've seen 'a lot' \u2014 listed for completeness with priority on the ones often overlooked.",
       "items": [
         {
-          "title": "The Grand Budapest Hotel", "year": 2014, "dir": "Wes Anderson", "country": "USA/Germany", "runtime": "99 min",
-          "priority": "med", "tags": ["modern"],
+          "title": "The Grand Budapest Hotel",
+          "year": 2014,
+          "dir": "Wes Anderson",
+          "country": "USA/Germany",
+          "runtime": "99 min",
+          "priority": "med",
+          "tags": [
+            "modern"
+          ],
           "pitch": "Anderson's most accessible. Ralph Fiennes as the concierge. Multiple frame ratios, multiple time periods. Won 4 Oscars.",
-          "critics": [{ "who": "Academy Awards 2015", "quote": "Won 4 Oscars. Tied with Birdman for most wins that year." }]
+          "critics": [
+            {
+              "who": "Academy Awards 2015",
+              "quote": "Won 4 Oscars. Tied with Birdman for most wins that year."
+            }
+          ]
         },
         {
-          "title": "The French Dispatch", "year": 2021, "dir": "Wes Anderson", "country": "USA", "runtime": "108 min",
-          "priority": "med", "tags": ["modern"],
+          "title": "The French Dispatch",
+          "year": 2021,
+          "dir": "Wes Anderson",
+          "country": "USA",
+          "runtime": "108 min",
+          "priority": "med",
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "Anderson's most divisive recent work. Anthology of New Yorker-style stories. Dense, demanding, rewards attention.",
           "pitch": "Anthology of stories from a fictional American magazine in a fictional French city. Anderson at his most magazine-like.",
-          "critics": [{ "who": "Reception", "quote": "Polarizing. Some critics called it overstuffed; others called it a masterpiece." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Polarizing. Some critics called it overstuffed; others called it a masterpiece."
+            }
+          ]
         },
         {
-          "title": "Rushmore", "year": 1998, "dir": "Wes Anderson", "country": "USA", "runtime": "93 min",
-          "priority": "med", "tags": ["foundational"],
+          "title": "Rushmore",
+          "year": 1998,
+          "dir": "Wes Anderson",
+          "country": "USA",
+          "runtime": "93 min",
+          "priority": "med",
+          "tags": [
+            "foundational"
+          ],
           "pitch": "Anderson's second. Bill Murray's career resurrection. Schwartzman's debut.",
-          "critics": [{ "who": "Reception", "quote": "Generally considered Anderson's first masterpiece. Murray won several critics' awards." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Generally considered Anderson's first masterpiece. Murray won several critics' awards."
+            }
+          ]
         }
+      ],
+      "categories": [
+        "satire",
+        "dark"
       ]
     },
     {
-      "name": "III. High Priority — Satire",
+      "name": "III. High Priority \u2014 Satire",
       "desc": "Network, Wag the Dog territory. Where comedy meets political weight.",
       "items": [
         {
-          "title": "Network", "year": 1976, "dir": "Sidney Lumet", "country": "USA", "runtime": "121 min",
-          "priority": "high", "tags": ["foundational"],
+          "title": "Network",
+          "year": 1976,
+          "dir": "Sidney Lumet",
+          "country": "USA",
+          "runtime": "121 min",
+          "priority": "high",
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "Paddy Chayefsky's screenplay. Predicted reality TV, infotainment, and contemporary cable news with horrifying accuracy. 'I'm mad as hell.' Won 4 Oscars.",
           "pitch": "A network newscaster's on-air breakdown becomes a ratings sensation. The network exploits him. Faye Dunaway is terrifying.",
-          "critics": [{ "who": "Academy Awards 1977", "quote": "Won 4 Oscars including Best Original Screenplay (Chayefsky), Best Actor (Finch), Best Actress (Dunaway), Best Supporting Actress (Straight)." }]
+          "critics": [
+            {
+              "who": "Academy Awards 1977",
+              "quote": "Won 4 Oscars including Best Original Screenplay (Chayefsky), Best Actor (Finch), Best Actress (Dunaway), Best Supporting Actress (Straight)."
+            }
+          ]
         },
         {
-          "title": "Dr. Strangelove", "year": 1964, "dir": "Stanley Kubrick", "country": "USA/UK", "runtime": "95 min",
-          "priority": "high", "tags": ["foundational"],
+          "title": "Dr. Strangelove",
+          "year": 1964,
+          "dir": "Stanley Kubrick",
+          "country": "USA/UK",
+          "runtime": "95 min",
+          "priority": "high",
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "You've seen all of Kubrick. Pre-marked Watched in case you have, but listed because it's the satirical foundation everything else owes a debt to.",
           "pitch": "Cold War nuclear war as black comedy. Sellers in three roles.",
-          "critics": [{ "who": "Reception", "quote": "Routinely listed among the greatest comedies and greatest American films ever made." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Routinely listed among the greatest comedies and greatest American films ever made."
+            }
+          ]
         },
         {
-          "title": "Wag the Dog", "year": 1997, "dir": "Barry Levinson", "country": "USA", "runtime": "97 min",
-          "priority": "high", "tags": ["modern"],
+          "title": "Wag the Dog",
+          "year": 1997,
+          "dir": "Barry Levinson",
+          "country": "USA",
+          "runtime": "97 min",
+          "priority": "high",
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "Hoffman and De Niro as a Hollywood producer and political fixer fabricating a fake war to distract from a presidential scandal. Released weeks before Lewinsky broke. Eerie.",
           "pitch": "A spin doctor and a Hollywood producer manufacture a war to distract from a presidential sex scandal. Released right before Lewinsky.",
-          "critics": [{ "who": "Reception", "quote": "Two Oscar nominations. Mamet co-wrote the screenplay." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Two Oscar nominations. Mamet co-wrote the screenplay."
+            }
+          ]
         },
         {
-          "title": "Don't Look Up", "year": 2021, "dir": "Adam McKay", "country": "USA", "runtime": "138 min",
-          "priority": "med", "tags": ["modern"],
+          "title": "Don't Look Up",
+          "year": 2021,
+          "dir": "Adam McKay",
+          "country": "USA",
+          "runtime": "138 min",
+          "priority": "med",
+          "tags": [
+            "modern"
+          ],
           "pitch": "Two scientists discover an extinction-level comet. Nobody listens. McKay's despair-comedy about climate change, dressed as something else.",
-          "critics": [{ "who": "Reception", "quote": "Critically polarizing. Audiences split sharply. Whether it lands depends on your tolerance for the technique." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Critically polarizing. Audiences split sharply. Whether it lands depends on your tolerance for the technique."
+            }
+          ]
         },
         {
-          "title": "Idiocracy", "year": 2006, "dir": "Mike Judge", "country": "USA", "runtime": "84 min",
-          "priority": "med", "tags": ["modern"],
+          "title": "Idiocracy",
+          "year": 2006,
+          "dir": "Mike Judge",
+          "country": "USA",
+          "runtime": "84 min",
+          "priority": "med",
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "Mike Judge's prophetic dystopian satire. Fox barely released it. Has aged from absurd to documentary.",
           "pitch": "Average soldier wakes up 500 years in the future and finds himself the smartest person alive.",
-          "critics": [{ "who": "Reappraisal", "quote": "Originally dumped to a few cities; cult resurrection through DVD. Now widely cited as eerily prescient." }]
+          "critics": [
+            {
+              "who": "Reappraisal",
+              "quote": "Originally dumped to a few cities; cult resurrection through DVD. Now widely cited as eerily prescient."
+            }
+          ]
         },
         {
-          "title": "Election", "year": 1999, "dir": "Alexander Payne", "country": "USA", "runtime": "103 min",
-          "priority": "med", "tags": ["foundational"],
+          "title": "Election",
+          "year": 1999,
+          "dir": "Alexander Payne",
+          "country": "USA",
+          "runtime": "103 min",
+          "priority": "med",
+          "tags": [
+            "foundational"
+          ],
           "pitch": "High school student council election as Clinton-era political allegory. Witherspoon's career-defining role. Broderick at his most pathetic.",
-          "critics": [{ "who": "Reception", "quote": "Two Oscar nominations. One of Witherspoon's defining performances." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Two Oscar nominations. One of Witherspoon's defining performances."
+            }
+          ]
         }
+      ],
+      "categories": [
+        "satire",
+        "dark"
       ]
     },
     {
@@ -125,40 +317,109 @@
       "desc": "Ealing through In the Loop. Wit instead of slapstick.",
       "items": [
         {
-          "title": "In the Loop", "year": 2009, "dir": "Armando Iannucci", "country": "UK/USA", "runtime": "106 min",
-          "priority": "high", "tags": ["modern","intl"],
+          "title": "In the Loop",
+          "year": 2009,
+          "dir": "Armando Iannucci",
+          "country": "UK/USA",
+          "runtime": "106 min",
+          "priority": "high",
+          "tags": [
+            "modern",
+            "intl"
+          ],
           "whyPriority": "Iannucci's spinoff from The Thick of It. Bureaucratic farce around the Iraq War. Peter Capaldi's profanity is poetry.",
           "pitch": "British and American bureaucrats stumble toward war while saying things they shouldn't and ducking each other.",
-          "critics": [{ "who": "Reception", "quote": "Oscar nomination for Best Adapted Screenplay. Cult devotion among political-comedy fans." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Oscar nomination for Best Adapted Screenplay. Cult devotion among political-comedy fans."
+            }
+          ]
         },
         {
-          "title": "Death at a Funeral (2007)", "year": 2007, "dir": "Frank Oz", "country": "UK/USA", "runtime": "90 min",
-          "priority": "med", "tags": ["modern","intl"],
+          "title": "Death at a Funeral (2007)",
+          "year": 2007,
+          "dir": "Frank Oz",
+          "country": "UK/USA",
+          "runtime": "90 min",
+          "priority": "med",
+          "tags": [
+            "modern",
+            "intl"
+          ],
           "whyPriority": "British original (not the 2010 American remake). Family secrets unravel during a father's funeral. Genuinely funny in classic British escalation pattern.",
           "pitch": "An Englishman's funeral is interrupted by hallucinogens, a dwarf, and a dead body that won't stay still.",
-          "critics": [{ "who": "Reception", "quote": "British original strongly preferred over the American remake by most critics." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "British original strongly preferred over the American remake by most critics."
+            }
+          ]
         },
         {
-          "title": "Kind Hearts and Coronets", "year": 1949, "dir": "Robert Hamer", "country": "UK", "runtime": "106 min",
-          "priority": "med", "tags": ["foundational","intl"],
+          "title": "Kind Hearts and Coronets",
+          "year": 1949,
+          "dir": "Robert Hamer",
+          "country": "UK",
+          "runtime": "106 min",
+          "priority": "med",
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "whyPriority": "Ealing classic. Alec Guinness plays eight roles. Distant heir methodically murders his way to a dukedom. The blueprint of British dry.",
           "pitch": "A penniless heir murders his way through eight relatives to inherit a title.",
-          "critics": [{ "who": "Reception", "quote": "Routinely cited among the greatest British comedies. AFI/BFI canon." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Routinely cited among the greatest British comedies. AFI/BFI canon."
+            }
+          ]
         },
         {
-          "title": "Withnail and I", "year": 1987, "dir": "Bruce Robinson", "country": "UK", "runtime": "107 min",
-          "priority": "med", "tags": ["under","intl"],
+          "title": "Withnail and I",
+          "year": 1987,
+          "dir": "Bruce Robinson",
+          "country": "UK",
+          "runtime": "107 min",
+          "priority": "med",
+          "tags": [
+            "under",
+            "intl"
+          ],
           "whyPriority": "Cult British classic. Two failed actors take a holiday in the Lake District. Richard E. Grant's debut. Quotable to obsessive degrees.",
           "pitch": "1969 London. Two unemployed actors flee to a country cottage owned by an eccentric uncle. Things go wrong.",
-          "critics": [{ "who": "Reception", "quote": "Cult devotion. Routinely listed in British greatest-of polls. The script was Robinson's reflection on his own 1960s." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Cult devotion. Routinely listed in British greatest-of polls. The script was Robinson's reflection on his own 1960s."
+            }
+          ]
         },
         {
-          "title": "The Death of Stalin", "year": 2017, "dir": "Armando Iannucci", "country": "UK/France", "runtime": "107 min",
-          "priority": "high", "tags": ["modern","intl"],
+          "title": "The Death of Stalin",
+          "year": 2017,
+          "dir": "Armando Iannucci",
+          "country": "UK/France",
+          "runtime": "107 min",
+          "priority": "high",
+          "tags": [
+            "modern",
+            "intl"
+          ],
           "whyPriority": "Iannucci does Soviet succession. Pitch-black political farce. Buscemi as Khrushchev. Banned in Russia.",
           "pitch": "1953. Stalin dies. The men around him scramble to seize power while pretending they aren't scrambling.",
-          "critics": [{ "who": "Reception", "quote": "BAFTA Best Actor (Comedy) for Simon Russell Beale. Critically acclaimed." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "BAFTA Best Actor (Comedy) for Simon Russell Beale. Critically acclaimed."
+            }
+          ]
         }
+      ],
+      "categories": [
+        "dark",
+        "satire"
       ]
     },
     {
@@ -166,32 +427,85 @@
       "desc": "Spinal Tap, Shadows, etc.",
       "items": [
         {
-          "title": "This Is Spinal Tap", "year": 1984, "dir": "Rob Reiner", "country": "USA", "runtime": "82 min",
-          "priority": "high", "tags": ["foundational"],
+          "title": "This Is Spinal Tap",
+          "year": 1984,
+          "dir": "Rob Reiner",
+          "country": "USA",
+          "runtime": "82 min",
+          "priority": "high",
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "The mockumentary template. 'These go to eleven.' Christopher Guest, Michael McKean, Harry Shearer. Aged into universal cultural touchstone.",
           "pitch": "Documentary crew follows a fading British metal band on a disastrous American tour.",
-          "critics": [{ "who": "Reception", "quote": "Cultural earthquake. Influence on comedy filmmaking is still ongoing." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Cultural earthquake. Influence on comedy filmmaking is still ongoing."
+            }
+          ]
         },
         {
-          "title": "What We Do in the Shadows (2014)", "year": 2014, "dir": "Jemaine Clement & Taika Waititi", "country": "New Zealand", "runtime": "86 min",
-          "priority": "high", "tags": ["modern","intl"],
+          "title": "What We Do in the Shadows (2014)",
+          "year": 2014,
+          "dir": "Jemaine Clement & Taika Waititi",
+          "country": "New Zealand",
+          "runtime": "86 min",
+          "priority": "high",
+          "tags": [
+            "modern",
+            "intl"
+          ],
           "whyPriority": "Three vampires share a flat in Wellington. Pre-FX series. Combines your vampire interest with mockumentary form. Specific and joyful.",
           "pitch": "Documentary about flatmate vampires. The TV series followed.",
-          "critics": [{ "who": "Reception", "quote": "Built sustained cult following; spawned the FX series. Considered one of the strongest 2010s comedies." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Built sustained cult following; spawned the FX series. Considered one of the strongest 2010s comedies."
+            }
+          ]
         },
         {
-          "title": "Best in Show", "year": 2000, "dir": "Christopher Guest", "country": "USA", "runtime": "90 min",
-          "priority": "med", "tags": ["modern"],
+          "title": "Best in Show",
+          "year": 2000,
+          "dir": "Christopher Guest",
+          "country": "USA",
+          "runtime": "90 min",
+          "priority": "med",
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "Guest's mockumentary about a dog show. Largely improvised. Catherine O'Hara, Eugene Levy, Fred Willard. Quotable to the same obsessive degree as Spinal Tap.",
           "pitch": "Five families compete in a national dog show. The dogs are normal.",
-          "critics": [{ "who": "Reception", "quote": "Most beloved of the Guest mockumentaries by most counts." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Most beloved of the Guest mockumentaries by most counts."
+            }
+          ]
         },
         {
-          "title": "Waiting for Guffman", "year": 1996, "dir": "Christopher Guest", "country": "USA", "runtime": "84 min",
-          "priority": "med", "tags": ["modern"],
+          "title": "Waiting for Guffman",
+          "year": 1996,
+          "dir": "Christopher Guest",
+          "country": "USA",
+          "runtime": "84 min",
+          "priority": "med",
+          "tags": [
+            "modern"
+          ],
           "pitch": "Small Missouri town puts on a community theater production celebrating its sesquicentennial. Guest, O'Hara, Levy, Willard.",
-          "critics": [{ "who": "Reception", "quote": "Cult classic. Established Guest's career as a mockumentary filmmaker." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Cult classic. Established Guest's career as a mockumentary filmmaker."
+            }
+          ]
         }
+      ],
+      "categories": [
+        "ensemble",
+        "dark"
       ]
     }
   ]

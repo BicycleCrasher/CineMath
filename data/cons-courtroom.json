@@ -7,176 +7,626 @@
       "name": "I. Cross-Listed (Already in Other Tabs)",
       "desc": "Films you've already loved that fit this lane. Listed for completeness.",
       "items": [
-        { "title": "Witness for the Prosecution", "year": 1957, "dir": "Billy Wilder", "country": "USA", "runtime": "116 min", "tags": ["foundational"],
+        {
+          "title": "Witness for the Prosecution",
+          "year": 1957,
+          "dir": "Billy Wilder",
+          "country": "USA",
+          "runtime": "116 min",
+          "tags": [
+            "foundational"
+          ],
           "pitch": "Cross-listed in Classics. Marked Loved + 'all-time favorite' per your record. The structural template for everything in this tab.",
-          "critics": [] },
-        { "title": "Catch Me If You Can", "year": 2002, "dir": "Steven Spielberg", "country": "USA", "runtime": "141 min", "tags": ["foundational"],
+          "critics": []
+        },
+        {
+          "title": "Catch Me If You Can",
+          "year": 2002,
+          "dir": "Steven Spielberg",
+          "country": "USA",
+          "runtime": "141 min",
+          "tags": [
+            "foundational"
+          ],
           "pitch": "Cross-listed in Heist. Marked Loved per your record.",
-          "critics": [] },
-        { "title": "Spy Game", "year": 2001, "dir": "Tony Scott", "country": "USA", "runtime": "126 min", "tags": ["modern"],
+          "critics": []
+        },
+        {
+          "title": "Spy Game",
+          "year": 2001,
+          "dir": "Tony Scott",
+          "country": "USA",
+          "runtime": "126 min",
+          "tags": [
+            "modern"
+          ],
           "pitch": "Cross-listed in Spy. Marked Loved + 'all-time favorite'. The flashback-structure-as-debrief device is a perfect example of plot architecture as primary pleasure.",
-          "critics": [] },
-        { "title": "All the President's Men", "year": 1976, "dir": "Alan J. Pakula", "country": "USA", "runtime": "138 min", "tags": ["foundational"],
+          "critics": []
+        },
+        {
+          "title": "All the President's Men",
+          "year": 1976,
+          "dir": "Alan J. Pakula",
+          "country": "USA",
+          "runtime": "138 min",
+          "tags": [
+            "foundational"
+          ],
           "pitch": "Cross-listed in Spy. Marked Loved per your record.",
-          "critics": [] },
-        { "title": "The Departed", "year": 2006, "dir": "Martin Scorsese", "country": "USA", "runtime": "151 min", "tags": ["modern"],
+          "critics": []
+        },
+        {
+          "title": "The Departed",
+          "year": 2006,
+          "dir": "Martin Scorsese",
+          "country": "USA",
+          "runtime": "151 min",
+          "tags": [
+            "modern"
+          ],
           "pitch": "Cross-listed in Crime. Marked Loved per your record.",
-          "critics": [] }
+          "critics": []
+        }
+      ],
+      "categories": [
+        "con-artist",
+        "courtroom",
+        "twist"
       ]
     },
     {
-      "name": "II. High Priority — Sorkin Films",
+      "name": "II. High Priority \u2014 Sorkin Films",
       "desc": "Sorkin is now a confirmed pillar. These are his major film credits, all in this lane.",
       "items": [
-        { "title": "A Few Good Men", "year": 1992, "dir": "Rob Reiner", "country": "USA", "runtime": "138 min",
-          "priority": "high", "tags": ["foundational"],
+        {
+          "title": "A Few Good Men",
+          "year": 1992,
+          "dir": "Rob Reiner",
+          "country": "USA",
+          "runtime": "138 min",
+          "priority": "high",
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "Sorkin's screenplay (adapted from his play). Cruise/Nicholson/Moore. Military courtroom thriller. 'You can't handle the truth.' Direct fit for everything Sorkin landed with you.",
           "pitch": "Two Marines are charged with a fellow Marine's death. Their lawyer must determine whether they were ordered to harm him.",
-          "critics": [{ "who": "Reception", "quote": "Four Oscar nominations including Best Picture. Nicholson Best Supporting Actor nomination." }] },
-        { "title": "The Social Network", "year": 2010, "dir": "David Fincher", "country": "USA", "runtime": "120 min",
-          "priority": "high", "tags": ["modern","foundational"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Four Oscar nominations including Best Picture. Nicholson Best Supporting Actor nomination."
+            }
+          ],
+          "categories": [
+            "sorkin",
+            "courtroom"
+          ]
+        },
+        {
+          "title": "The Social Network",
+          "year": 2010,
+          "dir": "David Fincher",
+          "country": "USA",
+          "runtime": "120 min",
+          "priority": "high",
+          "tags": [
+            "modern",
+            "foundational"
+          ],
           "whyPriority": "Sorkin + Fincher. Two depositions framing a flashback structure. Won 3 Oscars including Best Adapted Screenplay. Direct fit for plot-architecture-as-primary-pleasure.",
           "pitch": "Mark Zuckerberg founds Facebook. Two simultaneous lawsuits surround him. The film cuts between them and the events they're litigating.",
-          "critics": [{ "who": "Academy Awards 2011", "quote": "Won 3 Oscars. Eight nominations including Best Picture. Considered one of the films most often cited as 'should have won Best Picture.'" }] },
-        { "title": "Molly's Game", "year": 2017, "dir": "Aaron Sorkin", "country": "USA", "runtime": "140 min",
-          "priority": "high", "tags": ["modern"],
+          "critics": [
+            {
+              "who": "Academy Awards 2011",
+              "quote": "Won 3 Oscars. Eight nominations including Best Picture. Considered one of the films most often cited as 'should have won Best Picture.'"
+            }
+          ],
+          "categories": [
+            "sorkin",
+            "courtroom"
+          ]
+        },
+        {
+          "title": "Molly's Game",
+          "year": 2017,
+          "dir": "Aaron Sorkin",
+          "country": "USA",
+          "runtime": "140 min",
+          "priority": "high",
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "Sorkin's directorial debut. Jessica Chastain runs an underground high-stakes poker ring; the FBI catches her. Idris Elba as her lawyer. Long-con + courtroom + Sorkin.",
           "pitch": "Olympic skier becomes runner of the world's most exclusive private poker games. The IRS and FBI come for her. True story.",
-          "critics": [{ "who": "Reception", "quote": "Sorkin Oscar nomination for Adapted Screenplay. Critically warm." }] },
-        { "title": "Charlie Wilson's War", "year": 2007, "dir": "Mike Nichols", "country": "USA", "runtime": "102 min",
-          "priority": "high", "tags": ["modern"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Sorkin Oscar nomination for Adapted Screenplay. Critically warm."
+            }
+          ],
+          "categories": [
+            "sorkin",
+            "courtroom",
+            "con-artist"
+          ]
+        },
+        {
+          "title": "Charlie Wilson's War",
+          "year": 2007,
+          "dir": "Mike Nichols",
+          "country": "USA",
+          "runtime": "102 min",
+          "priority": "high",
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "Sorkin + Mike Nichols. Hanks, Hoffman, Roberts. True story of the Texas congressman who armed the Afghan mujahideen against the Soviets. Spy + politics + Sorkin dialogue.",
           "pitch": "A Texas congressman, a Houston socialite, and a CIA officer covertly funnel arms to the Afghan resistance. Hanks/Hoffman/Roberts.",
-          "critics": [{ "who": "Reception", "quote": "Hoffman Best Supporting Actor nomination. Sorkin's screenplay among his sharpest." }] }
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Hoffman Best Supporting Actor nomination. Sorkin's screenplay among his sharpest."
+            }
+          ],
+          "categories": [
+            "sorkin"
+          ]
+        }
+      ],
+      "categories": [
+        "sorkin",
+        "courtroom"
       ]
     },
     {
-      "name": "III. High Priority — Twist Architecture",
+      "name": "III. High Priority \u2014 Twist Architecture",
       "desc": "Films where the structural payoff is the point. Direct fits for what's worked already.",
       "items": [
-        { "title": "The Sting", "year": 1973, "dir": "George Roy Hill", "country": "USA", "runtime": "129 min",
-          "priority": "high", "tags": ["foundational"],
+        {
+          "title": "The Sting",
+          "year": 1973,
+          "dir": "George Roy Hill",
+          "country": "USA",
+          "runtime": "129 min",
+          "priority": "high",
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "Cross-listed in Heist. The con-artist film template. Newman + Redford. Won 7 Oscars including Best Picture. The reveal structure is impeccable.",
           "pitch": "Two grifters set up an elaborate revenge against a mob boss who killed their friend.",
-          "critics": [{ "who": "Academy Awards 1974", "quote": "Won 7 Oscars including Best Picture, Director, Original Screenplay." }] },
-        { "title": "The Usual Suspects", "year": 1995, "dir": "Bryan Singer", "country": "USA", "runtime": "106 min",
-          "priority": "high", "tags": ["foundational"],
+          "critics": [
+            {
+              "who": "Academy Awards 1974",
+              "quote": "Won 7 Oscars including Best Picture, Director, Original Screenplay."
+            }
+          ]
+        },
+        {
+          "title": "The Usual Suspects",
+          "year": 1995,
+          "dir": "Bryan Singer",
+          "country": "USA",
+          "runtime": "106 min",
+          "priority": "high",
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "The reveal-driven thriller template for the modern era. Spacey won Supporting Actor; Christopher McQuarrie won Original Screenplay. Direct fit.",
-          "pitch": "A small-time con man tells a prosecutor about a heist gone wrong. The 'Keyser Söze' reveal is one of cinema's most famous.",
-          "critics": [{ "who": "Reception", "quote": "Won 2 Oscars. Aged into a different reception due to Singer's reputation; the film's craft remains undisputed." }] },
-        { "title": "Inside Man", "year": 2006, "dir": "Spike Lee", "country": "USA", "runtime": "129 min",
-          "priority": "high", "tags": ["modern"],
+          "pitch": "A small-time con man tells a prosecutor about a heist gone wrong. The 'Keyser S\u00f6ze' reveal is one of cinema's most famous.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Won 2 Oscars. Aged into a different reception due to Singer's reputation; the film's craft remains undisputed."
+            }
+          ]
+        },
+        {
+          "title": "Inside Man",
+          "year": 2006,
+          "dir": "Spike Lee",
+          "country": "USA",
+          "runtime": "129 min",
+          "priority": "high",
+          "tags": [
+            "modern"
+          ],
           "pitch": "Cross-listed in Heist. Bank heist that's actually about something else entirely. The architecture of the deception is the appeal.",
-          "critics": [] },
-        { "title": "Memento", "year": 2000, "dir": "Christopher Nolan", "country": "USA", "runtime": "113 min",
-          "priority": "high", "tags": ["foundational"],
-          "whyPriority": "Nolan's structural breakthrough. Two parallel narratives — one running forward, one running backward — meet in the middle. Direct fit for your Smart Structure pillar.",
+          "critics": []
+        },
+        {
+          "title": "Memento",
+          "year": 2000,
+          "dir": "Christopher Nolan",
+          "country": "USA",
+          "runtime": "113 min",
+          "priority": "high",
+          "tags": [
+            "foundational"
+          ],
+          "whyPriority": "Nolan's structural breakthrough. Two parallel narratives \u2014 one running forward, one running backward \u2014 meet in the middle. Direct fit for your Smart Structure pillar.",
           "pitch": "A man with no short-term memory hunts the person who killed his wife. Tattoos and Polaroids are his memory.",
-          "critics": [{ "who": "Reception", "quote": "Two Oscar nominations including Best Original Screenplay. Established Nolan." }] },
-        { "title": "Gone Girl", "year": 2014, "dir": "David Fincher", "country": "USA", "runtime": "149 min",
-          "priority": "high", "tags": ["modern"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Two Oscar nominations including Best Original Screenplay. Established Nolan."
+            }
+          ]
+        },
+        {
+          "title": "Gone Girl",
+          "year": 2014,
+          "dir": "David Fincher",
+          "country": "USA",
+          "runtime": "149 min",
+          "priority": "high",
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "Fincher again. Mid-film perspective shift is one of the great structural moves. Pike Oscar-nominated. Flynn adapted her own novel.",
           "pitch": "A wife disappears on her wedding anniversary. The husband becomes the prime suspect. Then the film changes.",
-          "critics": [{ "who": "Reception", "quote": "Pike Best Actress nomination. Considered Fincher's most accessible major film." }] },
-        { "title": "12 Angry Men", "year": 1957, "dir": "Sidney Lumet", "country": "USA", "runtime": "96 min",
-          "priority": "high", "tags": ["foundational"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Pike Best Actress nomination. Considered Fincher's most accessible major film."
+            }
+          ]
+        },
+        {
+          "title": "12 Angry Men",
+          "year": 1957,
+          "dir": "Sidney Lumet",
+          "country": "USA",
+          "runtime": "96 min",
+          "priority": "high",
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "The single-room courtroom-jury film. Henry Fonda anchors. Lumet's debut. The genre-defining example of constraint producing depth.",
           "pitch": "Twelve jurors deliberate a murder case in real time. One man initially holds out for not guilty.",
-          "critics": [{ "who": "Reception", "quote": "Three Oscar nominations. AFI Top-100. Routinely cited among the greatest American films." }] }
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Three Oscar nominations. AFI Top-100. Routinely cited among the greatest American films."
+            }
+          ]
+        }
+      ],
+      "categories": [
+        "twist"
       ]
     },
     {
-      "name": "IV. High Priority — Courtroom",
+      "name": "IV. High Priority \u2014 Courtroom",
       "desc": "Direct heir to Witness for the Prosecution.",
       "items": [
-        { "title": "Anatomy of a Murder", "year": 1959, "dir": "Otto Preminger", "country": "USA", "runtime": "161 min",
-          "priority": "high", "tags": ["foundational"],
+        {
+          "title": "Anatomy of a Murder",
+          "year": 1959,
+          "dir": "Otto Preminger",
+          "country": "USA",
+          "runtime": "161 min",
+          "priority": "high",
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "James Stewart at peak. The first Hollywood film to use the words 'rape,' 'panties,' 'sperm.' Procedural courtroom drama at its most rigorous.",
           "pitch": "A small-town Michigan lawyer defends an Army officer who killed the man who allegedly raped his wife.",
-          "critics": [{ "who": "Reception", "quote": "Seven Oscar nominations including Best Picture. Routinely cited as one of the greatest courtroom films." }] },
-        { "title": "Anatomy of a Fall", "year": 2023, "dir": "Justine Triet", "country": "France", "runtime": "150 min",
-          "priority": "high", "tags": ["modern","intl"],
-          "whyPriority": "Won Palme d'Or 2023. French. Sandra Hüller as a writer accused of murdering her husband. The trial is the film. Direct fit.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Seven Oscar nominations including Best Picture. Routinely cited as one of the greatest courtroom films."
+            }
+          ]
+        },
+        {
+          "title": "Anatomy of a Fall",
+          "year": 2023,
+          "dir": "Justine Triet",
+          "country": "France",
+          "runtime": "150 min",
+          "priority": "high",
+          "tags": [
+            "modern",
+            "intl"
+          ],
+          "whyPriority": "Won Palme d'Or 2023. French. Sandra H\u00fcller as a writer accused of murdering her husband. The trial is the film. Direct fit.",
           "pitch": "A man falls from a chalet window in the French Alps. Was it suicide? An accident? Or did his wife push him? The trial unpacks their marriage.",
-          "critics": [{ "who": "Cannes 2023", "quote": "Palme d'Or. Won Best Original Screenplay at the 2024 Oscars." }] },
-        { "title": "Presumed Innocent", "year": 1990, "dir": "Alan J. Pakula", "country": "USA", "runtime": "127 min",
-          "priority": "high", "tags": ["foundational"],
-          "whyPriority": "Pakula again — same director as All The President's Men. Harrison Ford as a prosecutor accused of murdering his colleague-and-lover. Twist ending.",
+          "critics": [
+            {
+              "who": "Cannes 2023",
+              "quote": "Palme d'Or. Won Best Original Screenplay at the 2024 Oscars."
+            }
+          ]
+        },
+        {
+          "title": "Presumed Innocent",
+          "year": 1990,
+          "dir": "Alan J. Pakula",
+          "country": "USA",
+          "runtime": "127 min",
+          "priority": "high",
+          "tags": [
+            "foundational"
+          ],
+          "whyPriority": "Pakula again \u2014 same director as All The President's Men. Harrison Ford as a prosecutor accused of murdering his colleague-and-lover. Twist ending.",
           "pitch": "A married prosecutor is assigned to investigate the murder of his former lover. He becomes the prime suspect.",
-          "critics": [{ "who": "Reception", "quote": "Considered one of the great 90s adult thrillers. Scott Turow novel adaptation." }] },
-        { "title": "The Verdict", "year": 1982, "dir": "Sidney Lumet", "country": "USA", "runtime": "129 min",
-          "priority": "high", "tags": ["foundational"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Considered one of the great 90s adult thrillers. Scott Turow novel adaptation."
+            }
+          ]
+        },
+        {
+          "title": "The Verdict",
+          "year": 1982,
+          "dir": "Sidney Lumet",
+          "country": "USA",
+          "runtime": "129 min",
+          "priority": "high",
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "Paul Newman as a washed-up Boston lawyer. David Mamet screenplay. Five Oscar nominations. Quiet, devastating, one of Newman's career-best performances.",
           "pitch": "A failing alcoholic Boston lawyer takes a medical malpractice case he expects to settle. He decides to go to trial instead.",
-          "critics": [{ "who": "Reception", "quote": "Five Oscar nominations including Best Picture, Director, Actor (Newman), Adapted Screenplay (Mamet)." }] },
-        { "title": "The Lincoln Lawyer", "year": 2011, "dir": "Brad Furman", "country": "USA", "runtime": "118 min",
-          "priority": "med", "tags": ["modern"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Five Oscar nominations including Best Picture, Director, Actor (Newman), Adapted Screenplay (Mamet)."
+            }
+          ]
+        },
+        {
+          "title": "The Lincoln Lawyer",
+          "year": 2011,
+          "dir": "Brad Furman",
+          "country": "USA",
+          "runtime": "118 min",
+          "priority": "med",
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "Michael Connelly novel adaptation. McConaughey as a defense lawyer who works out of his Lincoln Town Car. Sharp, structurally tight, 90s-throwback feel.",
           "pitch": "A defense lawyer takes on a wealthy client accused of attempted rape. The case isn't what it seems.",
-          "critics": [{ "who": "Reception", "quote": "Critical and commercial hit. Spawned the 2022 Netflix series." }] }
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Critical and commercial hit. Spawned the 2022 Netflix series."
+            }
+          ]
+        }
+      ],
+      "categories": [
+        "courtroom"
       ]
     },
     {
-      "name": "V. Medium Priority — More Twists & Cons",
+      "name": "V. Medium Priority \u2014 More Twists & Cons",
       "desc": "Strong probable fits.",
       "items": [
-        { "title": "Body Heat", "year": 1981, "dir": "Lawrence Kasdan", "country": "USA", "runtime": "113 min",
-          "priority": "med", "tags": ["foundational"],
+        {
+          "title": "Body Heat",
+          "year": 1981,
+          "dir": "Lawrence Kasdan",
+          "country": "USA",
+          "runtime": "113 min",
+          "priority": "med",
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "Kasdan's directorial debut. Florida noir, William Hurt and Kathleen Turner. Femme-fatale-driven plot architecture.",
           "pitch": "Florida lawyer is seduced by a wealthy man's wife. They plan to murder him.",
-          "critics": [{ "who": "Reception", "quote": "Considered the great neo-noir of the 1980s. Career-launcher for Kasdan." }] },
-        { "title": "Sleuth (1972)", "year": 1972, "dir": "Joseph L. Mankiewicz", "country": "UK", "runtime": "138 min",
-          "priority": "med", "tags": ["foundational","intl"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Considered the great neo-noir of the 1980s. Career-launcher for Kasdan."
+            }
+          ]
+        },
+        {
+          "title": "Sleuth (1972)",
+          "year": 1972,
+          "dir": "Joseph L. Mankiewicz",
+          "country": "UK",
+          "runtime": "138 min",
+          "priority": "med",
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "whyPriority": "Two-hander with Caine and Olivier. Single location. Both nominated for Best Actor for the same film. Game-of-cat-and-mouse twist structure.",
           "pitch": "A wealthy English mystery novelist invites his wife's lover to his country house. He has plans.",
-          "critics": [{ "who": "Reception", "quote": "Both Caine and Olivier received Best Actor nominations. Anthony Shaffer adapted his own play." }] },
-        { "title": "Mulholland Drive", "year": 2001, "dir": "David Lynch", "country": "USA", "runtime": "147 min",
-          "priority": "med", "tags": ["foundational"],
-          "whyPriority": "Cross-listed in Auteur (Lynch). Most accessible Lynch despite being his most famously confusing. The structural reveal — the dreaming protagonist — is genuinely puzzle-shaped.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Both Caine and Olivier received Best Actor nominations. Anthony Shaffer adapted his own play."
+            }
+          ]
+        },
+        {
+          "title": "Mulholland Drive",
+          "year": 2001,
+          "dir": "David Lynch",
+          "country": "USA",
+          "runtime": "147 min",
+          "priority": "med",
+          "tags": [
+            "foundational"
+          ],
+          "whyPriority": "Cross-listed in Auteur (Lynch). Most accessible Lynch despite being his most famously confusing. The structural reveal \u2014 the dreaming protagonist \u2014 is genuinely puzzle-shaped.",
           "pitch": "An aspiring actress arrives in LA and meets a woman with amnesia. The film is more than it appears.",
-          "critics": [{ "who": "Sight & Sound 2022", "quote": "Voted #8 Greatest Film of All Time in critics poll. Routinely cited as the greatest film of the 21st century." }] },
-        { "title": "Jagged Edge", "year": 1985, "dir": "Richard Marquand", "country": "USA", "runtime": "108 min",
-          "priority": "med", "tags": ["foundational","under"],
+          "critics": [
+            {
+              "who": "Sight & Sound 2022",
+              "quote": "Voted #8 Greatest Film of All Time in critics poll. Routinely cited as the greatest film of the 21st century."
+            }
+          ]
+        },
+        {
+          "title": "Jagged Edge",
+          "year": 1985,
+          "dir": "Richard Marquand",
+          "country": "USA",
+          "runtime": "108 min",
+          "priority": "med",
+          "tags": [
+            "foundational",
+            "under"
+          ],
           "whyPriority": "Underrated 80s legal thriller. Glenn Close defends a publisher accused of murdering his wife. Eszterhas screenplay. Twist ending.",
           "pitch": "A retired prosecutor takes one more case as a defense attorney. She begins a relationship with her client. Things complicate.",
-          "critics": [{ "who": "Reception", "quote": "Two Oscar nominations. Established the template for many 80s/90s legal thrillers." }] },
-        { "title": "The Talented Mr. Ripley", "year": 1999, "dir": "Anthony Minghella", "country": "USA", "runtime": "139 min",
-          "priority": "med", "tags": ["foundational"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Two Oscar nominations. Established the template for many 80s/90s legal thrillers."
+            }
+          ]
+        },
+        {
+          "title": "The Talented Mr. Ripley",
+          "year": 1999,
+          "dir": "Anthony Minghella",
+          "country": "USA",
+          "runtime": "139 min",
+          "priority": "med",
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "Patricia Highsmith adaptation. Damon as Ripley. Long con as character study. The film's elegance is its core asset.",
           "pitch": "A young man is paid to bring a wealthy heir back from Italy. He decides he'd rather become him.",
-          "critics": [{ "who": "Academy Awards 2000", "quote": "Five Oscar nominations including Adapted Screenplay (Minghella) and Supporting Actor (Law)." }] },
-        { "title": "American Hustle", "year": 2013, "dir": "David O. Russell", "country": "USA", "runtime": "138 min",
-          "priority": "med", "tags": ["modern"],
+          "critics": [
+            {
+              "who": "Academy Awards 2000",
+              "quote": "Five Oscar nominations including Adapted Screenplay (Minghella) and Supporting Actor (Law)."
+            }
+          ]
+        },
+        {
+          "title": "American Hustle",
+          "year": 2013,
+          "dir": "David O. Russell",
+          "country": "USA",
+          "runtime": "138 min",
+          "priority": "med",
+          "tags": [
+            "modern"
+          ],
           "pitch": "Cross-listed in Heist. Marked Queued per your record.",
-          "critics": [] },
-        { "title": "Primal Fear", "year": 1996, "dir": "Gregory Hoblit", "country": "USA", "runtime": "129 min",
-          "priority": "med", "tags": ["foundational"],
+          "critics": []
+        },
+        {
+          "title": "Primal Fear",
+          "year": 1996,
+          "dir": "Gregory Hoblit",
+          "country": "USA",
+          "runtime": "129 min",
+          "priority": "med",
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "Edward Norton's debut. Defense attorney (Gere) takes on the case of an altar boy accused of murdering an archbishop. Late-90s legal thriller with a strong twist.",
           "pitch": "A Chicago defense attorney takes on a high-profile murder case. The accused is a stuttering teenage altar boy.",
-          "critics": [{ "who": "Reception", "quote": "Norton received an Oscar nomination for the role. Critical hit." }] },
-        { "title": "Glengarry Glen Ross", "year": 1992, "dir": "James Foley", "country": "USA", "runtime": "100 min",
-          "priority": "med", "tags": ["foundational"],
-          "whyPriority": "Mamet adapting his own play. Closest film cousin to a courtroom film without being one — every scene is structured argument. Pacino, Lemmon, Baldwin, Spacey, Harris, Arkin.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Norton received an Oscar nomination for the role. Critical hit."
+            }
+          ]
+        },
+        {
+          "title": "Glengarry Glen Ross",
+          "year": 1992,
+          "dir": "James Foley",
+          "country": "USA",
+          "runtime": "100 min",
+          "priority": "med",
+          "tags": [
+            "foundational"
+          ],
+          "whyPriority": "Mamet adapting his own play. Closest film cousin to a courtroom film without being one \u2014 every scene is structured argument. Pacino, Lemmon, Baldwin, Spacey, Harris, Arkin.",
           "pitch": "Real estate salesmen at a Chicago office in two impossible nights. Always be closing.",
-          "critics": [{ "who": "Reception", "quote": "Mamet's screenplay considered among the most influential of the modern era. Lemmon Volpi Cup at Venice." }] }
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Mamet's screenplay considered among the most influential of the modern era. Lemmon Volpi Cup at Venice."
+            }
+          ]
+        }
+      ],
+      "categories": [
+        "twist",
+        "con-artist"
       ]
     },
     {
       "name": "VI. Foundational",
       "desc": "Older essentials in this lane.",
       "items": [
-        { "title": "Witness for the Prosecution", "year": 1957, "dir": "Billy Wilder", "country": "USA", "runtime": "116 min", "tags": ["foundational"],
+        {
+          "title": "Witness for the Prosecution",
+          "year": 1957,
+          "dir": "Billy Wilder",
+          "country": "USA",
+          "runtime": "116 min",
+          "tags": [
+            "foundational"
+          ],
           "pitch": "Cross-listed Classics. Already loved.",
-          "critics": [] },
-        { "title": "Inherit the Wind", "year": 1960, "dir": "Stanley Kramer", "country": "USA", "runtime": "128 min", "tags": ["foundational"],
+          "critics": []
+        },
+        {
+          "title": "Inherit the Wind",
+          "year": 1960,
+          "dir": "Stanley Kramer",
+          "country": "USA",
+          "runtime": "128 min",
+          "tags": [
+            "foundational"
+          ],
           "pitch": "Spencer Tracy as Clarence Darrow analog defending a teacher charged with teaching evolution. The Scopes Trial fictionalized.",
-          "critics": [{ "who": "Reception", "quote": "Four Oscar nominations. Considered one of the great courtroom films." }] },
-        { "title": "Judgment at Nuremberg", "year": 1961, "dir": "Stanley Kramer", "country": "USA", "runtime": "186 min", "tags": ["foundational"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Four Oscar nominations. Considered one of the great courtroom films."
+            }
+          ]
+        },
+        {
+          "title": "Judgment at Nuremberg",
+          "year": 1961,
+          "dir": "Stanley Kramer",
+          "country": "USA",
+          "runtime": "186 min",
+          "tags": [
+            "foundational"
+          ],
           "pitch": "Spencer Tracy presides over the trial of Nazi judges. Three-hour epic courtroom drama.",
-          "critics": [{ "who": "Academy Awards 1962", "quote": "Won 2 Oscars. Eleven nominations including Best Picture, Best Actor (Tracy)." }] },
-        { "title": "To Kill a Mockingbird", "year": 1962, "dir": "Robert Mulligan", "country": "USA", "runtime": "129 min", "tags": ["foundational"],
+          "critics": [
+            {
+              "who": "Academy Awards 1962",
+              "quote": "Won 2 Oscars. Eleven nominations including Best Picture, Best Actor (Tracy)."
+            }
+          ]
+        },
+        {
+          "title": "To Kill a Mockingbird",
+          "year": 1962,
+          "dir": "Robert Mulligan",
+          "country": "USA",
+          "runtime": "129 min",
+          "tags": [
+            "foundational"
+          ],
           "pitch": "Gregory Peck as Atticus Finch. The defining Hollywood courtroom film of the era.",
-          "critics": [{ "who": "Reception", "quote": "Won 3 Oscars. Eight nominations including Best Picture." }] }
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Won 3 Oscars. Eight nominations including Best Picture."
+            }
+          ]
+        }
+      ],
+      "categories": [
+        "courtroom"
       ]
     }
   ]

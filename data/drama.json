@@ -8,66 +8,178 @@
       "desc": "Hemingway, Fitzgerald, Steinbeck, plus the next-tier American novelists.",
       "items": [
         {
-          "title": "East of Eden", "year": 1955, "dir": "Elia Kazan", "country": "USA", "runtime": "118 min",
-          "priority": "high", "tags": ["foundational"],
+          "title": "East of Eden",
+          "year": 1955,
+          "dir": "Elia Kazan",
+          "country": "USA",
+          "runtime": "118 min",
+          "priority": "high",
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "James Dean's first major role and his best. Steinbeck adaptation focused on the final third of the novel. Cain-and-Abel themes, father-son devastation.",
           "pitch": "California, 1917. A son competes for his father's love against a brother who can't lose. Watch then read; the film is a focused subset of the novel.",
-          "critics": [{ "who": "Academy Awards 1956", "quote": "Four Oscar nominations including Best Director. Dean nominated posthumously." }]
+          "critics": [
+            {
+              "who": "Academy Awards 1956",
+              "quote": "Four Oscar nominations including Best Director. Dean nominated posthumously."
+            }
+          ]
         },
         {
-          "title": "The Grapes of Wrath", "year": 1940, "dir": "John Ford", "country": "USA", "runtime": "129 min",
-          "priority": "high", "tags": ["foundational"],
+          "title": "The Grapes of Wrath",
+          "year": 1940,
+          "dir": "John Ford",
+          "country": "USA",
+          "runtime": "129 min",
+          "priority": "high",
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "Ford + Steinbeck + Henry Fonda. Depression-era Joads from Oklahoma to California. Cross-listed with Ford auteur. American canon.",
           "pitch": "The Joad family loses their farm and migrates to California with the rest of the Dust Bowl refugees.",
-          "critics": [{ "who": "Academy Awards 1941", "quote": "Won 2 Oscars (Best Director, Best Supporting Actress). Seven nominations." }]
+          "critics": [
+            {
+              "who": "Academy Awards 1941",
+              "quote": "Won 2 Oscars (Best Director, Best Supporting Actress). Seven nominations."
+            }
+          ]
         },
         {
-          "title": "The Great Gatsby (1974)", "year": 1974, "dir": "Jack Clayton", "country": "USA", "runtime": "144 min",
-          "priority": "med", "tags": ["foundational"],
-          "whyPriority": "Coppola screenplay. Redford and Mia Farrow. Generally considered the best Gatsby adaptation — the 2013 Luhrmann is dazzling but loses the melancholy.",
+          "title": "The Great Gatsby (1974)",
+          "year": 1974,
+          "dir": "Jack Clayton",
+          "country": "USA",
+          "runtime": "144 min",
+          "priority": "med",
+          "tags": [
+            "foundational"
+          ],
+          "whyPriority": "Coppola screenplay. Redford and Mia Farrow. Generally considered the best Gatsby adaptation \u2014 the 2013 Luhrmann is dazzling but loses the melancholy.",
           "pitch": "Jay Gatsby's pursuit of Daisy. The eyes of Doctor T.J. Eckleburg.",
-          "critics": [{ "who": "Reception", "quote": "Critically warm. Won 2 Oscars (Costume Design, Original Song)." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Critically warm. Won 2 Oscars (Costume Design, Original Song)."
+            }
+          ]
         },
         {
-          "title": "Of Mice and Men (1992)", "year": 1992, "dir": "Gary Sinise", "country": "USA", "runtime": "115 min",
-          "priority": "med", "tags": ["foundational"],
+          "title": "Of Mice and Men (1992)",
+          "year": 1992,
+          "dir": "Gary Sinise",
+          "country": "USA",
+          "runtime": "115 min",
+          "priority": "med",
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "Sinise directed and co-starred. Malkovich as Lennie. Steinbeck's novella unembellished.",
           "pitch": "Two migrant ranch hands in Depression-era California. One protects the other.",
-          "critics": [{ "who": "Reception", "quote": "Critical hit. Considered the definitive Of Mice and Men adaptation." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Critical hit. Considered the definitive Of Mice and Men adaptation."
+            }
+          ]
         },
         {
-          "title": "The Old Man and the Sea (1958)", "year": 1958, "dir": "John Sturges", "country": "USA", "runtime": "86 min",
-          "priority": "med", "tags": ["foundational"],
+          "title": "The Old Man and the Sea (1958)",
+          "year": 1958,
+          "dir": "John Sturges",
+          "country": "USA",
+          "runtime": "86 min",
+          "priority": "med",
+          "tags": [
+            "foundational"
+          ],
           "pitch": "Spencer Tracy as Santiago. Hemingway adapted faithfully. Won Best Score (Tiomkin).",
-          "critics": [{ "who": "Reception", "quote": "Critical reception mixed; Tracy and Tiomkin's score were the standouts. Three Oscar nominations." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Critical reception mixed; Tracy and Tiomkin's score were the standouts. Three Oscar nominations."
+            }
+          ]
         },
         {
-          "title": "Cat on a Hot Tin Roof", "year": 1958, "dir": "Richard Brooks", "country": "USA", "runtime": "108 min",
-          "priority": "med", "tags": ["foundational"],
+          "title": "Cat on a Hot Tin Roof",
+          "year": 1958,
+          "dir": "Richard Brooks",
+          "country": "USA",
+          "runtime": "108 min",
+          "priority": "med",
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "Tennessee Williams. Newman, Liz Taylor, Burl Ives. Code-era restrictions softened the source's sexuality but the family-rot core survives.",
           "pitch": "A wealthy Mississippi family gathers for the patriarch's birthday. Lies erupt.",
-          "critics": [{ "who": "Academy Awards 1959", "quote": "Six Oscar nominations including Best Picture, Best Actor, Best Actress." }]
+          "critics": [
+            {
+              "who": "Academy Awards 1959",
+              "quote": "Six Oscar nominations including Best Picture, Best Actor, Best Actress."
+            }
+          ]
         },
         {
-          "title": "A Streetcar Named Desire", "year": 1951, "dir": "Elia Kazan", "country": "USA", "runtime": "122 min",
-          "priority": "med", "tags": ["foundational"],
+          "title": "A Streetcar Named Desire",
+          "year": 1951,
+          "dir": "Elia Kazan",
+          "country": "USA",
+          "runtime": "122 min",
+          "priority": "med",
+          "tags": [
+            "foundational"
+          ],
           "pitch": "Brando's defining performance. Vivien Leigh's Blanche won the Oscar. Williams adapted by Williams.",
-          "critics": [{ "who": "Academy Awards 1952", "quote": "Won 4 Oscars in acting categories. Twelve total nominations." }]
+          "critics": [
+            {
+              "who": "Academy Awards 1952",
+              "quote": "Won 4 Oscars in acting categories. Twelve total nominations."
+            }
+          ]
         },
         {
-          "title": "True Grit (2010)", "year": 2010, "dir": "Joel & Ethan Coen", "country": "USA", "runtime": "110 min",
-          "priority": "high", "tags": ["modern"],
+          "title": "True Grit (2010)",
+          "year": 2010,
+          "dir": "Joel & Ethan Coen",
+          "country": "USA",
+          "runtime": "110 min",
+          "priority": "high",
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "Coens adapting Charles Portis. Hailee Steinfeld's career-launching performance. Bridges as Rooster Cogburn. The most faithful adaptation of the novel; the Wayne version is its own thing.",
           "pitch": "A 14-year-old hires a marshal to track down her father's killer in 1880s Indian Territory.",
-          "critics": [{ "who": "Academy Awards 2011", "quote": "Ten Oscar nominations including Best Picture." }]
+          "critics": [
+            {
+              "who": "Academy Awards 2011",
+              "quote": "Ten Oscar nominations including Best Picture."
+            }
+          ]
         },
         {
-          "title": "There Will Be Blood", "year": 2007, "dir": "Paul Thomas Anderson", "country": "USA", "runtime": "158 min",
-          "priority": "high", "tags": ["modern"],
+          "title": "There Will Be Blood",
+          "year": 2007,
+          "dir": "Paul Thomas Anderson",
+          "country": "USA",
+          "runtime": "158 min",
+          "priority": "high",
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "PTA's masterpiece. Loose adaptation of Upton Sinclair's Oil! Day-Lewis's Daniel Plainview is one of the great modern performances. Cross-listed with PTA auteur.",
           "pitch": "A turn-of-the-century oil prospector's life across decades. Capitalism, religion, isolation, milkshakes.",
-          "critics": [{ "who": "Academy Awards 2008", "quote": "Won 2 Oscars (Best Actor, Cinematography). Eight nominations including Best Picture." }]
+          "critics": [
+            {
+              "who": "Academy Awards 2008",
+              "quote": "Won 2 Oscars (Best Actor, Cinematography). Eight nominations including Best Picture."
+            }
+          ]
         }
+      ],
+      "categories": [
+        "character-study",
+        "period"
       ]
     },
     {
@@ -75,33 +187,87 @@
       "desc": "Tolstoy and Dostoevsky. The film versions vary; here are the genuinely excellent ones.",
       "items": [
         {
-          "title": "Doctor Zhivago", "year": 1965, "dir": "David Lean", "country": "USA/Italy", "runtime": "197 min",
-          "priority": "high", "tags": ["foundational"],
+          "title": "Doctor Zhivago",
+          "year": 1965,
+          "dir": "David Lean",
+          "country": "USA/Italy",
+          "runtime": "197 min",
+          "priority": "high",
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "Pasternak adapted by Robert Bolt and Lean. Sweeping epic across the Russian Revolution. Won 5 Oscars. The most accessible great Russian-novel adaptation.",
           "pitch": "Yuri Zhivago's life across pre-revolutionary, revolutionary, and Soviet Russia. Three women shape his life.",
-          "critics": [{ "who": "Academy Awards 1966", "quote": "Won 5 Oscars. Ten total nominations including Best Picture." }]
+          "critics": [
+            {
+              "who": "Academy Awards 1966",
+              "quote": "Won 5 Oscars. Ten total nominations including Best Picture."
+            }
+          ]
         },
         {
-          "title": "War and Peace (1966-67, Bondarchuk)", "year": 1966, "dir": "Sergei Bondarchuk", "country": "USSR", "runtime": "431 min · 4 parts",
-          "priority": "med", "tags": ["foundational","intl"],
+          "title": "War and Peace (1966-67, Bondarchuk)",
+          "year": 1966,
+          "dir": "Sergei Bondarchuk",
+          "country": "USSR",
+          "runtime": "431 min \u00b7 4 parts",
+          "priority": "med",
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "whyPriority": "The Soviet seven-hour adaptation. Won Best Foreign Language Film. Cast of thousands literally; the Borodino battle sequence has never been equaled in scale. A commitment, but the only film that truly captures the novel's scope.",
           "pitch": "Tolstoy's novel in seven hours, broken into four parts. Watch one part per session.",
-          "critics": [{ "who": "Academy Awards 1969", "quote": "Won Best Foreign Language Film. Considered the definitive adaptation by most Tolstoy scholars." }]
+          "critics": [
+            {
+              "who": "Academy Awards 1969",
+              "quote": "Won Best Foreign Language Film. Considered the definitive adaptation by most Tolstoy scholars."
+            }
+          ]
         },
         {
-          "title": "Anna Karenina (2012, Wright)", "year": 2012, "dir": "Joe Wright", "country": "UK", "runtime": "129 min",
-          "priority": "med", "tags": ["modern"],
-          "whyPriority": "Wright's theatrical conceit — much of the film stages Russian high society as if on a stage set — risks gimmickry but mostly works. Knightley, Jude Law (career-best), Aaron Taylor-Johnson. Tom Stoppard screenplay.",
+          "title": "Anna Karenina (2012, Wright)",
+          "year": 2012,
+          "dir": "Joe Wright",
+          "country": "UK",
+          "runtime": "129 min",
+          "priority": "med",
+          "tags": [
+            "modern"
+          ],
+          "whyPriority": "Wright's theatrical conceit \u2014 much of the film stages Russian high society as if on a stage set \u2014 risks gimmickry but mostly works. Knightley, Jude Law (career-best), Aaron Taylor-Johnson. Tom Stoppard screenplay.",
           "pitch": "Tolstoy's novel through a stylized theater-as-Russia framework.",
-          "critics": [{ "who": "Reception", "quote": "Polarizing. Some critics found the conceit revelatory; others distracting." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Polarizing. Some critics found the conceit revelatory; others distracting."
+            }
+          ]
         },
         {
-          "title": "Crime and Punishment (1970, Soviet)", "year": 1970, "dir": "Lev Kulidzhanov", "country": "USSR", "runtime": "224 min",
-          "priority": "med", "tags": ["foundational","intl"],
+          "title": "Crime and Punishment (1970, Soviet)",
+          "year": 1970,
+          "dir": "Lev Kulidzhanov",
+          "country": "USSR",
+          "runtime": "224 min",
+          "priority": "med",
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "whyPriority": "The most respected Crime and Punishment adaptation. Soviet, faithful, austere. Difficult to find but widely held as the only screen version that does Dostoevsky justice.",
           "pitch": "Dostoevsky's novel across four hours. Raskolnikov's crime, paranoia, confession.",
-          "critics": [{ "who": "Reception", "quote": "Critical consensus among Dostoevsky scholars: the definitive screen adaptation." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Critical consensus among Dostoevsky scholars: the definitive screen adaptation."
+            }
+          ]
         }
+      ],
+      "categories": [
+        "character-study",
+        "period"
       ]
     },
     {
@@ -109,54 +275,145 @@
       "desc": "The genuinely excellent Shakespeare films.",
       "items": [
         {
-          "title": "The Tragedy of Macbeth (2021)", "year": 2021, "dir": "Joel Coen", "country": "USA", "runtime": "105 min",
-          "priority": "high", "tags": ["modern"],
+          "title": "The Tragedy of Macbeth (2021)",
+          "year": 2021,
+          "dir": "Joel Coen",
+          "country": "USA",
+          "runtime": "105 min",
+          "priority": "high",
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "Joel Coen solo. Black-and-white, 1.37:1, expressionist staging. Washington and McDormand. The most formally daring Shakespeare film since Welles.",
           "pitch": "Macbeth as German expressionist nightmare. Scotland as sound stage. The witches as one impossibly contorted Kathryn Hunter.",
-          "critics": [{ "who": "Reception", "quote": "Three Oscar nominations including Best Actor (Washington). Critical consensus as among the best Shakespeare films." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Three Oscar nominations including Best Actor (Washington). Critical consensus as among the best Shakespeare films."
+            }
+          ]
         },
         {
-          "title": "Henry V (1989)", "year": 1989, "dir": "Kenneth Branagh", "country": "UK", "runtime": "137 min",
-          "priority": "high", "tags": ["modern","intl"],
+          "title": "Henry V (1989)",
+          "year": 1989,
+          "dir": "Kenneth Branagh",
+          "country": "UK",
+          "runtime": "137 min",
+          "priority": "high",
+          "tags": [
+            "modern",
+            "intl"
+          ],
           "whyPriority": "Branagh's directorial debut. Muddier and grittier than Olivier's wartime version. The Crispin's Day speech is one of the great moments in screen Shakespeare.",
           "pitch": "Young king of England invades France. The Battle of Agincourt as rain-soaked muck.",
-          "critics": [{ "who": "Academy Awards 1990", "quote": "Three Oscar nominations including Best Director and Best Actor." }]
+          "critics": [
+            {
+              "who": "Academy Awards 1990",
+              "quote": "Three Oscar nominations including Best Director and Best Actor."
+            }
+          ]
         },
         {
-          "title": "Hamlet (1996, Branagh)", "year": 1996, "dir": "Kenneth Branagh", "country": "UK/USA", "runtime": "242 min",
-          "priority": "med", "tags": ["modern"],
+          "title": "Hamlet (1996, Branagh)",
+          "year": 1996,
+          "dir": "Kenneth Branagh",
+          "country": "UK/USA",
+          "runtime": "242 min",
+          "priority": "med",
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "Full-text Hamlet, four hours, 70mm, gigantic cast (Charlton Heston, Robin Williams, Billy Crystal, Kate Winslet). Audacious, occasionally awkward, never less than committed.",
           "pitch": "Branagh stages every line of Hamlet. The 'too too solid flesh' soliloquy through the duel.",
-          "critics": [{ "who": "Reception", "quote": "Four Oscar nominations including Best Adapted Screenplay." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Four Oscar nominations including Best Adapted Screenplay."
+            }
+          ]
         },
         {
-          "title": "Throne of Blood", "year": 1957, "dir": "Akira Kurosawa", "country": "Japan", "runtime": "110 min",
-          "priority": "high", "tags": ["foundational","intl"],
+          "title": "Throne of Blood",
+          "year": 1957,
+          "dir": "Akira Kurosawa",
+          "country": "Japan",
+          "runtime": "110 min",
+          "priority": "high",
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "whyPriority": "Cross-listed with Kurosawa auteur and pre-1960. Macbeth in feudal Japan. T.S. Eliot called it the finest Shakespeare film ever made.",
           "pitch": "Macbeth transposed to feudal Japan. The arrow scene at the end is one of cinema's great climaxes.",
-          "critics": [{ "who": "Reception", "quote": "T.S. Eliot praised it as the finest Shakespeare adaptation. Routinely listed among Kurosawa's masterpieces." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "T.S. Eliot praised it as the finest Shakespeare adaptation. Routinely listed among Kurosawa's masterpieces."
+            }
+          ]
         },
         {
-          "title": "Ran", "year": 1985, "dir": "Akira Kurosawa", "country": "Japan/France", "runtime": "162 min",
-          "priority": "high", "tags": ["foundational","intl"],
+          "title": "Ran",
+          "year": 1985,
+          "dir": "Akira Kurosawa",
+          "country": "Japan/France",
+          "runtime": "162 min",
+          "priority": "high",
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "whyPriority": "Kurosawa's late-career masterpiece. King Lear in feudal Japan. Cross-listed with Kurosawa auteur.",
           "pitch": "An aging warlord divides his kingdom between three sons. The kingdom collapses.",
-          "critics": [{ "who": "Reception", "quote": "Routinely cited as one of the greatest films ever made about war and aging." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Routinely cited as one of the greatest films ever made about war and aging."
+            }
+          ]
         },
         {
-          "title": "Richard III (1995)", "year": 1995, "dir": "Richard Loncraine", "country": "UK/USA", "runtime": "104 min",
-          "priority": "med", "tags": ["modern"],
+          "title": "Richard III (1995)",
+          "year": 1995,
+          "dir": "Richard Loncraine",
+          "country": "UK/USA",
+          "runtime": "104 min",
+          "priority": "med",
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "Ian McKellen's Richard III set in fascist 1930s Britain. The conceit works because Shakespeare's text supports it. Smart, brutal.",
           "pitch": "Richard III in an alternate-history fascist 1930s Britain.",
-          "critics": [{ "who": "Reception", "quote": "Two Oscar nominations. Critically beloved by Shakespeare scholars." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Two Oscar nominations. Critically beloved by Shakespeare scholars."
+            }
+          ]
         },
         {
-          "title": "Chimes at Midnight", "year": 1965, "dir": "Orson Welles", "country": "Spain/Switzerland", "runtime": "115 min",
-          "priority": "med", "tags": ["foundational","intl"],
+          "title": "Chimes at Midnight",
+          "year": 1965,
+          "dir": "Orson Welles",
+          "country": "Spain/Switzerland",
+          "runtime": "115 min",
+          "priority": "med",
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "whyPriority": "Welles's Falstaff film, weaving multiple Henry plays around the fat knight. Welles considered it his best film. Cross-listed with Welles auteur.",
           "pitch": "Welles plays Falstaff. The relationship with Prince Hal as it builds, breaks, and ends.",
-          "critics": [{ "who": "Reception", "quote": "Welles considered it his best work. Critically rehabilitated as one of his masterpieces." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Welles considered it his best work. Critically rehabilitated as one of his masterpieces."
+            }
+          ]
         }
+      ],
+      "categories": [
+        "period"
       ]
     },
     {
@@ -164,46 +421,125 @@
       "desc": "Atonement, Remains of the Day, Never Let Me Go territory.",
       "items": [
         {
-          "title": "Atonement", "year": 2007, "dir": "Joe Wright", "country": "UK", "runtime": "123 min",
-          "priority": "high", "tags": ["modern","intl"],
+          "title": "Atonement",
+          "year": 2007,
+          "dir": "Joe Wright",
+          "country": "UK",
+          "runtime": "123 min",
+          "priority": "high",
+          "tags": [
+            "modern",
+            "intl"
+          ],
           "whyPriority": "Ian McEwan adaptation. McAvoy, Knightley, young Saoirse Ronan. The Dunkirk tracking shot. Devastating final-act revelation. Cross-listed.",
           "pitch": "A young girl's mistaken accusation destroys lives across decades. Britain and Europe through WWII.",
-          "critics": [{ "who": "Academy Awards 2008", "quote": "Won Best Original Score. Seven nominations including Best Picture." }]
+          "critics": [
+            {
+              "who": "Academy Awards 2008",
+              "quote": "Won Best Original Score. Seven nominations including Best Picture."
+            }
+          ]
         },
         {
-          "title": "The Remains of the Day", "year": 1993, "dir": "James Ivory", "country": "UK/USA", "runtime": "134 min",
-          "priority": "high", "tags": ["foundational","intl"],
+          "title": "The Remains of the Day",
+          "year": 1993,
+          "dir": "James Ivory",
+          "country": "UK/USA",
+          "runtime": "134 min",
+          "priority": "high",
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "whyPriority": "Ishiguro adaptation. Hopkins and Thompson at their finest. Restraint as art. Eight Oscar nominations.",
           "pitch": "An English butler reflects on his decades of service. What he repressed. Who he failed to love.",
-          "critics": [{ "who": "Academy Awards 1994", "quote": "Eight Oscar nominations including Best Picture." }]
+          "critics": [
+            {
+              "who": "Academy Awards 1994",
+              "quote": "Eight Oscar nominations including Best Picture."
+            }
+          ]
         },
         {
-          "title": "Never Let Me Go", "year": 2010, "dir": "Mark Romanek", "country": "UK", "runtime": "103 min",
-          "priority": "high", "tags": ["modern","intl"],
-          "whyPriority": "Ishiguro adaptation. Carey Mulligan, Andrew Garfield, Keira Knightley. Sci-fi-adjacent — the world is dystopian — but the heart is the relationships. Quiet, devastating.",
+          "title": "Never Let Me Go",
+          "year": 2010,
+          "dir": "Mark Romanek",
+          "country": "UK",
+          "runtime": "103 min",
+          "priority": "high",
+          "tags": [
+            "modern",
+            "intl"
+          ],
+          "whyPriority": "Ishiguro adaptation. Carey Mulligan, Andrew Garfield, Keira Knightley. Sci-fi-adjacent \u2014 the world is dystopian \u2014 but the heart is the relationships. Quiet, devastating.",
           "pitch": "Three children grow up at an English boarding school where something is off about why they're there.",
-          "critics": [{ "who": "Reception", "quote": "Critically beloved, commercially overlooked. Considered a great Ishiguro adaptation." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Critically beloved, commercially overlooked. Considered a great Ishiguro adaptation."
+            }
+          ]
         },
         {
-          "title": "No Country for Old Men", "year": 2007, "dir": "Joel & Ethan Coen", "country": "USA", "runtime": "122 min",
-          "priority": "high", "tags": ["modern"],
+          "title": "No Country for Old Men",
+          "year": 2007,
+          "dir": "Joel & Ethan Coen",
+          "country": "USA",
+          "runtime": "122 min",
+          "priority": "high",
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "Cormac McCarthy adaptation. Won Best Picture. Bardem's Anton Chigurh. Cross-listed with Coens auteur.",
           "pitch": "A Texas welder finds drug-deal money. A merciless killer pursues. A sheriff watches his world end.",
-          "critics": [{ "who": "Academy Awards 2008", "quote": "Won 4 Oscars including Best Picture, Best Director, Best Adapted Screenplay, Best Supporting Actor." }]
+          "critics": [
+            {
+              "who": "Academy Awards 2008",
+              "quote": "Won 4 Oscars including Best Picture, Best Director, Best Adapted Screenplay, Best Supporting Actor."
+            }
+          ]
         },
         {
-          "title": "The English Patient", "year": 1996, "dir": "Anthony Minghella", "country": "UK/USA", "runtime": "162 min",
-          "priority": "med", "tags": ["modern"],
+          "title": "The English Patient",
+          "year": 1996,
+          "dir": "Anthony Minghella",
+          "country": "UK/USA",
+          "runtime": "162 min",
+          "priority": "med",
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "Michael Ondaatje adaptation. Won 9 Oscars. Sweeping wartime romance with cartography, Herodotus, betrayal in the Sahara.",
           "pitch": "A burned man at a war's end recalls who he was, what he loved, and what he did.",
-          "critics": [{ "who": "Academy Awards 1997", "quote": "Won 9 Oscars including Best Picture, Best Director." }]
+          "critics": [
+            {
+              "who": "Academy Awards 1997",
+              "quote": "Won 9 Oscars including Best Picture, Best Director."
+            }
+          ]
         },
         {
-          "title": "Brooklyn", "year": 2015, "dir": "John Crowley", "country": "Ireland/UK", "runtime": "117 min",
-          "priority": "med", "tags": ["modern","intl"],
-          "pitch": "Colm Tóibín adaptation. Saoirse Ronan as a young Irish woman emigrating to 1950s Brooklyn. Quiet, lovely.",
-          "critics": [{ "who": "Reception", "quote": "Three Oscar nominations including Best Picture." }]
+          "title": "Brooklyn",
+          "year": 2015,
+          "dir": "John Crowley",
+          "country": "Ireland/UK",
+          "runtime": "117 min",
+          "priority": "med",
+          "tags": [
+            "modern",
+            "intl"
+          ],
+          "pitch": "Colm T\u00f3ib\u00edn adaptation. Saoirse Ronan as a young Irish woman emigrating to 1950s Brooklyn. Quiet, lovely.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Three Oscar nominations including Best Picture."
+            }
+          ]
         }
+      ],
+      "categories": [
+        "character-study"
       ]
     },
     {
@@ -211,26 +547,66 @@
       "desc": "Adaptations of long, mythic, deeply researched literary works.",
       "items": [
         {
-          "title": "Lawrence of Arabia", "year": 1962, "dir": "David Lean", "country": "UK/USA", "runtime": "228 min",
-          "priority": "high", "tags": ["foundational"],
+          "title": "Lawrence of Arabia",
+          "year": 1962,
+          "dir": "David Lean",
+          "country": "UK/USA",
+          "runtime": "228 min",
+          "priority": "high",
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "T.E. Lawrence's Seven Pillars of Wisdom. Lean's masterpiece. O'Toole's Lawrence is one of the great screen performances. Won 7 Oscars. The closest cinema has come to true epic.",
           "pitch": "British officer's role in the Arab Revolt during WWI. Four hours of desert, mythology, and self-destruction.",
-          "critics": [{ "who": "Academy Awards 1963", "quote": "Won 7 Oscars including Best Picture, Best Director." }]
+          "critics": [
+            {
+              "who": "Academy Awards 1963",
+              "quote": "Won 7 Oscars including Best Picture, Best Director."
+            }
+          ]
         },
         {
-          "title": "The Last Samurai", "year": 2003, "dir": "Edward Zwick", "country": "USA/Japan", "runtime": "154 min",
-          "priority": "med", "tags": ["modern"],
+          "title": "The Last Samurai",
+          "year": 2003,
+          "dir": "Edward Zwick",
+          "country": "USA/Japan",
+          "runtime": "154 min",
+          "priority": "med",
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "Cruise as a U.S. Army officer who becomes immersed in samurai culture during the Meiji Restoration. Watanabe's career-launching performance for Western audiences.",
           "pitch": "1870s Japan. The samurai class is being abolished by modernization. An American officer sent to train the new army is captured.",
-          "critics": [{ "who": "Reception", "quote": "Four Oscar nominations including Best Supporting Actor (Watanabe)." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Four Oscar nominations including Best Supporting Actor (Watanabe)."
+            }
+          ]
         },
         {
-          "title": "Master and Commander", "year": 2003, "dir": "Peter Weir", "country": "USA/UK", "runtime": "138 min",
-          "priority": "high", "tags": ["modern"],
+          "title": "Master and Commander",
+          "year": 2003,
+          "dir": "Peter Weir",
+          "country": "USA/UK",
+          "runtime": "138 min",
+          "priority": "high",
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "Patrick O'Brian adaptation. Crowe as Captain Jack Aubrey. Naval procedural meets character study. Underseen by general audiences but treasured by literature people.",
           "pitch": "Napoleonic-era British frigate hunts a French privateer around South America.",
-          "critics": [{ "who": "Academy Awards 2004", "quote": "Ten Oscar nominations. Won 2 (Cinematography, Sound Editing)." }]
+          "critics": [
+            {
+              "who": "Academy Awards 2004",
+              "quote": "Ten Oscar nominations. Won 2 (Cinematography, Sound Editing)."
+            }
+          ]
         }
+      ],
+      "categories": [
+        "epic",
+        "period"
       ]
     }
   ]

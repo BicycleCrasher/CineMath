@@ -98,6 +98,10 @@
             }
           ]
         }
+      ],
+      "categories": [
+        "already-watched",
+        "limited"
       ]
     },
     {
@@ -202,6 +206,10 @@
             }
           ]
         }
+      ],
+      "categories": [
+        "limited",
+        "ongoing"
       ]
     },
     {
@@ -244,6 +252,10 @@
             }
           ]
         }
+      ],
+      "categories": [
+        "limited",
+        "ongoing"
       ]
     },
     {
@@ -330,6 +342,9 @@
             }
           ]
         }
+      ],
+      "categories": [
+        "limited"
       ]
     },
     {
@@ -356,6 +371,9 @@
             }
           ]
         }
+      ],
+      "categories": [
+        "limited"
       ]
     },
     {
@@ -464,6 +482,9 @@
             }
           ]
         }
+      ],
+      "categories": [
+        "ongoing"
       ]
     },
     {
@@ -578,6 +599,9 @@
             }
           ]
         }
+      ],
+      "categories": [
+        "ongoing"
       ]
     },
     {
@@ -650,6 +674,9 @@
             }
           ]
         }
+      ],
+      "categories": [
+        "ongoing"
       ]
     },
     {
@@ -688,6 +715,9 @@
             }
           ]
         }
+      ],
+      "categories": [
+        "ongoing"
       ]
     },
     {
@@ -711,6 +741,9 @@
             }
           ]
         }
+      ],
+      "categories": [
+        "ongoing"
       ]
     },
     {
@@ -751,6 +784,9 @@
             }
           ]
         }
+      ],
+      "categories": [
+        "ongoing"
       ]
     },
     {
@@ -894,6 +930,9 @@
             }
           ]
         }
+      ],
+      "categories": [
+        "ongoing"
       ]
     }
   ]

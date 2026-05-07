@@ -7,111 +7,397 @@
       "name": "I. Queued (Per Your Request)",
       "desc": "You added these.",
       "items": [
-        { "title": "The Sticky", "year": 2024, "dir": "Brian Donovan & Ed Herro", "country": "Canada/USA", "runtime": "1 season · 6 episodes", "seasons": "Limited or short-form ongoing", "tags": ["modern"],
+        {
+          "title": "The Sticky",
+          "year": 2024,
+          "dir": "Brian Donovan & Ed Herro",
+          "country": "Canada/USA",
+          "runtime": "1 season \u00b7 6 episodes",
+          "seasons": "Limited or short-form ongoing",
+          "tags": [
+            "modern"
+          ],
           "pitch": "Amazon. Margo Martindale leads a heist plot involving Quebec maple syrup reserves. Inspired by the real 2011-12 Quebec maple syrup heist.",
-          "critics": [{ "who": "Reception", "quote": "Critical favorite of late 2024. Underseen. Tonally Coen-adjacent." }] }
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Critical favorite of late 2024. Underseen. Tonally Coen-adjacent."
+            }
+          ]
+        }
+      ],
+      "categories": [
+        "long-con"
       ]
     },
     {
-      "name": "II. High Priority — Long-Con Character Studies",
+      "name": "II. High Priority \u2014 Long-Con Character Studies",
       "desc": "Direct primary fits.",
       "items": [
-        { "title": "Better Call Saul", "year": 2015, "dir": "Vince Gilligan & Peter Gould", "country": "USA", "runtime": "6 seasons · 63 episodes", "seasons": "All 6 (ended 2022)",
-          "priority": "high", "tags": ["foundational"],
+        {
+          "title": "Better Call Saul",
+          "year": 2015,
+          "dir": "Vince Gilligan & Peter Gould",
+          "country": "USA",
+          "runtime": "6 seasons \u00b7 63 episodes",
+          "seasons": "All 6 (ended 2022)",
+          "priority": "high",
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "Strongest single TV recommendation across this entire build alongside The Bureau. Slow-burn legal/con character study. Considered Breaking Bad's equal by the end. Your structural-rigor + emotional-weight pillars stack to maximum.",
           "pitch": "Jimmy McGill, struggling Albuquerque defense lawyer, slowly transforms into Saul Goodman. Then, after Breaking Bad, into Gene from Cinnabon.",
-          "critics": [{ "who": "Reception", "quote": "53 Emmy nominations across run. Final season widely considered Breaking Bad's equal." }] },
-        { "title": "The Night Of", "year": 2016, "dir": "Richard Price & Steven Zaillian", "country": "USA", "runtime": "1 season · 8 episodes", "seasons": "Limited series",
-          "priority": "high", "tags": ["modern"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "53 Emmy nominations across run. Final season widely considered Breaking Bad's equal."
+            }
+          ]
+        },
+        {
+          "title": "The Night Of",
+          "year": 2016,
+          "dir": "Richard Price & Steven Zaillian",
+          "country": "USA",
+          "runtime": "1 season \u00b7 8 episodes",
+          "seasons": "Limited series",
+          "priority": "high",
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "HBO. John Turturro as a downtrodden NYC defense lawyer. Riz Ahmed as a Pakistani-American student accused of murder. Slow, devastating, courtroom-drama-as-character-piece.",
           "pitch": "A college student wakes up next to a dead woman with no memory of the night. The city's legal system processes him.",
-          "critics": [{ "who": "Reception", "quote": "Won 5 Emmys including Lead Actor (Ahmed) and Supporting Actor (Camp)." }] },
-        { "title": "Damages", "year": 2007, "dir": "Daniel Zelman, Glenn Kessler, Todd A. Kessler", "country": "USA", "runtime": "5 seasons · 59 episodes", "seasons": "All 5 (ended 2012). FX for S1-3, DirecTV for S4-5.",
-          "priority": "high", "tags": ["foundational","under"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Won 5 Emmys including Lead Actor (Ahmed) and Supporting Actor (Camp)."
+            }
+          ]
+        },
+        {
+          "title": "Damages",
+          "year": 2007,
+          "dir": "Daniel Zelman, Glenn Kessler, Todd A. Kessler",
+          "country": "USA",
+          "runtime": "5 seasons \u00b7 59 episodes",
+          "seasons": "All 5 (ended 2012). FX for S1-3, DirecTV for S4-5.",
+          "priority": "high",
+          "tags": [
+            "foundational",
+            "under"
+          ],
           "whyPriority": "Glenn Close vs. Rose Byrne. High-stakes civil litigation. Each season uses a flash-forward structure that rewards close attention.",
           "pitch": "A ruthless NYC litigator hires a young attorney. Each season has a high-stakes case and a hidden game.",
-          "critics": [{ "who": "Reception", "quote": "Close won two Lead Actress Emmys. Considered one of the great prestige legal dramas." }] },
-        { "title": "Goliath", "year": 2016, "dir": "David E. Kelley & Jonathan Shapiro", "country": "USA", "runtime": "4 seasons · 32 episodes", "seasons": "All 4 (ended 2021)",
-          "priority": "high", "tags": ["modern","under"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Close won two Lead Actress Emmys. Considered one of the great prestige legal dramas."
+            }
+          ]
+        },
+        {
+          "title": "Goliath",
+          "year": 2016,
+          "dir": "David E. Kelley & Jonathan Shapiro",
+          "country": "USA",
+          "runtime": "4 seasons \u00b7 32 episodes",
+          "seasons": "All 4 (ended 2021)",
+          "priority": "high",
+          "tags": [
+            "modern",
+            "under"
+          ],
           "whyPriority": "Amazon. Billy Bob Thornton as a washed-up lawyer taking on impossible cases. David E. Kelley (LA Law, The Practice, Big Little Lies) at his sharpest in years.",
           "pitch": "A disgraced ex-partner of a powerful LA firm builds his cases out of a beachside dive bar. Each season takes on a different titan of industry.",
-          "critics": [{ "who": "Reception", "quote": "Thornton won the Globe for the role. Critically warm; underseen relative to its quality." }] }
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Thornton won the Globe for the role. Critically warm; underseen relative to its quality."
+            }
+          ]
+        }
+      ],
+      "categories": [
+        "long-con",
+        "courtroom"
       ]
     },
     {
-      "name": "III. High Priority — Heist & Con Series",
+      "name": "III. High Priority \u2014 Heist & Con Series",
       "desc": "Per your selection.",
       "items": [
-        { "title": "Hustle", "year": 2004, "dir": "Tony Jordan", "country": "UK", "runtime": "8 seasons · 48 episodes", "seasons": "All 8 (ended 2012)",
-          "priority": "high", "tags": ["foundational","intl"],
+        {
+          "title": "Hustle",
+          "year": 2004,
+          "dir": "Tony Jordan",
+          "country": "UK",
+          "runtime": "8 seasons \u00b7 48 episodes",
+          "seasons": "All 8 (ended 2012)",
+          "priority": "high",
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "whyPriority": "Per your selection. BBC. London grifters running long cons against deserving marks. Procedurally elegant. The British heist-show standard.",
           "pitch": "A team of grifters runs elaborate long cons in London. The con-of-the-week structure escalates across seasons.",
-          "critics": [{ "who": "Reception", "quote": "BBC ratings hit. Considered the model for the modern British heist procedural." }] },
-        { "title": "Sneaky Pete", "year": 2015, "dir": "David Shore & Bryan Cranston", "country": "USA", "runtime": "3 seasons · 30 episodes", "seasons": "All 3 (ended 2019)",
-          "priority": "high", "tags": ["modern","under"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "BBC ratings hit. Considered the model for the modern British heist procedural."
+            }
+          ]
+        },
+        {
+          "title": "Sneaky Pete",
+          "year": 2015,
+          "dir": "David Shore & Bryan Cranston",
+          "country": "USA",
+          "runtime": "3 seasons \u00b7 30 episodes",
+          "seasons": "All 3 (ended 2019)",
+          "priority": "high",
+          "tags": [
+            "modern",
+            "under"
+          ],
           "whyPriority": "Per your selection. Amazon. Giovanni Ribisi as a con man assuming his cellmate's identity. Bryan Cranston produced and recurring.",
           "pitch": "A grifter on the run from a New York gangster takes the identity of his prison cellmate and moves in with the family.",
-          "critics": [{ "who": "Reception", "quote": "Critical favorite. Cancelled before its time. Cult devotion." }] },
-        { "title": "Lupin", "year": 2021, "dir": "George Kay", "country": "France", "runtime": "3 seasons · 17 episodes", "seasons": "Ongoing", "tags": ["modern","intl"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Critical favorite. Cancelled before its time. Cult devotion."
+            }
+          ]
+        },
+        {
+          "title": "Lupin",
+          "year": 2021,
+          "dir": "George Kay",
+          "country": "France",
+          "runtime": "3 seasons \u00b7 17 episodes",
+          "seasons": "Ongoing",
+          "tags": [
+            "modern",
+            "intl"
+          ],
           "priority": "med",
-          "whyPriority": "Netflix's biggest non-English breakout. Omar Sy as a gentleman thief modeled on Maurice Leblanc's Arsène Lupin character.",
-          "pitch": "A modern Parisian gentleman thief carries out cons inspired by his late father's favorite character: Arsène Lupin.",
-          "critics": [{ "who": "Reception", "quote": "Netflix's most-watched non-English series at launch. Sy's performance carries it." }] },
-        { "title": "Money Heist (La Casa de Papel)", "year": 2017, "dir": "Álex Pina", "country": "Spain", "runtime": "5 parts · 41 episodes", "seasons": "All 5 (ended 2021)",
-          "priority": "med", "tags": ["modern","intl"],
+          "whyPriority": "Netflix's biggest non-English breakout. Omar Sy as a gentleman thief modeled on Maurice Leblanc's Ars\u00e8ne Lupin character.",
+          "pitch": "A modern Parisian gentleman thief carries out cons inspired by his late father's favorite character: Ars\u00e8ne Lupin.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Netflix's most-watched non-English series at launch. Sy's performance carries it."
+            }
+          ]
+        },
+        {
+          "title": "Money Heist (La Casa de Papel)",
+          "year": 2017,
+          "dir": "\u00c1lex Pina",
+          "country": "Spain",
+          "runtime": "5 parts \u00b7 41 episodes",
+          "seasons": "All 5 (ended 2021)",
+          "priority": "med",
+          "tags": [
+            "modern",
+            "intl"
+          ],
           "pitch": "Spanish heist series. The Professor plans to print his own money inside the Royal Mint. The show's structural construction of the heist is the appeal.",
-          "critics": [{ "who": "Reception", "quote": "Most-watched non-English Netflix series in history at launch." }] }
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Most-watched non-English Netflix series in history at launch."
+            }
+          ]
+        }
+      ],
+      "categories": [
+        "heist-series"
       ]
     },
     {
       "name": "IV. Medium Priority",
       "desc": "Strong probable fits in adjacent territory.",
       "items": [
-        { "title": "Presumed Innocent (2024)", "year": 2024, "dir": "David E. Kelley", "country": "USA", "runtime": "1 season · 8 episodes", "seasons": "Limited series; S2 announced as anthology",
-          "priority": "med", "tags": ["modern"],
+        {
+          "title": "Presumed Innocent (2024)",
+          "year": 2024,
+          "dir": "David E. Kelley",
+          "country": "USA",
+          "runtime": "1 season \u00b7 8 episodes",
+          "seasons": "Limited series; S2 announced as anthology",
+          "priority": "med",
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "Apple TV+. Adaptation of the 1990 Pakula film of the same name. Jake Gyllenhaal as a prosecutor accused of murdering his colleague. Different ending than the film.",
           "pitch": "A Chicago prosecutor is accused of murdering a colleague with whom he had an affair. He must defend himself.",
-          "critics": [{ "who": "Reception", "quote": "Apple TV+'s most-watched series of 2024." }] },
-        { "title": "Anatomy of a Scandal", "year": 2022, "dir": "David E. Kelley & Melissa James Gibson", "country": "UK/USA", "runtime": "1 season · 6 episodes", "seasons": "Limited series",
-          "priority": "med", "tags": ["modern","intl"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Apple TV+'s most-watched series of 2024."
+            }
+          ]
+        },
+        {
+          "title": "Anatomy of a Scandal",
+          "year": 2022,
+          "dir": "David E. Kelley & Melissa James Gibson",
+          "country": "UK/USA",
+          "runtime": "1 season \u00b7 6 episodes",
+          "seasons": "Limited series",
+          "priority": "med",
+          "tags": [
+            "modern",
+            "intl"
+          ],
           "pitch": "Netflix. British political thriller. Sienna Miller, Rupert Friend. A junior Conservative minister is accused of rape. The trial unfolds.",
-          "critics": [{ "who": "Reception", "quote": "Mixed-positive critical reception; strong audience response." }] },
-        { "title": "The Defenders", "year": 1961, "dir": "Reginald Rose", "country": "USA", "runtime": "4 seasons · 132 episodes", "seasons": "All 4 (ended 1965)",
-          "priority": "med", "tags": ["foundational","under"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Mixed-positive critical reception; strong audience response."
+            }
+          ]
+        },
+        {
+          "title": "The Defenders",
+          "year": 1961,
+          "dir": "Reginald Rose",
+          "country": "USA",
+          "runtime": "4 seasons \u00b7 132 episodes",
+          "seasons": "All 4 (ended 1965)",
+          "priority": "med",
+          "tags": [
+            "foundational",
+            "under"
+          ],
           "whyPriority": "The seminal courtroom drama of American TV. Reginald Rose (12 Angry Men) created it. Father-son defense team takes on civil rights, abortion, McCarthyism, capital punishment. Unimaginable today for being so progressive then.",
           "pitch": "A Manhattan father-son defense team takes on the most controversial cases of their era.",
-          "critics": [{ "who": "Reception", "quote": "Won three consecutive Outstanding Drama Emmys (1962-64). Considered the prestige TV courtroom drama template." }] },
-        { "title": "Boston Legal", "year": 2004, "dir": "David E. Kelley", "country": "USA", "runtime": "5 seasons · 101 episodes", "seasons": "All 5 (ended 2008)",
-          "priority": "med", "tags": ["foundational"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Won three consecutive Outstanding Drama Emmys (1962-64). Considered the prestige TV courtroom drama template."
+            }
+          ]
+        },
+        {
+          "title": "Boston Legal",
+          "year": 2004,
+          "dir": "David E. Kelley",
+          "country": "USA",
+          "runtime": "5 seasons \u00b7 101 episodes",
+          "seasons": "All 5 (ended 2008)",
+          "priority": "med",
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "Spader and Shatner at their best. Kelley's most playful courtroom show. Tonally distinct: comedy-drama hybrid with sharp political and legal arguments.",
           "pitch": "Two ethically loose attorneys at a Boston firm take on cases too strange for the senior partners.",
-          "critics": [{ "who": "Reception", "quote": "Spader won three consecutive Lead Actor in a Drama Emmys." }] },
-        { "title": "The Good Wife", "year": 2009, "dir": "Robert & Michelle King", "country": "USA", "runtime": "7 seasons · 156 episodes", "seasons": "All 7 (ended 2016)",
-          "priority": "med", "tags": ["foundational"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Spader won three consecutive Lead Actor in a Drama Emmys."
+            }
+          ]
+        },
+        {
+          "title": "The Good Wife",
+          "year": 2009,
+          "dir": "Robert & Michelle King",
+          "country": "USA",
+          "runtime": "7 seasons \u00b7 156 episodes",
+          "seasons": "All 7 (ended 2016)",
+          "priority": "med",
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "Network legal drama with prestige-show ambition. Julianna Margulies as a politician's wife who returns to law after his scandal. Sharper than its CBS pedigree suggests.",
           "pitch": "Alicia Florrick returns to legal practice after her politician husband's sex-and-corruption scandal lands him in prison.",
-          "critics": [{ "who": "Reception", "quote": "Critical favorite throughout run. Margulies won two Lead Actress Emmys." }] },
-        { "title": "The Lincoln Lawyer (TV)", "year": 2022, "dir": "Ted Humphrey", "country": "USA", "runtime": "3 seasons · 30 episodes", "seasons": "Ongoing",
-          "priority": "med", "tags": ["modern"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Critical favorite throughout run. Margulies won two Lead Actress Emmys."
+            }
+          ]
+        },
+        {
+          "title": "The Lincoln Lawyer (TV)",
+          "year": 2022,
+          "dir": "Ted Humphrey",
+          "country": "USA",
+          "runtime": "3 seasons \u00b7 30 episodes",
+          "seasons": "Ongoing",
+          "priority": "med",
+          "tags": [
+            "modern"
+          ],
           "pitch": "Netflix. Manuel Garcia-Rulfo as Mickey Haller, the LA lawyer who works out of his Lincoln Town Car. Connelly novel adaptations.",
-          "critics": [{ "who": "Reception", "quote": "Netflix workhorse. Better than its category suggests." }] }
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Netflix workhorse. Better than its category suggests."
+            }
+          ]
+        }
+      ],
+      "categories": [
+        "courtroom",
+        "long-con"
       ]
     },
     {
       "name": "V. Worth Considering",
       "desc": "Less central but worth flagging.",
       "items": [
-        { "title": "Murder One", "year": 1995, "dir": "Steven Bochco", "country": "USA", "runtime": "2 seasons · 41 episodes", "seasons": "S1 follows one case across all 23 episodes",
-          "tags": ["foundational","under"],
+        {
+          "title": "Murder One",
+          "year": 1995,
+          "dir": "Steven Bochco",
+          "country": "USA",
+          "runtime": "2 seasons \u00b7 41 episodes",
+          "seasons": "S1 follows one case across all 23 episodes",
+          "tags": [
+            "foundational",
+            "under"
+          ],
           "pitch": "Steven Bochco's experiment: one murder case unfolds across an entire 23-episode season. Daniel Benzali anchors S1.",
-          "critics": [{ "who": "Reception", "quote": "Considered ahead of its time; structurally pioneered the season-long-arc legal drama." }] },
-        { "title": "How to Get Away with Murder", "year": 2014, "dir": "Peter Nowalk", "country": "USA", "runtime": "6 seasons · 90 episodes", "seasons": "All 6 (ended 2020)",
-          "tags": ["modern"],
-          "pitch": "Viola Davis as a defense attorney and law professor. Davis won the Lead Actress Emmy in 2015 — the first Black woman ever to do so.",
-          "critics": [{ "who": "Reception", "quote": "Davis Emmy historic. Show's later seasons declined." }] },
-        { "title": "Bull (UK 2014, not US)", "year": 0, "dir": "", "country": "", "runtime": "(reference note)", "seasons": "",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Considered ahead of its time; structurally pioneered the season-long-arc legal drama."
+            }
+          ]
+        },
+        {
+          "title": "How to Get Away with Murder",
+          "year": 2014,
+          "dir": "Peter Nowalk",
+          "country": "USA",
+          "runtime": "6 seasons \u00b7 90 episodes",
+          "seasons": "All 6 (ended 2020)",
+          "tags": [
+            "modern"
+          ],
+          "pitch": "Viola Davis as a defense attorney and law professor. Davis won the Lead Actress Emmy in 2015 \u2014 the first Black woman ever to do so.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Davis Emmy historic. Show's later seasons declined."
+            }
+          ]
+        },
+        {
+          "title": "Bull (UK 2014, not US)",
+          "year": 0,
+          "dir": "",
+          "country": "",
+          "runtime": "(reference note)",
+          "seasons": "",
           "pitch": "Note: The UK 'The Bridge' / 'The Bridge of Spies' / etc. and other titles confuse easily. The US 'Bull' (2016, with Michael Weatherly) is generally not recommended despite long run; quality issues + behind-scenes problems.",
-          "critics": [] }
+          "critics": []
+        }
+      ],
+      "categories": [
+        "courtroom"
       ]
     }
   ]

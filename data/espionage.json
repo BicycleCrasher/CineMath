@@ -1,67 +1,146 @@
 {
   "type": "espionage",
   "title": "Spy",
-  "subtitle": "Espionage and political thrillers — Cold War paranoia through modern surveillance.",
+  "subtitle": "Espionage and political thrillers \u2014 Cold War paranoia through modern surveillance.",
   "sections": [
     {
       "name": "I. High Priority",
       "desc": "Calibrated for character-driven, structurally rigorous spy fiction with intelligence over action.",
       "items": [
         {
-          "title": "Tinker Tailor Soldier Spy", "year": 2011, "dir": "Tomas Alfredson", "country": "UK", "runtime": "127 min",
-          "priority": "high", "tags": ["modern","intl"],
-          "whyPriority": "The most cerebral espionage film of the modern era. Le Carré's masterwork, with Gary Oldman as Smiley. Slow, dense, demands attention. Exact fit for your taste.",
+          "title": "Tinker Tailor Soldier Spy",
+          "year": 2011,
+          "dir": "Tomas Alfredson",
+          "country": "UK",
+          "runtime": "127 min",
+          "priority": "high",
+          "tags": [
+            "modern",
+            "intl"
+          ],
+          "whyPriority": "The most cerebral espionage film of the modern era. Le Carr\u00e9's masterwork, with Gary Oldman as Smiley. Slow, dense, demands attention. Exact fit for your taste.",
           "pitch": "Retired British intelligence officer is brought back to find a Soviet mole at the top of MI6. Performances by Oldman, Hardy, Cumberbatch, Firth, Strong. Patience required and rewarded.",
           "critics": [
-            { "who": "Manohla Dargis · NY Times", "quote": "Strongly positive. 'A sumptuously detailed period piece.'" },
-            { "who": "Critical consensus", "quote": "Multiple Oscar nominations. Widely considered the best Le Carré adaptation." }
+            {
+              "who": "Manohla Dargis \u00b7 NY Times",
+              "quote": "Strongly positive. 'A sumptuously detailed period piece.'"
+            },
+            {
+              "who": "Critical consensus",
+              "quote": "Multiple Oscar nominations. Widely considered the best Le Carr\u00e9 adaptation."
+            }
           ]
         },
         {
-          "title": "All the President's Men", "year": 1976, "dir": "Alan J. Pakula", "country": "USA", "runtime": "138 min",
-          "priority": "high", "tags": ["foundational"],
+          "title": "All the President's Men",
+          "year": 1976,
+          "dir": "Alan J. Pakula",
+          "country": "USA",
+          "runtime": "138 min",
+          "priority": "high",
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "Domestic political thriller as procedural. Watergate from the journalists' perspective. Every detail matters, no embellishment. Hoffman and Redford never better.",
           "pitch": "Bob Woodward and Carl Bernstein chase the Watergate story through phone calls, library research, and stakeouts. The blueprint for every journalism procedural since.",
           "critics": [
-            { "who": "Academy Awards", "quote": "Won 4 Oscars including Best Adapted Screenplay." },
-            { "who": "Pauline Kael", "quote": "Highly positive. Called Pakula's direction 'a triumph of pacing.'" }
+            {
+              "who": "Academy Awards",
+              "quote": "Won 4 Oscars including Best Adapted Screenplay."
+            },
+            {
+              "who": "Pauline Kael",
+              "quote": "Highly positive. Called Pakula's direction 'a triumph of pacing.'"
+            }
           ]
         },
         {
-          "title": "The Spy Who Came in from the Cold", "year": 1965, "dir": "Martin Ritt", "country": "UK", "runtime": "112 min",
-          "priority": "high", "tags": ["foundational","intl"],
-          "whyPriority": "The first Le Carré film, in glorious black and white. Burton's career-best. Where modern spy fiction's moral complexity was born — no glamour, only bleakness and sacrifice.",
+          "title": "The Spy Who Came in from the Cold",
+          "year": 1965,
+          "dir": "Martin Ritt",
+          "country": "UK",
+          "runtime": "112 min",
+          "priority": "high",
+          "tags": [
+            "foundational",
+            "intl"
+          ],
+          "whyPriority": "The first Le Carr\u00e9 film, in glorious black and white. Burton's career-best. Where modern spy fiction's moral complexity was born \u2014 no glamour, only bleakness and sacrifice.",
           "pitch": "An aging British spy is sent on one final mission across the Berlin Wall. The mission is not what he was told. Betrayal upon betrayal.",
           "critics": [
-            { "who": "Roger Ebert · Great Movies", "quote": "Wrote a Great Movies essay. 'The film that established the Le Carré school.'" },
-            { "who": "Burton's performance", "quote": "Oscar nomination. Widely considered the definitive Le Carré protagonist on screen." }
+            {
+              "who": "Roger Ebert \u00b7 Great Movies",
+              "quote": "Wrote a Great Movies essay. 'The film that established the Le Carr\u00e9 school.'"
+            },
+            {
+              "who": "Burton's performance",
+              "quote": "Oscar nomination. Widely considered the definitive Le Carr\u00e9 protagonist on screen."
+            }
           ]
         },
         {
-          "title": "Three Days of the Condor", "year": 1975, "dir": "Sydney Pollack", "country": "USA", "runtime": "117 min",
-          "priority": "high", "tags": ["foundational"],
+          "title": "Three Days of the Condor",
+          "year": 1975,
+          "dir": "Sydney Pollack",
+          "country": "USA",
+          "runtime": "117 min",
+          "priority": "high",
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "Paranoid 70s thriller at its peak. CIA analyst returns from lunch to find his entire office murdered. Redford on the run. Tight, smart, character-first.",
           "pitch": "Joseph Turner reads books for the CIA. One day he comes back from lunch and everyone is dead. He has 72 hours to find out why.",
           "critics": [
-            { "who": "Reception", "quote": "Defining 70s paranoid thriller. Influence on the Bourne films and Snowden-era surveillance fiction is direct." }
+            {
+              "who": "Reception",
+              "quote": "Defining 70s paranoid thriller. Influence on the Bourne films and Snowden-era surveillance fiction is direct."
+            }
           ]
         },
         {
-          "title": "The Conversation", "year": 1974, "dir": "Francis Ford Coppola", "country": "USA", "runtime": "113 min",
-          "priority": "high", "tags": ["foundational","adjacent"],
+          "title": "The Conversation",
+          "year": 1974,
+          "dir": "Francis Ford Coppola",
+          "country": "USA",
+          "runtime": "113 min",
+          "priority": "high",
+          "tags": [
+            "foundational",
+            "adjacent"
+          ],
           "whyPriority": "Already on your sci-fi tracker as adjacent. Listed here too because it's the foundational paranoia/surveillance film. Hackman career-best.",
           "pitch": "Surveillance expert listens to a recording that may capture a murder plot. Won the Palme d'Or. The most influential American thriller of the 70s.",
-          "critics": [{ "who": "Cannes 1974", "quote": "Palme d'Or." }]
+          "critics": [
+            {
+              "who": "Cannes 1974",
+              "quote": "Palme d'Or."
+            }
+          ]
         },
         {
-          "title": "Munich", "year": 2005, "dir": "Steven Spielberg", "country": "USA", "runtime": "164 min",
-          "priority": "high", "tags": ["modern","intl"],
+          "title": "Munich",
+          "year": 2005,
+          "dir": "Steven Spielberg",
+          "country": "USA",
+          "runtime": "164 min",
+          "priority": "high",
+          "tags": [
+            "modern",
+            "intl"
+          ],
           "whyPriority": "Spielberg's most morally complex film. Israeli operatives hunt the Black September members responsible for 1972. Eric Bana has never been better. Slow, weighted, philosophically serious.",
           "pitch": "After the 1972 Olympics massacre, Mossad assembles a team to assassinate the planners. The film is about what that does to them.",
           "critics": [
-            { "who": "Critical reception", "quote": "Multiple Oscar nominations. Roger Ebert: four stars. 'A film that requires more attention than most movies.'" }
+            {
+              "who": "Critical reception",
+              "quote": "Multiple Oscar nominations. Roger Ebert: four stars. 'A film that requires more attention than most movies.'"
+            }
           ]
         }
+      ],
+      "categories": [
+        "cold-war",
+        "paranoia-thriller"
       ]
     },
     {
@@ -69,80 +148,319 @@
       "desc": "Strong probable fits with one or more variables.",
       "items": [
         {
-          "title": "JFK", "year": 1991, "dir": "Oliver Stone", "country": "USA", "runtime": "189 min",
-          "priority": "med", "tags": ["foundational"],
+          "title": "JFK",
+          "year": 1991,
+          "dir": "Oliver Stone",
+          "country": "USA",
+          "runtime": "189 min",
+          "priority": "med",
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "Three hours, dense as a research paper. Oliver Stone's mosaic of the Garrison investigation. Whether you accept the conspiracy thesis or not, the formal craftsmanship is staggering.",
           "pitch": "New Orleans DA Jim Garrison investigates the JFK assassination. Costner anchors a vast ensemble. Stone treats history as a kaleidoscope.",
-          "critics": [{ "who": "Roger Ebert · Great Movies", "quote": "Wrote a Great Movies essay. 'A masterpiece of insinuation and hypothesis.'" }]
+          "critics": [
+            {
+              "who": "Roger Ebert \u00b7 Great Movies",
+              "quote": "Wrote a Great Movies essay. 'A masterpiece of insinuation and hypothesis.'"
+            }
+          ]
         },
         {
-          "title": "The Lives of Others", "year": 2006, "dir": "Florian Henckel von Donnersmarck", "country": "Germany", "runtime": "137 min",
-          "priority": "med", "tags": ["modern","intl"],
+          "title": "The Lives of Others",
+          "year": 2006,
+          "dir": "Florian Henckel von Donnersmarck",
+          "country": "Germany",
+          "runtime": "137 min",
+          "priority": "med",
+          "tags": [
+            "modern",
+            "intl"
+          ],
           "whyPriority": "East German Stasi officer surveils a writer and his lover. Won Best Foreign Language Film. Quiet, devastating character work.",
-          "pitch": "1984 East Berlin. A Stasi officer monitors a playwright and discovers his own conscience. Ulrich Mühe's final great performance before his death.",
-          "critics": [{ "who": "Academy Awards 2007", "quote": "Won Best Foreign Language Film." }]
+          "pitch": "1984 East Berlin. A Stasi officer monitors a playwright and discovers his own conscience. Ulrich M\u00fche's final great performance before his death.",
+          "critics": [
+            {
+              "who": "Academy Awards 2007",
+              "quote": "Won Best Foreign Language Film."
+            }
+          ]
         },
         {
-          "title": "The Bourne Identity", "year": 2002, "dir": "Doug Liman", "country": "USA", "runtime": "119 min",
-          "priority": "med", "tags": ["modern"],
+          "title": "The Bourne Identity",
+          "year": 2002,
+          "dir": "Doug Liman",
+          "country": "USA",
+          "runtime": "119 min",
+          "priority": "med",
+          "tags": [
+            "modern"
+          ],
           "pitch": "An amnesiac is found floating in the Mediterranean with two bullets in his back. Defined modern espionage cinema and triggered the post-Cold-War spy renaissance.",
-          "critics": [{ "who": "Reception", "quote": "Reinvented the spy genre. The hand-held cinematography became the template for a decade." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Reinvented the spy genre. The hand-held cinematography became the template for a decade."
+            }
+          ]
         },
         {
-          "title": "Bridge of Spies", "year": 2015, "dir": "Steven Spielberg", "country": "USA", "runtime": "142 min",
-          "priority": "med", "tags": ["modern"],
+          "title": "Bridge of Spies",
+          "year": 2015,
+          "dir": "Steven Spielberg",
+          "country": "USA",
+          "runtime": "142 min",
+          "priority": "med",
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "Spielberg + Coen brothers screenplay. Tom Hanks as a lawyer negotiating a Cold War prisoner exchange. Patient, dialogue-driven, unfashionable in the best way.",
           "pitch": "James Donovan is asked to defend a Soviet spy, then to negotiate his exchange for a captured American pilot. Mark Rylance won the Oscar.",
-          "critics": [{ "who": "Critical consensus", "quote": "Six Oscar nominations including Best Picture. Rylance won Best Supporting Actor." }]
+          "critics": [
+            {
+              "who": "Critical consensus",
+              "quote": "Six Oscar nominations including Best Picture. Rylance won Best Supporting Actor."
+            }
+          ]
         },
         {
-          "title": "Zero Dark Thirty", "year": 2012, "dir": "Kathryn Bigelow", "country": "USA", "runtime": "157 min",
-          "priority": "med", "tags": ["modern"],
+          "title": "Zero Dark Thirty",
+          "year": 2012,
+          "dir": "Kathryn Bigelow",
+          "country": "USA",
+          "runtime": "157 min",
+          "priority": "med",
+          "tags": [
+            "modern"
+          ],
           "pitch": "The hunt for Osama bin Laden through the eyes of a CIA analyst. Procedural, unsentimental, ethically rigorous in ways the audience may resist.",
-          "critics": [{ "who": "Critical reception", "quote": "Five Oscar nominations including Best Picture. Manohla Dargis: 'a near-masterpiece of investigative procedure.'" }]
+          "critics": [
+            {
+              "who": "Critical reception",
+              "quote": "Five Oscar nominations including Best Picture. Manohla Dargis: 'a near-masterpiece of investigative procedure.'"
+            }
+          ]
         }
+      ],
+      "categories": [
+        "modern"
       ]
     },
     {
       "name": "III. Standard",
       "desc": "Important entries with moderate confidence in fit.",
       "items": [
-        { "title": "The Manchurian Candidate", "year": 1962, "dir": "John Frankenheimer", "country": "USA", "runtime": "126 min", "tags": ["foundational"],
+        {
+          "title": "The Manchurian Candidate",
+          "year": 1962,
+          "dir": "John Frankenheimer",
+          "country": "USA",
+          "runtime": "126 min",
+          "tags": [
+            "foundational"
+          ],
           "pitch": "Korean War vet returns home brainwashed. Foundational political thriller. The 2004 remake is also strong but the original is the masterpiece.",
-          "critics": [{ "who": "Reception", "quote": "Withdrawn after JFK assassination; restored in 1988. Now considered one of the greatest American political films." }] },
-        { "title": "Marathon Man", "year": 1976, "dir": "John Schlesinger", "country": "USA", "runtime": "125 min", "tags": ["foundational"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Withdrawn after JFK assassination; restored in 1988. Now considered one of the greatest American political films."
+            }
+          ]
+        },
+        {
+          "title": "Marathon Man",
+          "year": 1976,
+          "dir": "John Schlesinger",
+          "country": "USA",
+          "runtime": "125 min",
+          "tags": [
+            "foundational"
+          ],
           "pitch": "Hoffman and Olivier. Nazi war criminal hiding in NYC, graduate student stumbles into the conspiracy. 'Is it safe?'",
-          "critics": [{ "who": "Reception", "quote": "Olivier Oscar nomination." }] },
-        { "title": "The Ipcress File", "year": 1965, "dir": "Sidney J. Furie", "country": "UK", "runtime": "109 min", "tags": ["foundational"],
-          "pitch": "Michael Caine's anti-Bond. Working-class British spy in horn-rimmed glasses. The book Le Carré read.",
-          "critics": [{ "who": "Reception", "quote": "Established Caine's career. Influenced every realistic spy film that followed." }] },
-        { "title": "The Good Shepherd", "year": 2006, "dir": "Robert De Niro", "country": "USA", "runtime": "167 min", "tags": ["modern"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Olivier Oscar nomination."
+            }
+          ]
+        },
+        {
+          "title": "The Ipcress File",
+          "year": 1965,
+          "dir": "Sidney J. Furie",
+          "country": "UK",
+          "runtime": "109 min",
+          "tags": [
+            "foundational"
+          ],
+          "pitch": "Michael Caine's anti-Bond. Working-class British spy in horn-rimmed glasses. The book Le Carr\u00e9 read.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Established Caine's career. Influenced every realistic spy film that followed."
+            }
+          ]
+        },
+        {
+          "title": "The Good Shepherd",
+          "year": 2006,
+          "dir": "Robert De Niro",
+          "country": "USA",
+          "runtime": "167 min",
+          "tags": [
+            "modern"
+          ],
           "pitch": "De Niro's directorial passion project. The birth of the CIA from Yale Skull and Bones. Damon as a man who loses everything to his work.",
-          "critics": [{ "who": "Reception", "quote": "Mixed-positive. Some found it cold; others praised the unsparing institutional view." }] },
-        { "title": "The Hunt for Red October", "year": 1990, "dir": "John McTiernan", "country": "USA", "runtime": "135 min", "tags": ["modern"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Mixed-positive. Some found it cold; others praised the unsparing institutional view."
+            }
+          ]
+        },
+        {
+          "title": "The Hunt for Red October",
+          "year": 1990,
+          "dir": "John McTiernan",
+          "country": "USA",
+          "runtime": "135 min",
+          "tags": [
+            "modern"
+          ],
           "pitch": "Connery as a Soviet sub captain trying to defect. Procedural, technical, smart. The first Tom Clancy adaptation and still the best.",
-          "critics": [{ "who": "Reception", "quote": "Won Best Sound Editing Oscar. Defined the Clancy adaptation template." }] },
-        { "title": "The Insider", "year": 1999, "dir": "Michael Mann", "country": "USA", "runtime": "157 min", "tags": ["modern","adjacent"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Won Best Sound Editing Oscar. Defined the Clancy adaptation template."
+            }
+          ]
+        },
+        {
+          "title": "The Insider",
+          "year": 1999,
+          "dir": "Michael Mann",
+          "country": "USA",
+          "runtime": "157 min",
+          "tags": [
+            "modern",
+            "adjacent"
+          ],
           "pitch": "Tobacco whistleblower vs. corporate power. Sci-fi-adjacent only in its surveillance themes. Pacino + Crowe + Mann.",
-          "critics": [{ "who": "Critical reception", "quote": "Seven Oscar nominations including Best Picture." }] },
-        { "title": "Spy Game", "year": 2001, "dir": "Tony Scott", "country": "USA", "runtime": "126 min", "tags": ["modern"],
+          "critics": [
+            {
+              "who": "Critical reception",
+              "quote": "Seven Oscar nominations including Best Picture."
+            }
+          ]
+        },
+        {
+          "title": "Spy Game",
+          "year": 2001,
+          "dir": "Tony Scott",
+          "country": "USA",
+          "runtime": "126 min",
+          "tags": [
+            "modern"
+          ],
           "pitch": "Redford as a retiring CIA officer trying to extract Pitt's character before policy abandons him. Underrated.",
-          "critics": [{ "who": "Reception", "quote": "Critically mixed at release; reputation has improved." }] },
-        { "title": "Body of Lies", "year": 2008, "dir": "Ridley Scott", "country": "USA", "runtime": "128 min", "tags": ["modern"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Critically mixed at release; reputation has improved."
+            }
+          ]
+        },
+        {
+          "title": "Body of Lies",
+          "year": 2008,
+          "dir": "Ridley Scott",
+          "country": "USA",
+          "runtime": "128 min",
+          "tags": [
+            "modern"
+          ],
           "pitch": "DiCaprio as a CIA operative in Jordan, Crowe as his handler. Smart, modern espionage about post-9/11 intelligence work.",
-          "critics": [{ "who": "Reception", "quote": "Mixed reviews; performances praised." }] },
-        { "title": "Argo", "year": 2012, "dir": "Ben Affleck", "country": "USA", "runtime": "120 min", "tags": ["modern"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Mixed reviews; performances praised."
+            }
+          ]
+        },
+        {
+          "title": "Argo",
+          "year": 2012,
+          "dir": "Ben Affleck",
+          "country": "USA",
+          "runtime": "120 min",
+          "tags": [
+            "modern"
+          ],
           "pitch": "Iran hostage crisis rescue using a fake film production. Won Best Picture. Slick but solid.",
-          "critics": [{ "who": "Academy Awards 2013", "quote": "Won Best Picture, Best Adapted Screenplay, Best Editing." }] },
-        { "title": "Tinker, Tailor, Soldier, Spy (BBC, 1979)", "year": 1979, "dir": "John Irvin", "country": "UK", "runtime": "315 min · 7 episodes", "tags": ["foundational","intl"],
-          "pitch": "Note: this is TV but listed here for comparison with the 2011 film. Alec Guinness as Smiley. The most faithful Le Carré adaptation. ~5 hours total.",
-          "critics": [{ "who": "Reception", "quote": "Considered by many Le Carré devotees as superior to the 2011 film due to length allowing full novel coverage." }] },
-        { "title": "The Quiet American", "year": 2002, "dir": "Phillip Noyce", "country": "USA/UK", "runtime": "101 min", "tags": ["modern","intl"],
+          "critics": [
+            {
+              "who": "Academy Awards 2013",
+              "quote": "Won Best Picture, Best Adapted Screenplay, Best Editing."
+            }
+          ]
+        },
+        {
+          "title": "Tinker, Tailor, Soldier, Spy (BBC, 1979)",
+          "year": 1979,
+          "dir": "John Irvin",
+          "country": "UK",
+          "runtime": "315 min \u00b7 7 episodes",
+          "tags": [
+            "foundational",
+            "intl"
+          ],
+          "pitch": "Note: this is TV but listed here for comparison with the 2011 film. Alec Guinness as Smiley. The most faithful Le Carr\u00e9 adaptation. ~5 hours total.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Considered by many Le Carr\u00e9 devotees as superior to the 2011 film due to length allowing full novel coverage."
+            }
+          ]
+        },
+        {
+          "title": "The Quiet American",
+          "year": 2002,
+          "dir": "Phillip Noyce",
+          "country": "USA/UK",
+          "runtime": "101 min",
+          "tags": [
+            "modern",
+            "intl"
+          ],
           "pitch": "Caine's late-career masterpiece. Graham Greene adaptation set in 1950s Vietnam. CIA, journalism, betrayal.",
-          "critics": [{ "who": "Reception", "quote": "Caine Oscar nomination. Critically beloved, commercially overlooked." }] },
-        { "title": "The Constant Gardener", "year": 2005, "dir": "Fernando Meirelles", "country": "UK", "runtime": "129 min", "tags": ["modern","intl"],
-          "pitch": "Le Carré adaptation. British diplomat in Kenya investigates his wife's murder, uncovers pharma conspiracy. Rachel Weisz won Best Supporting Actress.",
-          "critics": [{ "who": "Academy Awards", "quote": "Weisz won Best Supporting Actress; three other nominations." }] }
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Caine Oscar nomination. Critically beloved, commercially overlooked."
+            }
+          ]
+        },
+        {
+          "title": "The Constant Gardener",
+          "year": 2005,
+          "dir": "Fernando Meirelles",
+          "country": "UK",
+          "runtime": "129 min",
+          "tags": [
+            "modern",
+            "intl"
+          ],
+          "pitch": "Le Carr\u00e9 adaptation. British diplomat in Kenya investigates his wife's murder, uncovers pharma conspiracy. Rachel Weisz won Best Supporting Actress.",
+          "critics": [
+            {
+              "who": "Academy Awards",
+              "quote": "Weisz won Best Supporting Actress; three other nominations."
+            }
+          ]
+        }
+      ],
+      "categories": [
+        "modern"
       ]
     }
   ]

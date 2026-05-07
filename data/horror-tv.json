@@ -25,6 +25,10 @@
             }
           ]
         }
+      ],
+      "categories": [
+        "gothic",
+        "supernatural"
       ]
     },
     {
@@ -49,6 +53,10 @@
             }
           ]
         }
+      ],
+      "categories": [
+        "gothic",
+        "slow-burn"
       ]
     },
     {
@@ -136,6 +144,10 @@
             }
           ]
         }
+      ],
+      "categories": [
+        "flanagan",
+        "slow-burn"
       ]
     },
     {
@@ -235,6 +247,10 @@
             }
           ]
         }
+      ],
+      "categories": [
+        "slow-burn",
+        "supernatural"
       ]
     },
     {
@@ -276,7 +292,10 @@
           ],
           "pitch": "Cross-listed Sci-Fi TV. Tech-paranoia anthology. Episode quality varies wildly.",
           "critics": [],
-          "contentType": "tv-anthology"
+          "contentType": "tv-anthology",
+          "categories": [
+            "anthology"
+          ]
         },
         {
           "title": "Tales from the Loop",
@@ -332,6 +351,9 @@
             }
           ]
         }
+      ],
+      "categories": [
+        "anthology"
       ]
     }
   ]

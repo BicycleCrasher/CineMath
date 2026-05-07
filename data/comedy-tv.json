@@ -115,7 +115,11 @@
               "quote": "Polarizing on release; defenders have grown. Some consider the writing per scene as strong as anything Sorkin has done."
             }
           ],
-          "contentType": "tv-prestige"
+          "contentType": "tv-prestige",
+          "categories": [
+            "ensemble",
+            "dark"
+          ]
         },
         {
           "title": "NewsRadio",
@@ -171,7 +175,10 @@
               "quote": "Most-watched factual show in the world during peak years. Clarkson era ended after the BBC firing in 2015."
             }
           ],
-          "contentType": "tv-doc-reality"
+          "contentType": "tv-doc-reality",
+          "categories": [
+            "ensemble"
+          ]
         },
         {
           "title": "The Grand Tour",
@@ -191,7 +198,10 @@
               "quote": "Critical consensus that it found its footing once it transitioned from studio format to specials."
             }
           ],
-          "contentType": "tv-doc-reality"
+          "contentType": "tv-doc-reality",
+          "categories": [
+            "ensemble"
+          ]
         },
         {
           "title": "Tacoma FD",
@@ -272,6 +282,9 @@
           ],
           "pitch": "Single-camera medical comedy with surrealist fantasy sequences. The emotional swerves were unprecedented for the format at the time."
         }
+      ],
+      "categories": [
+        "ensemble"
       ]
     },
     {
@@ -291,6 +304,9 @@
           ],
           "pitch": "American football coach takes over an English Premier League club. The kindness-as-strategy show became the COVID-era prestige comedy hit."
         }
+      ],
+      "categories": [
+        "ensemble"
       ]
     },
     {
@@ -317,6 +333,9 @@
             }
           ]
         }
+      ],
+      "categories": [
+        "ensemble"
       ]
     },
     {
@@ -444,7 +463,10 @@
               "quote": "Critical darling. Vulture and other outlets have ranked it among the best comedies of the 2010s."
             }
           ],
-          "contentType": "tv-anthology"
+          "contentType": "tv-anthology",
+          "categories": [
+            "ensemble"
+          ]
         },
         {
           "title": "What We Do in the Shadows (TV)",
@@ -466,6 +488,9 @@
             }
           ]
         }
+      ],
+      "categories": [
+        "ensemble"
       ]
     },
     {
@@ -591,6 +616,10 @@
             }
           ]
         }
+      ],
+      "categories": [
+        "ensemble",
+        "dark"
       ]
     },
     {
@@ -672,6 +701,9 @@
             }
           ]
         }
+      ],
+      "categories": [
+        "ensemble"
       ]
     }
   ]
