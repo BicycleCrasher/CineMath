@@ -10,6 +10,60 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.3.0 — 2026-05-07
+**Service worker cache:** `scifi-tracker-v14` → `v15`
+
+### Added — Stage 4a: Metadata + history foundation
+This release lays the groundwork for bulk Plex history sync and TMDB enrichment. Stage 4b (UI for bulk sync) and 4c (streaming-provider badges) follow in subsequent releases.
+
+#### Worker upgrades (v2)
+- New endpoint: `GET /metadata/lookup?title=X&year=Y&type=movie|tv` — TMDB lookup with 30-day KV cache. Returns title, overview, runtime, episode counts, watch providers per region, top 5 cast, poster path, vote average.
+- New endpoint: `POST /viewed/ingest` — bulk-import historical Plex viewing data (used once for backfill from `/status/sessions/history/all`).
+- New endpoint: `GET /viewed/list?secret=X&cursor=...` — paginated list of every Plex view (durable, no TTL). Will power the future Plex History modal.
+- Webhook handler now writes to `WATCHTRACK_VIEWED` (durable history) in addition to `WATCHTRACK_EVENTS` (TTL'd queue).
+- Library whitelist hardcoded to sections 1+2 (movies + TV); other libraries silently dropped at ingest.
+
+#### New KV namespaces
+- `WATCHTRACK_VIEWED` — every Plex view, durable, no TTL
+- `WATCHTRACK_METADATA` — TMDB enrichment cache, 30-day TTL
+- `WATCHTRACK_CONFIG` extended with `tmdb_token` key
+
+#### Catalog additions (5)
+- **House MD** → Drama TV (`tvCompletionMode: 'flexible'`)
+- **The Blacklist** → Crime TV (`tvCompletionMode: 'flexible'`)
+- **Matlock (2024)** → Crime TV (`tvCompletionMode: 'episodic'`)
+- **Boston Legal** → Cons & Courtroom TV (`tvCompletionMode: 'flexible'`)
+- **Will & Grace** → Comedy TV (`tvCompletionMode: 'flexible'`)
+- **QI XL alias** added to QI for matching purposes
+
+#### Schema additions
+- Catalog items now support `aliases` array — alternate titles to match against (e.g., QI matches "QI XL")
+- Catalog items now support `tvCompletionMode` field with values `'strict'` (95% threshold), `'flexible'` (80% threshold), `'episodic'` (never auto-mark series watched)
+
+#### Matcher improvements
+- `plexNormalizeKey()` now strips parenthetical disambiguators, replaces `&` with "and", strips apostrophes (curly + straight + backtick), then collapses non-alphanumeric
+- New `plexNormalizeKeyTitleOnly()` — TV shows match by series title only since Plex history doesn't carry series first-aired year on episode events
+- Year-fuzz tolerance (±1) for movies — handles cases where TMDB / catalog / Plex disagree by one year on release date
+- Aliases checked when matching both Plex library items and webhook events
+
+#### Documentation
+- `worker/DEPLOY.md` updated to v2 with all four KV namespaces + TMDB token setup
+- `docs/DRYRUN-BENCHMARK.md` — preserved analysis of Plex history file as baseline for measuring future matcher improvements
+
+### Pending for Stage 4b
+- WatchTrack "Sync from Plex history" button in Settings → Plex Integration
+- Plex History endpoint client (fetches `/status/sessions/history/all` from Plex server)
+- Bulk apply logic with rules: movies → watched; TV ≥5 distinct episodes → loved; TV ≥95%/80% (per `tvCompletionMode`) → watched; otherwise watching
+- Results modal showing matched/orphan/applied counts
+
+### Pending for Stage 4c
+- Streaming-provider badges on items ("Available on: Netflix, Hulu") via cached `/metadata/lookup` calls
+- Search-on-service buttons that open Netflix/Hulu/Max/etc. with the title pre-typed
+- Plex History modal — read-only view of all viewing including catalog orphans
+- Catalog-promotion workflow for orphans
+
+---
+
 ## 5.2.1 — 2026-05-07
 **Service worker cache:** `scifi-tracker-v13` → `v14`
 

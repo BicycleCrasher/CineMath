@@ -314,7 +314,27 @@ function isPlexConfigured() {
 let plexLibrary = new Map();
 let plexLibraryLoadedAt = 0;
 function plexNormalizeKey(title, year) {
-  return (title || '').toLowerCase().replace(/[^a-z0-9]+/g, '').slice(0, 60) + '|' + (year || '');
+  if (!title) return '';
+  let t = title.toLowerCase();
+  // Strip parenthetical disambiguators like "(BBC, 1979)" or "(2024)"
+  t = t.replace(/\s*\([^)]*\)\s*/g, ' ');
+  // Replace & with "and"
+  t = t.replace(/&/g, ' and ');
+  // Strip apostrophes (curly + straight + backtick)
+  t = t.replace(/[\u2019\u2018'`]/g, '');
+  // Collapse all non-alphanumeric to nothing
+  t = t.replace(/[^a-z0-9]+/g, '');
+  return t.slice(0, 60) + '|' + (year || '');
+}
+// TV shows: match by title only, no year — Plex history has no series year
+function plexNormalizeKeyTitleOnly(title) {
+  if (!title) return '';
+  let t = title.toLowerCase();
+  t = t.replace(/\s*\([^)]*\)\s*/g, ' ');
+  t = t.replace(/&/g, ' and ');
+  t = t.replace(/[\u2019\u2018'`]/g, '');
+  t = t.replace(/[^a-z0-9]+/g, '');
+  return t.slice(0, 60);
 }
 async function fetchPlexLibrary() {
   if (!isPlexConfigured()) return;
@@ -358,8 +378,21 @@ async function fetchPlexLibrary() {
   }
 }
 function plexHasItem(item) {
+  // Check primary title first
   const key = plexNormalizeKey(item.title, item.year);
-  return plexLibrary.get(key);
+  if (plexLibrary.get(key)) return plexLibrary.get(key);
+  // Check aliases (catalog items can list alternate titles like "QI XL" for "QI")
+  if (Array.isArray(item.aliases)) {
+    for (const alias of item.aliases) {
+      const aliasKey = plexNormalizeKey(alias, item.year);
+      if (plexLibrary.get(aliasKey)) return plexLibrary.get(aliasKey);
+      // Also check title-only (TV shows often have no year in Plex)
+      for (const [libKey, libItem] of plexLibrary.entries()) {
+        if (libKey.startsWith(plexNormalizeKeyTitleOnly(alias) + '|')) return libItem;
+      }
+    }
+  }
+  return null;
 }
 function plexDeepLinkUrl(ratingKey) {
   // plex:// URL scheme launches the Plex Android TV app (or Plex desktop) with a specific item
@@ -445,29 +478,40 @@ async function pollPlexWebhookEvents() {
 // since one episode doesn't equal a whole series).
 function applyPlexEvent(evt) {
   if (evt.event !== 'media.scrobble') return false;
-  let matchTitle, matchYear;
-  if (evt.type === 'movie') {
-    matchTitle = evt.title;
-    matchYear = evt.year;
-  } else if (evt.type === 'episode' || evt.type === 'show') {
-    // For episodes, match the parent show
-    matchTitle = evt.grandparentTitle || evt.title;
-    matchYear = evt.year || null;
-  } else {
-    return false;
-  }
+  if (evt.type !== 'movie' && evt.type !== 'episode' && evt.type !== 'show') return false;
+
+  // For movies, match title+year exactly. For TV, match title only since Plex
+  // history doesn't carry the series first-aired year on episode events.
+  const isMovie = evt.type === 'movie';
+  const matchTitle = isMovie ? evt.title : (evt.grandparentTitle || evt.title);
+  const matchYear = isMovie ? evt.year : null;
   if (!matchTitle) return false;
-  const key = plexNormalizeKey(matchTitle, matchYear);
-  // Search every loaded catalog for a matching item
+
+  const movieKey = isMovie ? plexNormalizeKey(matchTitle, matchYear) : null;
+  const tvKey = isMovie ? null : plexNormalizeKeyTitleOnly(matchTitle);
+
+  // Search every loaded catalog for a matching item (primary title or alias)
   for (const tabId in catalogs) {
     const cat = catalogs[tabId];
     for (const item of cat.items) {
-      if (plexNormalizeKey(item.title, item.year) === key) {
-        if (evt.type === 'movie') {
+      const titlesToCheck = [item.title].concat(Array.isArray(item.aliases) ? item.aliases : []);
+      let matched = false;
+      for (const t of titlesToCheck) {
+        if (isMovie) {
+          if (plexNormalizeKey(t, item.year) === movieKey) { matched = true; break; }
+          // year-fuzz tolerance
+          for (const dy of [-1, 1]) {
+            if (plexNormalizeKey(t, item.year ? item.year + dy : null) === movieKey) { matched = true; break; }
+          }
+          if (matched) break;
+        } else {
+          if (plexNormalizeKeyTitleOnly(t) === tvKey) { matched = true; break; }
+        }
+      }
+      if (matched) {
+        if (isMovie) {
           setStatus(item.id, 'watched', tabId);
         } else {
-          // For episode events, mark the series as "watching" (don't auto-mark "watched"
-          // because one episode doesn't mean the whole show is done)
           const cur = getStatus(item.id, tabId);
           if (cur !== 'watched') setStatus(item.id, 'watching', tabId);
         }

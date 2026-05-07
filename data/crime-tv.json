@@ -310,6 +310,42 @@
           "categories": [
             "british-cozy"
           ]
+        },
+        {
+          "title": "The Blacklist",
+          "year": 2013,
+          "pitch": "Reformed-criminal-turned-FBI-asset Raymond Reddington gives the bureau a list of the world's worst criminals \u2014 for his own reasons. James Spader carries the entire show on charisma alone.",
+          "priority": "med",
+          "whyPriority": "You have watched this extensively (66+ episodes per Plex history). Cataloged here for tracking and rating purposes.",
+          "commitment": "10 seasons",
+          "commitmentTag": "long",
+          "critics": [
+            {
+              "who": "Rotten Tomatoes",
+              "rating": "70%+",
+              "note": "Spader-as-Reddington is a generational performance buoying an uneven show."
+            }
+          ],
+          "contentType": "tv-prestige",
+          "tvCompletionMode": "flexible"
+        },
+        {
+          "title": "Matlock",
+          "year": 2024,
+          "pitch": "Kathy Bates as a brilliant attorney returning to the workforce \u2014 but the gentle-procedural premise hides a longer-game revenge plot. Smarter than the Andy Griffith original suggests.",
+          "priority": "low",
+          "whyPriority": "You have watched a few episodes per Plex history. Cataloged for tracking.",
+          "commitment": "Ongoing",
+          "commitmentTag": "long",
+          "critics": [
+            {
+              "who": "NYT",
+              "rating": "Solid",
+              "note": "Kathy Bates anchors what could have been disposable."
+            }
+          ],
+          "contentType": "tv-prestige",
+          "tvCompletionMode": "episodic"
         }
       ],
       "categories": [

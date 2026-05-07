@@ -394,6 +394,24 @@
           "seasons": "",
           "pitch": "Note: The UK 'The Bridge' / 'The Bridge of Spies' / etc. and other titles confuse easily. The US 'Bull' (2016, with Michael Weatherly) is generally not recommended despite long run; quality issues + behind-scenes problems.",
           "critics": []
+        },
+        {
+          "title": "Boston Legal",
+          "year": 2004,
+          "pitch": "David E. Kelley's law firm dramedy that earned its reputation on Shatner's Denny Crane and James Spader's Alan Shore. Closing arguments became operatic monologues.",
+          "priority": "med",
+          "whyPriority": "You have watched 10+ episodes per Plex history. Cataloged for tracking.",
+          "commitment": "5 seasons",
+          "commitmentTag": "long",
+          "critics": [
+            {
+              "who": "NYT",
+              "rating": "Beloved",
+              "note": "Idiosyncratic legal drama where the closing speech mattered more than the verdict."
+            }
+          ],
+          "contentType": "tv-prestige",
+          "tvCompletionMode": "flexible"
         }
       ],
       "categories": [

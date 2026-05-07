@@ -6,224 +6,715 @@
     {
       "name": "I. Already Loved",
       "desc": "Your established British comedy pillars. Listed for tracking and rewatch.",
-      "categories": ["panel", "sitcom", "game", "specials"],
+      "categories": [
+        "panel",
+        "sitcom",
+        "game",
+        "specials"
+      ],
       "items": [
-        { "title": "QI", "year": 2003, "dir": "John Lloyd", "country": "UK", "runtime": "Ongoing · 20+ series", "seasons": "Stephen Fry hosted A-M (2003-15); Sandi Toksvig from N (2016-)",
-          "categories": ["panel"],
+        {
+          "title": "QI",
+          "year": 2003,
+          "dir": "John Lloyd",
+          "country": "UK",
+          "runtime": "Ongoing \u00b7 20+ series",
+          "seasons": "Stephen Fry hosted A-M (2003-15); Sandi Toksvig from N (2016-)",
+          "categories": [
+            "panel"
+          ],
           "pitch": "British panel show about quite interesting things. The standard against which all panel shows are measured. You've watched every episode.",
-          "critics": [{ "who": "Reception", "quote": "BBC's most-acclaimed panel format. Continues to win awards across hosts." }] },
-        { "title": "8 Out of 10 Cats Does Countdown", "year": 2012, "dir": "Jimmy Carr / Channel 4", "country": "UK", "runtime": "Ongoing · 25+ series", "seasons": "Carr hosts; Sean Lock and Jon Richardson team captains (Lock until 2021)",
-          "categories": ["panel", "game"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "BBC's most-acclaimed panel format. Continues to win awards across hosts."
+            }
+          ],
+          "aliases": [
+            "QI XL"
+          ]
+        },
+        {
+          "title": "8 Out of 10 Cats Does Countdown",
+          "year": 2012,
+          "dir": "Jimmy Carr / Channel 4",
+          "country": "UK",
+          "runtime": "Ongoing \u00b7 25+ series",
+          "seasons": "Carr hosts; Sean Lock and Jon Richardson team captains (Lock until 2021)",
+          "categories": [
+            "panel",
+            "game"
+          ],
           "pitch": "Hybrid of 8 Out of 10 Cats and Countdown. Susie Dent in Dictionary Corner. Specials with an extended cast (David Mitchell, Bob Mortimer, Joe Wilkinson) are reliably the best episodes.",
-          "critics": [{ "who": "Reception", "quote": "Considered Channel 4's flagship comedy panel show of the 2010s-2020s." }] },
-        { "title": "Would I Lie to You?", "year": 2007, "dir": "Various", "country": "UK", "runtime": "Ongoing · 18+ series",
-          "categories": ["panel"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Considered Channel 4's flagship comedy panel show of the 2010s-2020s."
+            }
+          ]
+        },
+        {
+          "title": "Would I Lie to You?",
+          "year": 2007,
+          "dir": "Various",
+          "country": "UK",
+          "runtime": "Ongoing \u00b7 18+ series",
+          "categories": [
+            "panel"
+          ],
           "pitch": "Rob Brydon hosts. David Mitchell and Lee Mack are team captains. Players try to deceive each other about whether stories from their lives are true.",
-          "critics": [{ "who": "Reception", "quote": "BAFTA-winning. Considered alongside QI and Taskmaster as the British panel-show triumvirate." }] },
-        { "title": "Taskmaster", "year": 2015, "dir": "Alex Horne", "country": "UK", "runtime": "Ongoing · 18+ series", "seasons": "Greg Davies hosts; Alex Horne is his assistant. Each series 5 contestants × 10 episodes. New Year's Treat specials are highly regarded.",
-          "categories": ["panel", "game"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "BAFTA-winning. Considered alongside QI and Taskmaster as the British panel-show triumvirate."
+            }
+          ]
+        },
+        {
+          "title": "Taskmaster",
+          "year": 2015,
+          "dir": "Alex Horne",
+          "country": "UK",
+          "runtime": "Ongoing \u00b7 18+ series",
+          "seasons": "Greg Davies hosts; Alex Horne is his assistant. Each series 5 contestants \u00d7 10 episodes. New Year's Treat specials are highly regarded.",
+          "categories": [
+            "panel",
+            "game"
+          ],
           "pitch": "Five comedians complete absurd tasks set by Alex Horne. Greg Davies judges them. The pre-recorded task films are the reason the show works.",
-          "critics": [{ "who": "Reception", "quote": "Won BAFTA for Best Comedy Entertainment Programme. Format licensed to ~12 countries." }] },
-        { "title": "Vicious", "year": 2013, "dir": "Mark Ravenhill & Gary Janetti", "country": "UK", "runtime": "2 series + 2016 finale special · 14 episodes total",
-          "categories": ["sitcom"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Won BAFTA for Best Comedy Entertainment Programme. Format licensed to ~12 countries."
+            }
+          ]
+        },
+        {
+          "title": "Vicious",
+          "year": 2013,
+          "dir": "Mark Ravenhill & Gary Janetti",
+          "country": "UK",
+          "runtime": "2 series + 2016 finale special \u00b7 14 episodes total",
+          "categories": [
+            "sitcom"
+          ],
           "pitch": "Ian McKellen and Derek Jacobi as an aging gay couple in London who have lived together for nearly 50 years and bicker constantly. Theatrical leads carrying a traditional sitcom format.",
-          "critics": [{ "who": "Reception", "quote": "Critical reception was mixed (some called it old-fashioned). Audience devotion strong." }] },
-        { "title": "Pointless", "year": 2009, "dir": "Endemol UK", "country": "UK", "runtime": "Ongoing · 30+ series",
-          "categories": ["game"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Critical reception was mixed (some called it old-fashioned). Audience devotion strong."
+            }
+          ]
+        },
+        {
+          "title": "Pointless",
+          "year": 2009,
+          "dir": "Endemol UK",
+          "country": "UK",
+          "runtime": "Ongoing \u00b7 30+ series",
+          "categories": [
+            "game"
+          ],
           "pitch": "Alexander Armstrong hosts. Richard Osman was his sidekick (left 2022; replaced by rotating co-hosts). Contestants try to find the LEAST popular correct answers. The Armstrong/Osman chemistry was the engine.",
-          "critics": [{ "who": "Reception", "quote": "BAFTA-winning. Long the highest-rated daytime quiz show in the UK." }] },
-        { "title": "Only Connect", "year": 2008, "dir": "Various / RDF Television", "country": "UK", "runtime": "Ongoing · 20+ series",
-          "categories": ["game"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "BAFTA-winning. Long the highest-rated daytime quiz show in the UK."
+            }
+          ]
+        },
+        {
+          "title": "Only Connect",
+          "year": 2008,
+          "dir": "Various / RDF Television",
+          "country": "UK",
+          "runtime": "Ongoing \u00b7 20+ series",
+          "categories": [
+            "game"
+          ],
           "pitch": "Victoria Coren Mitchell hosts. Teams of three find connections between obscure things. Considered the most cerebrally demanding quiz on UK television.",
-          "critics": [{ "who": "Reception", "quote": "Cult-to-mainstream trajectory across its run. Considered the brain-quiz benchmark." }] },
-        { "title": "University Challenge", "year": 1962, "dir": "ITV/Granada/BBC", "country": "UK", "runtime": "Ongoing · 50+ series", "seasons": "Bamber Gascoigne 1962-87; Jeremy Paxman 1994-2023; Amol Rajan 2023-",
-          "categories": ["game"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Cult-to-mainstream trajectory across its run. Considered the brain-quiz benchmark."
+            }
+          ]
+        },
+        {
+          "title": "University Challenge",
+          "year": 1962,
+          "dir": "ITV/Granada/BBC",
+          "country": "UK",
+          "runtime": "Ongoing \u00b7 50+ series",
+          "seasons": "Bamber Gascoigne 1962-87; Jeremy Paxman 1994-2023; Amol Rajan 2023-",
+          "categories": [
+            "game"
+          ],
           "pitch": "Universities compete in cerebral quiz. The longest-running British quiz on television.",
-          "critics": [{ "who": "Reception", "quote": "Cultural institution. Paxman era considered peak by many; Rajan era still establishing itself." }] },
-        { "title": "Big Fat Quiz of the Year", "year": 2004, "dir": "Channel 4", "country": "UK", "runtime": "Annual special · 1 hour each", "seasons": "Annual since 2004; spin-offs include Big Fat Quiz of the Decade, Big Fat Anniversary Quiz",
-          "categories": ["panel", "specials"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Cultural institution. Paxman era considered peak by many; Rajan era still establishing itself."
+            }
+          ]
+        },
+        {
+          "title": "Big Fat Quiz of the Year",
+          "year": 2004,
+          "dir": "Channel 4",
+          "country": "UK",
+          "runtime": "Annual special \u00b7 1 hour each",
+          "seasons": "Annual since 2004; spin-offs include Big Fat Quiz of the Decade, Big Fat Anniversary Quiz",
+          "categories": [
+            "panel",
+            "specials"
+          ],
           "pitch": "Jimmy Carr hosts. Three teams of two comedians answer questions about the year just past. The David Mitchell + Jonathan Ross + Russell Brand episodes are widely considered the format's peak.",
-          "critics": [{ "who": "Reception", "quote": "Cult New Year's-week tradition. The 2008-2014 stretch is the era most cited as classic." }] },
-        { "title": "8 Out of 10 Cats", "year": 2005, "dir": "Jimmy Carr / Channel 4", "country": "UK", "runtime": "21 series", "seasons": "Original ran to 2018. Carr hosts.",
-          "categories": ["panel", "news-comedy"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Cult New Year's-week tradition. The 2008-2014 stretch is the era most cited as classic."
+            }
+          ]
+        },
+        {
+          "title": "8 Out of 10 Cats",
+          "year": 2005,
+          "dir": "Jimmy Carr / Channel 4",
+          "country": "UK",
+          "runtime": "21 series",
+          "seasons": "Original ran to 2018. Carr hosts.",
+          "categories": [
+            "panel",
+            "news-comedy"
+          ],
           "pitch": "Topical news-driven panel format. Without the Countdown structural anchor it didn't land for you. Listed for completeness.",
-          "critics": [{ "who": "Reception", "quote": "Spawned the more-loved Cats Does Countdown spinoff in 2012." }] }
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Spawned the more-loved Cats Does Countdown spinoff in 2012."
+            }
+          ]
+        }
       ]
     },
     {
-      "name": "II. High Priority — Panel Shows",
+      "name": "II. High Priority \u2014 Panel Shows",
       "desc": "Direct fits given your panel-show love. Comedian-led, multi-host chemistry.",
-      "categories": ["panel"],
+      "categories": [
+        "panel"
+      ],
       "items": [
-        { "title": "Have I Got News for You", "year": 1990, "dir": "BBC", "country": "UK", "runtime": "Ongoing · 65+ series",
-          "categories": ["panel", "news-comedy"],
+        {
+          "title": "Have I Got News for You",
+          "year": 1990,
+          "dir": "BBC",
+          "country": "UK",
+          "runtime": "Ongoing \u00b7 65+ series",
+          "categories": [
+            "panel",
+            "news-comedy"
+          ],
           "priority": "high",
           "whyPriority": "Longest-running British panel show. Ian Hislop and Paul Merton anchor as team captains since 1990. Rotating guest hosts. The structural anchor is news-of-the-week, but Merton's free-association is what carries it.",
           "pitch": "Two teams of two compete on news of the week. Hislop is sharp and prepared; Merton goes off on tangents. Hosts rotate.",
-          "critics": [{ "who": "Reception", "quote": "BAFTA-winning multiple times. Considered the British satirical-news panel template." }] },
-        { "title": "Mock the Week", "year": 2005, "dir": "Dan Patterson", "country": "UK", "runtime": "21 series · 226 episodes", "seasons": "All ended 2022. Dara Ó Briain hosted entire run.",
-          "categories": ["panel", "news-comedy"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "BAFTA-winning multiple times. Considered the British satirical-news panel template."
+            }
+          ]
+        },
+        {
+          "title": "Mock the Week",
+          "year": 2005,
+          "dir": "Dan Patterson",
+          "country": "UK",
+          "runtime": "21 series \u00b7 226 episodes",
+          "seasons": "All ended 2022. Dara \u00d3 Briain hosted entire run.",
+          "categories": [
+            "panel",
+            "news-comedy"
+          ],
           "priority": "high",
           "whyPriority": "Faster, comedian-heavier than HIGNFY. Hugh Dennis and Andy Parsons were regulars; rotating guests. The Scenes We'd Like to See round is the format hook.",
           "pitch": "Six comedians joke about the week's news. Set-pieces include topical questions and improv-style scenes.",
-          "critics": [{ "who": "Reception", "quote": "Cancelled after BBC budget review. Considered the comedian-developer show — Romesh Ranganathan, Ed Gamble, James Acaster all came through." }] },
-        { "title": "Mock the Week-style alternative: The Mash Report", "year": 2017, "dir": "BBC / Dave", "country": "UK", "runtime": "5 series",
-          "categories": ["panel", "news-comedy"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Cancelled after BBC budget review. Considered the comedian-developer show \u2014 Romesh Ranganathan, Ed Gamble, James Acaster all came through."
+            }
+          ]
+        },
+        {
+          "title": "Mock the Week-style alternative: The Mash Report",
+          "year": 2017,
+          "dir": "BBC / Dave",
+          "country": "UK",
+          "runtime": "5 series",
+          "categories": [
+            "panel",
+            "news-comedy"
+          ],
           "priority": "med",
           "pitch": "Nish Kumar hosts. Daily-Show-flavored news satire with British sensibility. Cancelled by BBC, revived by Dave as Late Night Mash.",
-          "critics": [{ "who": "Reception", "quote": "Politically pointed; cancellation was controversial." }] },
-        { "title": "Cats Does Countdown — Specials", "year": 2012, "dir": "Channel 4", "country": "UK", "runtime": "Annual specials interspersed",
-          "categories": ["panel", "specials"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Politically pointed; cancellation was controversial."
+            }
+          ]
+        },
+        {
+          "title": "Cats Does Countdown \u2014 Specials",
+          "year": 2012,
+          "dir": "Channel 4",
+          "country": "UK",
+          "runtime": "Annual specials interspersed",
+          "categories": [
+            "panel",
+            "specials"
+          ],
           "priority": "high",
           "whyPriority": "Christmas Specials and the recurring David Mitchell + Joe Wilkinson + Bob Mortimer guest configurations are widely considered the show's peak.",
           "pitch": "If you like the main series, the Christmas Specials and the recurring Mitchell/Wilkinson combinations are the canonical episodes.",
-          "critics": [] },
-        { "title": "Taskmaster — New Year's Treat", "year": 2018, "dir": "Channel 4", "country": "UK", "runtime": "Annual specials",
-          "categories": ["game", "specials"],
+          "critics": []
+        },
+        {
+          "title": "Taskmaster \u2014 New Year's Treat",
+          "year": 2018,
+          "dir": "Channel 4",
+          "country": "UK",
+          "runtime": "Annual specials",
+          "categories": [
+            "game",
+            "specials"
+          ],
           "priority": "high",
           "whyPriority": "Annual New Year's Treat specials feature different lineups (often celebrities outside comedy). Widely regarded as the strongest specials in any UK panel-show franchise.",
           "pitch": "Annual variants where five new contestants do tasks. Self-contained.",
-          "critics": [] }
+          "critics": []
+        }
       ]
     },
     {
-      "name": "III. High Priority — Sitcoms",
+      "name": "III. High Priority \u2014 Sitcoms",
       "desc": "Theatrical/character-led, smart-witted, traditional sitcom craft. Explicitly avoids cringe-driven discomfort.",
-      "categories": ["sitcom"],
+      "categories": [
+        "sitcom"
+      ],
       "items": [
-        { "title": "Yes Minister / Yes, Prime Minister", "year": 1980, "dir": "Antony Jay & Jonathan Lynn", "country": "UK", "runtime": "5 series · 38 episodes total", "seasons": "Yes Minister 1980-84 (3 series); Yes, PM 1986-88 (2 series)",
-          "categories": ["sitcom"],
+        {
+          "title": "Yes Minister / Yes, Prime Minister",
+          "year": 1980,
+          "dir": "Antony Jay & Jonathan Lynn",
+          "country": "UK",
+          "runtime": "5 series \u00b7 38 episodes total",
+          "seasons": "Yes Minister 1980-84 (3 series); Yes, PM 1986-88 (2 series)",
+          "categories": [
+            "sitcom"
+          ],
           "priority": "high",
-          "whyPriority": "Highest-priority sitcom recommendation. Nigel Hawthorne as Sir Humphrey Appleby is among the great comic-dramatic performances on TV. Sorkin-adjacent — three-character dialogue dance about how government actually works. Direct fit for your West Wing pillar.",
+          "whyPriority": "Highest-priority sitcom recommendation. Nigel Hawthorne as Sir Humphrey Appleby is among the great comic-dramatic performances on TV. Sorkin-adjacent \u2014 three-character dialogue dance about how government actually works. Direct fit for your West Wing pillar.",
           "pitch": "A new Cabinet minister tries to enact policy; his Permanent Secretary gently sabotages him to preserve civil-service interests.",
-          "critics": [{ "who": "Reception", "quote": "Won BAFTA Best Comedy three times. Margaret Thatcher's stated favorite show — she once wrote a sketch with Hawthorne for a charity event." }] },
-        { "title": "Blackadder", "year": 1983, "dir": "Richard Curtis & Ben Elton", "country": "UK", "runtime": "4 series · 24 episodes + specials", "seasons": "Series 1 (1983) is widely considered the weakest; Series 2-4 (1986-89) are the canonical run. Series 4 (Blackadder Goes Forth, WWI trenches) is widely cited as the masterpiece.",
-          "categories": ["sitcom"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Won BAFTA Best Comedy three times. Margaret Thatcher's stated favorite show \u2014 she once wrote a sketch with Hawthorne for a charity event."
+            }
+          ]
+        },
+        {
+          "title": "Blackadder",
+          "year": 1983,
+          "dir": "Richard Curtis & Ben Elton",
+          "country": "UK",
+          "runtime": "4 series \u00b7 24 episodes + specials",
+          "seasons": "Series 1 (1983) is widely considered the weakest; Series 2-4 (1986-89) are the canonical run. Series 4 (Blackadder Goes Forth, WWI trenches) is widely cited as the masterpiece.",
+          "categories": [
+            "sitcom"
+          ],
           "priority": "high",
           "whyPriority": "Rowan Atkinson at his peak. Each series transplants Edmund Blackadder to a different historical era. Series 4's final episode (the men go over the top in WWI) is one of the most-praised endings in British TV.",
-          "pitch": "Edmund Blackadder schemes through history — Wars of the Roses, Elizabethan court, Regency, WWI trenches. Each series 6 episodes.",
-          "critics": [{ "who": "Reception", "quote": "Voted #2 in BFI's 100 Greatest British Television Programmes. Series 4 finale routinely cited among the great moments in British TV." }] },
-        { "title": "Father Ted", "year": 1995, "dir": "Graham Linehan & Arthur Mathews", "country": "UK/Ireland", "runtime": "3 series · 25 episodes", "seasons": "Complete (Dermot Morgan died after Series 3 was filmed). Christmas special is canonical.",
-          "categories": ["sitcom"],
+          "pitch": "Edmund Blackadder schemes through history \u2014 Wars of the Roses, Elizabethan court, Regency, WWI trenches. Each series 6 episodes.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Voted #2 in BFI's 100 Greatest British Television Programmes. Series 4 finale routinely cited among the great moments in British TV."
+            }
+          ]
+        },
+        {
+          "title": "Father Ted",
+          "year": 1995,
+          "dir": "Graham Linehan & Arthur Mathews",
+          "country": "UK/Ireland",
+          "runtime": "3 series \u00b7 25 episodes",
+          "seasons": "Complete (Dermot Morgan died after Series 3 was filmed). Christmas special is canonical.",
+          "categories": [
+            "sitcom"
+          ],
           "priority": "high",
           "whyPriority": "Three priests on a remote Irish island. Linehan-written. Three short perfect seasons. Tonally exact match for your Black Books loves (Linehan also).",
           "pitch": "Father Ted Crilly, Father Dougal McGuire, and Father Jack Hackett were exiled to a parish on Craggy Island for various ecclesiastical sins.",
-          "critics": [{ "who": "Reception", "quote": "Won BAFTA Best Comedy. Routinely cited among the greatest sitcoms of British television." }] },
-        { "title": "Fawlty Towers", "year": 1975, "dir": "John Cleese & Connie Booth", "country": "UK", "runtime": "2 series · 12 episodes total", "seasons": "Complete (1975 + 1979). Cleese refused to make more.",
-          "categories": ["sitcom"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Won BAFTA Best Comedy. Routinely cited among the greatest sitcoms of British television."
+            }
+          ]
+        },
+        {
+          "title": "Fawlty Towers",
+          "year": 1975,
+          "dir": "John Cleese & Connie Booth",
+          "country": "UK",
+          "runtime": "2 series \u00b7 12 episodes total",
+          "seasons": "Complete (1975 + 1979). Cleese refused to make more.",
+          "categories": [
+            "sitcom"
+          ],
           "priority": "high",
           "whyPriority": "John Cleese as Basil Fawlty. Twelve episodes, structurally perfect. Among the most-cited British sitcoms ever made. Note: occasional cringe content but it's farce-cringe (someone embarrasses *themselves* to the audience), not cringe-comedy in the modern Office sense.",
           "pitch": "Basil Fawlty runs a small hotel in Torquay. He hates the guests. Things go wrong.",
-          "critics": [{ "who": "Reception", "quote": "BFI's #1 Greatest British Television Programme of all time (2000 poll)." }] },
-        { "title": "Black Books", "year": 2000, "dir": "Graham Linehan & Dylan Moran", "country": "UK", "runtime": "3 series · 18 episodes",
-          "categories": ["sitcom"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "BFI's #1 Greatest British Television Programme of all time (2000 poll)."
+            }
+          ]
+        },
+        {
+          "title": "Black Books",
+          "year": 2000,
+          "dir": "Graham Linehan & Dylan Moran",
+          "country": "UK",
+          "runtime": "3 series \u00b7 18 episodes",
+          "categories": [
+            "sitcom"
+          ],
           "priority": "high",
           "pitch": "Cross-listed in Comedy TV. Already on your radar. Bernard Black runs a London bookshop he hates.",
-          "critics": [{ "who": "Reception", "quote": "Won BAFTA Best Sitcom." }] },
-        { "title": "Back", "year": 2017, "dir": "Simon Blackwell", "country": "UK", "runtime": "3 series · 18 episodes", "seasons": "Complete (ended 2024)",
-          "categories": ["sitcom"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Won BAFTA Best Sitcom."
+            }
+          ]
+        },
+        {
+          "title": "Back",
+          "year": 2017,
+          "dir": "Simon Blackwell",
+          "country": "UK",
+          "runtime": "3 series \u00b7 18 episodes",
+          "seasons": "Complete (ended 2024)",
+          "categories": [
+            "sitcom"
+          ],
           "priority": "high",
-          "whyPriority": "Per your request. David Mitchell and Robert Webb's first scripted reunion since Peep Show. Dark comedy, no cringe — much closer to your sensibility. Mitchell plays a man whose long-lost foster brother shows up to take over his late father's pub.",
-          "pitch": "Stephen takes over his father's pub. His foster brother Andrew shows up — charming, unsettling, possibly a sociopath.",
-          "critics": [{ "who": "Reception", "quote": "Critical favorite. Considered the strongest Mitchell/Webb scripted work since Peep Show, with a more mature register." }] }
+          "whyPriority": "Per your request. David Mitchell and Robert Webb's first scripted reunion since Peep Show. Dark comedy, no cringe \u2014 much closer to your sensibility. Mitchell plays a man whose long-lost foster brother shows up to take over his late father's pub.",
+          "pitch": "Stephen takes over his father's pub. His foster brother Andrew shows up \u2014 charming, unsettling, possibly a sociopath.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Critical favorite. Considered the strongest Mitchell/Webb scripted work since Peep Show, with a more mature register."
+            }
+          ]
+        }
       ]
     },
     {
-      "name": "IV. Medium Priority — Sitcoms",
+      "name": "IV. Medium Priority \u2014 Sitcoms",
       "desc": "Worth flagging. Includes the Mitchell/Webb cringe-warning entry.",
-      "categories": ["sitcom"],
+      "categories": [
+        "sitcom"
+      ],
       "items": [
-        { "title": "Peep Show", "year": 2003, "dir": "Sam Bain & Jesse Armstrong", "country": "UK", "runtime": "9 series · 54 episodes", "seasons": "Complete (ended 2015). Jesse Armstrong went on to create Succession.",
-          "categories": ["sitcom"],
+        {
+          "title": "Peep Show",
+          "year": 2003,
+          "dir": "Sam Bain & Jesse Armstrong",
+          "country": "UK",
+          "runtime": "9 series \u00b7 54 episodes",
+          "seasons": "Complete (ended 2015). Jesse Armstrong went on to create Succession.",
+          "categories": [
+            "sitcom"
+          ],
           "priority": "med",
-          "whyPriority": "Per your request. CRINGE WARNING: Peep Show is relentlessly cringe-driven — but structurally singular. Every shot is first-person POV with internal monologue voiceover. Mitchell + Webb at their best. If you can tolerate the cringe (it functions differently because of the POV device), this is a TV-history-grade work.",
+          "whyPriority": "Per your request. CRINGE WARNING: Peep Show is relentlessly cringe-driven \u2014 but structurally singular. Every shot is first-person POV with internal monologue voiceover. Mitchell + Webb at their best. If you can tolerate the cringe (it functions differently because of the POV device), this is a TV-history-grade work.",
           "pitch": "Mark and Jeremy share a London flat. Mark is a buttoned-up loan officer; Jeremy is an unemployed musician. We hear their private thoughts throughout.",
-          "critics": [{ "who": "Reception", "quote": "Two BAFTAs. Considered one of the greatest British sitcoms of the 21st century — including by people who otherwise don't tolerate cringe comedy." }] },
-        { "title": "Keeping Up Appearances", "year": 1990, "dir": "Roy Clarke", "country": "UK", "runtime": "5 series · 44 episodes",
-          "categories": ["sitcom"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Two BAFTAs. Considered one of the greatest British sitcoms of the 21st century \u2014 including by people who otherwise don't tolerate cringe comedy."
+            }
+          ]
+        },
+        {
+          "title": "Keeping Up Appearances",
+          "year": 1990,
+          "dir": "Roy Clarke",
+          "country": "UK",
+          "runtime": "5 series \u00b7 44 episodes",
+          "categories": [
+            "sitcom"
+          ],
           "priority": "med",
           "whyPriority": "Patricia Routledge as Hyacinth Bucket-pronounced-Bouquet. Broader than your usual lane but warmly written. Routledge's performance is the show.",
           "pitch": "A suburban Englishwoman desperately tries to project upper-class respectability while her embarrassing relatives keep undermining her.",
-          "critics": [{ "who": "Reception", "quote": "Long ratings hit; Routledge's performance now considered classic." }] },
-        { "title": "As Time Goes By", "year": 1992, "dir": "Bob Larbey", "country": "UK", "runtime": "9 series · 67 episodes + specials",
-          "categories": ["sitcom"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Long ratings hit; Routledge's performance now considered classic."
+            }
+          ]
+        },
+        {
+          "title": "As Time Goes By",
+          "year": 1992,
+          "dir": "Bob Larbey",
+          "country": "UK",
+          "runtime": "9 series \u00b7 67 episodes + specials",
+          "categories": [
+            "sitcom"
+          ],
           "priority": "med",
           "whyPriority": "Judi Dench and Geoffrey Palmer. Two former lovers separated by the Korean War reunite in middle age. Slower, romantic, character-led. Dench-anchored craft.",
           "pitch": "Jean and Lionel were briefly engaged in the 1950s. Decades later they meet again by chance.",
-          "critics": [{ "who": "Reception", "quote": "Ran nine series. Considered a benchmark for the gentle-romantic-sitcom register." }] },
-        { "title": "Spaced", "year": 1999, "dir": "Edgar Wright / Simon Pegg / Jessica Hynes", "country": "UK", "runtime": "2 series · 14 episodes",
-          "categories": ["sitcom"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Ran nine series. Considered a benchmark for the gentle-romantic-sitcom register."
+            }
+          ]
+        },
+        {
+          "title": "Spaced",
+          "year": 1999,
+          "dir": "Edgar Wright / Simon Pegg / Jessica Hynes",
+          "country": "UK",
+          "runtime": "2 series \u00b7 14 episodes",
+          "categories": [
+            "sitcom"
+          ],
           "priority": "med",
-          "pitch": "Cross-listed in Comedy TV. Edgar Wright's first directing project. Genre-pastiche per episode — the structural ancestor of Community.",
-          "critics": [{ "who": "Reception", "quote": "Established Wright/Pegg/Frost as a unit." }] }
+          "pitch": "Cross-listed in Comedy TV. Edgar Wright's first directing project. Genre-pastiche per episode \u2014 the structural ancestor of Community.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Established Wright/Pegg/Frost as a unit."
+            }
+          ]
+        }
       ]
     },
     {
-      "name": "V. Medium Priority — Game Shows",
+      "name": "V. Medium Priority \u2014 Game Shows",
       "desc": "Direct fits given your Pointless / Only Connect / University Challenge loves.",
-      "categories": ["game"],
+      "categories": [
+        "game"
+      ],
       "items": [
-        { "title": "Richard Osman's House of Games", "year": 2017, "dir": "Endemol UK", "country": "UK", "runtime": "Ongoing · 8+ series",
-          "categories": ["game"],
+        {
+          "title": "Richard Osman's House of Games",
+          "year": 2017,
+          "dir": "Endemol UK",
+          "country": "UK",
+          "runtime": "Ongoing \u00b7 8+ series",
+          "categories": [
+            "game"
+          ],
           "priority": "high",
           "whyPriority": "Per your interest in more Osman. Four celebrity panelists compete across a five-day week. Games rotate. Osman's banter is the show. Direct fit for your Pointless love.",
           "pitch": "A weeklong celebrity quiz show with Osman as host and a rotating set of word, number, and trivia games.",
-          "critics": [{ "who": "Reception", "quote": "BBC daytime hit. Considered the best Osman-only vehicle since Pointless." }] },
-        { "title": "The Chase", "year": 2009, "dir": "Potato / ITV", "country": "UK", "runtime": "Ongoing · 17+ series",
-          "categories": ["game"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "BBC daytime hit. Considered the best Osman-only vehicle since Pointless."
+            }
+          ]
+        },
+        {
+          "title": "The Chase",
+          "year": 2009,
+          "dir": "Potato / ITV",
+          "country": "UK",
+          "runtime": "Ongoing \u00b7 17+ series",
+          "categories": [
+            "game"
+          ],
           "priority": "med",
-          "whyPriority": "Bradley Walsh hosts. Five elite quizzers (the Chasers) — Anne Hegerty, Mark Labbett, Shaun Wallace, Paul Sinha, Jenny Ryan, Darragh Ennis. Contestants try to outrun a Chaser to win prize money. Walsh's hosting is the warm-and-funny variable that makes it work.",
+          "whyPriority": "Bradley Walsh hosts. Five elite quizzers (the Chasers) \u2014 Anne Hegerty, Mark Labbett, Shaun Wallace, Paul Sinha, Jenny Ryan, Darragh Ennis. Contestants try to outrun a Chaser to win prize money. Walsh's hosting is the warm-and-funny variable that makes it work.",
           "pitch": "Contestants build a cash bank; an elite quizzer tries to catch them on a quiz ladder.",
-          "critics": [{ "who": "Reception", "quote": "Top-rated daytime quiz in the UK for over a decade. Spawned multiple international versions." }] },
-        { "title": "Mastermind", "year": 1972, "dir": "BBC", "country": "UK", "runtime": "Ongoing · 50+ series", "seasons": "Magnus Magnusson 1972-97; John Humphrys 2003-21; Clive Myrie 2021-",
-          "categories": ["game"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Top-rated daytime quiz in the UK for over a decade. Spawned multiple international versions."
+            }
+          ]
+        },
+        {
+          "title": "Mastermind",
+          "year": 1972,
+          "dir": "BBC",
+          "country": "UK",
+          "runtime": "Ongoing \u00b7 50+ series",
+          "seasons": "Magnus Magnusson 1972-97; John Humphrys 2003-21; Clive Myrie 2021-",
+          "categories": [
+            "game"
+          ],
           "priority": "med",
           "whyPriority": "The original specialist-subject quiz. Two rounds: one on a chosen specialist subject, one on general knowledge. Myrie era considered an excellent revival.",
           "pitch": "Contestants face two timed quiz rounds in the iconic black chair. 'I've started, so I'll finish' is the catchphrase.",
-          "critics": [{ "who": "Reception", "quote": "Cultural institution. Format licensed worldwide." }] },
-        { "title": "Countdown", "year": 1982, "dir": "Channel 4", "country": "UK", "runtime": "Ongoing · 88+ series",
-          "categories": ["game"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Cultural institution. Format licensed worldwide."
+            }
+          ]
+        },
+        {
+          "title": "Countdown",
+          "year": 1982,
+          "dir": "Channel 4",
+          "country": "UK",
+          "runtime": "Ongoing \u00b7 88+ series",
+          "categories": [
+            "game"
+          ],
           "priority": "med",
           "whyPriority": "The parent format of Cats Does Countdown. Words and numbers puzzles. Susie Dent is a constant. Quieter than the Carr-hosted spinoff but the structural anchor.",
           "pitch": "Contestants form longest-possible words from random letters and reach a target number from a set of randomly-drawn numbers. Daytime, gentle.",
-          "critics": [{ "who": "Reception", "quote": "Channel 4's first-ever broadcast was Countdown. Cultural institution." }] },
-        { "title": "Only Connect — Specials", "year": 2008, "dir": "BBC", "country": "UK", "runtime": "Various specials",
-          "categories": ["game", "specials"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Channel 4's first-ever broadcast was Countdown. Cultural institution."
+            }
+          ]
+        },
+        {
+          "title": "Only Connect \u2014 Specials",
+          "year": 2008,
+          "dir": "BBC",
+          "country": "UK",
+          "runtime": "Various specials",
+          "categories": [
+            "game",
+            "specials"
+          ],
           "priority": "med",
           "whyPriority": "Christmas specials and themed series. Coren Mitchell's hosting register adapts well to special formats.",
           "pitch": "Holiday and themed specials are sprinkled across the regular series.",
-          "critics": [] }
+          "critics": []
+        }
       ]
     },
     {
       "name": "VI. Worth Considering",
       "desc": "Lower-confidence fits worth flagging.",
-      "categories": ["panel", "sitcom", "game"],
+      "categories": [
+        "panel",
+        "sitcom",
+        "game"
+      ],
       "items": [
-        { "title": "Outsiders", "year": 2024, "dir": "Dave / UKTV", "country": "UK", "runtime": "1 series so far",
-          "categories": ["panel"],
+        {
+          "title": "Outsiders",
+          "year": 2024,
+          "dir": "Dave / UKTV",
+          "country": "UK",
+          "runtime": "1 series so far",
+          "categories": [
+            "panel"
+          ],
           "pitch": "David Mitchell hosts. Comedians compete in survival challenges in a forest. Tonally adjacent to Taskmaster.",
-          "critics": [{ "who": "Reception", "quote": "Promising start; reviewed warmly." }] },
-        { "title": "Would I Lie to You? — Specials & Best Of", "year": 2007, "dir": "BBC", "country": "UK", "runtime": "Various",
-          "categories": ["panel", "specials"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Promising start; reviewed warmly."
+            }
+          ]
+        },
+        {
+          "title": "Would I Lie to You? \u2014 Specials & Best Of",
+          "year": 2007,
+          "dir": "BBC",
+          "country": "UK",
+          "runtime": "Various",
+          "categories": [
+            "panel",
+            "specials"
+          ],
           "pitch": "Children in Need and Comic Relief specials, plus regular Best-Of compilations. The Bob Mortimer episodes are routinely the most-rewatched in the format.",
-          "critics": [] },
-        { "title": "Cats Does Countdown — Anniversary specials", "year": 2012, "dir": "Channel 4", "country": "UK", "runtime": "Various",
-          "categories": ["panel", "game", "specials"],
+          "critics": []
+        },
+        {
+          "title": "Cats Does Countdown \u2014 Anniversary specials",
+          "year": 2012,
+          "dir": "Channel 4",
+          "country": "UK",
+          "runtime": "Various",
+          "categories": [
+            "panel",
+            "game",
+            "specials"
+          ],
           "pitch": "10th-anniversary best-ofs and themed compilations are circulating.",
-          "critics": [] },
-        { "title": "Big Fat Quiz of the Decade / Big Fat Quiz of Everything", "year": 2010, "dir": "Channel 4", "country": "UK", "runtime": "Special variants",
-          "categories": ["panel", "specials"],
+          "critics": []
+        },
+        {
+          "title": "Big Fat Quiz of the Decade / Big Fat Quiz of Everything",
+          "year": 2010,
+          "dir": "Channel 4",
+          "country": "UK",
+          "runtime": "Special variants",
+          "categories": [
+            "panel",
+            "specials"
+          ],
           "pitch": "Decade-spanning variants of Big Fat Quiz of the Year. Same panel show DNA, broader scope.",
-          "critics": [{ "who": "Reception", "quote": "Less consistent than the annual; the 2014 Decade was the most-praised." }] },
-        { "title": "Detectorists", "year": 2014, "dir": "Mackenzie Crook", "country": "UK", "runtime": "3 series · 19 episodes + 2022 special",
-          "categories": ["sitcom"],
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Less consistent than the annual; the 2014 Decade was the most-praised."
+            }
+          ]
+        },
+        {
+          "title": "Detectorists",
+          "year": 2014,
+          "dir": "Mackenzie Crook",
+          "country": "UK",
+          "runtime": "3 series \u00b7 19 episodes + 2022 special",
+          "categories": [
+            "sitcom"
+          ],
           "pitch": "Cross-listed in Comedy TV. Mackenzie Crook's gentle metal-detecting comedy. The closest tonal match in modern British TV to your Vicious-and-warm-ensemble overlap zone.",
-          "critics": [{ "who": "Reception", "quote": "Won BAFTA across all three series." }] },
-        { "title": "Inside No. 9", "year": 2014, "dir": "Reece Shearsmith & Steve Pemberton", "country": "UK", "runtime": "9 series · 50+ episodes",
-          "categories": ["sitcom"],
-          "pitch": "Cross-listed in Horror TV. Anthology — each episode self-contained 30-minute story that twists. Comedy and horror co-exist.",
-          "critics": [{ "who": "Reception", "quote": "BAFTA-winning. Considered one of the most inventive British shows of its era." }] }
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Won BAFTA across all three series."
+            }
+          ]
+        },
+        {
+          "title": "Inside No. 9",
+          "year": 2014,
+          "dir": "Reece Shearsmith & Steve Pemberton",
+          "country": "UK",
+          "runtime": "9 series \u00b7 50+ episodes",
+          "categories": [
+            "sitcom"
+          ],
+          "pitch": "Cross-listed in Horror TV. Anthology \u2014 each episode self-contained 30-minute story that twists. Comedy and horror co-exist.",
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "BAFTA-winning. Considered one of the most inventive British shows of its era."
+            }
+          ]
+        }
       ]
     }
   ]

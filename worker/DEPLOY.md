@@ -1,138 +1,155 @@
-# WatchTrack ↔ Plex Webhook Bridge — Deployment Guide
+# WatchTrack Worker — Deployment Guide (v2)
 
-This Cloudflare Worker receives webhooks from your Plex Media Server when you watch something, then exposes them to WatchTrack to sync the watched-status back. Free tier is plenty for personal use (you'll use ~50 of 100,000 daily requests).
+This Cloudflare Worker is the brain of WatchTrack's Plex integration:
 
-## What you'll need
+- Receives webhooks from your Plex server when you watch something
+- Caches TMDB metadata for movies and TV (streaming providers, episode counts, etc.)
+- Logs every Plex viewing event (durable history, queryable later)
+- Exposes endpoints WatchTrack uses for sync and enrichment
 
-- Cloudflare account (free)
-- The `worker.js` file in this directory
-- 5 minutes
+Free tier of Cloudflare is fine for personal use.
 
-## Step 1: Generate a shared secret
+## Prerequisites
 
-This is a random string that authenticates Plex → Worker → WatchTrack so randos can't write fake events.
+You need:
+- Cloudflare account (already have)
+- Plex Pass on your Plex server (already have — lifetime)
+- TMDB API key (v4 Read Access Token — get one at themoviedb.org/signup, then **Settings → API → Generate v4 token**)
+- A shared secret you generate (32+ random characters)
 
-In your terminal (Mac/Linux), run:
+## If upgrading from the v1 worker
 
+The v1 worker had only EVENTS + CONFIG namespaces and one purpose: webhooks. The v2 worker adds two more namespaces and several new endpoints. **Your existing v1 setup keeps working** — v2 is a strict superset. Just:
+
+1. Deploy the new worker.js
+2. Add the two new KV bindings (VIEWED + METADATA)
+3. Add the TMDB token to CONFIG KV
+
+That's it. Existing Plex webhooks, EVENTS data, and shared-secret all continue to function.
+
+## Step-by-step (fresh install)
+
+### 1. Generate a shared secret
+
+In your terminal:
 ```bash
 openssl rand -hex 32
 ```
 
-Or in your browser console, run:
-
+Or in any browser console:
 ```javascript
 [...crypto.getRandomValues(new Uint8Array(32))].map(b => b.toString(16).padStart(2,'0')).join('')
 ```
 
-Copy the output. Save it somewhere — you'll paste it into Cloudflare AND into WatchTrack Settings AND into Plex's webhook config. Don't share it.
+Save the output. You'll paste it into 4 places: Cloudflare CONFIG KV, Plex webhook URL, WatchTrack Settings, and any direct testing of endpoints.
 
-## Step 2: Create the KV namespaces
+### 2. Create four KV namespaces
 
-The Worker uses Cloudflare KV (key-value store) to hold events and config.
+Cloudflare dashboard → **Workers & Pages → KV** → **Create a namespace**. Name them exactly:
 
-1. In Cloudflare dashboard → **Workers & Pages** → **KV** (left sidebar).
-2. Click **Create a namespace**. Name it `WATCHTRACK_EVENTS`. Click Add.
-3. Click **Create a namespace** again. Name it `WATCHTRACK_CONFIG`. Click Add.
+- `WATCHTRACK_EVENTS` — webhook event queue (TTL'd, drained by WatchTrack on poll)
+- `WATCHTRACK_CONFIG` — shared secret + TMDB token
+- `WATCHTRACK_VIEWED` — durable Plex viewing history (no TTL, every play kept)
+- `WATCHTRACK_METADATA` — TMDB enrichment cache (30-day TTL)
 
-## Step 3: Store the secret in CONFIG KV
+### 3. Populate CONFIG KV
 
-1. Click into the `WATCHTRACK_CONFIG` namespace.
-2. Click **Add entry**.
-3. **Key:** `secret`
-4. **Value:** paste the shared secret you generated.
-5. Click Add.
+Click into `WATCHTRACK_CONFIG`. Add two keys:
 
-## Step 4: Create the Worker
+| Key | Value |
+|---|---|
+| `secret` | the shared secret from step 1 |
+| `tmdb_token` | your TMDB v4 Read Access Token |
 
-1. Cloudflare dashboard → **Workers & Pages** → **Create**.
-2. Select **Create Worker**.
-3. Name it `watchtrack-plex` (or anything you want — this becomes part of the URL).
-4. Click Deploy. (It'll deploy the default "Hello World" worker — we'll replace the code in a moment.)
-5. After deploy, click **Edit code** (top right).
-6. **Replace all the code** with the contents of `worker.js` from this directory.
-7. Click **Save and deploy**.
+### 4. Create the Worker
 
-You'll see a URL like `https://watchtrack-plex.YOURNAME.workers.dev`. Save this URL. This is your **Worker URL**.
+**Important:** create a code worker, NOT a "static assets" worker. The path that works:
+1. **Workers & Pages → Create**
+2. Select **Start with Hello World** (NOT "Connect to Git")
+3. Name it `watchtrack-plex`
+4. Click Deploy
+5. Click **Edit code** at top right
+6. **Replace all** code with the contents of `worker.js` from this folder
+7. Click **Save and deploy**
 
-## Step 5: Bind KV namespaces to the Worker
+Save the URL — looks like `https://watchtrack-plex.YOURNAME.workers.dev`.
 
-The Worker needs to access your KV namespaces. Bindings are how Cloudflare connects the two.
+### 5. Bind all four KV namespaces
 
-1. In your Worker's page → **Settings** tab → **Variables and Secrets** (or **Bindings** in newer UIs).
-2. Scroll to **KV Namespace Bindings**.
-3. Click **Add binding**.
-   - **Variable name:** `EVENTS`
-   - **KV namespace:** select `WATCHTRACK_EVENTS`
-4. Click **Add binding** again.
-   - **Variable name:** `CONFIG`
-   - **KV namespace:** select `WATCHTRACK_CONFIG`
-5. Click **Save and deploy**.
+Worker page → **Settings tab → Bindings → Add binding** (×4):
 
-Important: the variable names must be EXACTLY `EVENTS` and `CONFIG` — those are what the Worker code expects.
+| Variable name | KV namespace |
+|---|---|
+| `EVENTS` | WATCHTRACK_EVENTS |
+| `CONFIG` | WATCHTRACK_CONFIG |
+| `VIEWED` | WATCHTRACK_VIEWED |
+| `METADATA` | WATCHTRACK_METADATA |
 
-## Step 6: Test the Worker
+Variable names are CASE-SENSITIVE and must match exactly. The Worker code references `env.EVENTS`, `env.CONFIG`, etc.
 
-In your browser, visit:
+After adding all four, click **Save and deploy**.
+
+### 6. Verify the worker
+
+Visit `https://watchtrack-plex.YOURNAME.workers.dev/health` — should respond `WatchTrack-Plex bridge online (v2 — TMDB + history)`.
+
+Then test the secret + KV bindings:
+```
+https://watchtrack-plex.YOURNAME.workers.dev/events?secret=YOUR_SHARED_SECRET&since=0
+```
+Expected: `{"events":[]}`
+
+Then test TMDB:
+```
+https://watchtrack-plex.YOURNAME.workers.dev/metadata/lookup?secret=YOUR_SHARED_SECRET&title=Inception&year=2010&type=movie
+```
+Expected: A JSON blob with `found: true`, `tmdbId: 27205`, watchProviders, etc.
+
+If `found: false`, the title genuinely doesn't match anything in TMDB. If you get `{"error": "TMDB token not configured"}`, the `tmdb_token` key in CONFIG KV is missing or misnamed.
+
+### 7. Plex webhook (if not already done in v1)
+
+app.plex.tv → Settings → top-right gear → your server → **Webhooks** → **Add Webhook**:
 
 ```
-https://watchtrack-plex.YOURNAME.workers.dev/health
+https://watchtrack-plex.YOURNAME.workers.dev/webhook/YOUR_SHARED_SECRET
 ```
 
-You should see: `WatchTrack-Plex bridge online`. If you do, the Worker is live.
+Save. Plex will POST to that URL every time you scrobble or rate something.
 
-If you get a 1042 / 1101 / 503 error, the deploy failed — check Cloudflare's Workers logs.
+### 8. WatchTrack Settings (existing — unchanged from v1)
 
-## Step 7: Configure Plex to send webhooks
+Settings → Plex Webhook Bridge:
+- Worker URL: `https://watchtrack-plex.YOURNAME.workers.dev` (no path, no secret)
+- Shared Secret: your secret
+- Test poll → should say "Worker reachable, secret accepted."
+- Save.
 
-Plex Pass required (you have lifetime, you're set).
+## Endpoints reference
 
-1. Go to **app.plex.tv** → **Settings** (top-right gear icon) → in the left sidebar, scroll down and click **Webhooks** under your server name.
-2. Click **Add Webhook**.
-3. **URL:** `https://watchtrack-plex.YOURNAME.workers.dev/webhook/YOUR_SHARED_SECRET`
-   Replace YOURNAME with your Cloudflare subdomain and YOUR_SHARED_SECRET with the secret from Step 1.
-4. Click **Save Changes**.
+- `GET /health` — Health check (no auth)
+- `POST /webhook/{secret}` — Plex Pass webhook receiver. Library-section whitelist applies (1, 2 only).
+- `GET /events?secret=X&since=TS` — WatchTrack polls for new scrobble events
+- `POST /events/ack` — WatchTrack acks events processed (deletes from EVENTS)
+- `GET /metadata/lookup?secret=X&title=T&year=Y&type=movie|tv` — TMDB enrichment, cached 30 days
+- `POST /viewed/ingest` — Bulk-ingest historical Plex views (used once for backfill from `/status/sessions/history/all`)
+- `GET /viewed/list?secret=X&cursor=...` — Paginated list of every Plex view (for the WT History modal, future)
 
-That's it on the Plex side. Plex will now POST to your Worker every time you watch something.
+## Quotas & cost
 
-## Step 8: Configure WatchTrack
+- **Workers free tier:** 100,000 requests/day. Personal use is well within.
+- **KV free tier:** 1,000 writes + 100,000 reads/day. Heaviest day = first ingest of full history (~340 writes).
+- **TMDB:** No hard rate limits at our usage; ~720 catalog enrichment calls would be one-time, then cache.
+- **No credit card required** for any of these.
 
-1. Open WatchTrack on your phone or TV.
-2. Tap **Settings**.
-3. Scroll to **Plex Webhook Bridge**.
-4. **Worker URL:** `https://watchtrack-plex.YOURNAME.workers.dev`
-   (No trailing slash, no `/health` or `/webhook/...` — just the base URL.)
-5. **Shared Secret:** paste your secret.
-6. Click **Test poll**. You should see `Worker reachable, secret accepted.`
-7. Click **Save**.
+## Library whitelist
 
-## Verify end-to-end
-
-1. Open Plex on your TV (or any device) and watch a few minutes of any episode/movie that's also in WatchTrack's catalog. Let it scrobble (~90% watched is when Plex marks it watched).
-2. Open WatchTrack within a few minutes. The item should now show as "Watched" automatically.
-
-If it doesn't:
-- Check WatchTrack Settings → Plex Webhook Bridge → status line. It should say "Last poll: Xm ago."
-- Check the Worker logs in Cloudflare dashboard → Workers & Pages → your worker → **Logs** tab. You should see POST requests to `/webhook/...` with status 200.
-- If you see 403 errors in the Worker logs, the secret in Plex's webhook URL doesn't match the secret in CONFIG KV.
-
-## Cost & quotas
-
-- **Workers free tier:** 100,000 requests/day. You'll use maybe 50.
-- **KV free tier:** 1,000 reads + 1,000 writes per day. You'll use maybe 20.
-- **No credit card required** for free tier.
-
-## Security notes
-
-- The shared secret is your only auth gate. If it leaks, an attacker can poison your event stream (mark items as watched). Rotate by regenerating + updating in three places: Cloudflare CONFIG KV, Plex webhook URL, WatchTrack Settings.
-- Events are stored in Cloudflare's KV with a 7-day TTL — they auto-delete if WatchTrack never polls. So there's nothing long-lived in the bridge.
-- The Worker accepts events only from the `/webhook/{secret}` URL. There's no public posting endpoint.
+The worker hardcodes `LIBRARY_WHITELIST = new Set(['1', '2'])`. If you add a new Plex library section, edit `worker.js`, update the set, redeploy. Anything from a non-whitelisted library is silently dropped at ingest.
 
 ## Updating the Worker
 
-If you need to update `worker.js`:
+Cloudflare → your worker → Edit code → replace contents → Save and deploy. KV bindings persist.
 
-1. Cloudflare dashboard → your Worker → **Edit code**.
-2. Replace contents.
-3. Click **Save and deploy**.
+## Security
 
-KV namespaces and bindings persist across deploys.
+The shared secret is the only auth. If it leaks: rotate by updating in 3 places (Cloudflare CONFIG KV, Plex webhook URL, WatchTrack Settings). The TMDB token is read-only and only allows TMDB queries — leak is low-impact.

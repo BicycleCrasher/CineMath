@@ -700,6 +700,24 @@
               "quote": "LeBlanc won the Globe; show was overlooked. Cult fans defend it strongly."
             }
           ]
+        },
+        {
+          "title": "Will & Grace",
+          "year": 1998,
+          "pitch": "Network sitcom about a gay lawyer and his straight female best friend, with Karen and Jack as scene-stealers. Cultural impact during early-2000s LGBTQ+ visibility shift was real.",
+          "priority": "low",
+          "whyPriority": "You have watched 6+ episodes per Plex history. Cataloged for tracking.",
+          "commitment": "11 seasons (incl. revival)",
+          "commitmentTag": "long",
+          "critics": [
+            {
+              "who": "NYT",
+              "rating": "Influential",
+              "note": "Karen and Jack carry it."
+            }
+          ],
+          "contentType": "tv-sitcom",
+          "tvCompletionMode": "flexible"
         }
       ],
       "categories": [
