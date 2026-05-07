@@ -544,3 +544,50 @@ body.tv-mode .item:focus-visible {
   transform: scale(1.01);
   transition: transform 0.1s ease;
 }
+
+/* === V5.2.1 fix: Scrollable settings modal === */
+/* Settings modal is taller than other modals due to multiple config sections */
+#settings-modal .modal-content {
+  max-width: 600px;
+  max-height: 90vh;
+  padding: 0;
+  overflow: hidden;
+}
+#settings-modal .modal-content > h3 {
+  padding: 20px 20px 12px;
+  margin: 0;
+  border-bottom: 1px solid var(--rule);
+}
+#settings-modal .settings-section {
+  padding: 0 20px;
+  margin-bottom: 0;
+}
+#settings-modal .settings-section:first-of-type {
+  padding-top: 16px;
+}
+/* Scrollable body wraps all sections */
+#settings-modal .modal-content > .settings-section,
+#settings-modal .modal-content > .modal-actions {
+  flex-shrink: 0;
+}
+/* Make the section list itself scrollable, actions stay fixed at bottom */
+#settings-modal .modal-content {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+#settings-modal .settings-scroll {
+  overflow-y: auto;
+  padding: 0 0 16px;
+}
+#settings-modal .modal-actions {
+  padding: 12px 20px 16px;
+  margin-top: 0;
+  border-top: 1px solid var(--rule);
+  background: var(--bg-elev);
+}
+
+/* TV mode: larger settings modal still fits */
+body.tv-mode #settings-modal .modal-content {
+  max-width: 900px;
+  max-height: 85vh;
+}

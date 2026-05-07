@@ -10,6 +10,14 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.2.1 — 2026-05-07
+**Service worker cache:** `scifi-tracker-v13` → `v14`
+
+### Fixed
+- Settings modal Save/Cancel buttons were inaccessible when content overflowed the viewport. Now: settings sections scroll independently while title and action buttons stay pinned to top/bottom. Modal also widened slightly (500px → 600px on phone, 900px in TV mode) to accommodate the Plex sections.
+
+---
+
 ## 5.2.0 — 2026-05-07
 **Service worker cache:** `scifi-tracker-v12` → `v13`
 
