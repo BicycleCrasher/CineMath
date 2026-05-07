@@ -160,6 +160,22 @@
       </div>
       <p class="settings-status" id="plex-status">Not configured.</p>
     </div>
+    <div class="settings-section">
+      <h4>Plex Webhook Bridge</h4>
+      <p class="settings-help">When you watch something on Plex, it tells WatchTrack to mark it watched. Requires a Cloudflare Worker (free tier — see deployment instructions in the repo). Works with any Plex Pass account.</p>
+      <div class="settings-row">
+        <label>Worker URL</label>
+        <input type="url" class="modal-input" id="webhook-url" placeholder="https://watchtrack-plex.YOURSUBDOMAIN.workers.dev" autocomplete="off">
+      </div>
+      <div class="settings-row">
+        <label>Shared Secret</label>
+        <input type="password" class="modal-input" id="webhook-secret" placeholder="Random string you set in Worker config" autocomplete="off">
+      </div>
+      <div class="settings-row">
+        <button class="action-btn" id="webhook-test">Test poll</button>
+      </div>
+      <p class="settings-status" id="webhook-status">Not configured.</p>
+    </div>
     <div class="modal-actions">
       <button class="action-btn" id="settings-save">Save</button>
       <button class="action-btn" id="settings-close">Cancel</button>

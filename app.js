@@ -378,6 +378,106 @@ async function plexMarkWatched(ratingKey) {
   } catch (e) { return false; }
 }
 
+// === Plex webhook bridge (Cloudflare Worker) ===
+const WEBHOOK_URL_KEY = 'watchtrack-webhook-url';
+const WEBHOOK_SECRET_KEY = 'watchtrack-webhook-secret';
+const WEBHOOK_LAST_POLL_KEY = 'watchtrack-webhook-last-poll';
+
+function getWebhookUrl() { return localStorage.getItem(WEBHOOK_URL_KEY) || ''; }
+function setWebhookUrl(u) {
+  if (!u) localStorage.removeItem(WEBHOOK_URL_KEY);
+  else localStorage.setItem(WEBHOOK_URL_KEY, u.replace(/\/$/, ''));
+}
+function getWebhookSecret() { return localStorage.getItem(WEBHOOK_SECRET_KEY) || ''; }
+function setWebhookSecret(s) {
+  if (!s) localStorage.removeItem(WEBHOOK_SECRET_KEY);
+  else localStorage.setItem(WEBHOOK_SECRET_KEY, s);
+}
+function getWebhookLastPoll() {
+  return parseInt(localStorage.getItem(WEBHOOK_LAST_POLL_KEY) || '0');
+}
+function setWebhookLastPoll(ts) {
+  localStorage.setItem(WEBHOOK_LAST_POLL_KEY, String(ts));
+}
+function isWebhookConfigured() {
+  return Boolean(getWebhookUrl() && getWebhookSecret());
+}
+
+// Poll the Worker for new events. Apply each one to WatchTrack state.
+// Then ack so the Worker deletes them.
+async function pollPlexWebhookEvents() {
+  if (!isWebhookConfigured()) return { applied: 0, errors: 0 };
+  const url = getWebhookUrl();
+  const secret = getWebhookSecret();
+  const since = getWebhookLastPoll();
+  let applied = 0, errors = 0;
+  try {
+    const resp = await fetch(`${url}/events?secret=${encodeURIComponent(secret)}&since=${since}`);
+    if (!resp.ok) return { applied: 0, errors: 1 };
+    const data = await resp.json();
+    const events = data.events || [];
+    const ackIds = [];
+    for (const evt of events) {
+      try {
+        if (applyPlexEvent(evt)) applied++;
+        ackIds.push(evt.id);
+      } catch (e) {
+        errors++;
+      }
+    }
+    if (ackIds.length > 0) {
+      await fetch(`${url}/events/ack`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ secret, eventIds: ackIds }),
+      });
+    }
+    setWebhookLastPoll(Date.now());
+    return { applied, errors };
+  } catch (e) {
+    return { applied: 0, errors: 1 };
+  }
+}
+
+// Apply a single webhook event to WatchTrack state.
+// For movies: match by title+year, mark watched in source tab.
+// For TV episodes: match the show by grandparentTitle+year, mark show as watching (not "watched"
+// since one episode doesn't equal a whole series).
+function applyPlexEvent(evt) {
+  if (evt.event !== 'media.scrobble') return false;
+  let matchTitle, matchYear;
+  if (evt.type === 'movie') {
+    matchTitle = evt.title;
+    matchYear = evt.year;
+  } else if (evt.type === 'episode' || evt.type === 'show') {
+    // For episodes, match the parent show
+    matchTitle = evt.grandparentTitle || evt.title;
+    matchYear = evt.year || null;
+  } else {
+    return false;
+  }
+  if (!matchTitle) return false;
+  const key = plexNormalizeKey(matchTitle, matchYear);
+  // Search every loaded catalog for a matching item
+  for (const tabId in catalogs) {
+    const cat = catalogs[tabId];
+    for (const item of cat.items) {
+      if (plexNormalizeKey(item.title, item.year) === key) {
+        if (evt.type === 'movie') {
+          setStatus(item.id, 'watched', tabId);
+        } else {
+          // For episode events, mark the series as "watching" (don't auto-mark "watched"
+          // because one episode doesn't mean the whole show is done)
+          const cur = getStatus(item.id, tabId);
+          if (cur !== 'watched') setStatus(item.id, 'watching', tabId);
+        }
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 // === Category filter (in-memory only; never persisted to localStorage) ===
 const activeCategoryByTab = {};        // { tabId: 'panel' | 'all' }
 const categoryClearTimers = {};        // { tabId: timeoutId } — 30s "left tab" timer
@@ -1360,7 +1460,10 @@ function setupModals() {
     document.getElementById('plex-server-url').value = getPlexServerUrl();
     document.getElementById('plex-token').value = getPlexToken();
     document.getElementById('plex-client-id').value = getPlexClientId();
+    document.getElementById('webhook-url').value = getWebhookUrl();
+    document.getElementById('webhook-secret').value = getWebhookSecret();
     updatePlexStatusLine();
+    updateWebhookStatusLine();
     settingsModal.classList.add('active');
   });
   document.getElementById('settings-close').addEventListener('click', () => {
@@ -1372,9 +1475,12 @@ function setupModals() {
     setPlexServerUrl(document.getElementById('plex-server-url').value.trim());
     setPlexToken(document.getElementById('plex-token').value.trim());
     setPlexClientId(document.getElementById('plex-client-id').value.trim());
+    setWebhookUrl(document.getElementById('webhook-url').value.trim());
+    setWebhookSecret(document.getElementById('webhook-secret').value.trim());
     applyDisplayMode();
     settingsModal.classList.remove('active');
     if (isPlexConfigured()) fetchPlexLibrary();
+    if (isWebhookConfigured()) pollPlexWebhookEvents();
     render();
   });
   document.getElementById('plex-test').addEventListener('click', async () => {
@@ -1419,6 +1525,61 @@ function setupModals() {
     status.textContent = `Library cached: ${plexLibrary.size} items.`;
     status.className = 'settings-status ok';
   });
+
+  document.getElementById('webhook-test').addEventListener('click', async () => {
+    const url = document.getElementById('webhook-url').value.trim().replace(/\/$/, '');
+    const secret = document.getElementById('webhook-secret').value.trim();
+    const status = document.getElementById('webhook-status');
+    if (!url || !secret) {
+      status.textContent = 'Enter both Worker URL and shared secret first.';
+      status.className = 'settings-status err';
+      return;
+    }
+    status.textContent = 'Testing...';
+    status.className = 'settings-status';
+    try {
+      // Hit the health endpoint first
+      const healthResp = await fetch(`${url}/health`);
+      if (!healthResp.ok) {
+        status.textContent = `Worker unreachable: HTTP ${healthResp.status}`;
+        status.className = 'settings-status err';
+        return;
+      }
+      // Then test the secret by polling for events with `since=now` (so we don't disturb anything)
+      const pollResp = await fetch(`${url}/events?secret=${encodeURIComponent(secret)}&since=${Date.now()}`);
+      if (pollResp.status === 403) {
+        status.textContent = 'Worker rejects secret. Check Cloudflare KV CONFIG.';
+        status.className = 'settings-status err';
+        return;
+      }
+      if (!pollResp.ok) {
+        status.textContent = `Poll failed: HTTP ${pollResp.status}`;
+        status.className = 'settings-status err';
+        return;
+      }
+      status.textContent = 'Worker reachable, secret accepted.';
+      status.className = 'settings-status ok';
+    } catch (e) {
+      status.textContent = `Error: ${e.message}`;
+      status.className = 'settings-status err';
+    }
+  });
+}
+
+function updateWebhookStatusLine() {
+  const status = document.getElementById('webhook-status');
+  if (!status) return;
+  if (!isWebhookConfigured()) {
+    status.textContent = 'Not configured.';
+    status.className = 'settings-status';
+  } else {
+    const lastPoll = getWebhookLastPoll();
+    const ago = lastPoll ? Math.floor((Date.now() - lastPoll) / 60000) : 0;
+    status.textContent = lastPoll
+      ? `Configured. Last poll: ${ago}m ago.`
+      : 'Configured. Not yet polled.';
+    status.className = 'settings-status ok';
+  }
 }
 
 function updatePlexStatusLine() {
@@ -1769,6 +1930,10 @@ function triageAction(act) {
   // If Plex is already configured, fetch the library in the background
   if (isPlexConfigured()) {
     fetchPlexLibrary();
+  }
+  // If webhook bridge is configured, poll for events on startup
+  if (isWebhookConfigured()) {
+    pollPlexWebhookEvents();
   }
 
   // === D-pad / arrow-key navigation ===

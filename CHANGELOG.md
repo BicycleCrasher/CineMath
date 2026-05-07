@@ -10,6 +10,32 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.2.0 — 2026-05-07
+**Service worker cache:** `scifi-tracker-v12` → `v13`
+
+### Added — Plex webhook bridge (Stage 3 of TV/Plex initiative)
+- **Cloudflare Worker** (`worker/worker.js`) for receiving Plex Pass webhooks and serving them to WatchTrack
+- **Worker endpoints:**
+  - `POST /webhook/{secret}` — Plex server posts scrobble/rate events here
+  - `GET /events?secret=X&since=TIMESTAMP` — WatchTrack polls for new events
+  - `POST /events/ack` — WatchTrack confirms processed events (deletes from KV)
+- **WatchTrack-side polling:** on app launch, fetches new events, applies them, acks
+- **Settings → Plex Webhook Bridge** section with Worker URL + Shared Secret fields + Test poll button
+- **Event matching:** title+year normalized; movies → marks `watched`; TV episodes → marks parent show as `watching` (so a single episode doesn't mark a whole series watched)
+- **Deployment guide** in `worker/DEPLOY.md` — full Cloudflare setup walkthrough
+
+### Architecture
+- Webhook bridge is **purely additive**: only ever marks items as watched/watching, never removes state
+- Events stored in Cloudflare KV with 7-day TTL — auto-cleanup if WatchTrack never polls
+- Shared-secret authentication; Worker rejects requests with wrong secret
+- Free-tier Cloudflare Workers + KV (well within quota for personal use)
+- Plex Pass required on the Plex side (lifetime subscription works)
+
+### Pending for Stage 4
+- TWA APK packaging via PWABuilder for installable Android TV app
+
+---
+
 ## 5.1.0 — 2026-05-07
 **Service worker cache:** `scifi-tracker-v11` → `v12`
 
