@@ -10,6 +10,43 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.1.0 — 2026-05-07
+**Service worker cache:** `scifi-tracker-v11` → `v12`
+
+### Added — TV mode (Stage 2 of TV/Plex initiative)
+- **TV mode display** — auto-detected via user-agent (Bravia, Google TV, Chromecast, etc.) and viewport heuristics (large landscape + no touch). Manual override available in Settings.
+- **TV-optimized layout** — larger fonts, increased spacing, simpler controls, hidden notes textarea (D-pad typing is impractical).
+- **D-pad / arrow-key navigation** — focus rings on every focusable element; arrow keys navigate items; Enter activates; Escape/Backspace closes modals.
+- **Spatial focus algorithm** — finds the nearest focusable element in the direction of the arrow press, weighted to prefer aligned elements.
+- All `.item` cards now `tabindex="0"` and visibly focused in TV mode.
+
+### Added — Settings modal (consolidated)
+- New **Settings** header button opens a modal with Display + Plex sections
+- Display section: Auto / Phone / TV radio buttons (persist to localStorage)
+- Plex section: Server URL, Auth Token, Server Identifier inputs + Test Connection + Refresh Library
+- Replaces previous scattered configuration
+
+### Added — Plex integration scaffolding
+- Plex auth token / server URL / clientIdentifier stored in localStorage (never sent anywhere except plex.tv API calls)
+- `fetchPlexLibrary()` retrieves library catalog and caches in-memory
+- `plexHasItem(item)` matches WatchTrack items by title+year against Plex library
+- **`⊕ Plex` badge** appears on items present in your library
+- **`▶ Play on Plex` button** appears on matched items; launches the Plex Android TV app via `plex://` deep link
+- Status auto-updates to "watching" when launching playback
+- Fallback to Plex web client if deep link doesn't fire
+
+### Architecture notes
+- Plex layer is purely additive: never removes WatchTrack state, never modifies items not in your library
+- All Plex API calls are direct from browser to your seedbox/plex.tv (no third-party intermediary)
+- Library cache rebuilds on Settings save / Refresh Library / app startup
+- Webhook reception (Stage 3) and full bidirectional sync deferred to next session
+
+### Pending for Stage 3
+- Cloudflare Worker for receiving Plex Pass webhooks (real-time "watched on Plex" → "watched in WatchTrack")
+- TWA APK packaging via PWABuilder for installable Android TV app
+
+---
+
 ## 5.0.0 — 2026-05-07
 **Service worker cache:** `scifi-tracker-v10` → `v11`
 

@@ -420,3 +420,127 @@ footer {
   border-left: 2px solid var(--accent);
   font-size: 12px; margin: 8px 0; color: var(--ink);
 }
+
+/* === V9 additions: TV mode, Settings, Plex badge, focus rings === */
+
+/* Settings modal */
+.settings-section {
+  margin-bottom: 16px; padding-bottom: 12px;
+  border-bottom: 1px solid var(--rule);
+}
+.settings-section:last-of-type { border-bottom: none; }
+.settings-section h4 {
+  margin: 0 0 6px; color: var(--accent);
+  font-size: 11px; letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.settings-help {
+  color: var(--ink-dim); font-size: 11px;
+  line-height: 1.4; margin: 0 0 10px;
+}
+.settings-row {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  align-items: center; margin-bottom: 8px;
+}
+.settings-row label {
+  display: inline-flex; align-items: center; gap: 4px;
+  color: var(--ink); font-size: 12px;
+  min-width: 120px;
+}
+.settings-row .modal-input { flex: 1; min-width: 200px; }
+.settings-status {
+  font-size: 11px; color: var(--ink-dim);
+  margin-top: 8px; padding: 6px 8px;
+  background: var(--bg); border-radius: 3px;
+  font-family: monospace;
+}
+.settings-status.ok { color: var(--love); }
+.settings-status.err { color: var(--pri-high); }
+
+/* Plex badge */
+.plex-badge {
+  display: inline-block; background: rgba(229, 160, 13, 0.15);
+  color: #e5a00d; border: 1px solid #e5a00d;
+  padding: 2px 7px; border-radius: 3px;
+  font-size: 9px; letter-spacing: 0.08em;
+  text-transform: uppercase; font-weight: 600;
+}
+.plex-play-btn {
+  background: #e5a00d; color: #1a1612;
+  border: 1px solid #e5a00d;
+  padding: 6px 10px; border-radius: 3px;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  cursor: pointer; margin-left: 6px;
+}
+
+/* === TV MODE === */
+body.tv-mode {
+  font-size: 18px;
+}
+body.tv-mode #app-header h1 { font-size: 32px; }
+body.tv-mode #app-header .subtitle { font-size: 14px; }
+body.tv-mode .stat { font-size: 13px; }
+body.tv-mode .header-btn {
+  font-size: 13px; padding: 10px 16px;
+  min-height: 44px;
+}
+body.tv-mode .tab-btn {
+  font-size: 14px; padding: 12px 20px;
+  min-height: 48px;
+}
+body.tv-mode .filter-btn,
+body.tv-mode .category-btn {
+  font-size: 13px; padding: 10px 16px;
+  min-height: 40px;
+}
+body.tv-mode .item {
+  padding: 18px;
+  margin-bottom: 14px;
+}
+body.tv-mode .item-title { font-size: 22px; }
+body.tv-mode .item-meta { font-size: 13px; }
+body.tv-mode .pitch { font-size: 15px; line-height: 1.55; }
+body.tv-mode .why-priority { font-size: 14px; padding: 12px; }
+body.tv-mode .critic-block p { font-size: 13px; }
+body.tv-mode .action-btn {
+  font-size: 13px; padding: 10px 16px;
+  min-height: 44px;
+}
+body.tv-mode .rating-btn,
+body.tv-mode .tag-btn {
+  font-size: 12px; padding: 8px 14px;
+  min-height: 40px;
+}
+body.tv-mode .modal-content {
+  font-size: 16px; max-width: 800px;
+}
+body.tv-mode .modal-input,
+body.tv-mode .modal-textarea {
+  font-size: 16px; padding: 12px;
+}
+
+/* TV mode: hide notes textarea (typing on remote is brutal) */
+body.tv-mode .notes-input { display: none; }
+body.tv-mode .notes-label { display: none; }
+
+/* === Focus rings (D-pad navigation) — visible on every focusable element === */
+body.tv-mode *:focus,
+body.tv-mode *:focus-visible {
+  outline: 3px solid var(--accent) !important;
+  outline-offset: 2px !important;
+  border-radius: 4px;
+}
+/* Phone mode keeps the lighter focus from the OS */
+body.phone-mode *:focus { outline: none; }
+body.phone-mode *:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+/* Items get extra-visible focus in TV mode */
+body.tv-mode .item:focus,
+body.tv-mode .item:focus-visible {
+  background: var(--bg-elev);
+  transform: scale(1.01);
+  transition: transform 0.1s ease;
+}

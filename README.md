@@ -119,7 +119,26 @@ Category filters remember your selection per tab as you switch between tabs. The
 - **Stats** — read-only dashboard with status counts, rating distribution, activity, top tags, per-tab progress
 - **Triage Queue** — focused single-item review of your queued items
 - **Triage Suggested** — focused review of system suggestions
+- **Settings** — display mode (Auto / Phone / TV) and Plex Media Server connection
 - **Reset / Export / Import** — same as before. Import now shows a diagnostic summary instead of a generic confirmation.
+
+### TV mode
+
+WatchTrack auto-detects TV displays (Sony Bravia, Google TV, Chromecast) and switches to a TV-optimized layout with larger fonts, focus rings, and D-pad navigation. Use the arrow keys (or TV remote D-pad) to move between items, Enter to select, Backspace/Escape to close modals. Notes editing is hidden in TV mode since D-pad typing is impractical — edit notes from the phone.
+
+You can override auto-detection in Settings → Display. Choose Auto, Phone, or TV.
+
+### Plex integration
+
+Settings → Plex Integration accepts your Plex auth token, server URL, and (optionally) server identifier. Once configured:
+
+- Items in your Plex library show a `⊕ Plex` badge
+- Each matched item gets a **▶ Play on Plex** button that launches the Plex Android TV app to that exact item
+- Marking "watching" via Play on Plex automatically updates your status
+
+Your token is stored only in localStorage on the device that accepts it. It never goes through GitHub Pages or any third party.
+
+To get a Plex auth token: log in to app.plex.tv on a desktop, open dev tools console (F12), and paste `localStorage.getItem('myPlexAccessToken')`.
 
 ### Reaction tags
 

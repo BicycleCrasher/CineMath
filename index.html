@@ -34,6 +34,7 @@
     <button class="header-btn" id="stats-btn">Stats</button>
     <button class="header-btn" id="triage-queue-btn">Triage Queue</button>
     <button class="header-btn" id="triage-suggest-btn">Triage Suggested</button>
+    <button class="header-btn" id="settings-btn">Settings</button>
     <button class="header-btn" id="reset-btn">Reset</button>
     <button class="header-btn" id="export-btn">Export</button>
     <button class="header-btn" id="import-btn">Import</button>
@@ -116,6 +117,52 @@
     <div class="stats-content" id="import-summary-content"></div>
     <div class="modal-actions">
       <button class="action-btn" id="import-summary-close">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="settings-modal">
+  <div class="modal-content">
+    <h3>Settings</h3>
+    <div class="settings-section">
+      <h4>Display</h4>
+      <p class="settings-help">TV mode uses larger fonts, focus rings, and D-pad navigation. Auto-detects based on device.</p>
+      <div class="settings-row">
+        <label>
+          <input type="radio" name="display-mode" value="auto"> Auto (detect)
+        </label>
+        <label>
+          <input type="radio" name="display-mode" value="phone"> Phone
+        </label>
+        <label>
+          <input type="radio" name="display-mode" value="tv"> TV
+        </label>
+      </div>
+    </div>
+    <div class="settings-section">
+      <h4>Plex Integration</h4>
+      <p class="settings-help">Connect your Plex Media Server to mark items as in-library and launch playback. Token is stored only on this device.</p>
+      <div class="settings-row">
+        <label>Server URL</label>
+        <input type="url" class="modal-input" id="plex-server-url" placeholder="https://plex-XXX.a.seedbox.vip" autocomplete="off">
+      </div>
+      <div class="settings-row">
+        <label>Auth Token</label>
+        <input type="password" class="modal-input" id="plex-token" placeholder="X-Plex-Token value" autocomplete="off">
+      </div>
+      <div class="settings-row">
+        <label>Server Identifier (optional)</label>
+        <input type="text" class="modal-input" id="plex-client-id" placeholder="40-char hex string for deep links" autocomplete="off">
+      </div>
+      <div class="settings-row">
+        <button class="action-btn" id="plex-test">Test connection</button>
+        <button class="action-btn" id="plex-refresh">Refresh library</button>
+      </div>
+      <p class="settings-status" id="plex-status">Not configured.</p>
+    </div>
+    <div class="modal-actions">
+      <button class="action-btn" id="settings-save">Save</button>
+      <button class="action-btn" id="settings-close">Cancel</button>
     </div>
   </div>
 </div>

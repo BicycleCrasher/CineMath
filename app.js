@@ -255,6 +255,129 @@ let catalogManifest = [];
 let activeTab = 'watchlist';
 let activeFilter = 'all';
 
+// === Display mode (tv vs phone) — persisted in localStorage ===
+const DISPLAY_MODE_KEY = 'watchtrack-display-mode';  // 'auto' | 'tv' | 'phone'
+function getDisplayModePref() {
+  return localStorage.getItem(DISPLAY_MODE_KEY) || 'auto';
+}
+function setDisplayModePref(mode) {
+  if (mode === 'auto') localStorage.removeItem(DISPLAY_MODE_KEY);
+  else localStorage.setItem(DISPLAY_MODE_KEY, mode);
+}
+function detectTVMode() {
+  const ua = navigator.userAgent.toLowerCase();
+  // Common TV user agent strings
+  if (/\b(googletv|google_tv|smarttv|smart-tv|crkey|chromecast|bravia|aftv|webos|tizen|netcast)\b/.test(ua)) return true;
+  // Fallback: large landscape viewport with no touch (most TVs)
+  const big = window.innerWidth >= 1280 && window.innerHeight >= 720;
+  const landscape = window.innerWidth > window.innerHeight;
+  const noTouch = !('ontouchstart' in window) && navigator.maxTouchPoints === 0;
+  return big && landscape && noTouch;
+}
+function isTVMode() {
+  const pref = getDisplayModePref();
+  if (pref === 'tv') return true;
+  if (pref === 'phone') return false;
+  return detectTVMode();
+}
+function applyDisplayMode() {
+  const tv = isTVMode();
+  document.body.classList.toggle('tv-mode', tv);
+  document.body.classList.toggle('phone-mode', !tv);
+}
+
+// === Plex settings ===
+const PLEX_TOKEN_KEY = 'watchtrack-plex-token';
+const PLEX_SERVER_URL_KEY = 'watchtrack-plex-server-url';
+const PLEX_CLIENT_ID_KEY = 'watchtrack-plex-client-id';
+function getPlexToken() { return localStorage.getItem(PLEX_TOKEN_KEY) || ''; }
+function setPlexToken(t) {
+  if (!t) localStorage.removeItem(PLEX_TOKEN_KEY);
+  else localStorage.setItem(PLEX_TOKEN_KEY, t);
+}
+function getPlexServerUrl() { return localStorage.getItem(PLEX_SERVER_URL_KEY) || ''; }
+function setPlexServerUrl(u) {
+  if (!u) localStorage.removeItem(PLEX_SERVER_URL_KEY);
+  else localStorage.setItem(PLEX_SERVER_URL_KEY, u.replace(/\/$/, ''));
+}
+function getPlexClientId() { return localStorage.getItem(PLEX_CLIENT_ID_KEY) || ''; }
+function setPlexClientId(c) {
+  if (!c) localStorage.removeItem(PLEX_CLIENT_ID_KEY);
+  else localStorage.setItem(PLEX_CLIENT_ID_KEY, c);
+}
+function isPlexConfigured() {
+  return Boolean(getPlexToken() && getPlexServerUrl());
+}
+
+// === Plex library cache (in-memory, refreshed on load) ===
+// Map: normalized "title|year" -> { ratingKey, title, year, type }
+let plexLibrary = new Map();
+let plexLibraryLoadedAt = 0;
+function plexNormalizeKey(title, year) {
+  return (title || '').toLowerCase().replace(/[^a-z0-9]+/g, '').slice(0, 60) + '|' + (year || '');
+}
+async function fetchPlexLibrary() {
+  if (!isPlexConfigured()) return;
+  const url = getPlexServerUrl();
+  const token = getPlexToken();
+  try {
+    // Get sections list
+    const sectionsResp = await fetch(`${url}/library/sections?X-Plex-Token=${encodeURIComponent(token)}`, {
+      headers: { 'Accept': 'application/json' }
+    });
+    if (!sectionsResp.ok) {
+      console.warn('Plex sections fetch failed:', sectionsResp.status);
+      return;
+    }
+    const sectionsJson = await sectionsResp.json();
+    const dirs = (sectionsJson?.MediaContainer?.Directory) || [];
+    const newLib = new Map();
+    for (const dir of dirs) {
+      if (dir.type !== 'movie' && dir.type !== 'show') continue;
+      const allResp = await fetch(`${url}/library/sections/${dir.key}/all?X-Plex-Token=${encodeURIComponent(token)}`, {
+        headers: { 'Accept': 'application/json' }
+      });
+      if (!allResp.ok) continue;
+      const allJson = await allResp.json();
+      const items = (allJson?.MediaContainer?.Metadata) || [];
+      items.forEach(it => {
+        const key = plexNormalizeKey(it.title, it.year);
+        newLib.set(key, {
+          ratingKey: it.ratingKey,
+          title: it.title,
+          year: it.year,
+          type: it.type
+        });
+      });
+    }
+    plexLibrary = newLib;
+    plexLibraryLoadedAt = Date.now();
+    render();
+  } catch (e) {
+    console.warn('Plex library fetch error:', e);
+  }
+}
+function plexHasItem(item) {
+  const key = plexNormalizeKey(item.title, item.year);
+  return plexLibrary.get(key);
+}
+function plexDeepLinkUrl(ratingKey) {
+  // plex:// URL scheme launches the Plex Android TV app (or Plex desktop) with a specific item
+  const clientId = getPlexClientId();
+  const serverUrl = getPlexServerUrl();
+  // The standard deep link format
+  return `plex://play?metadataKey=/library/metadata/${ratingKey}&server=${encodeURIComponent(serverUrl)}`;
+}
+async function plexMarkWatched(ratingKey) {
+  if (!isPlexConfigured()) return false;
+  const url = getPlexServerUrl();
+  const token = getPlexToken();
+  try {
+    const resp = await fetch(`${url}/:/scrobble?identifier=com.plexapp.plugins.library&key=${ratingKey}&X-Plex-Token=${encodeURIComponent(token)}`);
+    return resp.ok;
+  } catch (e) { return false; }
+}
+
 // === Category filter (in-memory only; never persisted to localStorage) ===
 const activeCategoryByTab = {};        // { tabId: 'panel' | 'all' }
 const categoryClearTimers = {};        // { tabId: timeoutId } — 30s "left tab" timer
@@ -970,6 +1093,7 @@ function render() {
     itemEl.className = 'item' + priorityClass;
     itemEl.dataset.id = item.id;
     itemEl.dataset.status = status;
+    itemEl.tabIndex = 0;  // Focusable for D-pad nav
     if (expandedIds.has(item.id)) itemEl.classList.add('expanded');
 
     const criticsHtml = (item.critics || []).map(c => `
@@ -983,6 +1107,8 @@ function render() {
     const ratingBadge = rating !== 'none' ? `<span class="rating-badge ${rating}">${ratingLabel(rating)}</span>` : '';
     const commitmentBadge = item.commitment ? `<span class="commitment">${item.commitment}</span>` : '';
     const sourceBadge = (activeTab === 'watchlist' && item._watchlist_source_label) ? `<span class="source-badge">${item._watchlist_source_label}</span>` : '';
+    const plexMatch = isPlexConfigured() ? plexHasItem(item) : null;
+    const plexBadge = plexMatch ? `<span class="plex-badge" title="In your Plex library">⊕ Plex</span>` : '';
     const whyHtml = item.whyPriority ? `<div class="why-priority"><strong>Why this priority:</strong> ${item.whyPriority}</div>` : '';
 
     const itemTagSet = getTagSetForItem(item);
@@ -1011,7 +1137,7 @@ function render() {
           <h3 class="item-title">${item.title}</h3>
           <div class="item-meta">${metaLine}</div>
           ${seasonsLine}
-          <div class="badge-row">${sourceBadge}${commitmentBadge}${priorityBadge}${ratingBadge}</div>
+          <div class="badge-row">${sourceBadge}${plexBadge}${commitmentBadge}${priorityBadge}${ratingBadge}</div>
         </div>
         <div class="status-pill ${status === 'none' ? '' : status}">${statusIcon(status)}</div>
       </div>
@@ -1025,6 +1151,7 @@ function render() {
           <button class="action-btn ${status === 'watched' ? 'active-watched' : ''}" data-action="watched">Watched</button>
           <button class="action-btn ${status === 'skip' ? 'active-skip' : ''}" data-action="skip">Pass</button>
           <button class="action-btn" data-action="none">Clear</button>
+          ${plexMatch ? `<button class="plex-play-btn" data-plex-key="${plexMatch.ratingKey}">▶ Play on Plex</button>` : ''}
         </div>
         <div class="rating-section">
           <div class="rating-label">Your reaction</div>
@@ -1054,6 +1181,23 @@ function render() {
     itemEl.querySelectorAll('.action-btn').forEach(btn => {
       btn.addEventListener('click', (e) => { e.stopPropagation(); setStatus(item.id, btn.dataset.action, itemTab); });
     });
+    const plexPlayBtn = itemEl.querySelector('.plex-play-btn');
+    if (plexPlayBtn) {
+      plexPlayBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const ratingKey = plexPlayBtn.dataset.plexKey;
+        // Set status to watching automatically when launching playback
+        setStatus(item.id, 'watching', itemTab);
+        // Try the deep link — Plex Android TV catches plex://
+        const deepLink = plexDeepLinkUrl(ratingKey);
+        window.location.href = deepLink;
+        // Fallback: if deep link doesn't fire (browser blocks unknown protocol), open Plex web client
+        setTimeout(() => {
+          const fallbackUrl = `${getPlexServerUrl()}/web/index.html#!/server/${getPlexClientId() || ''}/details?key=%2Flibrary%2Fmetadata%2F${ratingKey}`;
+          window.open(fallbackUrl, '_blank');
+        }, 1000);
+      });
+    }
     itemEl.querySelectorAll('.rating-btn').forEach(btn => {
       btn.addEventListener('click', (e) => { e.stopPropagation(); setRating(item.id, btn.dataset.rating, itemTab); });
     });
@@ -1204,6 +1348,93 @@ function setupModals() {
   // === Triage modals ===
   document.getElementById('triage-queue-btn').addEventListener('click', () => startTriage('queue'));
   document.getElementById('triage-suggest-btn').addEventListener('click', () => startTriage('suggest'));
+
+  // === Settings modal ===
+  const settingsModal = document.getElementById('settings-modal');
+  document.getElementById('settings-btn').addEventListener('click', () => {
+    // Populate fields
+    const pref = getDisplayModePref();
+    document.querySelectorAll('input[name="display-mode"]').forEach(r => {
+      r.checked = (r.value === pref);
+    });
+    document.getElementById('plex-server-url').value = getPlexServerUrl();
+    document.getElementById('plex-token').value = getPlexToken();
+    document.getElementById('plex-client-id').value = getPlexClientId();
+    updatePlexStatusLine();
+    settingsModal.classList.add('active');
+  });
+  document.getElementById('settings-close').addEventListener('click', () => {
+    settingsModal.classList.remove('active');
+  });
+  document.getElementById('settings-save').addEventListener('click', () => {
+    const mode = document.querySelector('input[name="display-mode"]:checked')?.value || 'auto';
+    setDisplayModePref(mode);
+    setPlexServerUrl(document.getElementById('plex-server-url').value.trim());
+    setPlexToken(document.getElementById('plex-token').value.trim());
+    setPlexClientId(document.getElementById('plex-client-id').value.trim());
+    applyDisplayMode();
+    settingsModal.classList.remove('active');
+    if (isPlexConfigured()) fetchPlexLibrary();
+    render();
+  });
+  document.getElementById('plex-test').addEventListener('click', async () => {
+    const url = document.getElementById('plex-server-url').value.trim().replace(/\/$/, '');
+    const token = document.getElementById('plex-token').value.trim();
+    const status = document.getElementById('plex-status');
+    if (!url || !token) {
+      status.textContent = 'Enter both server URL and token first.';
+      status.className = 'settings-status err';
+      return;
+    }
+    status.textContent = 'Testing...';
+    status.className = 'settings-status';
+    try {
+      const resp = await fetch(`${url}/identity?X-Plex-Token=${encodeURIComponent(token)}`, {
+        headers: { 'Accept': 'application/json' }
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        const name = data?.MediaContainer?.machineIdentifier || 'unknown';
+        status.textContent = `Connected. Server ID: ${name.slice(0, 20)}...`;
+        status.className = 'settings-status ok';
+      } else {
+        status.textContent = `Failed: HTTP ${resp.status}. Check URL/token.`;
+        status.className = 'settings-status err';
+      }
+    } catch (e) {
+      status.textContent = `Error: ${e.message}. Likely CORS or network.`;
+      status.className = 'settings-status err';
+    }
+  });
+  document.getElementById('plex-refresh').addEventListener('click', async () => {
+    const status = document.getElementById('plex-status');
+    if (!isPlexConfigured()) {
+      status.textContent = 'Save Plex settings first.';
+      status.className = 'settings-status err';
+      return;
+    }
+    status.textContent = 'Refreshing library...';
+    status.className = 'settings-status';
+    await fetchPlexLibrary();
+    status.textContent = `Library cached: ${plexLibrary.size} items.`;
+    status.className = 'settings-status ok';
+  });
+}
+
+function updatePlexStatusLine() {
+  const status = document.getElementById('plex-status');
+  if (!status) return;
+  if (!isPlexConfigured()) {
+    status.textContent = 'Not configured.';
+    status.className = 'settings-status';
+  } else if (plexLibrary.size === 0) {
+    status.textContent = 'Configured but library not yet fetched. Click Test connection or Refresh library.';
+    status.className = 'settings-status';
+  } else {
+    const ago = plexLibraryLoadedAt ? Math.floor((Date.now() - plexLibraryLoadedAt) / 60000) : 0;
+    status.textContent = `Library: ${plexLibrary.size} items (refreshed ${ago}m ago).`;
+    status.className = 'settings-status ok';
+  }
 }
 
 // === Import diagnostic ===
@@ -1528,22 +1759,104 @@ function triageAction(act) {
   loadActiveTab();
   loadState();
   await loadCatalogs();
+  applyDisplayMode();
   buildTabs();
   setupModals();
   buildCategoryFilters();
   buildFilters();
   render();
 
+  // If Plex is already configured, fetch the library in the background
+  if (isPlexConfigured()) {
+    fetchPlexLibrary();
+  }
+
+  // === D-pad / arrow-key navigation ===
+  // Active by default in TV mode; harmless in phone mode (browsers handle arrows in inputs naturally).
+  document.addEventListener('keydown', (e) => {
+    if (!document.body.classList.contains('tv-mode')) return;
+    // Don't intercept inside text inputs or textareas
+    const tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+
+    const key = e.key;
+    if (!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Enter','Escape','Backspace'].includes(key)) return;
+
+    if (key === 'Escape' || key === 'Backspace') {
+      // Close any open modal
+      const openModal = document.querySelector('.modal.active');
+      if (openModal) {
+        e.preventDefault();
+        openModal.classList.remove('active');
+        return;
+      }
+      // Otherwise, focus the tab nav
+      const activeBtn = document.querySelector('.tab-btn.active');
+      if (activeBtn) { e.preventDefault(); activeBtn.focus(); }
+      return;
+    }
+
+    if (key === 'Enter') {
+      // Default browser behavior handles Enter on focused button. Only intercept if focus is on .item card.
+      const focused = document.activeElement;
+      if (focused && focused.classList.contains('item')) {
+        e.preventDefault();
+        focused.click();
+      }
+      return;
+    }
+
+    e.preventDefault();
+    const focused = document.activeElement;
+    if (!focused || focused === document.body) {
+      // Focus first item
+      const firstItem = document.querySelector('.item');
+      if (firstItem) firstItem.focus();
+      return;
+    }
+
+    // D-pad logic: simple "find nearest focusable in direction"
+    const focusables = Array.from(document.querySelectorAll(
+      '.tab-btn, .filter-btn, .category-btn, .header-btn, .item, .action-btn, .rating-btn, .tag-btn, .plex-play-btn, .sort-select, button, a, input'
+    )).filter(el => el.offsetParent !== null && !el.disabled);
+    if (focusables.length === 0) return;
+
+    const r = focused.getBoundingClientRect();
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height / 2;
+
+    let best = null;
+    let bestDist = Infinity;
+    focusables.forEach(el => {
+      if (el === focused) return;
+      const er = el.getBoundingClientRect();
+      const ecx = er.left + er.width / 2;
+      const ecy = er.top + er.height / 2;
+      const dx = ecx - cx;
+      const dy = ecy - cy;
+      let valid = false;
+      if (key === 'ArrowRight' && dx > 5) valid = Math.abs(dy) < 100 || Math.abs(dy) < Math.abs(dx) * 1.5;
+      else if (key === 'ArrowLeft' && dx < -5) valid = Math.abs(dy) < 100 || Math.abs(dy) < Math.abs(dx) * 1.5;
+      else if (key === 'ArrowDown' && dy > 5) valid = Math.abs(dx) < 200 || Math.abs(dx) < Math.abs(dy) * 1.5;
+      else if (key === 'ArrowUp' && dy < -5) valid = Math.abs(dx) < 200 || Math.abs(dx) < Math.abs(dy) * 1.5;
+      if (!valid) return;
+      const dist = Math.hypot(dx, dy);
+      if (dist < bestDist) { bestDist = dist; best = el; }
+    });
+
+    if (best) {
+      best.focus();
+      best.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+    }
+  });
+
   // App-backgrounded handling: clear ALL category memory after 5 minutes hidden.
-  // If the app becomes visible again before 5 minutes, cancel the clear.
-  // This ONLY clears the category sort filter — never ratings, status, or any other state.
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') {
       if (appHiddenClearTimer) clearTimeout(appHiddenClearTimer);
       appHiddenClearTimer = setTimeout(() => {
         clearAllCategoryMemory();
         appHiddenClearTimer = null;
-        // Refresh the category pill row in case the user returns
         if (typeof buildCategoryFilters === 'function') {
           buildCategoryFilters();
           render();
