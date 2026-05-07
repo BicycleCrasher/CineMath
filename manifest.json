@@ -1,7 +1,7 @@
 {
-  "name": "WatchTrack: Personal Film & TV Tracker",
+  "name": "WatchTrack",
   "short_name": "WatchTrack",
-  "description": "Personal tracker for films and TV.",
+  "description": "Personal tracker for films and TV across genres, with status, ratings, reaction tags, and category filters.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

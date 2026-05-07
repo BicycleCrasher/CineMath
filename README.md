@@ -1,22 +1,41 @@
-# Cerebral Sci-Fi Tracker — Deployment Guide
+# WatchTrack — Deployment Guide
 
-A Progressive Web App (PWA) that installs to your Android home screen as a real-feeling app.
+A Progressive Web App (PWA) that installs to your Android home screen as a real-feeling app. Tracks films and television across 21 genre-aware tabs with status, ratings, reaction tags, and category filtering.
 
 ## What's in this folder
 
 ```
-index.html           ← the app
-styles.css           ← styles
-app.js               ← logic
-manifest.json        ← PWA config
-service-worker.js    ← offline support
+index.html               ← the app
+styles.css               ← styles
+app.js                   ← logic
+manifest.json            ← PWA config
+service-worker.js        ← offline support
 icons/
-  icon-192.png       ← Android home-screen icon
-  icon-512.png       ← splash-screen icon
+  icon-192.png           ← Android home-screen icon
+  icon-512.png           ← splash-screen icon
 data/
-  films.json         ← film catalog
-  tv-limited.json    ← limited series catalog
-  tv-ongoing.json    ← ongoing series catalog
+  catalogs.json          ← tab manifest (defines the 21 tabs)
+  scifi.json             ← Sci-Fi films
+  scifi-tv.json          ← Sci-Fi TV (limited + ongoing)
+  espionage.json         ← Spy films
+  spy-tv.json            ← Spy TV
+  crime.json             ← Crime films
+  crime-tv.json          ← Crime TV
+  cons-courtroom.json    ← Cons & Courtroom films
+  cons-courtroom-tv.json ← Cons & Courtroom TV
+  horror.json            ← Horror films
+  horror-tv.json         ← Horror TV
+  fantasy.json           ← Fantasy films
+  fantasy-tv.json        ← Fantasy TV
+  heist.json             ← Heist films
+  comedy.json            ← Comedy films
+  comedy-tv.json         ← Comedy TV
+  british-comedy.json    ← British Comedy (panel, sitcom, game, news, specials)
+  drama.json             ← Drama films
+  drama-tv.json          ← Drama TV
+  foreign.json           ← Foreign / international film
+  auteur.json            ← Auteur retrospectives
+  pre1960.json           ← Classics
 ```
 
 To add new films or shows later, you (or Claude) edit/add JSON files in `/data/`. The app picks them up on next refresh.
@@ -32,7 +51,7 @@ If you don't have one: go to **github.com**, click "Sign up", pick a username (t
 ### 2. Create a new repository
 
 - Click the **+** in the top-right → **New repository**
-- Name it: `scifi-tracker` (or anything else; this becomes part of the URL)
+- Name it: `WatchTrack` (or anything else; this becomes part of the URL)
 - Set to **Public** (required for free GitHub Pages)
 - Don't initialize with README, .gitignore, or license — leave checkboxes empty
 - Click **Create repository**
@@ -55,7 +74,7 @@ You'll see a page with several options. Click **"uploading an existing file"** i
   - **Branch:** `main`, folder `/ (root)`
   - Click **Save**
 - Wait 1-2 minutes
-- A green banner will appear with your URL: `https://YOUR-USERNAME.github.io/scifi-tracker/`
+- A green banner will appear with your URL: `https://YOUR-USERNAME.github.io/WatchTrack/`
 
 ### 5. Install on your Android phone
 
@@ -74,9 +93,27 @@ That's it. The app:
 
 ---
 
+## Using the app
+
+### Tabs and categories
+
+The top nav has 21 tabs, organized roughly by film/TV pairs (Sci-Fi / Sci-Fi TV, Spy / Spy TV, etc.) plus standalone tabs (Heist, Auteur, Classics, British Comedy).
+
+Inside each tab, two pill rows above the content:
+- **Top row (warm coral):** category filter — narrow to a sub-genre (e.g., Drama TV → "Sorkin", Foreign → "Korean", Auteur → "Coens"). Tap "All" to clear.
+- **Bottom row (gold):** status filter — All / Queued / Watching / Watched / Skipped / Rated.
+
+Category filters remember your selection per tab as you switch between tabs. They auto-clear after 30 seconds away from a tab and after 5 minutes of the app being backgrounded — never affecting ratings or status.
+
+### Reaction tags
+
+When you rate something, the tag bar adapts to what you're rating. Films use one set, prestige TV uses another, sitcoms another, panel shows and game shows their own. The system resolves the right set automatically based on the tab and the item's metadata.
+
+---
+
 ## Adding new content later
 
-When Claude generates new film recommendations:
+When Claude generates new recommendations:
 
 1. Claude provides updated/new JSON files
 2. Save them locally
@@ -87,6 +124,8 @@ When Claude generates new film recommendations:
 
 The service worker may briefly serve a cached version. If you don't see updates, close the app completely (swipe away from recents) and reopen.
 
+When Claude updates `app.js`, `service-worker.js`, or the catalog manifest, you'll usually need to bump the cache version inside `service-worker.js` (e.g., `scifi-tracker-v10` → `v11`) so old caches evict on next load.
+
 ---
 
 ## Sharing your progress with Claude
@@ -95,7 +134,7 @@ The service worker may briefly serve a cached version. If you don't see updates,
 - Tap **Export** in the header
 - Tap **Copy to clipboard**
 - Paste into a Claude conversation
-- Claude reads the JSON directly, sees what you've watched, rated, and tagged across all three tabs
+- Claude reads the JSON directly, sees what you've watched, rated, and tagged across all 21 tabs
 
 ---
 
@@ -105,6 +144,10 @@ The service worker may briefly serve a cached version. If you don't see updates,
 - Make sure you're using Chrome on Android (not Samsung Internet or Firefox — those work too but UI differs)
 - The site must be served over HTTPS (GitHub Pages does this automatically)
 - Wait until the page fully loads before tapping the menu
+
+**App still says the old name after update:**
+- The PWA caches its name from `manifest.json` at install time
+- Long-press the icon → uninstall → reopen the URL in Chrome → reinstall from the menu
 
 **Icons look generic:**
 - Replace `icons/icon-192.png` and `icons/icon-512.png` with your own designs (same dimensions, PNG)
@@ -118,3 +161,6 @@ The service worker may briefly serve a cached version. If you don't see updates,
 **Updates not showing:**
 - Service workers cache aggressively. Close the app completely (swipe up to remove from recents) and reopen.
 - For stubborn cases: in Chrome, go to your GitHub Pages URL, tap menu → settings → site settings → clear & reset
+
+**Tab is empty or category pills don't appear:**
+- A catalog file may have failed to load. Hard-refresh the PWA. If a specific tab stays empty after that, the JSON for that tab probably has a syntax error — re-pull the latest from the repo.
