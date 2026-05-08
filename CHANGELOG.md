@@ -10,6 +10,21 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.10.1 — 2026-05-08
+**Service worker cache:** `scifi-tracker-v23` → `v24`
+
+### Fixed — Seed state for new tabs not applied to existing installs
+
+#### The bug
+SEED_STATE only ran when `localStorage[STORAGE_KEY]` was completely empty (i.e., truly first install ever). For any user with months of existing state, adding seed entries for newly-introduced tabs (Musicals, Heroes & Comics) had no effect — the new tabs initialized empty.
+
+#### The fix
+On state load, after parsing existing localStorage state, iterate `catalogManifest` and for any tab whose state object is empty AND has entries in `SEED_STATE`, merge them in. Existing tabs with any state are untouched. New tabs get their seeds.
+
+This is the right architectural fix: any future new tab added to the manifest with seed entries will now apply automatically on next page load, without overwriting existing user data on populated tabs.
+
+---
+
 ## 5.10.0 — 2026-05-08
 **Service worker cache:** `scifi-tracker-v22` → `v23`
 
