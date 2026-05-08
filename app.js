@@ -33,6 +33,10 @@ const TAG_SETS = {
   'tv-anthology': {
     positive: ["Variable but rewards","Quotable","Stayed with me","Smart structure","Emotionally resonant","Rewatchable","Want more like this"],
     negative: ["Inconsistent","Style over substance","Premise didn't land","Stretched thin","Aged badly"]
+  },
+  'film-musical': {
+    positive: ["Score is the engine","Bravura staging","Powerhouse vocals","Triple-threat","Endlessly rewatchable","Earned emotion","Subversive or knowing","Cult magnetism"],
+    negative: ["Score doesn't land","Vocally weak","Cuts mask the dance","Book is the problem","Joyless","Dated tropes"]
   }
 };
 
@@ -63,7 +67,10 @@ const TAB_DEFAULT_CONTENT_TYPE = {
   'drama-tv': 'tv-prestige',
   'foreign': 'film-narrative',
   'auteur': 'film-narrative',
-  'pre1960': 'film-narrative'
+  'pre1960': 'film-narrative',
+  'musicals': 'film-musical',
+  'heroes-comics': 'film-narrative',
+  'heroes-comics-tv': 'tv-prestige'
 };
 
 // British-comedy category → content type mapping (when item has categories[]).
@@ -246,7 +253,54 @@ const SEED_STATE = {
   },
   "foreign": {},
   "auteur": {},
-  "pre1960": {}
+  "pre1960": {},
+  "musicals": {
+    "singin-in-the-rain-1952": { "status": "watched", "rating": "loved", "reactionTags": ["Score is the engine","Bravura staging","Triple-threat","Endlessly rewatchable","Earned emotion"], "notes": "All-time favorite. Watched countless times. Know every word, every dance, every beat." },
+    "the-rocky-horror-picture-show-1975": { "status": "watched", "rating": "loved", "reactionTags": ["Cult magnetism","Subversive or knowing"] },
+    "wicked-2024": { "status": "watched", "rating": "loved", "reactionTags": ["Powerhouse vocals","Earned emotion","Subversive or knowing"], "notes": "Loved. Wicked: For Good (Part 2) on the queue." },
+    "anastasia-1997": { "status": "watched", "rating": "loved", "reactionTags": ["Score is the engine","Earned emotion","Endlessly rewatchable"] },
+    "pitch-perfect-2012": { "status": "watched", "rating": "loved", "reactionTags": ["Powerhouse vocals","Triple-threat","Earned emotion"] },
+    "pitch-perfect-2-2015": { "status": "watched", "rating": "loved", "reactionTags": ["Powerhouse vocals","Earned emotion"] },
+    "pitch-perfect-3-2017": { "status": "watched", "rating": "loved", "reactionTags": ["Earned emotion"] },
+    "south-park-bigger-longer-uncut-1999": { "status": "watched", "rating": "loved", "reactionTags": ["Subversive or knowing","Score is the engine"], "notes": "Wants a rewatch." },
+
+    "les-mis-rables-2012": { "status": "watched", "rating": "disliked", "reactionTags": ["Vocally weak","Book is the problem","Joyless"] },
+    "mamma-mia-2008": { "status": "watched", "rating": "disliked", "reactionTags": ["Vocally weak","Book is the problem","Joyless"] },
+    "la-la-land-2016": { "status": "watched", "rating": "disliked", "reactionTags": ["Vocally weak"] },
+    "white-christmas-1954": { "status": "watched", "rating": "disliked", "reactionTags": ["Score doesn't land","Joyless","Dated tropes"] },
+    "holiday-inn-1942": { "status": "watched", "rating": "disliked", "reactionTags": ["Dated tropes","Joyless","Book is the problem"] },
+    "across-the-universe-2007": { "status": "watched", "rating": "disliked", "reactionTags": ["Book is the problem","Joyless"] },
+
+    "mary-poppins-1964": { "status": "watched", "rating": "liked" },
+    "mary-poppins-returns-2018": { "status": "watched", "rating": "mixed", "notes": "OG was lightyears better." },
+    "the-prince-of-egypt-1998": { "status": "watched", "rating": "mixed", "notes": "OK but no rewatches." },
+
+    "the-little-mermaid-1989": { "status": "watched", "rating": "liked" },
+    "beauty-and-the-beast-1991": { "status": "watched", "rating": "liked" },
+    "aladdin-1992": { "status": "watched", "rating": "liked" },
+    "the-lion-king-1994": { "status": "watched", "rating": "liked" },
+    "pocahontas-1995": { "status": "watched", "rating": "liked" },
+    "the-hunchback-of-notre-dame-1996": { "status": "watched", "rating": "liked" },
+    "hercules-1997": { "status": "watched", "rating": "liked" },
+    "mulan-1998": { "status": "watched", "rating": "liked" },
+    "tarzan-1999": { "status": "watched", "rating": "liked" },
+    "west-side-story-2021": { "status": "watched", "rating": "liked" },
+    "the-sound-of-music-1965": { "status": "watched", "rating": "liked" },
+    "my-fair-lady-1964": { "status": "watched", "rating": "liked" },
+    "grease-1978": { "status": "watched", "rating": "liked" },
+    "sweeney-todd-the-demon-barber-of-fleet-street-2007": { "status": "watched", "rating": "liked" },
+    "into-the-woods-2014": { "status": "watched", "rating": "liked" },
+    "hairspray-2007": { "status": "watched", "rating": "liked" },
+    "annie-1982": { "status": "watched", "rating": "liked" },
+    "dreamgirls-2006": { "status": "watched", "rating": "liked" },
+    "the-phantom-of-the-opera-2004": { "status": "watched", "rating": "liked" },
+    "the-music-man-1962": { "status": "watched", "rating": "liked" },
+    "the-wizard-of-oz-1939": { "status": "watched", "rating": "liked" }
+  },
+  "heroes-comics": {
+    "joker-folie-deux-2024": { "status": "watched" }
+  },
+  "heroes-comics-tv": {}
 };
 
 let state = {};

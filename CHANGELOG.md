@@ -10,6 +10,35 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.10.0 — 2026-05-08
+**Service worker cache:** `scifi-tracker-v22` → `v23`
+
+### Added — Musicals reaction-tag taxonomy + seeded reactions
+
+#### New contentType: `film-musical`
+- Added as the 9th contentType in the system
+- Musicals tab default is now `film-musical` (previously inherited `film-narrative`)
+- Heroes & Comics film tab confirmed as `film-narrative`; Heroes & Comics TV as `tv-prestige`
+
+#### Tag set (8 positive + 6 negative)
+**Positive:** Score is the engine, Bravura staging, Powerhouse vocals, Triple-threat, Endlessly rewatchable, Earned emotion, Subversive or knowing, Cult magnetism
+
+**Negative:** Score doesn't land, Vocally weak, Cuts mask the dance, Book is the problem, Joyless, Dated tropes
+
+These replace the narrative-film tags (Rewatchable, Stayed with me, Visually stunning, etc.) with musical-specific axes covering score, performance, staging, book quality, tone, and cultural weight.
+
+#### Catalog updates
+- All 38 items in `data/musicals.json` updated to `contentType: "film-musical"`
+
+#### Seed state (37 items)
+- **Loved + tagged**: Singin' in the Rain (5 tags + notes), Rocky Horror, Wicked, Anastasia, Pitch Perfect 1/2/3, South Park: BLU
+- **Disliked + tagged**: Les Misérables, Mamma Mia!, La La Land, White Christmas, Holiday Inn, Across the Universe
+- **Mixed**: Mary Poppins Returns, Prince of Egypt
+- **Liked (default for unflagged Watched items)**: 20 items (Disney Renaissance + most stage adaptations + classics)
+- **Heroes & Comics**: Joker: Folie à Deux marked Watched (no rating; can be applied through UI)
+
+---
+
 ## 5.9.0 — 2026-05-08
 **Service worker cache:** `scifi-tracker-v21` → `v22`
 
