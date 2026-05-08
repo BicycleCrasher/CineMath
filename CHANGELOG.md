@@ -10,6 +10,35 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.14.0 — 2026-05-08
+**Service worker cache:** `scifi-tracker-v29` → `v30`
+
+### Added — Stage 5e: Recommendation engine
+
+The wizard's "Looking for something to watch → Start something new" branch now opens a Recommendations panel instead of going straight to triage. Recommendations are derived from your own ratings, scoped per genre tab.
+
+#### How it works
+For the genre you pick, the engine walks every item you've rated **Loved** or **Liked** in that tab (or across all film/TV tabs if you choose "Not Sure") and aggregates the TMDB `recommendations` and `similar` arrays cached in catalog enrichment. Each candidate accumulates a score of `Σ (Loved → 2, Liked → 1)` per source item, with deduplication on TMDB ID.
+
+Candidates split into two sections:
+
+- **Recommended for you** — items already in your catalog (in the selected tab) that you haven't watched, queued, or rated. Tap to jump to the item.
+- **Discover** — TMDB candidates that are NOT in any of your catalogs. Tap to open the existing Promote modal, which adds the item under a new section `X. TMDB Recommendations (Promoted)` with status `queued`.
+
+If your catalog hasn't been pre-enriched yet (no rec arrays cached), the panel offers a hint to run **Settings → Plex Integration → Pre-enrich catalog**. If you have no Loved/Liked items in the tab, the panel directs you to rate a few first.
+
+A "Browse all unrated items" fallback button preserves the previous flow.
+
+#### Data layer changes
+- `catalogEnrichmentIdx` now persists `recommendations` and `similar` slim arrays per item alongside `tmdbId`/`type`/`year`/`posterPath`/`numberOfEpisodes`/`genres`.
+- `enrichEntireCatalog()` skip-check tightened: items missing the new arrays are re-enriched on the next pass. **One-time UX cost: re-run "Pre-enrich catalog" once after upgrading.**
+- The Worker has provided `recommendations`/`similar` since v5; this release just starts persisting them locally.
+
+#### Promote-modal generalization
+The Promote modal now branches on source: rec-sourced promotes write to a new section, set status to `queued` (not `watched`), and stamp a partial enrichment record so the same TMDB item disappears from Discover on the next render. Plex-history promotes are unchanged.
+
+---
+
 ## 5.13.0 — 2026-05-08
 **Service worker cache:** `scifi-tracker-v28` → `v29`
 

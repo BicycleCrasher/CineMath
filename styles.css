@@ -850,3 +850,25 @@ body.tv-mode #settings-modal .modal-content {
   font-style: italic;
   padding: 24px;
 }
+.wizard-recs-section {
+  display: flex; flex-direction: column; gap: 8px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 8px;
+}
+.wizard-recs-section:last-of-type {
+  border-bottom: none;
+}
+.wizard-recs-heading {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  margin-top: 4px;
+}
+.wizard-recs-help {
+  font-size: 12px;
+  color: var(--ink-dim);
+  font-style: italic;
+  margin-bottom: 4px;
+}

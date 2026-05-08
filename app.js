@@ -1150,7 +1150,10 @@ async function enrichEntireCatalog(progressCb) {
     const isTvTab = tvTabs.has(tabId);
     cat.items.forEach(item => {
       const existing = getEnrichmentForItem(item.id);
-      if (existing && existing.lastEnriched && (Date.now() - existing.lastEnriched < STALE_MS) && existing.tmdbId) return;
+      // Skip only if fresh AND has tmdbId AND has rec arrays (added in v5.14 for Stage 5e).
+      // Older enrichment records without rec arrays will be re-fetched.
+      const hasRecs = existing && (existing.recommendations || existing.similar);
+      if (existing && existing.lastEnriched && (Date.now() - existing.lastEnriched < STALE_MS) && existing.tmdbId && hasRecs) return;
       lookups.push({
         itemId: item.id,
         title: item.title,
@@ -1193,6 +1196,8 @@ async function enrichEntireCatalog(progressCb) {
             posterPath: r.result.posterPath,
             numberOfEpisodes: r.result.numberOfEpisodes,
             genres: r.result.genres,
+            recommendations: r.result.recommendations || [],
+            similar: r.result.similar || [],
           });
           found++;
         }
@@ -2998,12 +3003,17 @@ async function confirmPromote() {
   if (!catalogs[tab]) { alert('Tab not found.'); return; }
 
   const cat = catalogs[tab];
-  const sectionName = 'X. Plex History (Promoted)';
+  const isRecSource = pendingPromote.source === 'recommendation';
+  const sectionName = isRecSource
+    ? 'X. TMDB Recommendations (Promoted)'
+    : 'X. Plex History (Promoted)';
   let section = cat.sections.find(s => s.name === sectionName);
   if (!section) {
     section = {
       name: sectionName,
-      desc: 'Items promoted from your Plex viewing history (synced via Cloudflare KV).',
+      desc: isRecSource
+        ? 'Items promoted from TMDB recommendations based on what you Loved or Liked (synced via Cloudflare KV).'
+        : 'Items promoted from your Plex viewing history (synced via Cloudflare KV).',
       categories: [],
       items: [],
     };
@@ -3012,9 +3022,13 @@ async function confirmPromote() {
   const newItem = {
     title: pendingPromote.title,
     year: pendingPromote.year ? parseInt(pendingPromote.year) : null,
-    pitch: `Promoted from Plex history. ${pendingPromote.plays} play(s) detected${pendingPromote.type === 'tv' ? `, ${pendingPromote.distinct} distinct episode(s)` : ''}.`,
+    pitch: isRecSource
+      ? `Promoted from TMDB recommendation. Suggested by your rating of "${pendingPromote.sourceTitle}".`
+      : `Promoted from Plex history. ${pendingPromote.plays} play(s) detected${pendingPromote.type === 'tv' ? `, ${pendingPromote.distinct} distinct episode(s)` : ''}.`,
     priority: 'low',
-    whyPriority: 'Auto-added from your Plex viewing history.',
+    whyPriority: isRecSource
+      ? 'Auto-added from TMDB recommendations.'
+      : 'Auto-added from your Plex viewing history.',
     contentType: pendingPromote.type === 'tv' ? 'tv-prestige' : 'film-narrative',
     tvCompletionMode: 'flexible',
   };
@@ -3053,8 +3067,19 @@ async function confirmPromote() {
   // Refresh promotions cache (so the new entry appears in maintenance modal)
   await fetchPromotions();
 
-  // Mark watched/watching
-  if (pendingPromote.type === 'movie') {
+  // Mark status: rec-sourced → queued (user wants to consider it);
+  // Plex-sourced movie → watched; Plex-sourced TV → watching, with auto-loved if many distinct episodes.
+  if (isRecSource) {
+    setStatus(newItem.id, 'queued', tab);
+    // Stamp local enrichment so the same TMDB item won't re-appear in Discover next render.
+    if (pendingPromote.tmdbId) {
+      setEnrichmentForItem(newItem.id, {
+        tmdbId: pendingPromote.tmdbId,
+        type: pendingPromote.type === 'tv' ? 'tv' : 'movie',
+        year: newItem.year,
+      });
+    }
+  } else if (pendingPromote.type === 'movie') {
     setStatus(newItem.id, 'watched', tab);
   } else {
     setStatus(newItem.id, 'watching', tab);
@@ -3066,9 +3091,15 @@ async function confirmPromote() {
   // Refresh state
   plexHistoryCache = null;
   document.getElementById('promote-modal').classList.remove('active');
+  const wasRecSourced = isRecSource;
   pendingPromote = null;
-  // Re-render history modal
-  setTimeout(() => openHistoryModal(), 100);
+  if (wasRecSourced) {
+    // Re-render the wizard recs panel so the just-promoted item disappears from Discover.
+    setTimeout(() => wizardRender(), 100);
+  } else {
+    // Re-render history modal (existing flow)
+    setTimeout(() => openHistoryModal(), 100);
+  }
   render();
 }
 
@@ -3779,13 +3810,118 @@ function renderStats() {
 
 // === Triage mode ===
 let triageState = null;  // { mode, queue, idx }
+
+// =====================================================================
+// Stage 5e: Recommendation engine
+// =====================================================================
+// Pure: walks loved/liked source items in tabIds, aggregates the TMDB
+// recommendations/similar arrays from local enrichment, scores by source
+// rating weight, classifies candidates as catalog-matched (Recommended)
+// or TMDB-orphan (Discover), and returns the top of each.
+function computeRecsForTab(tabIds) {
+  const tabSet = new Set(tabIds);
+
+  // Sources: loved/liked items in the requested tabs that have enrichment.
+  const sources = [];
+  tabSet.forEach(tabId => {
+    const cat = catalogs[tabId];
+    if (!cat) return;
+    cat.items.forEach(item => {
+      const r = getRating(item.id, tabId);
+      if (r !== 'loved' && r !== 'liked') return;
+      const enrich = getEnrichmentForItem(item.id);
+      if (!enrich) return;
+      sources.push({
+        srcId: item.id,
+        srcTitle: item.title,
+        srcTab: tabId,
+        weight: r === 'loved' ? 2 : 1,
+        enrich,
+      });
+    });
+  });
+
+  // tmdbId → [{ tabId, item }] across every loaded catalog (incl. promotions).
+  const tmdbToCatalog = new Map();
+  Object.keys(catalogs).forEach(tabId => {
+    if (tabId === 'watchlist') return;
+    catalogs[tabId].items.forEach(item => {
+      const e = getEnrichmentForItem(item.id);
+      if (!e || !e.tmdbId) return;
+      const list = tmdbToCatalog.get(e.tmdbId) || [];
+      list.push({ tabId, item });
+      tmdbToCatalog.set(e.tmdbId, list);
+    });
+  });
+
+  // Aggregate candidates: tmdbId → { tmdbId, title, year, type, score, sourceTitles }
+  const candidates = new Map();
+  let anyEnriched = false;
+  sources.forEach(src => {
+    const recs = src.enrich.recommendations || [];
+    const sims = src.enrich.similar || [];
+    if (recs.length || sims.length) anyEnriched = true;
+    const seen = new Set();
+    [...recs, ...sims].forEach(rec => {
+      if (!rec || !rec.id) return;
+      if (seen.has(rec.id)) return;
+      seen.add(rec.id);
+      if (src.enrich.tmdbId === rec.id) return;
+      const ex = candidates.get(rec.id) || {
+        tmdbId: rec.id,
+        title: rec.title,
+        year: rec.year,
+        type: src.enrich.type,
+        score: 0,
+        sourceTitles: [],
+      };
+      ex.score += src.weight;
+      if (ex.sourceTitles.length < 3) ex.sourceTitles.push(src.srcTitle);
+      candidates.set(rec.id, ex);
+    });
+  });
+
+  // Classify into Recommended (catalog match in selected tabs, untouched)
+  // vs Discover (no catalog match anywhere).
+  const recommended = [];
+  const discover = [];
+  candidates.forEach(c => {
+    const matches = tmdbToCatalog.get(c.tmdbId) || [];
+    let recHit = null;
+    for (const m of matches) {
+      if (!tabSet.has(m.tabId)) continue;
+      const status = getStatus(m.item.id, m.tabId);
+      const rating = getRating(m.item.id, m.tabId);
+      if (status !== 'none' || rating) continue;
+      recHit = m;
+      break;
+    }
+    if (recHit) {
+      recommended.push({ ...c, catalogTab: recHit.tabId, catalogItemId: recHit.item.id });
+    } else if (matches.length === 0) {
+      discover.push(c);
+    }
+  });
+
+  const byScore = (a, b) => b.score - a.score || (a.title || '').localeCompare(b.title || '');
+  recommended.sort(byScore);
+  discover.sort(byScore);
+
+  return {
+    recommended: recommended.slice(0, 12),
+    discover: discover.slice(0, 8),
+    sourceCount: sources.length,
+    anyEnriched,
+  };
+}
+
 // =====================================================================
 // Stage 5g: Wizard / guided-flow home screen
 // =====================================================================
 
 // Always start fresh on app open. State is in-memory only, never persisted.
 const wizardState = {
-  step: 'root',         // 'root' | 'rate' | 'film-tv' | 'session' | 'genre' | 'continue-list'
+  step: 'root',         // 'root' | 'rate' | 'film-tv' | 'session' | 'genre' | 'recs' | 'continue-list'
   rateContext: null,    // 'specific-tab' | 'recent-watched' | 'queued' | 'unrated-loved'
   contentType: null,    // 'film' | 'tv'
   session: null,        // 'continue' | 'new' | 'rewatch'
@@ -3937,6 +4073,62 @@ function wizardRender() {
       stepEl.innerHTML = html;
     }
   }
+  else if (wizardState.step === 'recs') {
+    subtitle.textContent = 'Recommendations';
+    backBtn.style.display = '';
+    const isTV = wizardState.contentType === 'tv';
+    const genre = wizardState.genre;
+    const tabIds = (genre === 'not-sure' || !genre)
+      ? Object.keys(catalogs).filter(t => t !== 'watchlist' && WIZARD_TV_TABS.has(t) === isTV)
+      : [genre];
+    const tabLabel = (genre === 'not-sure' || !genre)
+      ? (isTV ? 'TV' : 'Film')
+      : ((catalogs[genre] && catalogs[genre].title) || genre);
+    const recs = computeRecsForTab(tabIds);
+
+    let html = '';
+    if (recs.sourceCount === 0) {
+      html += `<div class="wizard-empty">No Loved or Liked items in ${escapeHtml(tabLabel)} yet. Rate a few first, then come back.</div>`;
+      html += `<button class="wizard-btn" data-action="recs-fallback">Browse all unrated items in ${escapeHtml(tabLabel)}</button>`;
+    } else if (!recs.anyEnriched) {
+      html += `<div class="wizard-empty">No TMDB recommendations cached yet. Open Settings → Plex Integration → Pre-enrich catalog, then return.</div>`;
+      html += `<button class="wizard-btn" data-action="recs-fallback">Browse all unrated items in ${escapeHtml(tabLabel)}</button>`;
+    } else if (recs.recommended.length === 0 && recs.discover.length === 0) {
+      html += `<div class="wizard-empty">No recommendations could be generated from your ${recs.sourceCount} rated item${recs.sourceCount === 1 ? '' : 's'} in ${escapeHtml(tabLabel)}.</div>`;
+      html += `<button class="wizard-btn" data-action="recs-fallback">Browse all unrated items in ${escapeHtml(tabLabel)}</button>`;
+    } else {
+      if (recs.recommended.length > 0) {
+        html += `<div class="wizard-recs-section">`;
+        html += `<div class="wizard-recs-heading">Recommended for you · ${recs.recommended.length}</div>`;
+        html += `<div class="wizard-recs-help">Already in your catalog. Tap to jump to the item.</div>`;
+        html += recs.recommended.map(r => {
+          const yearStr = r.year ? ` (${r.year})` : '';
+          const sources = r.sourceTitles.slice(0, 2).join(', ') + (r.sourceTitles.length > 2 ? ' and others' : '');
+          return `<button class="wizard-btn" data-action="recs-goto" data-tab="${escapeHtml(r.catalogTab)}" data-id="${escapeHtml(r.catalogItemId)}">
+            ${escapeHtml(r.title)}${yearStr}
+            <span class="wizard-btn-meta">like ${escapeHtml(sources)}</span>
+          </button>`;
+        }).join('');
+        html += `</div>`;
+      }
+      if (recs.discover.length > 0) {
+        html += `<div class="wizard-recs-section">`;
+        html += `<div class="wizard-recs-heading">Discover · ${recs.discover.length}</div>`;
+        html += `<div class="wizard-recs-help">Not in your catalog yet. Tap to promote.</div>`;
+        html += recs.discover.map(r => {
+          const yearStr = r.year ? ` (${r.year})` : '';
+          const sources = r.sourceTitles.slice(0, 2).join(', ') + (r.sourceTitles.length > 2 ? ' and others' : '');
+          return `<button class="wizard-btn" data-action="recs-promote" data-tmdb-id="${r.tmdbId}" data-type="${escapeHtml(r.type || 'movie')}" data-title="${escapeHtml(r.title || '')}" data-year="${r.year || ''}" data-source="${escapeHtml(r.sourceTitles[0] || '')}">
+            ${escapeHtml(r.title || 'Unknown')}${yearStr}
+            <span class="wizard-btn-meta">like ${escapeHtml(sources)}</span>
+          </button>`;
+        }).join('');
+        html += `</div>`;
+      }
+      html += `<button class="wizard-btn" data-action="recs-fallback">Browse all unrated items in ${escapeHtml(tabLabel)}</button>`;
+    }
+    stepEl.innerHTML = html;
+  }
 
   // Wire all buttons
   stepEl.querySelectorAll('.wizard-btn').forEach(btn => {
@@ -3951,6 +4143,7 @@ function wizardGoBack() {
   else if (wizardState.step === 'session') wizardState.step = 'film-tv';
   else if (wizardState.step === 'continue-list') wizardState.step = 'session';
   else if (wizardState.step === 'genre') wizardState.step = 'session';
+  else if (wizardState.step === 'recs') wizardState.step = 'genre';
   wizardRender();
 }
 
@@ -3990,9 +4183,60 @@ function wizardHandleAction(btn) {
     }, 100);
     return;
   }
-  // Genre pick → launch triage with that scope
+  // Genre pick → for "new" sessions go to recs panel; for rewatch keep direct triage
   if (action === 'genre-pick') {
     wizardState.genre = btn.dataset.tab;
+    if (wizardState.session === 'new') {
+      wizardState.step = 'recs';
+      wizardRender();
+    } else {
+      wizardLaunchTriage('watch');
+    }
+    return;
+  }
+  // Recs step → jump to a catalog item the user already has
+  if (action === 'recs-goto') {
+    wizardHide();
+    switchTab(btn.dataset.tab);
+    setTimeout(() => {
+      const target = document.querySelector(`.item[data-id="${btn.dataset.id}"]`);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        target.classList.add('expanded');
+        target.style.outline = '2px solid var(--accent)';
+        setTimeout(() => target.style.outline = '', 1500);
+      }
+    }, 100);
+    return;
+  }
+  // Recs step → promote a TMDB orphan into the catalog
+  if (action === 'recs-promote') {
+    pendingPromote = {
+      type: btn.dataset.type === 'tv' ? 'tv' : 'movie',
+      title: btn.dataset.title,
+      year: btn.dataset.year || null,
+      plays: 0,
+      distinct: 0,
+      source: 'recommendation',
+      sourceTitle: btn.dataset.source || '',
+      tmdbId: btn.dataset.tmdbId || null,
+    };
+    document.getElementById('promote-info').textContent =
+      `Promote "${pendingPromote.title}" (${pendingPromote.year || '?'}) into a WatchTrack catalog tab. Recommended by your rating of "${pendingPromote.sourceTitle}".`;
+    const tvTabs = new Set(['comedy-tv','crime-tv','spy-tv','drama-tv','horror-tv','fantasy-tv','scifi-tv','cons-courtroom-tv','british-comedy','heroes-comics-tv']);
+    const select = document.getElementById('promote-tab');
+    select.innerHTML = catalogManifest
+      .filter(c => !c.virtual)
+      .filter(c => pendingPromote.type === 'movie' ? !tvTabs.has(c.id) : tvTabs.has(c.id))
+      .map(c => `<option value="${c.id}">${c.label}</option>`).join('');
+    if (wizardState.genre && wizardState.genre !== 'not-sure' && catalogs[wizardState.genre]) {
+      select.value = wizardState.genre;
+    }
+    document.getElementById('promote-modal').classList.add('active');
+    return;
+  }
+  // Recs step → "Browse all unrated items" fallback to existing triage flow
+  if (action === 'recs-fallback') {
     wizardLaunchTriage('watch');
     return;
   }
