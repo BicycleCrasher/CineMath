@@ -10,6 +10,23 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.12.1 — 2026-05-08
+**Service worker cache:** `scifi-tracker-v27` → `v28`
+
+### Fixed — Service worker breaking Plex / Worker / TMDB cross-origin requests
+
+#### The bug
+The service worker's fetch handler intercepted ALL GET requests, including cross-origin ones to the Plex seedbox, Cloudflare Worker, and TMDB. When SW called `fetch(event.request)` for these, the request often failed (CORS preflight handling, opaque response semantics), the promise rejected, and the page got "Failed to fetch" with no useful error message.
+
+This had been latent since the original SW was added, but became more visible after recent SW cache bumps re-activated the handler against newly-uncached cross-origin URLs.
+
+#### The fix
+1. **Same-origin gate**: SW fetch handler now early-returns for any request to a different origin. Cross-origin fetches (Plex, Worker, TMDB) pass through to the network with no SW involvement.
+2. **Synthetic fallback on same-origin fetch failure**: if a same-origin fetch fails (offline, etc.), return a synthetic 504 response instead of letting the promise rejection propagate.
+3. **Updated ASSETS list** to include musicals.json, heroes-comics.json, heroes-comics-tv.json — they were missing from the precache (offline mode wouldn't have served them).
+
+---
+
 ## 5.12.0 — 2026-05-08
 **Service worker cache:** `scifi-tracker-v26` → `v27`
 
