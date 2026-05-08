@@ -141,7 +141,7 @@ export default {
 
     // Health
     if (path === '/' || path === '/health') {
-      return new Response('WatchTrack-Plex bridge online (v5 — TMDB ID + recommendations + promotions)', { headers: cors });
+      return new Response('WatchTrack-Plex bridge online (v5.1 — parallel KV reads)', { headers: cors });
     }
 
     // === Plex webhook receiver ===
@@ -199,13 +199,17 @@ export default {
       const since = parseInt(url.searchParams.get('since') || '0');
       const list = await env.EVENTS.list();
       const events = [];
-      for (const k of list.keys) {
-        const v = await env.EVENTS.get(k.name);
-        if (!v) continue;
-        try {
-          const rec = JSON.parse(v);
-          if (rec.ts > since) events.push(rec);
-        } catch {}
+      const CONCURRENCY = 50;
+      for (let i = 0; i < list.keys.length; i += CONCURRENCY) {
+        const batch = list.keys.slice(i, i + CONCURRENCY);
+        const results = await Promise.all(batch.map(k => env.EVENTS.get(k.name).catch(() => null)));
+        results.forEach(v => {
+          if (!v) return;
+          try {
+            const rec = JSON.parse(v);
+            if (rec.ts > since) events.push(rec);
+          } catch {}
+        });
       }
       events.sort((a, b) => a.ts - b.ts);
       return jsonResponse({ events });
@@ -299,13 +303,18 @@ export default {
       const providedSecret = url.searchParams.get('secret');
       if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
       const cursor = url.searchParams.get('cursor') || undefined;
-      // KV list is paginated to 1000 per call
-      const list = await env.VIEWED.list({ cursor, limit: 1000 });
+      // KV list is paginated; lower limit to keep response time reasonable
+      const list = await env.VIEWED.list({ cursor, limit: 500 });
+      // Parallel reads with concurrency control — sequential await on 500 keys would blow past Worker timeout
       const records = [];
-      for (const k of list.keys) {
-        const v = await env.VIEWED.get(k.name);
-        if (!v) continue;
-        try { records.push(JSON.parse(v)); } catch {}
+      const CONCURRENCY = 50;
+      for (let i = 0; i < list.keys.length; i += CONCURRENCY) {
+        const batch = list.keys.slice(i, i + CONCURRENCY);
+        const results = await Promise.all(batch.map(k => env.VIEWED.get(k.name).catch(() => null)));
+        results.forEach(v => {
+          if (!v) return;
+          try { records.push(JSON.parse(v)); } catch {}
+        });
       }
       return jsonResponse({
         records,
@@ -342,10 +351,14 @@ export default {
       if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
       const list = await env.PROMOTIONS.list({ limit: 1000 });
       const records = [];
-      for (const k of list.keys) {
-        const v = await env.PROMOTIONS.get(k.name);
-        if (!v) continue;
-        try { records.push({ key: k.name, ...JSON.parse(v) }); } catch {}
+      const CONCURRENCY = 50;
+      for (let i = 0; i < list.keys.length; i += CONCURRENCY) {
+        const batch = list.keys.slice(i, i + CONCURRENCY);
+        const results = await Promise.all(batch.map(k => env.PROMOTIONS.get(k.name).then(v => ({ name: k.name, v })).catch(() => null)));
+        results.forEach(r => {
+          if (!r || !r.v) return;
+          try { records.push({ key: r.name, ...JSON.parse(r.v) }); } catch {}
+        });
       }
       return jsonResponse({ records });
     }

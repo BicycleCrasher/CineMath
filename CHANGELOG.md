@@ -10,6 +10,22 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.7.1 — 2026-05-07
+**Service worker cache:** `scifi-tracker-v19` → `v20`
+
+### Fixed — Worker timeout on /viewed/list
+- `/viewed/list` was performing sequential KV reads on up to 1000 keys per request. With ~340 viewing records, this took 30+ seconds and tripped Cloudflare's 1101 timeout. Result: Plex History modal hung indefinitely with "Failed to fetch."
+- Switched to parallel reads with 50-way concurrency (Promise.all batches). Now completes in <1 second for typical history sizes.
+- Same fix applied preemptively to `/events` and `/promotions` endpoints (same sequential-read pattern, hadn't yet hit the wall but would have with growth).
+- Worker version bumped to v5.1.
+
+### Performance notes
+- KV reads are ~30-100ms each. Sequential = O(N × 50ms). Parallel = O(50ms × ⌈N/50⌉).
+- For 340 records: sequential ~17s, parallel ~340ms.
+- Concurrency capped at 50 to stay well under Cloudflare's burst limits.
+
+---
+
 ## 5.7.0 — 2026-05-07
 **Service worker cache:** `scifi-tracker-v18` → `v19`
 
