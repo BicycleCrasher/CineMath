@@ -10,6 +10,23 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.17.0 — 2026-05-08
+**Service worker cache:** `scifi-tracker-v34` → `v35`
+
+### Feature — TWA APK packaging for Google TV (Stage 5c)
+
+Android TV packaging via Trusted Web Activity. Changes:
+
+- `manifest.json`: orientation changed from `portrait` to `any` (Android TV is landscape; portrait lock causes letterboxing)
+- `icons/tv-banner.png`: new 320×180 banner image for the Android TV Leanback launcher, generated from the existing 512×512 icon
+- `worker/build-twa.sh`: guided build script that installs Bubblewrap, initializes the TWA project, patches AndroidManifest.xml for Leanback compatibility (LEANBACK_LAUNCHER intent filter, touchscreen not required, leanback feature, TV banner), and builds the signed APK
+
+Separate `bicyclecrasher.github.io` user site repo created to host `/.well-known/assetlinks.json` for Digital Asset Links verification (required for fullscreen TWA without URL bar). Includes `.nojekyll` to prevent GitHub Pages from ignoring the `.well-known/` directory.
+
+The PWA already has TV detection (`detectTVMode()` checks for "bravia" in UA) and full D-pad navigation support — no app.js changes needed.
+
+---
+
 ## 5.16.0 — 2026-05-08
 **Service worker cache:** `scifi-tracker-v33` → `v34`
 
