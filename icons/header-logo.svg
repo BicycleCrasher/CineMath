@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120" role="img" aria-label="WatchTrack — return to Watchlist">
+  <title>WatchTrack — return to Watchlist</title>
+  <defs>
+    <linearGradient id="wtHeaderGold" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#f0cb74"/>
+      <stop offset="55%"  stop-color="#c8a35a"/>
+      <stop offset="100%" stop-color="#8a7340"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Top film-strip band (4 perforations across compact 200-wide frame) -->
+  <g fill="url(#wtHeaderGold)">
+    <rect x="14"  y="6" width="32" height="20" rx="5"/>
+    <rect x="64"  y="6" width="32" height="20" rx="5"/>
+    <rect x="104" y="6" width="32" height="20" rx="5"/>
+    <rect x="154" y="6" width="32" height="20" rx="5"/>
+  </g>
+
+  <!-- Bottom film-strip band -->
+  <g fill="url(#wtHeaderGold)">
+    <rect x="14"  y="94" width="32" height="20" rx="5"/>
+    <rect x="64"  y="94" width="32" height="20" rx="5"/>
+    <rect x="104" y="94" width="32" height="20" rx="5"/>
+    <rect x="154" y="94" width="32" height="20" rx="5"/>
+  </g>
+
+  <!-- Italic serif WT monogram, centered between the bands -->
+  <text x="100" y="80"
+        font-family="'Didot', 'Bodoni 72', 'Playfair Display', Georgia, serif"
+        font-style="italic"
+        font-weight="700"
+        font-size="68"
+        fill="url(#wtHeaderGold)"
+        text-anchor="middle"
+        letter-spacing="-2">WT</text>
+</svg>

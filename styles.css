@@ -886,3 +886,55 @@ body.tv-mode #settings-modal .modal-content {
   font-style: italic;
   margin-bottom: 4px;
 }
+
+/* === App logo button (top-left reset to Watchlist) === */
+.app-logo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0 0 8px;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  width: 100%;
+  -webkit-tap-highlight-color: rgba(200, 163, 90, 0.15);
+  transition: opacity 0.15s ease;
+}
+.app-logo:active { opacity: 0.6; }
+.app-logo:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+.app-logo-img {
+  width: 56px;
+  height: 34px;
+  flex-shrink: 0;
+  display: block;
+}
+.app-logo-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.app-logo-text .eyebrow { margin-bottom: 0; }
+.app-logo-title {
+  font-family: 'Didot', 'Bodoni 72', 'Playfair Display', Georgia, serif;
+  font-weight: 400;
+  font-size: 28px;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  display: block;
+}
+.app-logo-title em { font-style: italic; color: var(--accent); }
+
+/* TV-mode upscale to match the rest of TV layout */
+body.tv-mode .app-logo-img { width: 72px; height: 44px; }
+body.tv-mode .app-logo-title { font-size: 32px; }

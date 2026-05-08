@@ -10,6 +10,25 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.18.0 — 2026-05-08
+**Service worker cache:** `scifi-tracker-v35` → `v36`
+
+### Feature — Tappable header logo (reset to Watchlist)
+
+The top-left header now displays a compact WT film-strip logo. Tapping it:
+- Switches to the Watchlist tab
+- Clears all category, sort, and filter state across every tab
+- Closes any open modal
+- Clears the search box
+- Smooth-scrolls back to the top
+
+Acts as a "soft refresh" — instantly returns to the curated Watchlist view without
+re-running the wizard. Existing `⌂ Home` button (which opens the wizard) is preserved.
+
+New asset: `icons/header-logo.svg`.
+
+---
+
 ## 5.17.0 — 2026-05-08
 **Service worker cache:** `scifi-tracker-v34` → `v35`
 

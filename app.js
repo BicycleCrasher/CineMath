@@ -2534,6 +2534,29 @@ function setupModals() {
     document.getElementById('import-summary-modal').classList.remove('active');
   });
 
+  // === App logo (top-left): reset to Watchlist with cleared filter/search state ===
+  document.getElementById('app-logo-btn').addEventListener('click', () => {
+    // Clear search input if open
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) searchInput.value = '';
+    const searchResults = document.getElementById('search-results');
+    if (searchResults) searchResults.innerHTML = '';
+    // Close any open modal
+    document.querySelectorAll('.modal.active').forEach(m => m.classList.remove('active'));
+    // Clear all in-memory filter/category/sort state for every tab
+    Object.keys(activeCategoryByTab).forEach(k => delete activeCategoryByTab[k]);
+    Object.keys(activeSortByTab).forEach(k => delete activeSortByTab[k]);
+    // Cancel any pending category-clear timers
+    Object.keys(categoryClearTimers).forEach(k => {
+      clearTimeout(categoryClearTimers[k]);
+      delete categoryClearTimers[k];
+    });
+    // Switch to Watchlist (this also resets activeFilter to 'all' and clears expandedIds)
+    switchTab('watchlist');
+    // Scroll header into view in case user was deep in a long list
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
   // === Search modal ===
   document.getElementById('search-btn').addEventListener('click', () => {
     document.getElementById('search-input').value = '';
