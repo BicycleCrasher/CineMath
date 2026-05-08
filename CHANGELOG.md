@@ -10,6 +10,40 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.9.0 — 2026-05-08
+**Service worker cache:** `scifi-tracker-v21` → `v22`
+
+### Added — Musicals tab (films only, populated)
+
+New catalog tab: **Musicals**. Films-only (per user spec — no musical TV interest).
+
+#### Sections (5)
+- **I. Animated** — Disney Renaissance + non-Disney animated musicals (Anastasia, Prince of Egypt)
+- **II. Stage Adaptations** — filmed versions of stage musicals
+- **III. Original Screen Musicals** — written for film, including all-time-favorite Singin' in the Rain
+- **IV. Jukebox & Bio-Musical** — songbook-driven and musician-life films
+- **V. Cult & Auteur** — Rocky Horror, South Park: BLU
+
+#### Categories (6)
+animated, stage-adaptation, original-screen, jukebox, bio-musical, auteur, cult
+
+#### Initial population (~26 items)
+Curated from user's stated viewing history. Includes:
+- All Disney Renaissance films (1989-1999)
+- Stage adaptations watched (West Side Story 2021, Sound of Music, MFL, Grease, Sweeney Todd, Les Mis, Into the Woods, Hairspray, Mamma Mia, Annie 1982, Dreamgirls, Phantom 2004, Music Man)
+- Original screen musicals watched (Singin' in the Rain ⭐, Mary Poppins / Returns, La La Land, White Christmas, Holiday Inn, Wizard of Oz, Across the Universe)
+- Pitch Perfect trilogy
+- Cult: Rocky Horror, South Park: BLU
+
+User reactions captured in `whyPriority` fields per item. Items NOT pre-marked with status — user will mark them through normal UI flow on first open.
+
+#### Architecture
+- Total tabs: 24 → 25 (Watchlist + 24 alphabetical)
+- No cross-listing into other genre tabs (forward-only rule applies)
+- Multi-tagging within tab kept where appropriate (e.g., bio-musical items also tagged jukebox)
+
+---
+
 ## 5.8.0 — 2026-05-08
 **Service worker cache:** `scifi-tracker-v20` → `v21`
 

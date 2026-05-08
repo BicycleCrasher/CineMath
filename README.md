@@ -97,7 +97,7 @@ That's it. The app:
 
 ### Tabs and categories
 
-The top nav has 24 tabs. **Watchlist** is first; the other 23 are alphabetical (Auteur, British Comedy, Classics, Comedy, Comedy TV, Cons & Courtroom, Cons & Courtroom TV, Crime, Crime TV, Drama, Drama TV, Fantasy, Fantasy TV, Foreign, Heist, Heroes & Comics, Heroes & Comics TV, Horror, Horror TV, Sci-Fi, Sci-Fi TV, Spy, Spy TV).
+The top nav has 25 tabs. **Watchlist** is first; the other 24 are alphabetical (Auteur, British Comedy, Classics, Comedy, Comedy TV, Cons & Courtroom, Cons & Courtroom TV, Crime, Crime TV, Drama, Drama TV, Fantasy, Fantasy TV, Foreign, Heist, Heroes & Comics, Heroes & Comics TV, Horror, Horror TV, Musicals, Sci-Fi, Sci-Fi TV, Spy, Spy TV).
 
 **Watchlist** is the "what now" view. It aggregates across every catalog into three sections:
 - **Currently Watching** — what you've marked as in-progress

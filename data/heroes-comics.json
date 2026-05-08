@@ -19,7 +19,17 @@
       "name": "III. DC",
       "desc": "DC Extended Universe, Snyderverse, current DCU, prior eras.",
       "categories": ["dc"],
-      "items": []
+      "items": [
+        {
+          "title": "Joker: Folie à Deux",
+          "year": 2024,
+          "pitch": "Todd Phillips's musical sequel to 2019's Joker. Phoenix and Lady Gaga in a folie-à-deux courtroom-and-Arkham two-hander built on jukebox standards. Polarizing — read as either a brave deconstruction of fan expectation or a betrayal of the first film, depending on who you ask.",
+          "priority": "low",
+          "whyPriority": "Watched. Cataloged for tracking. Pairs with the original Joker (2019) when added.",
+          "categories": ["dc", "deconstructive"],
+          "contentType": "film-narrative"
+        }
+      ]
     },
     {
       "name": "IV. Indie / Other Publishers",

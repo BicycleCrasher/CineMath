@@ -1314,6 +1314,13 @@ const CATEGORY_LABELS = {
   'marvel-disney-plus': 'Marvel — Disney+',
   'marvel-netflix': 'Marvel — Netflix',
   'animated': 'Animated',
+  // Musicals
+  'stage-adaptation': 'Stage Adaptations',
+  'original-screen': 'Original Screen',
+  'jukebox': 'Jukebox',
+  'bio-musical': 'Bio-Musical',
+  'auteur': 'Auteur',
+  'cult': 'Cult',
   // Watchlist sections (virtual tab)
   'watching': 'Watching',
   'queued': 'Queued',
@@ -1532,6 +1539,7 @@ async function loadCatalogManifest() {
       { id: "heroes-comics-tv", label: "Heroes & Comics TV" },
       { id: "horror", label: "Horror" },
       { id: "horror-tv", label: "Horror TV" },
+      { id: "musicals", label: "Musicals" },
       { id: "scifi", label: "Sci-Fi" },
       { id: "scifi-tv", label: "Sci-Fi TV" },
       { id: "espionage", label: "Spy" },
