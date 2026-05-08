@@ -690,3 +690,66 @@ body.tv-mode #settings-modal .modal-content {
   letter-spacing: 0.04em; text-transform: uppercase;
 }
 .history-row .source-badge { font-size: 8px; }
+
+/* Stage 5d-1: Tag-filter pills */
+.tag-pills {
+  padding: 6px 16px 8px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--bg);
+}
+.tag-pills:empty { display: none; padding: 0; border-bottom: none; }
+.tag-pill-mode {
+  display: flex; align-items: center; gap: 6px;
+  margin-bottom: 6px;
+  font-size: 10px; color: var(--ink-dim);
+  letter-spacing: 0.06em; text-transform: uppercase;
+}
+.tag-pill-mode-label { margin-right: 2px; }
+.tag-mode-btn {
+  background: var(--bg-elev); color: var(--ink-dim);
+  border: 1px solid var(--rule); border-radius: 3px;
+  padding: 2px 8px; font-size: 10px;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  cursor: pointer; font-family: inherit;
+}
+.tag-mode-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.tag-mode-clear {
+  background: transparent; color: var(--ink-dim);
+  border: 1px solid var(--rule); border-radius: 3px;
+  padding: 2px 8px; font-size: 10px;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  cursor: pointer; font-family: inherit; margin-left: auto;
+}
+.tag-mode-clear:hover { color: var(--ink); border-color: var(--ink-dim); }
+.tag-pill-row {
+  display: flex; flex-wrap: wrap; gap: 4px 5px;
+  margin-bottom: 4px;
+}
+.tag-pill-row:last-child { margin-bottom: 0; }
+.tag-pill {
+  background: transparent; color: var(--ink-dim);
+  border: 1px solid var(--rule); border-radius: 11px;
+  padding: 3px 9px; font-size: 11px;
+  cursor: pointer; font-family: inherit;
+  transition: all 0.15s;
+}
+.tag-pill:hover { color: var(--ink); border-color: var(--ink-dim); }
+.tag-pill-pos.active {
+  background: rgba(120, 200, 140, 0.18);
+  color: rgb(150, 220, 170);
+  border-color: rgb(150, 220, 170);
+}
+.tag-pill-neg.active {
+  background: rgba(220, 130, 130, 0.18);
+  color: rgb(230, 160, 160);
+  border-color: rgb(230, 160, 160);
+}
+.tag-pill-orphan {
+  border-style: dashed;
+}
+.tag-pill-orphan.active {
+  background: rgba(180, 180, 180, 0.18);
+  color: var(--ink);
+  border-color: var(--ink-dim);
+  border-style: solid;
+}

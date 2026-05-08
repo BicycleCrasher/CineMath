@@ -308,6 +308,23 @@ let catalogs = {};
 let catalogManifest = [];
 let activeTab = 'watchlist';
 let activeFilter = 'all';
+// Tag pill filter state (Stage 5d-1) — in-memory only, resets on tab switch.
+// Maps tabId → Set of selected tag strings. Mode: 'and' | 'or' (per tab).
+const activeTagFilters = {};   // { tabId: Set<string> }
+const tagFilterMode = {};      // { tabId: 'and' | 'or' }
+function getActiveTagFilters(tab) {
+  if (!activeTagFilters[tab]) activeTagFilters[tab] = new Set();
+  return activeTagFilters[tab];
+}
+function getTagFilterMode(tab) {
+  return tagFilterMode[tab] || 'and';
+}
+function setTagFilterMode(tab, mode) {
+  tagFilterMode[tab] = (mode === 'or') ? 'or' : 'and';
+}
+function clearTagFilters(tab) {
+  if (activeTagFilters[tab]) activeTagFilters[tab].clear();
+}
 
 // === Display mode (tv vs phone) — persisted in localStorage ===
 const DISPLAY_MODE_KEY = 'watchtrack-display-mode';  // 'auto' | 'tv' | 'phone'
@@ -1692,6 +1709,8 @@ function toggleTag(id, tag, tab) {
   else state[tab][id].reactionTags.splice(idx, 1);
   touchEntry(tab, id);
   saveState(); updateItemInPlace(id);
+  // Rebuild tag pills since the set of tags-in-use may have changed
+  if (typeof buildTagPills === 'function') buildTagPills();
 }
 
 function setNotes(id, notes, tab) {
@@ -1897,29 +1916,172 @@ function buildFilters() {
   });
 }
 
+// Stage 5d-1: render tag-pills row beneath filter row.
+// Hidden on Watchlist (per design decision: heterogeneous tag set is too noisy).
+// Shows only tags actually in use on items in the current tab.
+function buildTagPills() {
+  const container = document.getElementById('tag-pills');
+  if (!container) return;
+  if (activeTab === 'watchlist') {
+    container.innerHTML = '';
+    container.style.display = 'none';
+    return;
+  }
+  container.style.display = '';
+
+  const cat = catalogs[activeTab];
+  if (!cat || !cat.items || cat.items.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+
+  // Collect tags actually in use across items in this tab.
+  // Separate positive vs negative based on the tab's tag set.
+  const tagsInUse = new Set();
+  cat.items.forEach(item => {
+    const tags = getTags(item.id, activeTab);
+    if (Array.isArray(tags)) tags.forEach(t => tagsInUse.add(t));
+  });
+
+  if (tagsInUse.size === 0) {
+    container.innerHTML = '';
+    return;
+  }
+
+  // Resolve content type from a representative item to determine positive/negative split.
+  // Use first item that has a contentType, or fall back to tab default.
+  let contentType = TAB_DEFAULT_CONTENT_TYPE[activeTab] || 'film-narrative';
+  const firstWithType = cat.items.find(i => i.contentType);
+  if (firstWithType) contentType = firstWithType.contentType;
+  const tagSet = TAG_SETS[contentType] || TAG_SETS['film-narrative'];
+
+  const positive = (tagSet.positive || []).filter(t => tagsInUse.has(t));
+  const negative = (tagSet.negative || []).filter(t => tagsInUse.has(t));
+  // Any in-use tags not in this tab's contentType set (edge: items from other contentTypes)
+  const orphans = Array.from(tagsInUse).filter(t =>
+    !(tagSet.positive || []).includes(t) && !(tagSet.negative || []).includes(t)
+  );
+
+  const activeFilters = getActiveTagFilters(activeTab);
+  const mode = getTagFilterMode(activeTab);
+
+  let html = '';
+
+  // AND/OR toggle (only show if ≥2 tags selected)
+  if (activeFilters.size >= 2) {
+    html += `<div class="tag-pill-mode">
+      <span class="tag-pill-mode-label">Combine:</span>
+      <button class="tag-mode-btn ${mode === 'and' ? 'active' : ''}" data-mode="and">AND</button>
+      <button class="tag-mode-btn ${mode === 'or' ? 'active' : ''}" data-mode="or">OR</button>
+      <button class="tag-mode-clear">Clear</button>
+    </div>`;
+  } else if (activeFilters.size === 1) {
+    html += `<div class="tag-pill-mode">
+      <button class="tag-mode-clear">Clear</button>
+    </div>`;
+  }
+
+  if (positive.length > 0) {
+    html += '<div class="tag-pill-row tag-pill-row-pos">';
+    positive.forEach(t => {
+      const active = activeFilters.has(t);
+      html += `<button class="tag-pill tag-pill-pos ${active ? 'active' : ''}" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</button>`;
+    });
+    html += '</div>';
+  }
+  if (negative.length > 0) {
+    html += '<div class="tag-pill-row tag-pill-row-neg">';
+    negative.forEach(t => {
+      const active = activeFilters.has(t);
+      html += `<button class="tag-pill tag-pill-neg ${active ? 'active' : ''}" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</button>`;
+    });
+    html += '</div>';
+  }
+  if (orphans.length > 0) {
+    html += '<div class="tag-pill-row tag-pill-row-orphan">';
+    orphans.forEach(t => {
+      const active = activeFilters.has(t);
+      html += `<button class="tag-pill tag-pill-orphan ${active ? 'active' : ''}" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</button>`;
+    });
+    html += '</div>';
+  }
+
+  container.innerHTML = html;
+
+  // Wire pills
+  container.querySelectorAll('.tag-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tag = btn.dataset.tag;
+      const filters = getActiveTagFilters(activeTab);
+      if (filters.has(tag)) filters.delete(tag);
+      else filters.add(tag);
+      buildTagPills();
+      render();
+    });
+  });
+  container.querySelectorAll('.tag-mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      setTagFilterMode(activeTab, btn.dataset.mode);
+      buildTagPills();
+      render();
+    });
+  });
+  const clearBtn = container.querySelector('.tag-mode-clear');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      clearTagFilters(activeTab);
+      buildTagPills();
+      render();
+    });
+  }
+}
+
 function itemMatchesFilter(item) {
   const tab = item._watchlist_source_tab || activeTab;
   const status = getStatus(item.id, tab);
   const rating = getRating(item.id, tab);
+  // First check status/quick filter
+  let statusMatch;
   switch (activeFilter) {
-    case 'all': return true;
-    case 'priority-high': return item.priority === 'high';
-    case 'priority-med': return item.priority === 'med';
-    case 'watching': return status === 'watching';
-    case 'unwatched': return status === 'none' || status === 'queued';
-    case 'queued': return status === 'queued';
-    case 'watched': return status === 'watched';
-    case 'loved': return rating === 'loved';
-    case 'liked': return rating === 'loved' || rating === 'liked';
-    case 'short': return item.commitmentTag === 'short';
-    case 'medium': return item.commitmentTag === 'medium';
-    case 'long': return item.commitmentTag === 'long';
-    case 'foundational': return item.tags && item.tags.includes('foundational');
-    case 'modern': return item.tags && item.tags.includes('modern');
-    case 'under': return item.tags && item.tags.includes('under');
-    case 'intl': return item.tags && item.tags.includes('intl');
-    case 'adjacent': return item.tags && item.tags.includes('adjacent');
-    default: return true;
+    case 'all': statusMatch = true; break;
+    case 'priority-high': statusMatch = item.priority === 'high'; break;
+    case 'priority-med': statusMatch = item.priority === 'med'; break;
+    case 'watching': statusMatch = status === 'watching'; break;
+    case 'unwatched': statusMatch = status === 'none' || status === 'queued'; break;
+    case 'queued': statusMatch = status === 'queued'; break;
+    case 'watched': statusMatch = status === 'watched'; break;
+    case 'loved': statusMatch = rating === 'loved'; break;
+    case 'liked': statusMatch = rating === 'loved' || rating === 'liked'; break;
+    case 'short': statusMatch = item.commitmentTag === 'short'; break;
+    case 'medium': statusMatch = item.commitmentTag === 'medium'; break;
+    case 'long': statusMatch = item.commitmentTag === 'long'; break;
+    case 'foundational': statusMatch = item.tags && item.tags.includes('foundational'); break;
+    case 'modern': statusMatch = item.tags && item.tags.includes('modern'); break;
+    case 'under': statusMatch = item.tags && item.tags.includes('under'); break;
+    case 'intl': statusMatch = item.tags && item.tags.includes('intl'); break;
+    case 'adjacent': statusMatch = item.tags && item.tags.includes('adjacent'); break;
+    default: statusMatch = true;
+  }
+  if (!statusMatch) return false;
+
+  // Then check tag pill filters (Stage 5d-1)
+  // Tag filters compose with status filter via AND.
+  // Within tag filters: AND (must have all selected) or OR (must have any).
+  const tagFilters = getActiveTagFilters(tab);
+  if (tagFilters.size === 0) return true;  // no tag filters = pass
+  const itemTags = getTags(item.id, tab) || [];
+  const itemTagSet = new Set(itemTags);
+  const mode = getTagFilterMode(tab);
+  if (mode === 'and') {
+    for (const t of tagFilters) {
+      if (!itemTagSet.has(t)) return false;
+    }
+    return true;
+  } else {
+    for (const t of tagFilters) {
+      if (itemTagSet.has(t)) return true;
+    }
+    return false;
   }
 }
 
@@ -2206,6 +2368,7 @@ function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   buildCategoryFilters();
   buildFilters();
+  buildTagPills();
   render();
   // Scroll active tab into view
   const activeBtn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
@@ -2320,6 +2483,20 @@ function setupModals() {
   document.getElementById('stats-close').addEventListener('click', () => {
     document.getElementById('stats-modal').classList.remove('active');
   });
+  document.getElementById('stats-period-review').addEventListener('click', () => {
+    document.getElementById('stats-modal').classList.remove('active');
+    openPeriodReviewModal();
+  });
+  document.getElementById('period-review-cancel').addEventListener('click', () => {
+    document.getElementById('period-review-modal').classList.remove('active');
+  });
+  document.getElementById('period-review-type').addEventListener('change', (e) => {
+    const t = e.target.value;
+    document.getElementById('period-review-year-section').style.display = (t === 'year' || t === 'month') ? '' : 'none';
+    document.getElementById('period-review-month-section').style.display = (t === 'month') ? '' : 'none';
+    document.getElementById('period-review-custom-section').style.display = (t === 'custom') ? '' : 'none';
+  });
+  document.getElementById('period-review-generate').addEventListener('click', generatePeriodReview);
 
   // === Triage modals ===
   document.getElementById('triage-queue-btn').addEventListener('click', () => startTriage('queue'));
@@ -2965,6 +3142,288 @@ function exportPromotionsAsJsonPatch() {
   URL.revokeObjectURL(url);
 }
 
+// =====================================================================
+// Stage 5d-2: Period in Review (markdown export)
+// =====================================================================
+
+function openPeriodReviewModal() {
+  // Populate year dropdown — pull years from state's lastUpdated values
+  const years = new Set();
+  Object.keys(state).forEach(tab => {
+    Object.keys(state[tab] || {}).forEach(id => {
+      const ts = state[tab][id].lastUpdated;
+      if (ts) years.add(new Date(ts).getFullYear());
+    });
+  });
+  // Always include current year
+  years.add(new Date().getFullYear());
+  const yearList = Array.from(years).sort((a, b) => b - a);
+  const ySel = document.getElementById('period-review-year');
+  ySel.innerHTML = yearList.map(y => `<option value="${y}">${y}</option>`).join('');
+
+  // Populate month dropdown
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const mSel = document.getElementById('period-review-month');
+  mSel.innerHTML = monthNames.map((m, i) => `<option value="${i + 1}">${m}</option>`).join('');
+  mSel.value = String(new Date().getMonth() + 1);
+
+  // Default custom range to last 30 days
+  const today = new Date();
+  const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+  document.getElementById('period-review-start').value = monthAgo.toISOString().slice(0, 10);
+  document.getElementById('period-review-end').value = today.toISOString().slice(0, 10);
+
+  document.getElementById('period-review-type').value = 'year';
+  document.getElementById('period-review-year-section').style.display = '';
+  document.getElementById('period-review-month-section').style.display = 'none';
+  document.getElementById('period-review-custom-section').style.display = 'none';
+  document.getElementById('period-review-status').textContent = '';
+
+  document.getElementById('period-review-modal').classList.add('active');
+}
+
+function getPeriodRange() {
+  const type = document.getElementById('period-review-type').value;
+  const now = new Date();
+  let start, end, label;
+  if (type === 'year') {
+    const y = parseInt(document.getElementById('period-review-year').value);
+    start = new Date(y, 0, 1).getTime();
+    end = new Date(y + 1, 0, 1).getTime() - 1;
+    label = `${y}`;
+  } else if (type === 'month') {
+    const y = parseInt(document.getElementById('period-review-year').value);
+    const m = parseInt(document.getElementById('period-review-month').value);
+    start = new Date(y, m - 1, 1).getTime();
+    end = new Date(y, m, 1).getTime() - 1;
+    const mn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m - 1];
+    label = `${mn} ${y}`;
+  } else if (type === 'last12') {
+    end = now.getTime();
+    start = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate()).getTime();
+    label = 'Last 12 Months';
+  } else if (type === 'custom') {
+    const s = document.getElementById('period-review-start').value;
+    const e = document.getElementById('period-review-end').value;
+    if (!s || !e) return null;
+    start = new Date(s).getTime();
+    end = new Date(e).getTime() + 24 * 60 * 60 * 1000 - 1;  // include the end day
+    label = `${s} to ${e}`;
+  }
+  return { start, end, label, type };
+}
+
+function generatePeriodReview() {
+  const range = getPeriodRange();
+  const status = document.getElementById('period-review-status');
+  if (!range) {
+    status.textContent = 'Pick a valid date range.';
+    return;
+  }
+  status.textContent = 'Generating report...';
+
+  const md = buildPeriodReviewMarkdown(range);
+  const blob = new Blob([md], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const safeLabel = range.label.replace(/[^a-zA-Z0-9-]/g, '_');
+  a.download = `watchtrack-review-${safeLabel}.md`;
+  a.click();
+  URL.revokeObjectURL(url);
+  status.textContent = 'Downloaded.';
+}
+
+function buildPeriodReviewMarkdown(range) {
+  const { start, end, label, type } = range;
+
+  // Walk all state, collect entries within range
+  const inRange = [];   // { tab, id, item, entry }
+  Object.keys(state).forEach(tab => {
+    if (tab === 'watchlist') return;
+    const cat = catalogs[tab];
+    if (!cat) return;
+    const tabState = state[tab] || {};
+    Object.keys(tabState).forEach(id => {
+      const entry = tabState[id];
+      if (!entry || !entry.lastUpdated) return;
+      if (entry.lastUpdated < start || entry.lastUpdated > end) return;
+      const item = cat.items.find(it => it.id === id);
+      if (!item) return;
+      inRange.push({ tab, id, item, entry });
+    });
+  });
+
+  // Categorize by status / rating
+  const watched = inRange.filter(x => x.entry.status === 'watched');
+  const watching = inRange.filter(x => x.entry.status === 'watching');
+  const queued = inRange.filter(x => x.entry.status === 'queued');
+  const skip = inRange.filter(x => x.entry.status === 'skip');
+  const loved = inRange.filter(x => x.entry.rating === 'loved');
+  const liked = inRange.filter(x => x.entry.rating === 'liked');
+  const mixed = inRange.filter(x => x.entry.rating === 'mixed');
+  const disliked = inRange.filter(x => x.entry.rating === 'disliked');
+
+  // Comparison: prior period
+  const periodLength = end - start;
+  const priorStart = start - periodLength;
+  const priorEnd = start - 1;
+  let priorWatchedCount = 0;
+  Object.keys(state).forEach(tab => {
+    if (tab === 'watchlist') return;
+    const tabState = state[tab] || {};
+    Object.keys(tabState).forEach(id => {
+      const entry = tabState[id];
+      if (!entry || !entry.lastUpdated) return;
+      if (entry.lastUpdated >= priorStart && entry.lastUpdated <= priorEnd && entry.status === 'watched') {
+        priorWatchedCount++;
+      }
+    });
+  });
+
+  // Genre breakdown
+  const genreCounts = {};
+  watched.forEach(x => {
+    const tabLabel = (catalogs[x.tab] && catalogs[x.tab].title) || x.tab;
+    genreCounts[tabLabel] = (genreCounts[tabLabel] || 0) + 1;
+  });
+  const genresSorted = Object.entries(genreCounts).sort((a, b) => b[1] - a[1]);
+
+  // Tag highlights
+  const posTagCounts = {};
+  const negTagCounts = {};
+  inRange.forEach(x => {
+    const tags = x.entry.reactionTags || [];
+    const ct = resolveContentTypeForItem(x.item, x.tab);
+    const set = TAG_SETS[ct] || TAG_SETS['film-narrative'];
+    const posSet = new Set(set.positive || []);
+    const negSet = new Set(set.negative || []);
+    tags.forEach(t => {
+      if (posSet.has(t)) posTagCounts[t] = (posTagCounts[t] || 0) + 1;
+      else if (negSet.has(t)) negTagCounts[t] = (negTagCounts[t] || 0) + 1;
+    });
+  });
+  const topPos = Object.entries(posTagCounts).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  const topNeg = Object.entries(negTagCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+  // Trend (only relevant for year / last12 / large custom ranges)
+  let trendBlock = '';
+  if (type !== 'month' && (end - start) > 60 * 24 * 60 * 60 * 1000) {
+    const monthBuckets = {};
+    watched.forEach(x => {
+      const d = new Date(x.entry.lastUpdated);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      monthBuckets[key] = (monthBuckets[key] || 0) + 1;
+    });
+    const sorted = Object.entries(monthBuckets).sort((a, b) => a[0].localeCompare(b[0]));
+    if (sorted.length > 0) {
+      trendBlock = '\n## Monthly Trend\n\n';
+      const max = Math.max(...sorted.map(s => s[1]));
+      sorted.forEach(([m, c]) => {
+        const bar = '█'.repeat(Math.round((c / max) * 20));
+        trendBlock += `- **${m}**: ${bar} ${c}\n`;
+      });
+    }
+  }
+
+  // Build markdown
+  let md = `# WatchTrack — ${label} in Review\n\n`;
+  md += `*Generated ${new Date().toISOString().slice(0, 10)}*\n\n`;
+  md += `---\n\n## Headline Stats\n\n`;
+  md += `- **Items watched**: ${watched.length}`;
+  if (priorWatchedCount > 0) {
+    const delta = watched.length - priorWatchedCount;
+    const sign = delta >= 0 ? '+' : '';
+    md += ` (${sign}${delta} vs prior ${type === 'year' ? 'year' : type === 'month' ? 'month' : 'period'})`;
+  }
+  md += `\n`;
+  md += `- **Items started but not finished (watching)**: ${watching.length}\n`;
+  md += `- **Added to queue**: ${queued.length}\n`;
+  md += `- **Marked as skip**: ${skip.length}\n`;
+  md += `- **Total items touched**: ${inRange.length}\n\n`;
+
+  md += `### Rating Distribution\n\n`;
+  md += `- 💚 **Loved**: ${loved.length}\n`;
+  md += `- 👍 **Liked**: ${liked.length}\n`;
+  md += `- 🤷 **Mixed**: ${mixed.length}\n`;
+  md += `- 👎 **Disliked**: ${disliked.length}\n\n`;
+
+  // Top loved
+  if (loved.length > 0) {
+    md += `## Top Loved (${loved.length})\n\n`;
+    loved.sort((a, b) => b.entry.lastUpdated - a.entry.lastUpdated).slice(0, 20).forEach(x => {
+      const tabLabel = (catalogs[x.tab] && catalogs[x.tab].title) || x.tab;
+      const date = new Date(x.entry.lastUpdated).toISOString().slice(0, 10);
+      md += `- **${x.item.title}** (${x.item.year || '?'}) — *${tabLabel}* — ${date}`;
+      if (x.entry.notes) md += ` — _${x.entry.notes}_`;
+      md += `\n`;
+    });
+    md += `\n`;
+  }
+
+  // Disliked
+  if (disliked.length > 0) {
+    md += `## Disliked (${disliked.length})\n\n`;
+    disliked.sort((a, b) => b.entry.lastUpdated - a.entry.lastUpdated).forEach(x => {
+      const tabLabel = (catalogs[x.tab] && catalogs[x.tab].title) || x.tab;
+      const date = new Date(x.entry.lastUpdated).toISOString().slice(0, 10);
+      md += `- **${x.item.title}** (${x.item.year || '?'}) — *${tabLabel}* — ${date}`;
+      if (x.entry.notes) md += ` — _${x.entry.notes}_`;
+      md += `\n`;
+    });
+    md += `\n`;
+  }
+
+  // Genres
+  if (genresSorted.length > 0) {
+    md += `## Genres Explored\n\n`;
+    genresSorted.forEach(([g, c]) => {
+      md += `- **${g}**: ${c}\n`;
+    });
+    md += `\n`;
+  }
+
+  // Tag highlights
+  if (topPos.length > 0) {
+    md += `## Top Positive Tags\n\n`;
+    topPos.forEach(([t, c]) => md += `- **${t}**: ${c}\n`);
+    md += `\n`;
+  }
+  if (topNeg.length > 0) {
+    md += `## Top Negative Tags\n\n`;
+    topNeg.forEach(([t, c]) => md += `- **${t}**: ${c}\n`);
+    md += `\n`;
+  }
+
+  md += trendBlock;
+
+  // All watched (full list at end)
+  if (watched.length > 0) {
+    md += `\n## Complete Watched List\n\n`;
+    watched.sort((a, b) => b.entry.lastUpdated - a.entry.lastUpdated).forEach(x => {
+      const tabLabel = (catalogs[x.tab] && catalogs[x.tab].title) || x.tab;
+      const date = new Date(x.entry.lastUpdated).toISOString().slice(0, 10);
+      const ratingEmoji = { loved: '💚', liked: '👍', mixed: '🤷', disliked: '👎' }[x.entry.rating] || '';
+      md += `- ${ratingEmoji} **${x.item.title}** (${x.item.year || '?'}) — *${tabLabel}* — ${date}\n`;
+    });
+    md += `\n`;
+  }
+
+  md += `\n---\n*WatchTrack period review — ${label}*\n`;
+  return md;
+}
+
+// Helper for tag categorization within period review
+function resolveContentTypeForItem(item, tabId) {
+  if (item && item.contentType) return item.contentType;
+  if (item && Array.isArray(item.categories) && item.categories.length > 0) {
+    for (const cat of item.categories) {
+      if (CATEGORY_TO_CONTENT_TYPE[cat]) return CATEGORY_TO_CONTENT_TYPE[cat];
+    }
+  }
+  return TAB_DEFAULT_CONTENT_TYPE[tabId] || 'film-narrative';
+}
+
 function updateWebhookStatusLine() {
   const status = document.getElementById('webhook-status');
   if (!status) return;
@@ -3369,6 +3828,7 @@ function triageAction(act) {
   setupModals();
   buildCategoryFilters();
   buildFilters();
+  buildTagPills();
   render();
 
   // If Plex is already configured, fetch the library in the background

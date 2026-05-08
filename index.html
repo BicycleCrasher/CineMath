@@ -45,6 +45,7 @@
 <nav class="tab-nav" id="tab-nav"></nav>
 <div class="categories" id="categories"></div>
 <div class="filters" id="filters"></div>
+<div class="tag-pills" id="tag-pills"></div>
 <main id="items-container"></main>
 
 <div class="modal" id="export-modal">
@@ -98,7 +99,43 @@
     <h3>Stats</h3>
     <div class="stats-content" id="stats-content"></div>
     <div class="modal-actions">
+      <button class="action-btn" id="stats-period-review">Period in Review</button>
       <button class="action-btn" id="stats-close">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="period-review-modal">
+  <div class="modal-content">
+    <h3>Period in Review</h3>
+    <p class="settings-help">Generate a markdown report covering a specific time window.</p>
+    <div class="settings-section">
+      <label>Period</label>
+      <select id="period-review-type" class="modal-input">
+        <option value="year">Year</option>
+        <option value="month">Month</option>
+        <option value="last12">Last 12 months</option>
+        <option value="custom">Custom date range</option>
+      </select>
+    </div>
+    <div class="settings-section" id="period-review-year-section">
+      <label>Year</label>
+      <select id="period-review-year" class="modal-input"></select>
+    </div>
+    <div class="settings-section" id="period-review-month-section" style="display:none">
+      <label>Month</label>
+      <select id="period-review-month" class="modal-input"></select>
+    </div>
+    <div class="settings-section" id="period-review-custom-section" style="display:none">
+      <label>Start date</label>
+      <input type="date" id="period-review-start" class="modal-input">
+      <label style="margin-top:8px">End date</label>
+      <input type="date" id="period-review-end" class="modal-input">
+    </div>
+    <p id="period-review-status" class="settings-help"></p>
+    <div class="modal-actions">
+      <button class="action-btn" id="period-review-generate">Generate &amp; download</button>
+      <button class="action-btn" id="period-review-cancel">Cancel</button>
     </div>
   </div>
 </div>

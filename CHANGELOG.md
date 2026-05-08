@@ -10,6 +10,47 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.11.0 — 2026-05-08
+**Service worker cache:** `scifi-tracker-v25` → `v26`
+
+### Added — Stage 5d-1: Tag-filter pills
+
+New filter row beneath the existing Watching/Queued/Watched filters. Filters items by their applied reaction tags.
+
+- **Two pill rows**: positive tags (greenish) above, negative tags (reddish) below
+- **Multi-select** with **AND/OR toggle**: AND requires all selected tags, OR requires any
+- **Dynamic**: only shows tags actually applied to items in the current tab
+- **Composes with status filter**: items must match both filters
+- **Per-tab state**: in-memory only, resets on tab switch
+- **Hidden on Watchlist** (heterogeneous tag set across content types is too noisy)
+- **Clear button** to reset all selected tag filters
+- AND/OR toggle only appears when 2+ tags are selected
+- Orphan tags (in use but not in current tab's contentType set) appear in a third row with dashed borders
+
+### Added — Stage 5d-2: Period in Review (markdown export)
+
+New "Period in Review" button on the Stats modal. Generates a downloadable markdown report covering a chosen time window.
+
+#### Period selection
+- **Year**: pick any year that has data
+- **Month**: pick year + month
+- **Last 12 months**: rolling 12 months from today
+- **Custom date range**: arbitrary start + end dates
+
+#### Report contents
+- **Headline stats**: items watched, started but not finished, queued, skipped — with delta vs. prior period
+- **Rating distribution**: Loved / Liked / Mixed / Disliked counts with emojis
+- **Top loved**: up to 20 most recent, with notes inline
+- **Disliked list**: complete, with notes
+- **Genres explored**: count per tab, sorted by volume
+- **Top positive tags / negative tags**: 8 / 5 most-used
+- **Monthly trend**: bar chart (text-rendered) — only shows for periods >60 days
+- **Complete watched list**: every watched item in period, with rating emoji + date
+
+Output is a `.md` file named `watchtrack-review-{label}.md`. Renders properly in GitHub, Notion, Obsidian, etc.
+
+---
+
 ## 5.10.2 — 2026-05-08
 **Service worker cache:** `scifi-tracker-v24` → `v25`
 
