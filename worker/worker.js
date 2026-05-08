@@ -1,19 +1,24 @@
-// WatchTrack ↔ Plex bridge (v2 — adds TMDB metadata + viewing history)
+// WatchTrack ↔ Plex bridge (v5 — adds TMDB metadata + history + promotions)
 //
 // Endpoints:
 //   POST /webhook/{secret}              Plex Pass webhook receiver
 //   GET  /events?secret=X&since=TS      WatchTrack polls for new scrobble events
 //   POST /events/ack                    WatchTrack acks events processed
-//   GET  /metadata/lookup?title=X&year=Y&type=movie|tv&secret=S   TMDB enrichment
+//   GET  /metadata/lookup?secret=X&title=T&year=Y&type=movie|tv[&tmdbId=N]   TMDB enrichment
+//   POST /metadata/bulk                 Batch TMDB lookups (≤50 per call)
 //   POST /viewed/ingest                 Bulk ingest Plex history (used once for backfill)
 //   GET  /viewed/list?secret=X          Return all logged Plex views (for History modal)
+//   POST /promotions/add                Persistent orphan promotion to catalog
+//   GET  /promotions?secret=X           List all stored promotions (queried on app bootstrap)
+//   DELETE /promotions/{tab}/{itemId}   Remove a promotion (after committing to catalog source)
 //   GET  /                              health check
 //
 // KV bindings expected (variable names must match exactly):
-//   EVENTS    — webhook scrobble events queued for WatchTrack to pull
-//   CONFIG    — { "secret": "shared secret", "tmdb_token": "TMDB v4 read access token" }
-//   VIEWED    — full Plex viewing history (every play, including orphans)
-//   METADATA  — cached TMDB enrichment, keyed by tmdb:{id} or normalized title+year+type
+//   EVENTS      — webhook scrobble events queued for WatchTrack to pull
+//   CONFIG      — { "secret": "...", "tmdb_token": "..." }
+//   VIEWED      — full Plex viewing history
+//   METADATA    — TMDB enrichment cache
+//   PROMOTIONS  — orphan promotions persisted across devices
 
 // Library whitelist — only ingest from these Plex library section IDs.
 // Adjust if your library config changes.
@@ -136,7 +141,7 @@ export default {
 
     // Health
     if (path === '/' || path === '/health') {
-      return new Response('WatchTrack-Plex bridge online (v4 — TMDB ID lookup + recommendations)', { headers: cors });
+      return new Response('WatchTrack-Plex bridge online (v5 — TMDB ID + recommendations + promotions)', { headers: cors });
     }
 
     // === Plex webhook receiver ===
@@ -306,6 +311,57 @@ export default {
         records,
         cursor: list.list_complete ? null : list.cursor,
       });
+    }
+
+    // === Promotions: persistent orphan-to-catalog additions ===
+    // POST /promotions/add — body: { secret, tab, item }
+    //   - Writes to PROMOTIONS KV under key `${tab}|${item.id}`
+    if (path === '/promotions/add' && method === 'POST') {
+      try {
+        const body = await request.json();
+        if (!(await checkSecret(env, body.secret))) return new Response('Forbidden', { status: 403, headers: cors });
+        if (!body.tab || !body.item || !body.item.id) {
+          return new Response('Missing tab or item.id', { status: 400, headers: cors });
+        }
+        const key = `${body.tab}|${body.item.id}`;
+        const record = {
+          tab: body.tab,
+          item: body.item,
+          createdAt: Date.now(),
+        };
+        await env.PROMOTIONS.put(key, JSON.stringify(record));
+        return jsonResponse({ ok: true, key });
+      } catch (e) {
+        return new Response('Bad request: ' + e.message, { status: 400, headers: cors });
+      }
+    }
+
+    // GET /promotions?secret=X — list all promotions
+    if (path === '/promotions' && method === 'GET') {
+      const providedSecret = url.searchParams.get('secret');
+      if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
+      const list = await env.PROMOTIONS.list({ limit: 1000 });
+      const records = [];
+      for (const k of list.keys) {
+        const v = await env.PROMOTIONS.get(k.name);
+        if (!v) continue;
+        try { records.push({ key: k.name, ...JSON.parse(v) }); } catch {}
+      }
+      return jsonResponse({ records });
+    }
+
+    // DELETE /promotions/{tab}/{itemId}?secret=X — remove a promotion (for "I committed this" workflow)
+    if (path.startsWith('/promotions/') && method === 'DELETE') {
+      const providedSecret = url.searchParams.get('secret');
+      if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
+      const remainder = path.slice('/promotions/'.length);
+      const slash = remainder.indexOf('/');
+      if (slash < 0) return new Response('Bad path', { status: 400, headers: cors });
+      const tab = remainder.slice(0, slash);
+      const itemId = remainder.slice(slash + 1);
+      const key = `${tab}|${itemId}`;
+      await env.PROMOTIONS.delete(key);
+      return jsonResponse({ ok: true, deleted: key });
     }
 
     return new Response('Not found', { status: 404, headers: cors });

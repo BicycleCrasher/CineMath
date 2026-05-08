@@ -43,7 +43,7 @@ Or in any browser console:
 
 Save the output. You'll paste it into 4 places: Cloudflare CONFIG KV, Plex webhook URL, WatchTrack Settings, and any direct testing of endpoints.
 
-### 2. Create four KV namespaces
+### 2. Create five KV namespaces
 
 Cloudflare dashboard → **Workers & Pages → KV** → **Create a namespace**. Name them exactly:
 
@@ -51,6 +51,7 @@ Cloudflare dashboard → **Workers & Pages → KV** → **Create a namespace**. 
 - `WATCHTRACK_CONFIG` — shared secret + TMDB token
 - `WATCHTRACK_VIEWED` — durable Plex viewing history (no TTL, every play kept)
 - `WATCHTRACK_METADATA` — TMDB enrichment cache (30-day TTL)
+- `WATCHTRACK_PROMOTIONS` — orphan promotions persisted across devices (no TTL)
 
 ### 3. Populate CONFIG KV
 
@@ -74,9 +75,9 @@ Click into `WATCHTRACK_CONFIG`. Add two keys:
 
 Save the URL — looks like `https://watchtrack-plex.YOURNAME.workers.dev`.
 
-### 5. Bind all four KV namespaces
+### 5. Bind all five KV namespaces
 
-Worker page → **Settings tab → Bindings → Add binding** (×4):
+Worker page → **Settings tab → Bindings → Add binding** (×5):
 
 | Variable name | KV namespace |
 |---|---|
@@ -84,6 +85,7 @@ Worker page → **Settings tab → Bindings → Add binding** (×4):
 | `CONFIG` | WATCHTRACK_CONFIG |
 | `VIEWED` | WATCHTRACK_VIEWED |
 | `METADATA` | WATCHTRACK_METADATA |
+| `PROMOTIONS` | WATCHTRACK_PROMOTIONS |
 
 Variable names are CASE-SENSITIVE and must match exactly. The Worker code references `env.EVENTS`, `env.CONFIG`, etc.
 

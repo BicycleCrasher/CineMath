@@ -202,6 +202,19 @@
   </div>
 </div>
 
+<div class="modal" id="promotions-mgr-modal">
+  <div class="modal-content">
+    <h3>Manage promotions</h3>
+    <p class="settings-help" id="promotions-mgr-status">Loading promotions...</p>
+    <div class="history-list" id="promotions-mgr-list"></div>
+    <div class="modal-actions">
+      <button class="action-btn" id="promotions-export">Export as JSON patch</button>
+      <button class="action-btn" id="promotions-mgr-refresh">Refresh</button>
+      <button class="action-btn" id="promotions-mgr-close">Close</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal" id="settings-modal">
   <div class="modal-content">
     <h3>Settings</h3>
@@ -241,6 +254,7 @@
         <button class="action-btn" id="plex-refresh">Refresh library</button>
         <button class="action-btn" id="plex-bulk-sync">Sync from Plex history</button>
         <button class="action-btn" id="catalog-enrich">Pre-enrich catalog</button>
+        <button class="action-btn" id="promotions-manage">Manage promotions</button>
       </div>
       <p class="settings-status" id="plex-status">Not configured.</p>
     </div>

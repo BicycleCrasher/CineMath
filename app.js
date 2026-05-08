@@ -945,6 +945,95 @@ function streamingSearchUrl(providerName, title) {
 }
 
 // =====================================================================
+// Promotions (Stage 5b): persistent orphan→catalog additions stored in
+// Cloudflare KV. Loaded on bootstrap and merged into catalogs.
+// =====================================================================
+let promotionsCache = [];   // { key, tab, item, createdAt }[]
+
+async function fetchPromotions() {
+  if (!isWebhookConfigured()) { promotionsCache = []; return promotionsCache; }
+  const url = getWebhookUrl();
+  const secret = getWebhookSecret();
+  try {
+    const resp = await fetch(`${url}/promotions?secret=${encodeURIComponent(secret)}`);
+    if (!resp.ok) { promotionsCache = []; return promotionsCache; }
+    const data = await resp.json();
+    promotionsCache = data.records || [];
+  } catch {
+    promotionsCache = [];
+  }
+  return promotionsCache;
+}
+
+async function postPromotion(tab, item) {
+  if (!isWebhookConfigured()) throw new Error('Webhook bridge not configured');
+  const url = getWebhookUrl();
+  const secret = getWebhookSecret();
+  const resp = await fetch(`${url}/promotions/add`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ secret, tab, item }),
+  });
+  if (!resp.ok) {
+    const txt = await resp.text();
+    throw new Error(`HTTP ${resp.status}: ${txt}`);
+  }
+  return await resp.json();
+}
+
+async function deletePromotion(tab, itemId) {
+  if (!isWebhookConfigured()) throw new Error('Webhook bridge not configured');
+  const url = getWebhookUrl();
+  const secret = getWebhookSecret();
+  const resp = await fetch(`${url}/promotions/${encodeURIComponent(tab)}/${encodeURIComponent(itemId)}?secret=${encodeURIComponent(secret)}`, {
+    method: 'DELETE',
+  });
+  if (!resp.ok) {
+    const txt = await resp.text();
+    throw new Error(`HTTP ${resp.status}: ${txt}`);
+  }
+  return await resp.json();
+}
+
+// Merge promotions into loaded catalogs.
+// SILENT DEDUPE (option A): if catalog JSON already has an item with same id,
+// skip the promotion (canonical source wins).
+function mergePromotionsIntoCatalogs() {
+  if (!promotionsCache || promotionsCache.length === 0) return;
+  promotionsCache.forEach(p => {
+    const cat = catalogs[p.tab];
+    if (!cat) return;
+    // Check if catalog already has this item ID
+    const exists = cat.items.some(it => it.id === p.item.id);
+    if (exists) return;  // canonical source wins; silent dedupe
+    // Find or create the "Plex History (Promoted)" section
+    let section = cat.sections.find(s => s.name.includes('Promoted'));
+    if (!section) {
+      section = {
+        name: 'X. Plex History (Promoted)',
+        desc: 'Items promoted from your Plex viewing history (synced via Cloudflare KV).',
+        categories: [],
+        items: [],
+      };
+      cat.sections.push(section);
+    }
+    // Build the runtime item
+    const runtimeItem = {
+      ...p.item,
+      section: section.name,
+      sectionDesc: section.desc,
+      categories: p.item.categories || [],
+      sourceTab: p.tab,
+      sourceTabLabel: cat.title || p.tab,
+      order: cat.items.length + 1,
+      _isPromotion: true,  // Flag for UI purposes
+    };
+    section.items.push(runtimeItem);
+    cat.items.push(runtimeItem);
+  });
+}
+
+// =====================================================================
 // Catalog enrichment index — maps catalog item.id → { tmdbId, type, lastEnriched }
 // Stored in localStorage for instant streaming-badge resolution.
 // =====================================================================
@@ -2290,6 +2379,20 @@ function setupModals() {
     document.getElementById('enrichment-result-modal').classList.remove('active');
   });
 
+  // === Promotions Manager ===
+  document.getElementById('promotions-manage').addEventListener('click', () => {
+    document.getElementById('settings-modal').classList.remove('active');
+    openPromotionsManager();
+  });
+  document.getElementById('promotions-mgr-close').addEventListener('click', () => {
+    document.getElementById('promotions-mgr-modal').classList.remove('active');
+  });
+  document.getElementById('promotions-mgr-refresh').addEventListener('click', async () => {
+    await fetchPromotions();
+    renderPromotionsManager();
+  });
+  document.getElementById('promotions-export').addEventListener('click', exportPromotionsAsJsonPatch);
+
   document.getElementById('webhook-test').addEventListener('click', async () => {
     const url = document.getElementById('webhook-url').value.trim().replace(/\/$/, '');
     const secret = document.getElementById('webhook-secret').value.trim();
@@ -2568,19 +2671,18 @@ function openPromoteModal(btn) {
   document.getElementById('promote-modal').classList.add('active');
 }
 
-function confirmPromote() {
+async function confirmPromote() {
   if (!pendingPromote) return;
   const tab = document.getElementById('promote-tab').value;
   if (!catalogs[tab]) { alert('Tab not found.'); return; }
 
-  // Build a minimal item
   const cat = catalogs[tab];
-  const sectionName = pendingPromote.type === 'movie' ? 'X. Plex History (Promoted)' : 'X. Plex History (Promoted)';
+  const sectionName = 'X. Plex History (Promoted)';
   let section = cat.sections.find(s => s.name === sectionName);
   if (!section) {
     section = {
       name: sectionName,
-      desc: 'Items added from your Plex viewing history.',
+      desc: 'Items promoted from your Plex viewing history (synced via Cloudflare KV).',
       categories: [],
       items: [],
     };
@@ -2592,18 +2694,43 @@ function confirmPromote() {
     pitch: `Promoted from Plex history. ${pendingPromote.plays} play(s) detected${pendingPromote.type === 'tv' ? `, ${pendingPromote.distinct} distinct episode(s)` : ''}.`,
     priority: 'low',
     whyPriority: 'Auto-added from your Plex viewing history.',
+    contentType: pendingPromote.type === 'tv' ? 'tv-prestige' : 'film-narrative',
+    tvCompletionMode: 'flexible',
+  };
+  newItem.id = `${newItem.title.replace(/[^a-z0-9]+/gi, '-').toLowerCase().replace(/^-|-$/g, '')}-${newItem.year || 'unknown'}`;
+
+  // Persist to Worker KV synchronously (Option A flow)
+  const confirmBtn = document.getElementById('promote-confirm');
+  const cancelBtn = document.getElementById('promote-cancel');
+  if (confirmBtn) confirmBtn.disabled = true;
+  if (cancelBtn) cancelBtn.disabled = true;
+  try {
+    await postPromotion(tab, newItem);
+  } catch (e) {
+    if (confirmBtn) confirmBtn.disabled = false;
+    if (cancelBtn) cancelBtn.disabled = false;
+    alert(`Failed to save promotion: ${e.message}\n\nThe Cloudflare Worker may be unreachable. Try again later.`);
+    return;
+  }
+  if (confirmBtn) confirmBtn.disabled = false;
+  if (cancelBtn) cancelBtn.disabled = false;
+
+  // Add to runtime catalog
+  const runtimeItem = {
+    ...newItem,
     section: sectionName,
     sectionDesc: section.desc,
     categories: [],
     sourceTab: tab,
     sourceTabLabel: cat.title || tab,
     order: cat.items.length + 1,
-    contentType: pendingPromote.type === 'tv' ? 'tv-prestige' : 'film-narrative',
-    tvCompletionMode: 'flexible',
+    _isPromotion: true,
   };
-  newItem.id = `${newItem.title.replace(/[^a-z0-9]+/gi, '-').toLowerCase().replace(/^-|-$/g, '')}-${newItem.year || 'unknown'}`;
-  section.items.push(newItem);
-  cat.items.push(newItem);
+  section.items.push(runtimeItem);
+  cat.items.push(runtimeItem);
+
+  // Refresh promotions cache (so the new entry appears in maintenance modal)
+  await fetchPromotions();
 
   // Mark watched/watching
   if (pendingPromote.type === 'movie') {
@@ -2616,14 +2743,135 @@ function confirmPromote() {
   }
 
   // Refresh state
-  plexHistoryCache = null;  // force re-aggregate so it now shows as in-catalog
+  plexHistoryCache = null;
   document.getElementById('promote-modal').classList.remove('active');
-  alert(`Added "${pendingPromote.title}" to ${cat.title || tab}.`);
   pendingPromote = null;
   // Re-render history modal
   setTimeout(() => openHistoryModal(), 100);
-  // Re-render main UI
   render();
+}
+
+// =====================================================================
+// Promotions Manager modal — view, mark-committed, delete, export
+// =====================================================================
+async function openPromotionsManager() {
+  const modal = document.getElementById('promotions-mgr-modal');
+  const status = document.getElementById('promotions-mgr-status');
+  modal.classList.add('active');
+  if (!isWebhookConfigured()) {
+    status.textContent = 'Configure Plex Webhook Bridge in Settings first.';
+    document.getElementById('promotions-mgr-list').innerHTML = '';
+    return;
+  }
+  status.textContent = 'Loading promotions...';
+  await fetchPromotions();
+  renderPromotionsManager();
+}
+
+function renderPromotionsManager() {
+  const status = document.getElementById('promotions-mgr-status');
+  const list = document.getElementById('promotions-mgr-list');
+  if (promotionsCache.length === 0) {
+    status.textContent = 'No promotions stored.';
+    list.innerHTML = '<p class="settings-help" style="padding:12px 0">Items you promote from the Plex History modal will appear here. They\'re stored in Cloudflare KV and synced across all your devices that share this Worker.</p>';
+    return;
+  }
+  // Sort: most recent first
+  const sorted = promotionsCache.slice().sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+  // Determine which promotions are now in canonical catalog (silent dedupe candidates)
+  const inCanonical = new Set();
+  sorted.forEach(p => {
+    const cat = catalogs[p.tab];
+    if (!cat) return;
+    // Check if a non-promotion item with same id exists
+    const hit = cat.items.find(it => it.id === p.item.id && !it._isPromotion);
+    if (hit) inCanonical.add(p.key);
+  });
+
+  status.textContent = `${promotionsCache.length} promotion${promotionsCache.length === 1 ? '' : 's'} · ${inCanonical.size} now in canonical catalog`;
+  list.innerHTML = sorted.map(p => {
+    const dateStr = p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '';
+    const tabLabel = (catalogs[p.tab] && catalogs[p.tab].title) || p.tab;
+    const isInCanon = inCanonical.has(p.key);
+    const meta = `${p.item.year || '?'} · ${tabLabel}${dateStr ? ' · added ' + dateStr : ''}`;
+    return `<div class="history-row" data-key="${escapeHtml(p.key)}" data-tab="${escapeHtml(p.tab)}" data-itemid="${escapeHtml(p.item.id)}">
+      <div class="history-row-info">
+        <div class="history-row-title">${escapeHtml(p.item.title)}${isInCanon ? ' <span class="plex-badge" style="margin-left:6px">In repo</span>' : ''}</div>
+        <div class="history-row-meta">${meta}</div>
+      </div>
+      <button class="history-promote-btn promotions-delete-btn" title="Remove this KV promotion. Use after you commit it to the repo data files.">Delete</button>
+    </div>`;
+  }).join('');
+
+  list.querySelectorAll('.promotions-delete-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const row = btn.closest('.history-row');
+      if (!row) return;
+      const tab = row.dataset.tab;
+      const itemId = row.dataset.itemid;
+      if (!confirm(`Delete this promotion from KV?\n\nUse this after you've added the item to the catalog source files in the GitHub repo. The item stays in WatchTrack via the canonical catalog; the KV entry is just cleanup.`)) return;
+      btn.disabled = true;
+      try {
+        await deletePromotion(tab, itemId);
+        await fetchPromotions();
+        renderPromotionsManager();
+      } catch (err) {
+        btn.disabled = false;
+        alert('Delete failed: ' + err.message);
+      }
+    });
+  });
+}
+
+function exportPromotionsAsJsonPatch() {
+  if (!promotionsCache || promotionsCache.length === 0) {
+    alert('No promotions to export.');
+    return;
+  }
+  // Group by tab
+  const byTab = {};
+  promotionsCache.forEach(p => {
+    if (!byTab[p.tab]) byTab[p.tab] = [];
+    byTab[p.tab].push(p.item);
+  });
+
+  // Build a single combined patch document
+  const lines = [];
+  lines.push('# WatchTrack — Promotions Export');
+  lines.push('# Generated: ' + new Date().toISOString());
+  lines.push(`# Total promotions: ${promotionsCache.length} across ${Object.keys(byTab).length} tab(s)`);
+  lines.push('#');
+  lines.push('# Instructions:');
+  lines.push('# Each section below corresponds to one catalog file in the WatchTrack repo:');
+  lines.push('#   data/{tab-id}.json');
+  lines.push('# For each tab, copy the items array into the appropriate section of that catalog file.');
+  lines.push('# Most natural fit is a section named "Plex History" or "Already Watched" — or create');
+  lines.push('# a new section. After committing to the repo, return to Manage Promotions and Delete');
+  lines.push('# the corresponding KV entries to clean up.');
+  lines.push('');
+
+  for (const tab of Object.keys(byTab).sort()) {
+    const tabLabel = (catalogs[tab] && catalogs[tab].title) || tab;
+    lines.push('================================================================================');
+    lines.push(`# Tab: ${tabLabel}`);
+    lines.push(`# File: data/${tab}.json`);
+    lines.push(`# Items: ${byTab[tab].length}`);
+    lines.push('================================================================================');
+    lines.push('');
+    lines.push(JSON.stringify(byTab[tab], null, 2));
+    lines.push('');
+    lines.push('');
+  }
+
+  const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `watchtrack-promotions-${new Date().toISOString().slice(0, 10)}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 function updateWebhookStatusLine() {
@@ -3020,6 +3268,11 @@ function triageAction(act) {
   loadState();
   await loadCatalogs();
   catalogEnrichmentIdx = loadCatalogEnrichment();
+  // Fetch + merge promotions (cross-device persistence)
+  if (isWebhookConfigured()) {
+    await fetchPromotions();
+    mergePromotionsIntoCatalogs();
+  }
   applyDisplayMode();
   buildTabs();
   setupModals();

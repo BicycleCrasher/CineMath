@@ -10,6 +10,63 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.7.0 — 2026-05-07
+**Service worker cache:** `scifi-tracker-v18` → `v19`
+
+### Added — Stage 5b: Persistent orphan promotions (hybrid KV+GitHub)
+
+Promotions in WatchTrack now persist across devices via Cloudflare KV. The history-modal "Promote" button writes to KV synchronously; on app boot, all KV promotions get merged into the catalog. Items committed to the canonical `data/*.json` files in the repo silently dedupe (canonical source wins).
+
+#### Worker upgrades (v5)
+- New KV namespace: `WATCHTRACK_PROMOTIONS` (no TTL — durable forever until manually deleted)
+- `POST /promotions/add` — store a promotion under `${tab}|${itemId}` key
+- `GET /promotions?secret=X` — list all stored promotions (called on app bootstrap)
+- `DELETE /promotions/{tab}/{itemId}?secret=X` — remove a promotion (cleanup after committing to repo)
+
+#### Promote button workflow (synchronous, Option A)
+- Click Promote on an orphan in History modal
+- Pick a destination tab in the existing promote modal
+- Click confirm → POSTs to Worker → on success, runtime catalog updates and UI refreshes
+- On Worker error: shows error message, item is NOT added (no silent failure)
+
+#### Bootstrap merge
+- On app load, if Webhook Bridge configured: fetches all promotions from KV
+- Merges them into loaded catalogs as runtime items in a `X. Plex History (Promoted)` section
+- **Silent dedupe (Option A)**: if a catalog JSON already has an item with the same id, the KV promotion is skipped. Canonical source wins. KV stays around as harmless cruft.
+
+#### Manage Promotions modal
+- New **Manage promotions** button in Settings → Plex Integration
+- Lists all KV promotions sorted most-recent-first
+- "In repo" badge appears on promotions that now exist in canonical catalog (cleanup candidates)
+- Per-promotion **Delete** button (calls Worker DELETE endpoint)
+- **Refresh** button re-fetches from Worker
+
+#### Export as JSON patch (Option B — single combined file)
+- New **Export as JSON patch** button in Promotions Manager
+- Generates a single `.txt` file with sections per tab
+- Each section shows the target file path (`data/{tab-id}.json`) and a JSON-formatted array of items to paste in
+- Includes header with timestamp, total count, and instructions
+- Filename: `watchtrack-promotions-YYYY-MM-DD.txt`
+- Workflow: export → paste sections into appropriate catalog files in repo → commit & push → return to Manage Promotions and Delete the corresponding KV entries
+
+### Architecture notes
+- Promotions are de-facto YOUR promotions (single shared secret, no user concept) — fine for personal use
+- Promotion IDs use the same scheme as catalog items (`title-year`); collisions across users would require multiple WatchTrack accounts, which doesn't apply here
+- Deleting a promotion from KV doesn't remove the runtime item until next app load; no immediate-effect needed since the use case is post-commit cleanup
+
+### Pending for Stage 5c
+- TWA APK packaging via PWABuilder
+
+### Pending for Stage 5d
+- Multi-select tag operations
+- Year-in-review / monthly export
+
+### Pending for Stage 5e + 5f
+- Recommendation engine using `recommendations` and `similar` arrays already returned from TMDB
+- Catalog gap analysis with promote-to-catalog workflow (will reuse Stage 5b's promotion infrastructure)
+
+---
+
 ## 5.6.0 — 2026-05-07
 **Service worker cache:** `scifi-tracker-v17` → `v18`
 
