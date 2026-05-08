@@ -507,6 +507,93 @@
         "ensemble",
         "dark"
       ]
+    },
+    {
+      "name": "Z. Plex History (Auto-Promoted)",
+      "desc": "Items auto-promoted from Plex viewing history and TMDB recommendations during 2026-05-08 sync. Source attribution is in each item's pitch.",
+      "items": [
+        {
+          "title": "Barbershop 2: Back in Business",
+          "year": 2004,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "barbershop-2-back-in-business-2004"
+        },
+        {
+          "title": "Barbershop",
+          "year": 2002,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "barbershop-2002"
+        },
+        {
+          "title": "Beetlejuice",
+          "year": 1988,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "beetlejuice-1988"
+        },
+        {
+          "title": "Extract",
+          "year": 2009,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "extract-2009"
+        },
+        {
+          "title": "Friday",
+          "year": 1995,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "friday-1995"
+        },
+        {
+          "title": "Monsters, Inc.",
+          "year": 2001,
+          "pitch": "Promoted from TMDB recommendation. Suggested by your rating of \"The Big Lebowski\".",
+          "priority": "low",
+          "whyPriority": "Auto-added from TMDB recommendations.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "monsters-inc-2001"
+        },
+        {
+          "title": "The Birdcage",
+          "year": 1996,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "the-birdcage-1996"
+        },
+        {
+          "title": "The Super Mario Bros. Movie",
+          "year": 2023,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "the-super-mario-bros-movie-2023"
+        }
+      ],
+      "categories": []
     }
   ]
 }

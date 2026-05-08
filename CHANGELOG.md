@@ -10,6 +10,19 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.14.1 — 2026-05-08
+**Service worker cache:** `scifi-tracker-v30` → `v31`
+
+### Content — 62 KV promotions committed to canonical catalogs
+
+Auto-promoted items accumulated in `WATCHTRACK_PROMOTIONS` were merged into their respective `data/*.json` source files under a new `Z. Plex History (Auto-Promoted)` section per tab.
+
+Counts: comedy +8, comedy-tv +1, cons-courtroom +1, crime +3, crime-tv +1, drama +7, espionage +2, heist +1, heroes-comics +12, horror +7, scifi +18, scifi-tv +1 (61 from Plex history + 1 from TMDB recommendation).
+
+After redeploy, `mergePromotionsIntoCatalogs()` silently dedupes the KV entries against the canonical catalog. The KV entries themselves can be cleared at leisure via Settings → Plex Integration → Manage Promotions → Delete.
+
+---
+
 ## 5.14.0 — 2026-05-08
 **Service worker cache:** `scifi-tracker-v29` → `v30`
 

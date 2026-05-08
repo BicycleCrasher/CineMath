@@ -608,6 +608,83 @@
         "epic",
         "period"
       ]
+    },
+    {
+      "name": "Z. Plex History (Auto-Promoted)",
+      "desc": "Items auto-promoted from Plex viewing history and TMDB recommendations during 2026-05-08 sync. Source attribution is in each item's pitch.",
+      "items": [
+        {
+          "title": "Gladiator",
+          "year": 2000,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "gladiator-2000"
+        },
+        {
+          "title": "Harriet",
+          "year": 2019,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "harriet-2019"
+        },
+        {
+          "title": "Margin Call",
+          "year": 2011,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "margin-call-2011"
+        },
+        {
+          "title": "Shortbus",
+          "year": 2006,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "shortbus-2006"
+        },
+        {
+          "title": "The Menu",
+          "year": 2022,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "the-menu-2022"
+        },
+        {
+          "title": "The Prestige",
+          "year": 2006,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "the-prestige-2006"
+        },
+        {
+          "title": "Torch Song Trilogy",
+          "year": 1988,
+          "pitch": "Promoted from Plex history. 6 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "torch-song-trilogy-1988"
+        }
+      ],
+      "categories": []
     }
   ]
 }

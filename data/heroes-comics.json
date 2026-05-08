@@ -4,29 +4,38 @@
   "subtitle": "Superhero films and broader comic-book adaptations.",
   "sections": [
     {
-      "name": "I. Marvel — MCU",
+      "name": "I. Marvel \u2014 MCU",
       "desc": "Marvel Studios proper. Iron Man through current.",
-      "categories": ["marvel-mcu"],
+      "categories": [
+        "marvel-mcu"
+      ],
       "items": []
     },
     {
-      "name": "II. Marvel — Non-MCU",
+      "name": "II. Marvel \u2014 Non-MCU",
       "desc": "Fox X-Men/FF era, Sony Spider-Verse, Sony alt-Marvel, Spider-Man trilogies.",
-      "categories": ["marvel-non-mcu"],
+      "categories": [
+        "marvel-non-mcu"
+      ],
       "items": []
     },
     {
       "name": "III. DC",
       "desc": "DC Extended Universe, Snyderverse, current DCU, prior eras.",
-      "categories": ["dc"],
+      "categories": [
+        "dc"
+      ],
       "items": [
         {
-          "title": "Joker: Folie à Deux",
+          "title": "Joker: Folie \u00e0 Deux",
           "year": 2024,
-          "pitch": "Todd Phillips's musical sequel to 2019's Joker. Phoenix and Lady Gaga in a folie-à-deux courtroom-and-Arkham two-hander built on jukebox standards. Polarizing — read as either a brave deconstruction of fan expectation or a betrayal of the first film, depending on who you ask.",
+          "pitch": "Todd Phillips's musical sequel to 2019's Joker. Phoenix and Lady Gaga in a folie-\u00e0-deux courtroom-and-Arkham two-hander built on jukebox standards. Polarizing \u2014 read as either a brave deconstruction of fan expectation or a betrayal of the first film, depending on who you ask.",
           "priority": "low",
           "whyPriority": "Watched. Cataloged for tracking. Pairs with the original Joker (2019) when added.",
-          "categories": ["dc", "deconstructive"],
+          "categories": [
+            "dc",
+            "deconstructive"
+          ],
           "contentType": "film-narrative"
         }
       ]
@@ -34,38 +43,177 @@
     {
       "name": "IV. Indie / Other Publishers",
       "desc": "Hellboy, Dredd, Kick-Ass, Image, Dark Horse, etc.",
-      "categories": ["indie"],
+      "categories": [
+        "indie"
+      ],
       "items": []
     },
     {
       "name": "V. Deconstructive",
       "desc": "Watchmen, Joker, the genre interrogating itself.",
-      "categories": ["deconstructive"],
+      "categories": [
+        "deconstructive"
+      ],
       "items": []
     },
     {
       "name": "VI. Cosmic",
       "desc": "Guardians of the Galaxy, Eternals, Captain Marvel, the space-tier of the genre.",
-      "categories": ["cosmic"],
+      "categories": [
+        "cosmic"
+      ],
       "items": []
     },
     {
       "name": "VII. Street-Level",
       "desc": "Daredevil, Punisher, Spider-Man (most), grounded-tier superhero.",
-      "categories": ["street-level"],
+      "categories": [
+        "street-level"
+      ],
       "items": []
     },
     {
       "name": "VIII. Team-Up",
       "desc": "Avengers, Justice League, X-Men ensembles.",
-      "categories": ["team-up"],
+      "categories": [
+        "team-up"
+      ],
       "items": []
     },
     {
       "name": "IX. Non-Comic Super-Powered",
-      "desc": "Unbreakable, Chronicle, The Incredibles, Brightburn — superpowers without the comic source.",
-      "categories": ["indie"],
+      "desc": "Unbreakable, Chronicle, The Incredibles, Brightburn \u2014 superpowers without the comic source.",
+      "categories": [
+        "indie"
+      ],
       "items": []
+    },
+    {
+      "name": "Z. Plex History (Auto-Promoted)",
+      "desc": "Items auto-promoted from Plex viewing history and TMDB recommendations during 2026-05-08 sync. Source attribution is in each item's pitch.",
+      "items": [
+        {
+          "title": "Deadpool & Wolverine",
+          "year": 2024,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "deadpool-wolverine-2024"
+        },
+        {
+          "title": "Guardians of the Galaxy Vol. 3",
+          "year": 2023,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "guardians-of-the-galaxy-vol-3-2023"
+        },
+        {
+          "title": "Joker: Folie \u00e0 Deux",
+          "year": 2024,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "joker-folie-deux-2024"
+        },
+        {
+          "title": "Kingsman: The Golden Circle",
+          "year": 2017,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "kingsman-the-golden-circle-2017"
+        },
+        {
+          "title": "Logan",
+          "year": 2017,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "logan-2017"
+        },
+        {
+          "title": "The League of Extraordinary Gentlemen",
+          "year": 2003,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "the-league-of-extraordinary-gentlemen-2003"
+        },
+        {
+          "title": "The New Mutants",
+          "year": 2020,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "the-new-mutants-2020"
+        },
+        {
+          "title": "Thunderbolts*",
+          "year": 2025,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "thunderbolts-2025"
+        },
+        {
+          "title": "X-Men",
+          "year": 2000,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "x-men-2000"
+        },
+        {
+          "title": "X-Men: Apocalypse",
+          "year": 2016,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "x-men-apocalypse-2016"
+        },
+        {
+          "title": "X-Men: Dark Phoenix",
+          "year": 2019,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "x-men-dark-phoenix-2019"
+        },
+        {
+          "title": "X-Men: First Class",
+          "year": 2011,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "x-men-first-class-2011"
+        }
+      ],
+      "categories": []
     }
   ]
 }

@@ -646,6 +646,83 @@
         "slow-burn",
         "psychological"
       ]
+    },
+    {
+      "name": "Z. Plex History (Auto-Promoted)",
+      "desc": "Items auto-promoted from Plex viewing history and TMDB recommendations during 2026-05-08 sync. Source attribution is in each item's pitch.",
+      "items": [
+        {
+          "title": "Constantine",
+          "year": 2005,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "constantine-2005"
+        },
+        {
+          "title": "The Substance",
+          "year": 2024,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "the-substance-2024"
+        },
+        {
+          "title": "Underworld",
+          "year": 2003,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "underworld-2003"
+        },
+        {
+          "title": "Underworld: Awakening",
+          "year": 2012,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "underworld-awakening-2012"
+        },
+        {
+          "title": "Underworld: Blood Wars",
+          "year": 2016,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "underworld-blood-wars-2016"
+        },
+        {
+          "title": "Underworld: Evolution",
+          "year": 2006,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "underworld-evolution-2006"
+        },
+        {
+          "title": "Underworld: Rise of the Lycans",
+          "year": 2009,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "underworld-rise-of-the-lycans-2009"
+        }
+      ],
+      "categories": []
     }
   ]
 }

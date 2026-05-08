@@ -762,6 +762,23 @@
       "categories": [
         "british-cozy"
       ]
+    },
+    {
+      "name": "Z. Plex History (Auto-Promoted)",
+      "desc": "Items auto-promoted from Plex viewing history and TMDB recommendations during 2026-05-08 sync. Source attribution is in each item's pitch.",
+      "items": [
+        {
+          "title": "Mafia: Most Wanted",
+          "year": null,
+          "pitch": "Promoted from Plex history. 9 play(s) detected, 3 distinct episode(s).",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "tv-prestige",
+          "tvCompletionMode": "flexible",
+          "id": "mafia-most-wanted-unknown"
+        }
+      ],
+      "categories": []
     }
   ]
 }

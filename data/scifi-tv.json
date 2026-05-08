@@ -934,6 +934,23 @@
       "categories": [
         "ongoing"
       ]
+    },
+    {
+      "name": "Z. Plex History (Auto-Promoted)",
+      "desc": "Items auto-promoted from Plex viewing history and TMDB recommendations during 2026-05-08 sync. Source attribution is in each item's pitch.",
+      "items": [
+        {
+          "title": "Dune",
+          "year": null,
+          "pitch": "Promoted from Plex history. 3 play(s) detected, 1 distinct episode(s).",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "tv-prestige",
+          "tvCompletionMode": "flexible",
+          "id": "dune-unknown"
+        }
+      ],
+      "categories": []
     }
   ]
 }

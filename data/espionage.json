@@ -462,6 +462,33 @@
       "categories": [
         "modern"
       ]
+    },
+    {
+      "name": "Z. Plex History (Auto-Promoted)",
+      "desc": "Items auto-promoted from Plex viewing history and TMDB recommendations during 2026-05-08 sync. Source attribution is in each item's pitch.",
+      "items": [
+        {
+          "title": "Casino Royale",
+          "year": 2006,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "casino-royale-2006"
+        },
+        {
+          "title": "GoldenEye",
+          "year": 1995,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "goldeneye-1995"
+        }
+      ],
+      "categories": []
     }
   ]
 }

@@ -424,6 +424,23 @@
         "heist",
         "con"
       ]
+    },
+    {
+      "name": "Z. Plex History (Auto-Promoted)",
+      "desc": "Items auto-promoted from Plex viewing history and TMDB recommendations during 2026-05-08 sync. Source attribution is in each item's pitch.",
+      "items": [
+        {
+          "title": "Operation Fortune: Ruse de Guerre",
+          "year": 2023,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "operation-fortune-ruse-de-guerre-2023"
+        }
+      ],
+      "categories": []
     }
   ]
 }

@@ -932,6 +932,193 @@
       "categories": [
         "cerebral"
       ]
+    },
+    {
+      "name": "Z. Plex History (Auto-Promoted)",
+      "desc": "Items auto-promoted from Plex viewing history and TMDB recommendations during 2026-05-08 sync. Source attribution is in each item's pitch.",
+      "items": [
+        {
+          "title": "A.I. Artificial Intelligence",
+          "year": 2001,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "a-i-artificial-intelligence-2001"
+        },
+        {
+          "title": "Alien: Romulus",
+          "year": 2024,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "alien-romulus-2024"
+        },
+        {
+          "title": "Avatar",
+          "year": 2009,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "avatar-2009"
+        },
+        {
+          "title": "Avatar: The Way of Water",
+          "year": 2022,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "avatar-the-way-of-water-2022"
+        },
+        {
+          "title": "Battlestar Galactica: Razor",
+          "year": 2007,
+          "pitch": "Promoted from Plex history. 6 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "battlestar-galactica-razor-2007"
+        },
+        {
+          "title": "Inception",
+          "year": 2010,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "inception-2010"
+        },
+        {
+          "title": "Independence Day",
+          "year": 1996,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "independence-day-1996"
+        },
+        {
+          "title": "Mad Max",
+          "year": 1979,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "mad-max-1979"
+        },
+        {
+          "title": "Mad Max Beyond Thunderdome",
+          "year": 1985,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "mad-max-beyond-thunderdome-1985"
+        },
+        {
+          "title": "Mad Max: Fury Road",
+          "year": 2015,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "mad-max-fury-road-2015"
+        },
+        {
+          "title": "Nope",
+          "year": 2022,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "nope-2022"
+        },
+        {
+          "title": "Serenity",
+          "year": 2005,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "serenity-2005"
+        },
+        {
+          "title": "Star Trek",
+          "year": 2009,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "star-trek-2009"
+        },
+        {
+          "title": "Stargate",
+          "year": 1994,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "stargate-1994"
+        },
+        {
+          "title": "The Hitchhiker's Guide to the Galaxy",
+          "year": 2005,
+          "pitch": "Promoted from Plex history. 6 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "the-hitchhiker-s-guide-to-the-galaxy-2005"
+        },
+        {
+          "title": "The Matrix",
+          "year": 1999,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "the-matrix-1999"
+        },
+        {
+          "title": "The Road Warrior",
+          "year": 1981,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "the-road-warrior-1981"
+        },
+        {
+          "title": "The Terminator",
+          "year": 1984,
+          "pitch": "Promoted from Plex history. 3 play(s) detected.",
+          "priority": "low",
+          "whyPriority": "Auto-added from your Plex viewing history.",
+          "contentType": "film-narrative",
+          "tvCompletionMode": "flexible",
+          "id": "the-terminator-1984"
+        }
+      ],
+      "categories": []
     }
   ]
 }
