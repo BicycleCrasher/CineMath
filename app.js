@@ -1542,13 +1542,19 @@ function loadState() {
     if (raw) {
       state = normalizeStateIds(JSON.parse(raw));
       catalogManifest.forEach(c => { if (!state[c.id]) state[c.id] = {}; });
-      // Per-tab seed merge: if a tab's state is empty AND SEED_STATE has entries
-      // for that tab, apply them. Handles new tabs added in updates without
-      // overwriting any existing state on already-populated tabs.
-      catalogManifest.forEach(c => {
-        if (state[c.id] && Object.keys(state[c.id]).length === 0 && SEED_STATE[c.id]) {
-          state[c.id] = JSON.parse(JSON.stringify(SEED_STATE[c.id]));
-        }
+      // Per-ITEM seed merge: for each tab in SEED_STATE, fill in seed entries
+      // for items that don't already have user state. Items the user has
+      // already touched stay as-is (user data always wins). Idempotent — safe
+      // to run on every load. Handles new tabs added in updates AND new items
+      // added to existing tabs.
+      Object.keys(SEED_STATE).forEach(tabId => {
+        if (!state[tabId]) state[tabId] = {};
+        const tabSeed = SEED_STATE[tabId] || {};
+        Object.keys(tabSeed).forEach(itemId => {
+          if (!state[tabId][itemId]) {
+            state[tabId][itemId] = JSON.parse(JSON.stringify(tabSeed[itemId]));
+          }
+        });
       });
       saveState();
       return;

@@ -10,6 +10,24 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.10.2 — 2026-05-08
+**Service worker cache:** `scifi-tracker-v24` → `v25`
+
+### Fixed — Seed state per-item merge (proper fix)
+
+#### The deeper bug
+v5.10.1 fixed the obvious case (entirely-new tab) but the merge gated on "tab is empty." If a user had touched even one item in a new tab during testing/preview, the seed for that tab was skipped — leaving 36 of 37 musicals unseeded.
+
+#### The fix
+Switched from per-tab merge to per-item merge:
+- Iterate every (tab, itemId) pair in SEED_STATE
+- If state[tab][itemId] doesn't exist, apply seed
+- If user already has state for that item, skip — user data wins
+
+Idempotent. Runs every load. Handles every future case automatically: new tabs, new items added to existing tabs, partial seeding after preview.
+
+---
+
 ## 5.10.1 — 2026-05-08
 **Service worker cache:** `scifi-tracker-v23` → `v24`
 
