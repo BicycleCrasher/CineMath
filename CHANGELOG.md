@@ -10,6 +10,23 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.16.0 — 2026-05-08
+**Service worker cache:** `scifi-tracker-v33` → `v34`
+
+### Feature — Catalog health report (Stage 5f)
+
+New "Catalog Health" button in the Stats modal. Renders a full gap analysis covering:
+
+- **Metadata completeness** — percentage coverage for director, runtime, country, critics, and priority fields, with expandable lists of items missing each
+- **TMDB enrichment** — counts for unenriched items, stale enrichment (>30 days), and items missing recommendations/similar data
+- **Reaction tags** — watched and rated items that have no reaction tags applied
+- **Decade distribution** — visual bar chart of catalog spread across decades
+- **Country diversity** — count of unique origins and top-12 breakdown
+- **Tab sizes** — all tabs sorted smallest-first, thin tabs (<15 items) highlighted
+- **Director concentration** — top-12 most represented directors, total unique count, single-entry count
+
+---
+
 ## 5.15.0 — 2026-05-08
 **Service worker cache:** `scifi-tracker-v32` → `v33`
 

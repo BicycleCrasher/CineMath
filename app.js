@@ -2578,6 +2578,20 @@ function setupModals() {
     document.getElementById('stats-modal').classList.remove('active');
     openPeriodReviewModal();
   });
+  document.getElementById('stats-catalog-health').addEventListener('click', () => {
+    const el = document.getElementById('stats-content');
+    el.innerHTML = renderCatalogHealth();
+    el.querySelectorAll('.health-expand').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = document.getElementById(btn.dataset.target);
+        if (target) {
+          const hidden = target.style.display === 'none';
+          target.style.display = hidden ? '' : 'none';
+          btn.textContent = hidden ? '− collapse' : btn.textContent.replace('− collapse', '+ ' + btn.dataset.target);
+        }
+      });
+    });
+  });
   document.getElementById('period-review-cancel').addEventListener('click', () => {
     document.getElementById('period-review-modal').classList.remove('active');
   });
@@ -3889,6 +3903,150 @@ function renderStats() {
     const cat = catalogs[tab];
     html += `<div class="stat-line"><span>${cat ? cat.title : tab}</span><strong>${s.watched}/${s.total} watched</strong></div>`;
   });
+  return html;
+}
+
+// =====================================================================
+// Stage 5f: Catalog gap analysis
+// =====================================================================
+function renderCatalogHealth() {
+  const STALE_MS = 30 * 24 * 60 * 60 * 1000;
+  const now = Date.now();
+
+  const missingDir = [], missingRuntime = [], missingCountry = [], missingCritics = [], missingPriority = [];
+  const noEnrichment = [], staleEnrichment = [], noRecs = [];
+  const watchedNoTags = [], ratedNoTags = [];
+  const decadeCounts = {};
+  const countryCounts = {};
+  const tabSizes = {};
+  const directorCounts = {};
+  let totalItems = 0;
+
+  for (const tab in catalogs) {
+    const cat = catalogs[tab];
+    tabSizes[tab] = { title: cat.title || tab, count: cat.items.length };
+    cat.items.forEach(item => {
+      totalItems++;
+      const label = `${item.title} (${item.year || '?'})`;
+      const tabLabel = cat.title || tab;
+
+      if (!item.dir) missingDir.push({ label, tab: tabLabel, id: item.id, tabId: tab });
+      if (!item.runtime) missingRuntime.push({ label, tab: tabLabel, id: item.id, tabId: tab });
+      if (!item.country) missingCountry.push({ label, tab: tabLabel, id: item.id, tabId: tab });
+      if (!item.critics || item.critics.length === 0) missingCritics.push({ label, tab: tabLabel });
+      if (!item.priority) missingPriority.push({ label, tab: tabLabel });
+
+      if (item.year && typeof item.year === 'number') {
+        const decade = Math.floor(item.year / 10) * 10;
+        decadeCounts[decade] = (decadeCounts[decade] || 0) + 1;
+      }
+      if (item.country) countryCounts[item.country] = (countryCounts[item.country] || 0) + 1;
+      if (item.dir) directorCounts[item.dir] = (directorCounts[item.dir] || 0) + 1;
+
+      const enrich = getEnrichmentForItem(item.id);
+      if (!enrich || !enrich.tmdbId) noEnrichment.push({ label, tab: tabLabel });
+      else {
+        if (enrich.lastEnriched && (now - enrich.lastEnriched > STALE_MS)) staleEnrichment.push({ label, tab: tabLabel });
+        if (!enrich.recommendations || enrich.recommendations.length === 0) noRecs.push({ label, tab: tabLabel });
+      }
+
+      const entry = (state[tab] && state[tab][item.id]) || {};
+      const st = entry.status || 'none';
+      const hasTags = entry.reactionTags && entry.reactionTags.length > 0;
+      if ((st === 'watched' || st === 'watching') && !hasTags) watchedNoTags.push({ label, tab: tabLabel, tabId: tab, id: item.id });
+      if (entry.rating && entry.rating !== 'none' && !hasTags) ratedNoTags.push({ label, tab: tabLabel, tabId: tab, id: item.id });
+    });
+  }
+
+  function collapsible(id, items, max) {
+    if (items.length === 0) return '';
+    const shown = items.slice(0, max || 10);
+    const rest = items.slice(max || 10);
+    let html = '<div class="health-list">';
+    shown.forEach(x => { html += `<div class="health-item">${x.label} <span class="health-tab">${x.tab}</span></div>`; });
+    if (rest.length) {
+      html += `<div class="health-expand" data-target="${id}">+ ${rest.length} more</div>`;
+      html += `<div class="health-extra" id="${id}" style="display:none">`;
+      rest.forEach(x => { html += `<div class="health-item">${x.label} <span class="health-tab">${x.tab}</span></div>`; });
+      html += '</div>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  let html = '';
+
+  // --- Metadata completeness ---
+  html += '<h4>Metadata completeness</h4>';
+  const metaFields = [
+    { name: 'Director', items: missingDir },
+    { name: 'Runtime', items: missingRuntime },
+    { name: 'Country', items: missingCountry },
+    { name: 'Critics', items: missingCritics },
+    { name: 'Priority', items: missingPriority },
+  ];
+  metaFields.forEach((f, i) => {
+    const pct = totalItems ? Math.round((totalItems - f.items.length) * 100 / totalItems) : 100;
+    const cls = pct === 100 ? 'health-good' : pct >= 80 ? 'health-ok' : 'health-warn';
+    html += `<div class="stat-line"><span>${f.name}</span><strong class="${cls}">${pct}% <span class="health-count">(${f.items.length} missing)</span></strong></div>`;
+    if (f.items.length > 0) html += collapsible(`meta-${i}`, f.items, 8);
+  });
+
+  // --- Enrichment coverage ---
+  html += '<h4>TMDB enrichment</h4>';
+  const enriched = totalItems - noEnrichment.length;
+  const enrichPct = totalItems ? Math.round(enriched * 100 / totalItems) : 0;
+  html += `<div class="stat-line"><span>Enriched</span><strong>${enriched}/${totalItems} (${enrichPct}%)</strong></div>`;
+  if (noEnrichment.length) html += collapsible('enrich-missing', noEnrichment, 8);
+  html += `<div class="stat-line"><span>Stale (>30 days)</span><strong>${staleEnrichment.length}</strong></div>`;
+  html += `<div class="stat-line"><span>Missing recs/similar</span><strong>${noRecs.length}</strong></div>`;
+  if (noRecs.length) html += collapsible('enrich-norecs', noRecs, 8);
+
+  // --- Reaction tag gaps ---
+  html += '<h4>Reaction tags</h4>';
+  html += `<div class="stat-line"><span>Watched, no tags</span><strong>${watchedNoTags.length}</strong></div>`;
+  if (watchedNoTags.length) html += collapsible('tags-watched', watchedNoTags, 8);
+  html += `<div class="stat-line"><span>Rated, no tags</span><strong>${ratedNoTags.length}</strong></div>`;
+  if (ratedNoTags.length) html += collapsible('tags-rated', ratedNoTags, 8);
+
+  // --- Decade balance ---
+  html += '<h4>Decade distribution</h4>';
+  const maxDecade = Math.max(...Object.values(decadeCounts), 1);
+  const decades = Object.keys(decadeCounts).map(Number).sort();
+  decades.forEach(d => {
+    const n = decadeCounts[d];
+    const barW = Math.round(n * 100 / maxDecade);
+    html += `<div class="health-decade"><span class="health-decade-label">${d}s</span><div class="health-bar-track"><div class="health-bar" style="width:${barW}%"></div></div><span class="health-decade-n">${n}</span></div>`;
+  });
+
+  // --- Country diversity ---
+  html += '<h4>Country diversity</h4>';
+  const topCountries = Object.entries(countryCounts).sort((a, b) => b[1] - a[1]);
+  const uniqueCountries = topCountries.length;
+  html += `<div class="stat-line"><span>Unique origins</span><strong>${uniqueCountries}</strong></div>`;
+  topCountries.slice(0, 12).forEach(([c, n]) => {
+    html += `<div class="stat-line"><span>${c}</span><strong>${n}</strong></div>`;
+  });
+
+  // --- Tab balance ---
+  html += '<h4>Tab sizes</h4>';
+  const sorted = Object.entries(tabSizes).sort((a, b) => a[1].count - b[1].count);
+  sorted.forEach(([tab, info]) => {
+    const cls = info.count < 15 ? 'health-warn' : '';
+    html += `<div class="stat-line"><span>${info.title}</span><strong class="${cls}">${info.count}</strong></div>`;
+  });
+
+  // --- Director concentration ---
+  html += '<h4>Most represented directors</h4>';
+  const topDirs = Object.entries(directorCounts).sort((a, b) => b[1] - a[1]).slice(0, 12);
+  topDirs.forEach(([d, n]) => {
+    html += `<div class="stat-line"><span>${d}</span><strong>${n}</strong></div>`;
+  });
+  const singleDirs = Object.values(directorCounts).filter(n => n === 1).length;
+  const totalDirs = Object.keys(directorCounts).length;
+  html += `<div class="stat-line"><span>Total unique directors</span><strong>${totalDirs}</strong></div>`;
+  html += `<div class="stat-line"><span>Single-entry directors</span><strong>${singleDirs}</strong></div>`;
+
   return html;
 }
 
