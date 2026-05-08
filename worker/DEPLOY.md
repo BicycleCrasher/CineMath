@@ -55,12 +55,16 @@ Cloudflare dashboard → **Workers & Pages → KV** → **Create a namespace**. 
 
 ### 3. Populate CONFIG KV
 
-Click into `WATCHTRACK_CONFIG`. Add two keys:
+Click into `WATCHTRACK_CONFIG`. Add these keys:
 
 | Key | Value |
 |---|---|
 | `secret` | the shared secret from step 1 |
 | `tmdb_token` | your TMDB v4 Read Access Token |
+| `plex_url` | your Plex server base URL (no trailing slash) — populated automatically by WatchTrack's "Save to Worker" button |
+| `plex_token` | your X-Plex-Token — populated automatically by WatchTrack's "Save to Worker" button |
+
+`plex_url` and `plex_token` can be left blank initially; WatchTrack writes them via `POST /plex/configure` the first time you click "Save to Worker" in Settings. They are required for any of the `/plex/*` proxy endpoints to function.
 
 ### 4. Create the Worker
 
@@ -93,7 +97,7 @@ After adding all four, click **Save and deploy**.
 
 ### 6. Verify the worker
 
-Visit `https://watchtrack-plex.YOURNAME.workers.dev/health` — should respond `WatchTrack-Plex bridge online (v2 — TMDB + history)`.
+Visit `https://watchtrack-plex.YOURNAME.workers.dev/health` — should respond `WatchTrack-Plex bridge online (v5.2 — Plex proxy added)`.
 
 Then test the secret + KV bindings:
 ```
@@ -134,8 +138,17 @@ Settings → Plex Webhook Bridge:
 - `GET /events?secret=X&since=TS` — WatchTrack polls for new scrobble events
 - `POST /events/ack` — WatchTrack acks events processed (deletes from EVENTS)
 - `GET /metadata/lookup?secret=X&title=T&year=Y&type=movie|tv` — TMDB enrichment, cached 30 days
+- `POST /metadata/bulk` — Batch TMDB lookups (≤50 per call)
 - `POST /viewed/ingest` — Bulk-ingest historical Plex views (used once for backfill from `/status/sessions/history/all`)
-- `GET /viewed/list?secret=X&cursor=...` — Paginated list of every Plex view (for the WT History modal, future)
+- `GET /viewed/list?secret=X&cursor=...` — Paginated list of every Plex view (for the WT History modal)
+- `POST /promotions/add` — Persist orphan promotion to catalog
+- `GET /promotions?secret=X` — List all stored promotions
+- `DELETE /promotions/{tab}/{itemId}?secret=X` — Remove a promotion
+- `POST /plex/configure` — Body `{ secret, plexUrl, plexToken }`. Stores Plex URL + token in CONFIG KV. Used once by WatchTrack's "Save to Worker" button.
+- `GET /plex/identity?secret=X` — Server-to-server probe of Plex `/identity`. Replaces the direct browser fetch that breaks under the seedbox's TLS handshake.
+- `GET /plex/library?secret=X` — Returns `{ items: [{title, year, ratingKey, type, librarySectionID}, ...] }` aggregated across every movie/show section.
+- `POST /plex/scrobble` — Body `{ secret, ratingKey }`. Marks the item watched on Plex.
+- `GET /plex/history?secret=X&start=N&size=N` — Returns Plex's raw paginated `MediaContainer` for `/status/sessions/history/all`.
 
 ## Quotas & cost
 

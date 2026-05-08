@@ -1,4 +1,4 @@
-// WatchTrack ↔ Plex bridge (v5 — adds TMDB metadata + history + promotions)
+// WatchTrack ↔ Plex bridge (v5.2 — Plex proxy added)
 //
 // Endpoints:
 //   POST /webhook/{secret}              Plex Pass webhook receiver
@@ -11,11 +11,16 @@
 //   POST /promotions/add                Persistent orphan promotion to catalog
 //   GET  /promotions?secret=X           List all stored promotions (queried on app bootstrap)
 //   DELETE /promotions/{tab}/{itemId}   Remove a promotion (after committing to catalog source)
+//   POST /plex/configure                Store Plex URL + token in CONFIG KV
+//   GET  /plex/identity?secret=X        Server-to-server Plex identity probe (replaces direct browser call)
+//   GET  /plex/library?secret=X         Aggregated Plex library (sections + items)
+//   POST /plex/scrobble                 Mark item watched on Plex (server-to-server)
+//   GET  /plex/history?secret=X&start=N&size=N   Paginated Plex viewing history
 //   GET  /                              health check
 //
 // KV bindings expected (variable names must match exactly):
 //   EVENTS      — webhook scrobble events queued for WatchTrack to pull
-//   CONFIG      — { "secret": "...", "tmdb_token": "..." }
+//   CONFIG      — { "secret": "...", "tmdb_token": "...", "plex_url": "...", "plex_token": "..." }
 //   VIEWED      — full Plex viewing history
 //   METADATA    — TMDB enrichment cache
 //   PROMOTIONS  — orphan promotions persisted across devices
@@ -141,7 +146,7 @@ export default {
 
     // Health
     if (path === '/' || path === '/health') {
-      return new Response('WatchTrack-Plex bridge online (v5.1 — parallel KV reads)', { headers: cors });
+      return new Response('WatchTrack-Plex bridge online (v5.2 — Plex proxy added)', { headers: cors });
     }
 
     // === Plex webhook receiver ===
@@ -375,6 +380,115 @@ export default {
       const key = `${tab}|${itemId}`;
       await env.PROMOTIONS.delete(key);
       return jsonResponse({ ok: true, deleted: key });
+    }
+
+    // === Plex proxy: store URL + token in CONFIG KV (one-time setup) ===
+    if (path === '/plex/configure' && method === 'POST') {
+      try {
+        const body = await request.json();
+        if (!(await checkSecret(env, body.secret))) return new Response('Forbidden', { status: 403, headers: cors });
+        if (!body.plexUrl || !body.plexToken) return new Response('Missing plexUrl or plexToken', { status: 400, headers: cors });
+        await env.CONFIG.put('plex_url', body.plexUrl.replace(/\/$/, ''));
+        await env.CONFIG.put('plex_token', body.plexToken);
+        return jsonResponse({ ok: true });
+      } catch (e) {
+        return new Response('Bad request: ' + e.message, { status: 400, headers: cors });
+      }
+    }
+
+    // === Plex proxy: server identity probe ===
+    if (path === '/plex/identity' && method === 'GET') {
+      const providedSecret = url.searchParams.get('secret');
+      if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
+      const plexUrl = await env.CONFIG.get('plex_url');
+      const plexToken = await env.CONFIG.get('plex_token');
+      if (!plexUrl || !plexToken) return jsonResponse({ error: 'Plex not configured' }, 400);
+      try {
+        const resp = await fetch(`${plexUrl}/identity?X-Plex-Token=${encodeURIComponent(plexToken)}`, {
+          headers: { 'Accept': 'application/json' },
+        });
+        if (!resp.ok) return jsonResponse({ error: `Plex returned ${resp.status}` }, 502);
+        const data = await resp.json();
+        return jsonResponse(data);
+      } catch (e) {
+        return jsonResponse({ error: e.message }, 502);
+      }
+    }
+
+    // === Plex proxy: aggregated library (sections + items) ===
+    if (path === '/plex/library' && method === 'GET') {
+      const providedSecret = url.searchParams.get('secret');
+      if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
+      const plexUrl = await env.CONFIG.get('plex_url');
+      const plexToken = await env.CONFIG.get('plex_token');
+      if (!plexUrl || !plexToken) return jsonResponse({ error: 'Plex not configured' }, 400);
+      try {
+        const sectionsResp = await fetch(`${plexUrl}/library/sections?X-Plex-Token=${encodeURIComponent(plexToken)}`, {
+          headers: { 'Accept': 'application/json' },
+        });
+        if (!sectionsResp.ok) return jsonResponse({ error: `Plex sections ${sectionsResp.status}` }, 502);
+        const sectionsJson = await sectionsResp.json();
+        const dirs = (sectionsJson?.MediaContainer?.Directory) || [];
+        const items = [];
+        for (const dir of dirs) {
+          if (dir.type !== 'movie' && dir.type !== 'show') continue;
+          const allResp = await fetch(`${plexUrl}/library/sections/${dir.key}/all?X-Plex-Token=${encodeURIComponent(plexToken)}`, {
+            headers: { 'Accept': 'application/json' },
+          });
+          if (!allResp.ok) continue;
+          const allJson = await allResp.json();
+          const sectionItems = (allJson?.MediaContainer?.Metadata) || [];
+          sectionItems.forEach(it => {
+            items.push({
+              title: it.title,
+              year: it.year || null,
+              ratingKey: it.ratingKey,
+              type: it.type,
+              librarySectionID: dir.key,
+            });
+          });
+        }
+        return jsonResponse({ items });
+      } catch (e) {
+        return jsonResponse({ error: e.message }, 502);
+      }
+    }
+
+    // === Plex proxy: scrobble (mark item watched on Plex) ===
+    if (path === '/plex/scrobble' && method === 'POST') {
+      try {
+        const body = await request.json();
+        if (!(await checkSecret(env, body.secret))) return new Response('Forbidden', { status: 403, headers: cors });
+        if (!body.ratingKey) return new Response('Missing ratingKey', { status: 400, headers: cors });
+        const plexUrl = await env.CONFIG.get('plex_url');
+        const plexToken = await env.CONFIG.get('plex_token');
+        if (!plexUrl || !plexToken) return jsonResponse({ error: 'Plex not configured' }, 400);
+        const resp = await fetch(`${plexUrl}/:/scrobble?identifier=com.plexapp.plugins.library&key=${encodeURIComponent(body.ratingKey)}&X-Plex-Token=${encodeURIComponent(plexToken)}`);
+        return jsonResponse({ ok: resp.ok, status: resp.status });
+      } catch (e) {
+        return jsonResponse({ error: e.message }, 502);
+      }
+    }
+
+    // === Plex proxy: paginated viewing history ===
+    if (path === '/plex/history' && method === 'GET') {
+      const providedSecret = url.searchParams.get('secret');
+      if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
+      const start = parseInt(url.searchParams.get('start') || '0');
+      const size = parseInt(url.searchParams.get('size') || '500');
+      const plexUrl = await env.CONFIG.get('plex_url');
+      const plexToken = await env.CONFIG.get('plex_token');
+      if (!plexUrl || !plexToken) return jsonResponse({ error: 'Plex not configured' }, 400);
+      try {
+        const resp = await fetch(`${plexUrl}/status/sessions/history/all?sort=viewedAt:asc&X-Plex-Token=${encodeURIComponent(plexToken)}&X-Plex-Container-Start=${start}&X-Plex-Container-Size=${size}`, {
+          headers: { 'Accept': 'application/json' },
+        });
+        if (!resp.ok) return jsonResponse({ error: `Plex history ${resp.status}` }, 502);
+        const data = await resp.json();
+        return jsonResponse(data);
+      } catch (e) {
+        return jsonResponse({ error: e.message }, 502);
+      }
     }
 
     return new Response('Not found', { status: 404, headers: cors });

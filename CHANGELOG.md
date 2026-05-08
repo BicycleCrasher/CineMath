@@ -10,6 +10,37 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.13.0 — 2026-05-08
+**Service worker cache:** `scifi-tracker-v28` → `v29`
+
+### Changed — Plex API calls now route through Cloudflare Worker
+
+#### The driver
+After a Plex Server update, the seedbox's frontend proxy began rejecting browser-originated TLS handshakes from cross-origin contexts. Direct fetches from `https://bicyclecrasher.github.io` to the seedbox returned `ERR_SSL_PROTOCOL_ERROR` despite the same URL working in the address bar. CORS allowlist tweaks weren't sufficient.
+
+#### The fix
+All Plex API calls now go through the Cloudflare Worker as a proxy. The Worker calls Plex server-to-server (no browser TLS context, no CORS), and returns responses to WatchTrack with permissive CORS.
+
+#### Worker upgrades (v5.2)
+- New CONFIG KV keys: `plex_url`, `plex_token` (set via /plex/configure)
+- `POST /plex/configure` — store Plex URL + token in Worker
+- `GET /plex/identity?secret=X` — test connection
+- `GET /plex/library?secret=X` — fetch entire library (sections + items)
+- `POST /plex/scrobble` — mark item watched on Plex
+- `GET /plex/history?secret=X&start=N&size=N` — fetch paginated viewing history
+
+#### WatchTrack changes
+- New "Save to Worker" button in Settings → Plex Integration (one-time setup to push URL/token to Worker)
+- `testPlexConnection()`, `fetchPlexLibrary()`, `plexMarkWatched()`, `fetchFullPlexHistory()` all refactored to call Worker endpoints
+- localStorage Plex URL/token stays for UI display only; not the source of truth
+
+#### Architectural benefit
+- Plex token no longer needs to live in every browser's localStorage — it's at the Worker
+- Future Plex/seedbox CORS changes don't break WatchTrack
+- One less thing for users to manage if WatchTrack ever has multiple users
+
+---
+
 ## 5.12.1 — 2026-05-08
 **Service worker cache:** `scifi-tracker-v27` → `v28`
 

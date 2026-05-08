@@ -291,7 +291,7 @@
     </div>
     <div class="settings-section">
       <h4>Plex Integration</h4>
-      <p class="settings-help">Connect your Plex Media Server to mark items as in-library and launch playback. Token is stored only on this device.</p>
+      <p class="settings-help">Connect your Plex Media Server to mark items as in-library and launch playback. URL + token are pushed to your Cloudflare Worker (via "Save to Worker") and proxied from there — the seedbox no longer accepts cross-origin browser requests directly.</p>
       <div class="settings-row">
         <label>Server URL</label>
         <input type="url" class="modal-input" id="plex-server-url" placeholder="https://plex-XXX.a.seedbox.vip" autocomplete="off">
@@ -305,6 +305,7 @@
         <input type="text" class="modal-input" id="plex-client-id" placeholder="40-char hex string for deep links" autocomplete="off">
       </div>
       <div class="settings-row">
+        <button class="action-btn" id="plex-save-worker">Save to Worker</button>
         <button class="action-btn" id="plex-test">Test connection</button>
         <button class="action-btn" id="plex-refresh">Refresh library</button>
         <button class="action-btn" id="plex-bulk-sync">Sync from Plex history</button>

@@ -409,38 +409,31 @@ function plexNormalizeKeyTitleOnly(title) {
 }
 async function fetchPlexLibrary() {
   if (!isPlexConfigured()) return;
-  const url = getPlexServerUrl();
-  const token = getPlexToken();
+  if (!isWebhookConfigured()) return;
+  const workerUrl = getWebhookUrl();
+  const secret = getWebhookSecret();
   try {
-    // Get sections list
-    const sectionsResp = await fetch(`${url}/library/sections?X-Plex-Token=${encodeURIComponent(token)}`, {
-      headers: { 'Accept': 'application/json' }
-    });
-    if (!sectionsResp.ok) {
-      console.warn('Plex sections fetch failed:', sectionsResp.status);
+    const resp = await fetch(`${workerUrl}/plex/library?secret=${encodeURIComponent(secret)}`);
+    if (!resp.ok) {
+      console.warn('Plex library fetch failed:', resp.status);
       return;
     }
-    const sectionsJson = await sectionsResp.json();
-    const dirs = (sectionsJson?.MediaContainer?.Directory) || [];
-    const newLib = new Map();
-    for (const dir of dirs) {
-      if (dir.type !== 'movie' && dir.type !== 'show') continue;
-      const allResp = await fetch(`${url}/library/sections/${dir.key}/all?X-Plex-Token=${encodeURIComponent(token)}`, {
-        headers: { 'Accept': 'application/json' }
-      });
-      if (!allResp.ok) continue;
-      const allJson = await allResp.json();
-      const items = (allJson?.MediaContainer?.Metadata) || [];
-      items.forEach(it => {
-        const key = plexNormalizeKey(it.title, it.year);
-        newLib.set(key, {
-          ratingKey: it.ratingKey,
-          title: it.title,
-          year: it.year,
-          type: it.type
-        });
-      });
+    const data = await resp.json();
+    if (data.error) {
+      console.warn('Plex library worker error:', data.error);
+      return;
     }
+    const items = data.items || [];
+    const newLib = new Map();
+    items.forEach(it => {
+      const key = plexNormalizeKey(it.title, it.year);
+      newLib.set(key, {
+        ratingKey: it.ratingKey,
+        title: it.title,
+        year: it.year,
+        type: it.type
+      });
+    });
     plexLibrary = newLib;
     plexLibraryLoadedAt = Date.now();
     render();
@@ -474,11 +467,18 @@ function plexDeepLinkUrl(ratingKey) {
 }
 async function plexMarkWatched(ratingKey) {
   if (!isPlexConfigured()) return false;
-  const url = getPlexServerUrl();
-  const token = getPlexToken();
+  if (!isWebhookConfigured()) return false;
+  const workerUrl = getWebhookUrl();
+  const secret = getWebhookSecret();
   try {
-    const resp = await fetch(`${url}/:/scrobble?identifier=com.plexapp.plugins.library&key=${ratingKey}&X-Plex-Token=${encodeURIComponent(token)}`);
-    return resp.ok;
+    const resp = await fetch(`${workerUrl}/plex/scrobble`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ secret, ratingKey }),
+    });
+    if (!resp.ok) return false;
+    const data = await resp.json();
+    return Boolean(data.ok);
   } catch (e) { return false; }
 }
 
@@ -600,16 +600,18 @@ const PLEX_BULK_LIBRARY_WHITELIST = new Set(['1', '2']);
 // Fetch the full Plex history in pages. Returns array of raw entry objects.
 async function fetchFullPlexHistory(progressCb) {
   if (!isPlexConfigured()) throw new Error('Plex not configured');
-  const url = getPlexServerUrl();
-  const token = getPlexToken();
+  if (!isWebhookConfigured()) throw new Error('Plex Webhook Bridge not configured');
+  const workerUrl = getWebhookUrl();
+  const secret = getWebhookSecret();
   const pageSize = 500;
   let start = 0;
   const all = [];
   while (true) {
-    const fetchUrl = `${url}/status/sessions/history/all?sort=viewedAt:asc&X-Plex-Token=${encodeURIComponent(token)}&X-Plex-Container-Start=${start}&X-Plex-Container-Size=${pageSize}`;
+    const fetchUrl = `${workerUrl}/plex/history?secret=${encodeURIComponent(secret)}&start=${start}&size=${pageSize}`;
     const resp = await fetch(fetchUrl, { headers: { 'Accept': 'application/json' } });
     if (!resp.ok) throw new Error(`Plex history fetch ${resp.status}`);
     const data = await resp.json();
+    if (data.error) throw new Error(data.error);
     const mc = data?.MediaContainer || {};
     const items = mc.Metadata || [];
     if (items.length === 0) break;
@@ -2536,32 +2538,83 @@ function setupModals() {
     if (isWebhookConfigured()) pollPlexWebhookEvents();
     render();
   });
-  document.getElementById('plex-test').addEventListener('click', async () => {
-    const url = document.getElementById('plex-server-url').value.trim().replace(/\/$/, '');
-    const token = document.getElementById('plex-token').value.trim();
+  document.getElementById('plex-save-worker').addEventListener('click', async () => {
+    const plexUrl = document.getElementById('plex-server-url').value.trim().replace(/\/$/, '');
+    const plexToken = document.getElementById('plex-token').value.trim();
     const status = document.getElementById('plex-status');
-    if (!url || !token) {
+    if (!plexUrl || !plexToken) {
       status.textContent = 'Enter both server URL and token first.';
       status.className = 'settings-status err';
       return;
     }
-    status.textContent = 'Testing...';
+    if (!isWebhookConfigured()) {
+      status.textContent = 'Configure Plex Webhook Bridge first (Worker URL + secret).';
+      status.className = 'settings-status err';
+      return;
+    }
+    status.textContent = 'Pushing to Worker...';
     status.className = 'settings-status';
     try {
-      const resp = await fetch(`${url}/identity?X-Plex-Token=${encodeURIComponent(token)}`, {
-        headers: { 'Accept': 'application/json' }
+      const workerUrl = getWebhookUrl();
+      const secret = getWebhookSecret();
+      const resp = await fetch(`${workerUrl}/plex/configure`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ secret, plexUrl, plexToken }),
       });
       if (resp.ok) {
-        const data = await resp.json();
-        const name = data?.MediaContainer?.machineIdentifier || 'unknown';
-        status.textContent = `Connected. Server ID: ${name.slice(0, 20)}...`;
+        status.textContent = 'Configured on Worker.';
         status.className = 'settings-status ok';
       } else {
-        status.textContent = `Failed: HTTP ${resp.status}. Check URL/token.`;
+        const t = await resp.text();
+        status.textContent = `Worker rejected config: HTTP ${resp.status} ${t}`;
         status.className = 'settings-status err';
       }
     } catch (e) {
-      status.textContent = `Error: ${e.message}. Likely CORS or network.`;
+      status.textContent = `Error: ${e.message}`;
+      status.className = 'settings-status err';
+    }
+  });
+  document.getElementById('plex-test').addEventListener('click', async () => {
+    const urlField = document.getElementById('plex-server-url').value.trim();
+    const tokenField = document.getElementById('plex-token').value.trim();
+    const status = document.getElementById('plex-status');
+    if (!urlField || !tokenField) {
+      status.textContent = 'Enter both server URL and token first.';
+      status.className = 'settings-status err';
+      return;
+    }
+    if (!isWebhookConfigured()) {
+      status.textContent = 'Configure Plex Webhook Bridge first (Worker URL + secret).';
+      status.className = 'settings-status err';
+      return;
+    }
+    status.textContent = 'Testing via Worker...';
+    status.className = 'settings-status';
+    try {
+      const workerUrl = getWebhookUrl();
+      const secret = getWebhookSecret();
+      const resp = await fetch(`${workerUrl}/plex/identity?secret=${encodeURIComponent(secret)}`);
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.error) {
+          status.textContent = `Worker says: ${data.error}. Click "Save to Worker" first.`;
+          status.className = 'settings-status err';
+          return;
+        }
+        const name = data?.MediaContainer?.machineIdentifier || 'unknown';
+        status.textContent = `Connected. Server ID: ${name.slice(0, 20)}...`;
+        status.className = 'settings-status ok';
+      } else if (resp.status === 400) {
+        const t = await resp.text();
+        status.textContent = `Worker not yet configured. Click "Save to Worker" first. (${t})`;
+        status.className = 'settings-status err';
+      } else {
+        status.textContent = `Failed: HTTP ${resp.status}.`;
+        status.className = 'settings-status err';
+      }
+    } catch (e) {
+      status.textContent = `Error: ${e.message}`;
       status.className = 'settings-status err';
     }
   });
