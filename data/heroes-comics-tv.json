@@ -1,0 +1,43 @@
+{
+  "type": "heroes-comics-tv",
+  "title": "Heroes & Comics TV",
+  "subtitle": "Superhero television and comic-book series.",
+  "sections": [
+    {
+      "name": "I. Marvel — Disney+",
+      "desc": "WandaVision, Loki, Hawkeye, Moon Knight, X-Men 97, etc.",
+      "categories": ["marvel-disney-plus"],
+      "items": []
+    },
+    {
+      "name": "II. Marvel — Netflix",
+      "desc": "Daredevil, Jessica Jones, Luke Cage, Iron Fist, Punisher, Defenders.",
+      "categories": ["marvel-netflix"],
+      "items": []
+    },
+    {
+      "name": "III. DC",
+      "desc": "Smallville, Arrow, Flash, Gotham, Watchmen HBO, Peacemaker, Titans.",
+      "categories": ["dc"],
+      "items": []
+    },
+    {
+      "name": "IV. Animated",
+      "desc": "X-Men: The Animated Series, Batman: TAS, Justice League Unlimited, Spider-Verse animation.",
+      "categories": ["animated"],
+      "items": []
+    },
+    {
+      "name": "V. Deconstructive",
+      "desc": "The Boys, Invincible, Watchmen HBO — the genre questioning itself.",
+      "categories": ["deconstructive"],
+      "items": []
+    },
+    {
+      "name": "VI. Indie / Other",
+      "desc": "Preacher, The Umbrella Academy, The Tick, etc.",
+      "categories": ["indie"],
+      "items": []
+    }
+  ]
+}

@@ -10,6 +10,34 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.8.0 — 2026-05-08
+**Service worker cache:** `scifi-tracker-v20` → `v21`
+
+### Added — Heroes & Comics tabs (empty scaffolds)
+
+Two new catalog tabs for superhero films and comic book adaptations:
+
+- **Heroes & Comics** (films): 9 sections — Marvel MCU, Marvel Non-MCU, DC, Indie, Deconstructive, Cosmic, Street-Level, Team-Up, Non-Comic Super-Powered
+- **Heroes & Comics TV**: 6 sections — Marvel Disney+, Marvel Netflix, DC, Animated, Deconstructive, Indie
+
+Both tabs ship as empty scaffolds. Categories and section structure are defined; items will be populated via the orphan-promotion workflow.
+
+### Scope decisions
+- **Broader scope**: comic book adaptations + non-comic super-powered films (Unbreakable, Chronicle, The Incredibles, Brightburn). Not the broadest scope (Road to Perdition, A History of Violence stay in Crime/Drama).
+- **No cross-listing across genre tabs**: this is a forward-only rule. Existing cross-listings remain. Auteur is the sole exception (different purpose).
+- **Multi-tagging within a single tab kept**: items can have multiple categories within their tab.
+
+### CATEGORY_LABELS additions
+- Films: marvel-mcu, marvel-non-mcu, dc, indie, deconstructive, cosmic, street-level, team-up
+- TV: marvel-disney-plus, marvel-netflix, animated
+
+### Architecture
+- Total tabs: 22 → 24 (Watchlist virtual tab + 23 alphabetical including 2 new)
+- All four `tvTabs` sets in app.js updated to include heroes-comics-tv (5 occurrences confirmed via grep, including the type field)
+- Manifest in `data/catalogs.json` and fallback manifest in `app.js` both updated
+
+---
+
 ## 5.7.1 — 2026-05-07
 **Service worker cache:** `scifi-tracker-v19` → `v20`
 

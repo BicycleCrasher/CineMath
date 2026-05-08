@@ -1067,7 +1067,7 @@ function setEnrichmentForItem(itemId, payload) {
 // Skips items already enriched within last 30 days.
 async function enrichEntireCatalog(progressCb) {
   if (!isWebhookConfigured()) throw new Error('Configure Plex Webhook Bridge in Settings first.');
-  const tvTabs = new Set(['comedy-tv','crime-tv','spy-tv','drama-tv','horror-tv','fantasy-tv','scifi-tv','cons-courtroom-tv','british-comedy']);
+  const tvTabs = new Set(['comedy-tv','crime-tv','spy-tv','drama-tv','horror-tv','fantasy-tv','scifi-tv','cons-courtroom-tv','british-comedy','heroes-comics-tv']);
   const STALE_MS = 30 * 24 * 60 * 60 * 1000;
 
   const lookups = [];
@@ -1147,7 +1147,7 @@ async function loadStreamingProviders(itemEl, item) {
     slot.innerHTML = '';
     return;
   }
-  const tvTabs = ['comedy-tv','crime-tv','spy-tv','drama-tv','horror-tv','fantasy-tv','scifi-tv','cons-courtroom-tv','british-comedy'];
+  const tvTabs = ['comedy-tv','crime-tv','spy-tv','drama-tv','horror-tv','fantasy-tv','scifi-tv','cons-courtroom-tv','british-comedy','heroes-comics-tv'];
   const sourceTab = item._watchlist_source_tab || activeTab;
   const type = tvTabs.includes(sourceTab) ? 'tv' : 'movie';
   slot.innerHTML = '<div class="streaming-loading">Looking up streaming availability...</div>';
@@ -1301,6 +1301,19 @@ const CATEGORY_LABELS = {
   'game': 'Game Show',
   'news-comedy': 'News Comedy',
   'specials': 'Specials',
+  // Heroes & Comics
+  'marvel-mcu': 'Marvel (MCU)',
+  'marvel-non-mcu': 'Marvel (Non-MCU)',
+  'dc': 'DC',
+  'indie': 'Indie',
+  'deconstructive': 'Deconstructive',
+  'cosmic': 'Cosmic',
+  'street-level': 'Street-Level',
+  'team-up': 'Team-Up',
+  // Heroes & Comics TV
+  'marvel-disney-plus': 'Marvel — Disney+',
+  'marvel-netflix': 'Marvel — Netflix',
+  'animated': 'Animated',
   // Watchlist sections (virtual tab)
   'watching': 'Watching',
   'queued': 'Queued',
@@ -1515,6 +1528,8 @@ async function loadCatalogManifest() {
       { id: "fantasy-tv", label: "Fantasy TV" },
       { id: "foreign", label: "Foreign" },
       { id: "heist", label: "Heist" },
+      { id: "heroes-comics", label: "Heroes & Comics" },
+      { id: "heroes-comics-tv", label: "Heroes & Comics TV" },
       { id: "horror", label: "Horror" },
       { id: "horror-tv", label: "Horror TV" },
       { id: "scifi", label: "Sci-Fi" },
@@ -2547,7 +2562,7 @@ function aggregateHistory(records) {
 }
 
 function isInCatalog(title, year, type) {
-  const tvTabs = new Set(['comedy-tv','crime-tv','spy-tv','drama-tv','horror-tv','fantasy-tv','scifi-tv','cons-courtroom-tv','british-comedy']);
+  const tvTabs = new Set(['comedy-tv','crime-tv','spy-tv','drama-tv','horror-tv','fantasy-tv','scifi-tv','cons-courtroom-tv','british-comedy','heroes-comics-tv']);
   for (const tabId in catalogs) {
     const isTvTab = tvTabs.has(tabId);
     if (type === 'movie' && isTvTab) continue;
@@ -2662,7 +2677,7 @@ function openPromoteModal(btn) {
   document.getElementById('promote-info').textContent =
     `Promote "${pendingPromote.title}" (${pendingPromote.year || '?'}) to a WatchTrack catalog tab. ${pendingPromote.plays} plays detected.`;
   // Populate tab dropdown
-  const tvTabs = new Set(['comedy-tv','crime-tv','spy-tv','drama-tv','horror-tv','fantasy-tv','scifi-tv','cons-courtroom-tv','british-comedy']);
+  const tvTabs = new Set(['comedy-tv','crime-tv','spy-tv','drama-tv','horror-tv','fantasy-tv','scifi-tv','cons-courtroom-tv','british-comedy','heroes-comics-tv']);
   const select = document.getElementById('promote-tab');
   select.innerHTML = catalogManifest
     .filter(c => !c.virtual)

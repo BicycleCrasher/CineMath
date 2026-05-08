@@ -16,6 +16,8 @@
     { "id": "fantasy-tv", "label": "Fantasy TV" },
     { "id": "foreign", "label": "Foreign" },
     { "id": "heist", "label": "Heist" },
+    { "id": "heroes-comics", "label": "Heroes & Comics" },
+    { "id": "heroes-comics-tv", "label": "Heroes & Comics TV" },
     { "id": "horror", "label": "Horror" },
     { "id": "horror-tv", "label": "Horror TV" },
     { "id": "scifi", "label": "Sci-Fi" },

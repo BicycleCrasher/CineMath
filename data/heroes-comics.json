@@ -1,0 +1,61 @@
+{
+  "type": "heroes-comics",
+  "title": "Heroes & Comics",
+  "subtitle": "Superhero films and broader comic-book adaptations.",
+  "sections": [
+    {
+      "name": "I. Marvel — MCU",
+      "desc": "Marvel Studios proper. Iron Man through current.",
+      "categories": ["marvel-mcu"],
+      "items": []
+    },
+    {
+      "name": "II. Marvel — Non-MCU",
+      "desc": "Fox X-Men/FF era, Sony Spider-Verse, Sony alt-Marvel, Spider-Man trilogies.",
+      "categories": ["marvel-non-mcu"],
+      "items": []
+    },
+    {
+      "name": "III. DC",
+      "desc": "DC Extended Universe, Snyderverse, current DCU, prior eras.",
+      "categories": ["dc"],
+      "items": []
+    },
+    {
+      "name": "IV. Indie / Other Publishers",
+      "desc": "Hellboy, Dredd, Kick-Ass, Image, Dark Horse, etc.",
+      "categories": ["indie"],
+      "items": []
+    },
+    {
+      "name": "V. Deconstructive",
+      "desc": "Watchmen, Joker, the genre interrogating itself.",
+      "categories": ["deconstructive"],
+      "items": []
+    },
+    {
+      "name": "VI. Cosmic",
+      "desc": "Guardians of the Galaxy, Eternals, Captain Marvel, the space-tier of the genre.",
+      "categories": ["cosmic"],
+      "items": []
+    },
+    {
+      "name": "VII. Street-Level",
+      "desc": "Daredevil, Punisher, Spider-Man (most), grounded-tier superhero.",
+      "categories": ["street-level"],
+      "items": []
+    },
+    {
+      "name": "VIII. Team-Up",
+      "desc": "Avengers, Justice League, X-Men ensembles.",
+      "categories": ["team-up"],
+      "items": []
+    },
+    {
+      "name": "IX. Non-Comic Super-Powered",
+      "desc": "Unbreakable, Chronicle, The Incredibles, Brightburn — superpowers without the comic source.",
+      "categories": ["indie"],
+      "items": []
+    }
+  ]
+}
