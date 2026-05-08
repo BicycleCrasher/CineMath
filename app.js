@@ -6,9 +6,93 @@ const TAG_SETS = {
     positive: ["Rewatchable","Stayed with me","Visually stunning","Smart structure","Emotionally resonant","Want more like this"],
     negative: ["Too slow","Too bleak","Too cold","Style over substance","Premise didn't land","Dated badly"]
   },
+  'film-scifi': {
+    positive: ["Rewatchable","Stayed with me","Visually stunning","Mind-bending","World-building sells it","Hard sci-fi done right","Want more like this"],
+    negative: ["Premise didn't land","Too exposition-heavy","Science is hand-waved","CGI ages badly","Style over substance","Dated badly"]
+  },
+  'film-espionage': {
+    positive: ["Rewatchable","Stayed with me","Tradecraft feels real","Cat-and-mouse tension","Smart structure","Visually stunning","Want more like this"],
+    negative: ["Too convoluted","Twists feel cheap","Implausibly invincible","Dated politics","Style over substance","Too slow"]
+  },
+  'film-crime': {
+    positive: ["Rewatchable","Stayed with me","Great tension","Moral complexity","Smart structure","Performance-driven","Want more like this"],
+    negative: ["Too bleak","Glorifies the wrong people","Twist doesn't hold up","Too formulaic","Pacing drags","Dated badly"]
+  },
+  'film-cons-courtroom': {
+    positive: ["Rewatchable","Stayed with me","Great twist","Smart structure","Performance-driven","Dialogue sparkles","Want more like this"],
+    negative: ["Twist doesn't hold up","Too predictable","Courtroom logic strained","Pacing drags","Style over substance","Dated badly"]
+  },
+  'film-horror': {
+    positive: ["Rewatchable","Stayed with me","Genuinely unsettling","Great atmosphere","Smart structure","Visually stunning","Want more like this"],
+    negative: ["Jump-scare crutch","Gore over craft","Not scary","Too bleak","Premise didn't land","Dated badly"]
+  },
+  'film-fantasy': {
+    positive: ["Rewatchable","Stayed with me","Visually stunning","World-building sells it","Emotionally resonant","Mythic weight","Want more like this"],
+    negative: ["World-building over story","CGI ages badly","Too long","Tonally uneven","Premise didn't land","Dated badly"]
+  },
+  'film-heist': {
+    positive: ["Rewatchable","Stayed with me","Smart structure","Great twist","Ensemble chemistry","Plan is satisfying","Want more like this"],
+    negative: ["Twist doesn't hold up","Too convoluted","Style over substance","Characters thin","Pacing drags","Dated badly"]
+  },
+  'film-comedy': {
+    positive: ["Rewatchable","Stayed with me","Laugh-out-loud funny","Quotable","Smart structure","Emotionally resonant","Want more like this"],
+    negative: ["Humor doesn't land","Too crude","Sentimental","One-joke premise","Dated badly","Pacing drags"]
+  },
+  'film-drama': {
+    positive: ["Rewatchable","Stayed with me","Performance-driven","Emotionally resonant","Smart structure","Visually stunning","Want more like this"],
+    negative: ["Too bleak","Manipulative","Too slow","Oscar-bait feel","Premise didn't land","Dated badly"]
+  },
+  'film-foreign': {
+    positive: ["Rewatchable","Stayed with me","Visually stunning","Culturally immersive","Emotionally resonant","Smart structure","Want more like this"],
+    negative: ["Subtitles distract","Too slow","Style over substance","Culturally opaque","Premise didn't land","Dated badly"]
+  },
+  'film-auteur': {
+    positive: ["Rewatchable","Stayed with me","Visually stunning","Director's voice unmistakable","Smart structure","Emotionally resonant","Want more like this"],
+    negative: ["Self-indulgent","Style over substance","Too slow","Alienating","Premise didn't land","Dated badly"]
+  },
+  'film-pre1960': {
+    positive: ["Rewatchable","Stayed with me","Still holds up","Performance-driven","Visually inventive","Smart structure","Want more like this"],
+    negative: ["Dated badly","Pacing drags","Acting style alienating","Cultural blind spots","Visually flat","Premise didn't land"]
+  },
+  'film-heroes': {
+    positive: ["Rewatchable","Stayed with me","Visually stunning","Earned the stakes","Smart structure","Faithful adaptation","Want more like this"],
+    negative: ["CGI overload","Villain is thin","Origin-story fatigue","Franchise filler","Style over substance","Dated badly"]
+  },
   'tv-prestige': {
     positive: ["Stuck the landing","Stayed with me","Performance-driven","Smart structure","Emotionally resonant","Want more like this","Rewatchable"],
     negative: ["Lost steam","Late-season decline","Too bleak","Stretched thin","Premise wore out","Dated badly"]
+  },
+  'tv-scifi': {
+    positive: ["Stuck the landing","Stayed with me","World-building sells it","Mind-bending","Visually stunning","Performance-driven","Want more like this"],
+    negative: ["Lost steam","Science is hand-waved","CGI ages badly","Mythology collapses","Too exposition-heavy","Dated badly"]
+  },
+  'tv-espionage': {
+    positive: ["Stuck the landing","Stayed with me","Tradecraft feels real","Cat-and-mouse tension","Smart structure","Performance-driven","Want more like this"],
+    negative: ["Lost steam","Too convoluted","Twists feel cheap","Stretched thin","Dated politics","Late-season decline"]
+  },
+  'tv-crime': {
+    positive: ["Stuck the landing","Stayed with me","Great tension","Moral complexity","Performance-driven","Smart structure","Want more like this"],
+    negative: ["Lost steam","Procedural fatigue","Too bleak","Case-of-the-week tires","Stretched thin","Late-season decline"]
+  },
+  'tv-cons-courtroom': {
+    positive: ["Stuck the landing","Stayed with me","Smart structure","Performance-driven","Dialogue sparkles","Great twist","Want more like this"],
+    negative: ["Lost steam","Courtroom logic strained","Too predictable","Stretched thin","Late-season decline","Premise wore out"]
+  },
+  'tv-horror': {
+    positive: ["Stuck the landing","Stayed with me","Genuinely unsettling","Great atmosphere","Performance-driven","Visually stunning","Want more like this"],
+    negative: ["Lost steam","Not scary enough","Gore over craft","Mythology collapses","Jump-scare crutch","Late-season decline"]
+  },
+  'tv-fantasy': {
+    positive: ["Stuck the landing","Stayed with me","World-building sells it","Visually stunning","Emotionally resonant","Mythic weight","Want more like this"],
+    negative: ["Lost steam","World-building over story","CGI ages badly","Stretched thin","Tonally uneven","Late-season decline"]
+  },
+  'tv-drama': {
+    positive: ["Stuck the landing","Stayed with me","Performance-driven","Emotionally resonant","Smart structure","Visually stunning","Want more like this"],
+    negative: ["Lost steam","Too bleak","Manipulative","Stretched thin","Late-season decline","Premise wore out"]
+  },
+  'tv-heroes': {
+    positive: ["Stuck the landing","Stayed with me","Visually stunning","Earned the stakes","Performance-driven","Faithful adaptation","Want more like this"],
+    negative: ["Lost steam","CGI overload","Villain is thin","Franchise filler","Stretched thin","Late-season decline"]
   },
   'tv-limited': {
     positive: ["Stuck the landing","Stayed with me","Performance-driven","Tight structure","Emotionally resonant","Visually stunning","Want more like this"],
@@ -47,30 +131,30 @@ const NEGATIVE_TAGS = TAG_SETS['film-narrative'].negative;
 // Default content type per tab. Items in British Comedy resolve via category.
 // Items can override at the catalog level via `contentType` on the item or section.
 const TAB_DEFAULT_CONTENT_TYPE = {
-  'scifi': 'film-narrative',
-  'scifi-tv': 'tv-prestige',
-  'espionage': 'film-narrative',
-  'spy-tv': 'tv-prestige',
-  'crime': 'film-narrative',
-  'crime-tv': 'tv-prestige',
-  'cons-courtroom': 'film-narrative',
-  'cons-courtroom-tv': 'tv-prestige',
-  'horror': 'film-narrative',
-  'horror-tv': 'tv-prestige',
-  'fantasy': 'film-narrative',
-  'fantasy-tv': 'tv-prestige',
-  'heist': 'film-narrative',
-  'comedy': 'film-narrative',
+  'scifi': 'film-scifi',
+  'scifi-tv': 'tv-scifi',
+  'espionage': 'film-espionage',
+  'spy-tv': 'tv-espionage',
+  'crime': 'film-crime',
+  'crime-tv': 'tv-crime',
+  'cons-courtroom': 'film-cons-courtroom',
+  'cons-courtroom-tv': 'tv-cons-courtroom',
+  'horror': 'film-horror',
+  'horror-tv': 'tv-horror',
+  'fantasy': 'film-fantasy',
+  'fantasy-tv': 'tv-fantasy',
+  'heist': 'film-heist',
+  'comedy': 'film-comedy',
   'comedy-tv': 'tv-sitcom',
   'british-comedy': 'tv-sitcom',
-  'drama': 'film-narrative',
-  'drama-tv': 'tv-prestige',
-  'foreign': 'film-narrative',
-  'auteur': 'film-narrative',
-  'pre1960': 'film-narrative',
+  'drama': 'film-drama',
+  'drama-tv': 'tv-drama',
+  'foreign': 'film-foreign',
+  'auteur': 'film-auteur',
+  'pre1960': 'film-pre1960',
   'musicals': 'film-musical',
-  'heroes-comics': 'film-narrative',
-  'heroes-comics-tv': 'tv-prestige'
+  'heroes-comics': 'film-heroes',
+  'heroes-comics-tv': 'tv-heroes'
 };
 
 // British-comedy category → content type mapping (when item has categories[]).

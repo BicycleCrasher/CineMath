@@ -10,6 +10,20 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.15.0 — 2026-05-08
+**Service worker cache:** `scifi-tracker-v32` → `v33`
+
+### Feature — Genre-specific reaction tags
+
+Replaced the two shared tag sets (`film-narrative` for all film tabs, `tv-prestige` for all TV tabs) with 21 genre-specific content types. Each tab now resolves to its own tailored set of positive and negative reaction tags:
+
+- **Film:** scifi (Mind-bending, World-building, Hard sci-fi done right), espionage (Tradecraft feels real, Cat-and-mouse tension), crime (Great tension, Moral complexity), cons-courtroom (Great twist, Dialogue sparkles), horror (Genuinely unsettling, Great atmosphere), fantasy (World-building sells it, Mythic weight), heist (Ensemble chemistry, Plan is satisfying), comedy (Laugh-out-loud funny, Quotable), drama (Performance-driven, Oscar-bait feel), foreign (Culturally immersive, Culturally opaque), auteur (Director's voice unmistakable, Self-indulgent), pre-1960 (Still holds up, Acting style alienating), heroes-comics (Earned the stakes, Faithful adaptation, Origin-story fatigue)
+- **TV:** each genre mirrors its film counterpart's flavor but swaps in TV-specific tags (Stuck the landing, Lost steam, Late-season decline, Procedural fatigue, Mythology collapses, etc.)
+- Existing specialized types unchanged: tv-sitcom, tv-panel, tv-game, tv-doc-reality, tv-anthology, tv-limited, film-musical.
+- Tags already saved on items that aren't in the new set are preserved silently (per existing design). They appear in the filter bar's "other" section if any items in the tab use them.
+
+---
+
 ## 5.14.3 — 2026-05-08
 **Service worker cache:** `scifi-tracker-v31` → `v32`
 
