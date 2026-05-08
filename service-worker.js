@@ -1,4 +1,4 @@
-const CACHE_NAME = 'scifi-tracker-v31';
+const CACHE_NAME = 'scifi-tracker-v32';
 const ASSETS = [
   './',
   './index.html',

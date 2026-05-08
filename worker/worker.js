@@ -1,4 +1,4 @@
-// WatchTrack ↔ Plex bridge (v5.2 — Plex proxy added)
+// WatchTrack ↔ Plex bridge (v5.3 — DELETE added to CORS Allow-Methods)
 //
 // Endpoints:
 //   POST /webhook/{secret}              Plex Pass webhook receiver
@@ -34,7 +34,7 @@ const METADATA_TTL = 30 * 24 * 60 * 60;  // 30 days
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
@@ -146,7 +146,7 @@ export default {
 
     // Health
     if (path === '/' || path === '/health') {
-      return new Response('WatchTrack-Plex bridge online (v5.2 — Plex proxy added)', { headers: cors });
+      return new Response('WatchTrack-Plex bridge online (v5.3 — DELETE in CORS)', { headers: cors });
     }
 
     // === Plex webhook receiver ===

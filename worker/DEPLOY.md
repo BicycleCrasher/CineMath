@@ -97,7 +97,7 @@ After adding all four, click **Save and deploy**.
 
 ### 6. Verify the worker
 
-Visit `https://watchtrack-plex.YOURNAME.workers.dev/health` — should respond `WatchTrack-Plex bridge online (v5.2 — Plex proxy added)`.
+Visit `https://watchtrack-plex.YOURNAME.workers.dev/health` — should respond `WatchTrack-Plex bridge online (v5.3 — DELETE in CORS)`.
 
 Then test the secret + KV bindings:
 ```

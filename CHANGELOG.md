@@ -10,6 +10,30 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.14.3 — 2026-05-08
+**Service worker cache:** `scifi-tracker-v31` → `v32`
+
+### Fixed — 3 TV promotion IDs mismatched runtime generator
+
+RuPaul's Drag Race (comedy-tv), Mafia: Most Wanted (crime-tv), and Dune (scifi-tv) had `year: null` in the catalog but their hardcoded `id` fields used `-unknown` instead of `-null`. Runtime ID generation produces `-null`, so the "In repo" badge and deduplication never matched. Fixed all three IDs.
+
+---
+
+## 5.14.2 — 2026-05-08
+**Worker version:** v5.2 → v5.3 (no service worker / app changes)
+
+### Fixed — Promotion delete failing under CORS
+
+#### The bug
+`POST /promotions/add` and `GET /promotions` worked, but `DELETE /promotions/{tab}/{itemId}` failed with a CORS preflight rejection. The Worker's `Access-Control-Allow-Methods` header advertised only `GET, POST, OPTIONS`, so browsers rejected the DELETE preflight before the actual request reached the handler.
+
+#### The fix
+Worker CORS Allow-Methods now includes `DELETE`. Health string bumped to `v5.3 — DELETE in CORS`.
+
+No app or service-worker changes — Worker-only redeploy.
+
+---
+
 ## 5.14.1 — 2026-05-08
 **Service worker cache:** `scifi-tracker-v30` → `v31`
 
