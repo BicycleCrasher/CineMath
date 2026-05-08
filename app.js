@@ -3726,6 +3726,363 @@ function renderStats() {
 
 // === Triage mode ===
 let triageState = null;  // { mode, queue, idx }
+// =====================================================================
+// Stage 5g: Wizard / guided-flow home screen
+// =====================================================================
+
+// Always start fresh on app open. State is in-memory only, never persisted.
+const wizardState = {
+  step: 'root',         // 'root' | 'rate' | 'film-tv' | 'session' | 'genre' | 'continue-list'
+  rateContext: null,    // 'specific-tab' | 'recent-watched' | 'queued' | 'unrated-loved'
+  contentType: null,    // 'film' | 'tv'
+  session: null,        // 'continue' | 'new' | 'rewatch'
+  genre: null,          // tab id, or 'not-sure'
+};
+
+const WIZARD_TV_TABS = new Set(['comedy-tv','crime-tv','spy-tv','drama-tv','horror-tv','fantasy-tv','scifi-tv','cons-courtroom-tv','british-comedy','heroes-comics-tv']);
+
+function wizardShow() {
+  document.getElementById('wizard').style.display = 'flex';
+  document.getElementById('app-shell').style.display = 'none';
+  // Always reset state
+  wizardState.step = 'root';
+  wizardState.rateContext = null;
+  wizardState.contentType = null;
+  wizardState.session = null;
+  wizardState.genre = null;
+  wizardRender();
+}
+
+function wizardHide() {
+  document.getElementById('wizard').style.display = 'none';
+  document.getElementById('app-shell').style.display = '';
+}
+
+function wizardRender() {
+  const subtitle = document.getElementById('wizard-subtitle');
+  const stepEl = document.getElementById('wizard-step');
+  const backBtn = document.getElementById('wizard-back');
+  stepEl.className = 'wizard-step';   // reset matrix class
+
+  if (wizardState.step === 'root') {
+    subtitle.textContent = 'What are you doing?';
+    backBtn.style.display = 'none';
+    stepEl.innerHTML = `
+      <button class="wizard-btn" data-action="rate">
+        Rating
+        <span class="wizard-btn-meta">Mark watched, apply ratings, add tags</span>
+      </button>
+      <button class="wizard-btn" data-action="watch">
+        Looking for something to watch
+        <span class="wizard-btn-meta">Find your next pick</span>
+      </button>
+    `;
+  }
+  else if (wizardState.step === 'rate') {
+    subtitle.textContent = 'Rate which?';
+    backBtn.style.display = '';
+    stepEl.innerHTML = `
+      <button class="wizard-btn" data-action="rate-recent">
+        Recently watched, unrated
+        <span class="wizard-btn-meta">Items marked Watched but not yet rated</span>
+      </button>
+      <button class="wizard-btn" data-action="rate-queued">
+        Things on my queue
+        <span class="wizard-btn-meta">Items marked Queued — quick triage</span>
+      </button>
+      <button class="wizard-btn" data-action="rate-loved-untagged">
+        Loved items missing tags
+        <span class="wizard-btn-meta">Items rated Loved with no reaction tags applied</span>
+      </button>
+      <button class="wizard-btn" data-action="rate-tab">
+        Pick a specific tab
+        <span class="wizard-btn-meta">Browse one tab and rate from there</span>
+      </button>
+    `;
+  }
+  else if (wizardState.step === 'film-tv') {
+    subtitle.textContent = 'Film or TV?';
+    backBtn.style.display = '';
+    stepEl.innerHTML = `
+      <button class="wizard-btn" data-action="film">Film</button>
+      <button class="wizard-btn" data-action="tv">TV</button>
+    `;
+  }
+  else if (wizardState.step === 'session') {
+    subtitle.textContent = 'What kind of session?';
+    backBtn.style.display = '';
+    stepEl.innerHTML = `
+      <button class="wizard-btn" data-action="continue">
+        Continue something I've started
+        <span class="wizard-btn-meta">Items marked Watching</span>
+      </button>
+      <button class="wizard-btn" data-action="new">
+        Start something new
+        <span class="wizard-btn-meta">Pick a genre and triage</span>
+      </button>
+      <button class="wizard-btn" data-action="rewatch">
+        Rewatch an old favorite
+        <span class="wizard-btn-meta">Watched + Loved items, rewatchable-tagged first</span>
+      </button>
+    `;
+  }
+  else if (wizardState.step === 'continue-list') {
+    subtitle.textContent = 'Pick something to continue';
+    backBtn.style.display = '';
+    const items = wizardGatherContinueItems();
+    if (items.length === 0) {
+      stepEl.innerHTML = `
+        <div class="wizard-empty">Nothing in progress. Try "Start something new" instead.</div>
+      `;
+    } else {
+      stepEl.innerHTML = items.slice(0, 30).map(x => {
+        const tabLabel = (catalogs[x.tab] && catalogs[x.tab].title) || x.tab;
+        return `<button class="wizard-btn" data-action="goto-item" data-tab="${x.tab}" data-id="${x.item.id}">
+          <div class="wizard-list-row">
+            <span class="wizard-list-title">${escapeHtml(x.item.title)}</span>
+            <span class="wizard-list-meta">${tabLabel}</span>
+          </div>
+        </button>`;
+      }).join('');
+    }
+  }
+  else if (wizardState.step === 'genre') {
+    subtitle.textContent = 'Pick a genre';
+    backBtn.style.display = '';
+    stepEl.className = 'wizard-step matrix';
+    // Show only tabs of the chosen content type that have unwatched/queued items
+    const isTV = wizardState.contentType === 'tv';
+    const candidates = catalogManifest.filter(c => {
+      if (c.virtual) return false;
+      const isTvTab = WIZARD_TV_TABS.has(c.id);
+      if (isTV && !isTvTab) return false;
+      if (!isTV && isTvTab) return false;
+      // Only include tabs with at least one unwatched/queued item (for new) or relevant (for rewatch)
+      const cat = catalogs[c.id];
+      if (!cat || !cat.items || cat.items.length === 0) return false;
+      if (wizardState.session === 'new') {
+        return cat.items.some(it => {
+          const s = getStatus(it.id, c.id);
+          return s === 'none' || s === 'queued';
+        });
+      } else if (wizardState.session === 'rewatch') {
+        return cat.items.some(it => {
+          const s = getStatus(it.id, c.id);
+          const r = getRating(it.id, c.id);
+          return s === 'watched' && (r === 'loved' || r === 'liked');
+        });
+      }
+      return true;
+    });
+    if (candidates.length === 0) {
+      stepEl.innerHTML = `<div class="wizard-empty">No matching tabs. Go back and try a different session type.</div>`;
+    } else {
+      let html = candidates.map(c =>
+        `<button class="wizard-btn" data-action="genre-pick" data-tab="${c.id}">${c.label}</button>`
+      ).join('');
+      html += `<button class="wizard-btn" data-action="genre-pick" data-tab="not-sure">Not Sure</button>`;
+      stepEl.innerHTML = html;
+    }
+  }
+
+  // Wire all buttons
+  stepEl.querySelectorAll('.wizard-btn').forEach(btn => {
+    btn.addEventListener('click', () => wizardHandleAction(btn));
+  });
+}
+
+function wizardGoBack() {
+  if (wizardState.step === 'root') return;
+  if (wizardState.step === 'rate') wizardState.step = 'root';
+  else if (wizardState.step === 'film-tv') wizardState.step = 'root';
+  else if (wizardState.step === 'session') wizardState.step = 'film-tv';
+  else if (wizardState.step === 'continue-list') wizardState.step = 'session';
+  else if (wizardState.step === 'genre') wizardState.step = 'session';
+  wizardRender();
+}
+
+function wizardHandleAction(btn) {
+  const action = btn.dataset.action;
+  // Root step
+  if (action === 'rate') { wizardState.step = 'rate'; wizardRender(); return; }
+  if (action === 'watch') { wizardState.step = 'film-tv'; wizardRender(); return; }
+  // Rate substep — goes straight into triage with appropriate filter
+  if (action === 'rate-recent') { wizardLaunchTriage('rate-recent'); return; }
+  if (action === 'rate-queued') { wizardLaunchTriage('rate-queued'); return; }
+  if (action === 'rate-loved-untagged') { wizardLaunchTriage('rate-loved-untagged'); return; }
+  if (action === 'rate-tab') {
+    // Open browse mode at the user's last tab — they pick from there
+    wizardHide();
+    return;
+  }
+  // Film/TV step
+  if (action === 'film') { wizardState.contentType = 'film'; wizardState.step = 'session'; wizardRender(); return; }
+  if (action === 'tv') { wizardState.contentType = 'tv'; wizardState.step = 'session'; wizardRender(); return; }
+  // Session step
+  if (action === 'continue') { wizardState.session = 'continue'; wizardState.step = 'continue-list'; wizardRender(); return; }
+  if (action === 'new') { wizardState.session = 'new'; wizardState.step = 'genre'; wizardRender(); return; }
+  if (action === 'rewatch') { wizardState.session = 'rewatch'; wizardState.step = 'genre'; wizardRender(); return; }
+  // Continue list — go to specific item
+  if (action === 'goto-item') {
+    wizardHide();
+    switchTab(btn.dataset.tab);
+    setTimeout(() => {
+      const target = document.querySelector(`.item[data-id="${btn.dataset.id}"]`);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        target.classList.add('expanded');
+        target.style.outline = '2px solid var(--accent)';
+        setTimeout(() => target.style.outline = '', 1500);
+      }
+    }, 100);
+    return;
+  }
+  // Genre pick → launch triage with that scope
+  if (action === 'genre-pick') {
+    wizardState.genre = btn.dataset.tab;
+    wizardLaunchTriage('watch');
+    return;
+  }
+}
+
+// Gather items based on continue session: status === 'watching' for chosen content type
+function wizardGatherContinueItems() {
+  const isTV = wizardState.contentType === 'tv';
+  const result = [];
+  Object.keys(catalogs).forEach(tabId => {
+    if (tabId === 'watchlist') return;
+    const isTvTab = WIZARD_TV_TABS.has(tabId);
+    if (isTV && !isTvTab) return;
+    if (!isTV && isTvTab) return;
+    const cat = catalogs[tabId];
+    cat.items.forEach(item => {
+      if (getStatus(item.id, tabId) === 'watching') {
+        result.push({ tab: tabId, item, lastUpdated: getLastUpdated(item.id, tabId) });
+      }
+    });
+  });
+  result.sort((a, b) => (b.lastUpdated || 0) - (a.lastUpdated || 0));
+  return result;
+}
+
+// Launch triage with the wizard's scope applied
+function wizardLaunchTriage(mode) {
+  let queue = [];
+  let title = 'Triage';
+
+  if (mode === 'rate-recent') {
+    title = 'Rate recently watched';
+    Object.keys(catalogs).forEach(tabId => {
+      if (tabId === 'watchlist') return;
+      const cat = catalogs[tabId];
+      cat.items.forEach(item => {
+        if (getStatus(item.id, tabId) === 'watched' && !getRating(item.id, tabId)) {
+          const enriched = { ...item, _watchlist_source_tab: tabId, _watchlist_source_label: cat.title || tabId, _watchlist_lastUpdated: getLastUpdated(item.id, tabId) };
+          queue.push(enriched);
+        }
+      });
+    });
+    queue.sort((a, b) => (b._watchlist_lastUpdated || 0) - (a._watchlist_lastUpdated || 0));
+  }
+  else if (mode === 'rate-queued') {
+    title = 'Triage your queue';
+    Object.keys(catalogs).forEach(tabId => {
+      if (tabId === 'watchlist') return;
+      const cat = catalogs[tabId];
+      cat.items.forEach(item => {
+        if (getStatus(item.id, tabId) === 'queued') {
+          const enriched = { ...item, _watchlist_source_tab: tabId, _watchlist_source_label: cat.title || tabId, _watchlist_lastUpdated: getLastUpdated(item.id, tabId) };
+          queue.push(enriched);
+        }
+      });
+    });
+  }
+  else if (mode === 'rate-loved-untagged') {
+    title = 'Tag your loved items';
+    Object.keys(catalogs).forEach(tabId => {
+      if (tabId === 'watchlist') return;
+      const cat = catalogs[tabId];
+      cat.items.forEach(item => {
+        if (getRating(item.id, tabId) === 'loved') {
+          const tags = getTags(item.id, tabId);
+          if (!tags || tags.length === 0) {
+            const enriched = { ...item, _watchlist_source_tab: tabId, _watchlist_source_label: cat.title || tabId };
+            queue.push(enriched);
+          }
+        }
+      });
+    });
+  }
+  else if (mode === 'watch') {
+    // Filter by content type AND session AND genre
+    const isTV = wizardState.contentType === 'tv';
+    const session = wizardState.session;
+    const genre = wizardState.genre;
+    const tabsToInclude = (genre === 'not-sure' || !genre)
+      ? Object.keys(catalogs).filter(t => t !== 'watchlist' && WIZARD_TV_TABS.has(t) === isTV)
+      : [genre];
+
+    if (session === 'new') title = 'Find something new to watch';
+    else if (session === 'rewatch') title = 'Pick something to rewatch';
+
+    tabsToInclude.forEach(tabId => {
+      const cat = catalogs[tabId];
+      if (!cat) return;
+      cat.items.forEach(item => {
+        const s = getStatus(item.id, tabId);
+        const r = getRating(item.id, tabId);
+        let include = false;
+        if (session === 'new') {
+          include = (s === 'none' || s === 'queued');
+        } else if (session === 'rewatch') {
+          // C with fallback to A: rewatchable-tagged first, then loved/liked watched
+          include = s === 'watched' && (r === 'loved' || r === 'liked');
+        }
+        if (include) {
+          const enriched = { ...item, _watchlist_source_tab: tabId, _watchlist_source_label: cat.title || tabId };
+          queue.push(enriched);
+        }
+      });
+    });
+
+    // For rewatch: sort items with rewatchable-style tags first
+    if (session === 'rewatch') {
+      const REWATCHABLE_TAGS = new Set(['Endlessly rewatchable','Rewatchable','Cult magnetism']);
+      queue.sort((a, b) => {
+        const aTags = getTags(a.id, a._watchlist_source_tab) || [];
+        const bTags = getTags(b.id, b._watchlist_source_tab) || [];
+        const aRew = aTags.some(t => REWATCHABLE_TAGS.has(t)) ? 0 : 1;
+        const bRew = bTags.some(t => REWATCHABLE_TAGS.has(t)) ? 0 : 1;
+        if (aRew !== bRew) return aRew - bRew;
+        // Then loved before liked
+        const aR = getRating(a.id, a._watchlist_source_tab);
+        const bR = getRating(b.id, b._watchlist_source_tab);
+        return (aR === 'loved' ? 0 : 1) - (bR === 'loved' ? 0 : 1);
+      });
+    }
+  }
+
+  if (queue.length === 0) {
+    alert('No items match. Try a different selection.');
+    return;
+  }
+
+  // Shuffle for "new" / "not-sure" — feels more like discovery
+  if (mode === 'watch' && (wizardState.session === 'new' || wizardState.genre === 'not-sure')) {
+    for (let i = queue.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [queue[i], queue[j]] = [queue[j], queue[i]];
+    }
+  }
+
+  // Hide wizard, show app shell, launch triage
+  wizardHide();
+  triageState = { mode: 'wizard', queue, idx: 0 };
+  document.getElementById('triage-title').textContent = title;
+  document.getElementById('triage-modal').classList.add('active');
+  renderTriage();
+}
+
 function startTriage(mode) {
   // Build the queue from watchlist sections
   const wl = buildWatchlistCatalog();
@@ -3750,8 +4107,13 @@ function renderTriage() {
     document.getElementById('triage-actions').innerHTML = `<button class="action-btn" id="triage-done">Close</button>`;
     document.getElementById('triage-done').addEventListener('click', () => {
       document.getElementById('triage-modal').classList.remove('active');
+      const wasWizard = triageState && triageState.mode === 'wizard';
       triageState = null;
-      render();
+      if (wasWizard) {
+        wizardShow();
+      } else {
+        render();
+      }
     });
     return;
   }
@@ -3830,6 +4192,13 @@ function triageAction(act) {
   buildFilters();
   buildTagPills();
   render();
+
+  // Wizard wiring (Stage 5g)
+  document.getElementById('wizard-back').addEventListener('click', wizardGoBack);
+  document.getElementById('wizard-browse').addEventListener('click', wizardHide);
+  document.getElementById('home-btn').addEventListener('click', wizardShow);
+  // Show wizard always at app start (per "always start fresh")
+  wizardShow();
 
   // If Plex is already configured, fetch the library in the background
   if (isPlexConfigured()) {

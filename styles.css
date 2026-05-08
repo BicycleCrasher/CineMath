@@ -753,3 +753,100 @@ body.tv-mode #settings-modal .modal-content {
   border-color: var(--ink-dim);
   border-style: solid;
 }
+
+/* Stage 5g: Wizard / guided-flow home screen */
+.wizard {
+  position: fixed; inset: 0; z-index: 50;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+  overflow-y: auto;
+}
+.wizard-content {
+  max-width: 600px; width: 100%;
+  text-align: center;
+}
+.wizard-title {
+  font-family: 'Bodoni Moda', serif;
+  font-size: clamp(36px, 8vw, 56px);
+  letter-spacing: 0.04em;
+  margin: 0 0 12px;
+  color: var(--ink);
+}
+.wizard-subtitle {
+  font-size: 14px;
+  color: var(--ink-dim);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0 0 32px;
+}
+.wizard-step {
+  display: flex; flex-direction: column; gap: 12px;
+  margin-bottom: 32px;
+  max-height: 60vh; overflow-y: auto;
+}
+.wizard-step.matrix {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+}
+.wizard-btn {
+  background: var(--bg-elev);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  padding: 18px 24px;
+  font-size: 16px;
+  font-family: 'Helvetica Neue', sans-serif;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.15s;
+  text-align: left;
+}
+.wizard-step.matrix .wizard-btn {
+  text-align: center;
+  padding: 14px 12px;
+  font-size: 14px;
+}
+.wizard-btn:hover {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+}
+.wizard-btn-meta {
+  display: block;
+  font-size: 11px;
+  color: var(--ink-dim);
+  letter-spacing: 0.04em;
+  margin-top: 4px;
+  text-transform: uppercase;
+}
+.wizard-btn:hover .wizard-btn-meta { color: rgba(0, 0, 0, 0.6); }
+.wizard-list-row {
+  display: flex; justify-content: space-between; align-items: center;
+}
+.wizard-list-row .wizard-list-title { font-weight: 500; }
+.wizard-list-row .wizard-list-meta {
+  font-size: 11px; color: var(--ink-dim);
+  letter-spacing: 0.04em; text-transform: uppercase;
+}
+.wizard-footer {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 12px;
+}
+.wizard-back, .wizard-browse {
+  background: transparent;
+  color: var(--ink-dim);
+  border: none;
+  padding: 8px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.wizard-back:hover, .wizard-browse:hover { color: var(--accent); }
+.wizard-empty {
+  color: var(--ink-dim);
+  font-style: italic;
+  padding: 24px;
+}

@@ -10,6 +10,59 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.12.0 — 2026-05-08
+**Service worker cache:** `scifi-tracker-v26` → `v27`
+
+### Added — Stage 5g: Wizard / guided-flow home screen
+
+WatchTrack now opens to a guided-flow wizard instead of the catalog grid. The catalog browse experience is one tap away.
+
+#### Flow architecture
+
+```
+Root: "What are you doing?"
+├── Rating
+│   ├── Recently watched, unrated → triage
+│   ├── Things on my queue → triage
+│   ├── Loved items missing tags → triage
+│   └── Pick a specific tab → browse mode
+└── Looking for something to watch
+    ├── Film or TV?
+    │   └── Continue / Start new / Rewatch
+    │       ├── Continue → list of Watching items
+    │       ├── Start new → genre matrix → triage
+    │       └── Rewatch → genre matrix → triage (rewatchable-tagged first)
+```
+
+#### Key behaviors
+- **Always starts fresh** on every app open — no preselected last choice
+- **"Browse all 25 tabs →"** link in wizard footer falls back to existing tab grid
+- **Home button** (⌂) in app header returns to wizard from anywhere
+- **Genre matrix is dynamic**: only shows tabs of the chosen content type that have relevant items for the chosen session (unwatched/queued for "new"; watched+loved for "rewatch")
+- **"Not Sure"** option in genre matrix → triage across all tabs of chosen content type
+- **Triage launched from wizard** returns to wizard on completion (not catalog grid)
+
+#### Triage scope expansions
+The existing triage system supports cross-tab queues via `_watchlist_source_tab`. Wizard launches build custom queues:
+- `rate-recent`: watched + unrated, sorted by lastUpdated
+- `rate-queued`: queued items, all tabs
+- `rate-loved-untagged`: loved + zero reactionTags
+- `watch`: filtered by content type, session, genre with appropriate sort
+
+#### Rewatch sort priority
+"Rewatch an old favorite" sorts:
+1. Items tagged Endlessly rewatchable / Rewatchable / Cult magnetism (any one)
+2. Then loved before liked
+3. Then lastUpdated
+
+#### Architecture
+- New top-level `<div id="wizard">` overlay; existing app structure wrapped in `<div id="app-shell">`
+- Modals remain at body root so they overlay both wizard and app-shell
+- Wizard state is in-memory only, never persisted
+- "Always start fresh" honored: state resets on every wizardShow()
+
+---
+
 ## 5.11.0 — 2026-05-08
 **Service worker cache:** `scifi-tracker-v25` → `v26`
 
