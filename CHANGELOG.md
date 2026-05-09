@@ -10,6 +10,31 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.18.2 — 2026-05-08
+**Service worker cache:** `scifi-tracker-v37` → `v38`
+
+### Fix — Focus halo cropping at scroll-container edges (follow-up to 5.18.1)
+
+5.18.1 set `outline-offset: -1px` on the TV-mode focus ring, but with a 3px
+outline width, 2px of the halo still extended *outside* the element. Buttons
+flush against the wizard `max-height: 60vh` overflow boundary still showed
+clipped halo edges.
+
+Math fix: `outline-offset` now matches the **negative** of `outline-width`,
+so the entire ring sits inside the element's bounding box.
+
+- TV mode: `outline: 3px` + `outline-offset: -3px`  (was `-1px`)
+- Phone mode: `outline: 2px` + `outline-offset: -2px`  (was `2px`)
+
+The phone-mode rule was also updated because the TWA WebView UA on Google TV
+doesn't always match `detectTVMode()`'s regex, so the body can fall into
+`phone-mode` even on a TV — and that path's halo was still extending outside.
+
+Result: focus indicator is identical in size and color, but is fully contained
+within the button on every screen, every container, every device mode.
+
+---
+
 ## 5.18.1 — 2026-05-08
 **Service worker cache:** `scifi-tracker-v36` → `v37`
 

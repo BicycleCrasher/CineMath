@@ -539,20 +539,21 @@ body.tv-mode .notes-input { display: none; }
 body.tv-mode .notes-label { display: none; }
 
 /* === Focus rings (D-pad navigation) — visible on every focusable element ===
-   outline-offset is -1px (inside the button edge) so the ring never extends
-   beyond the element's bounding box. Prevents clipping in tight grids
-   (e.g. the wizard "Pick a genre" matrix) and against scroll boundaries. */
+   outline-offset matches the negative outline-width (TV: -3px, phone: -2px) so
+   the ring sits ENTIRELY INSIDE the element's bounding box. Prevents clipping
+   against parent containers with overflow:auto (e.g. the wizard "Pick a genre"
+   matrix's max-height: 60vh scroll boundary). */
 body.tv-mode *:focus,
 body.tv-mode *:focus-visible {
   outline: 3px solid var(--accent) !important;
-  outline-offset: -1px !important;
+  outline-offset: -3px !important;
   border-radius: 4px;
 }
 /* Phone mode keeps the lighter focus from the OS */
 body.phone-mode *:focus { outline: none; }
 body.phone-mode *:focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 2px;
+  outline-offset: -2px;
 }
 /* Items get extra-visible focus in TV mode */
 body.tv-mode .item:focus,
