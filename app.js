@@ -4337,7 +4337,12 @@ async function openWatchModal(item, sourceTab) {
 async function renderWatchProviders(item, container, opts) {
   opts = opts || {};
   if (!isWebhookConfigured()) {
-    container.innerHTML = '<div class="streaming-none">TMDB worker not configured. Configure in Settings → Plex Integration.</div>';
+    container.innerHTML = `
+      <div class="streaming-none">
+        TMDB watch-provider data needs the Cloudflare Worker.<br>
+        Settings → <strong>Plex Webhook Bridge</strong> → enter Worker URL + Shared Secret.<br>
+        <span style="font-size:11px;color:var(--ink-faint)">If you haven't deployed it, see <code>worker/DEPLOY.md</code> in the repo.</span>
+      </div>`;
     return;
   }
   const tvTabs = ['comedy-tv','crime-tv','spy-tv','drama-tv','horror-tv','fantasy-tv','scifi-tv','cons-courtroom-tv','british-comedy','heroes-comics-tv'];

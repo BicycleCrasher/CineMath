@@ -10,6 +10,24 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.21.3 — 2026-05-08
+**Service worker cache:** `scifi-tracker-v43` → `v44`
+
+### Fix — Watch sub-modal error message points to correct Settings section
+
+The "TMDB worker not configured" message in the Watch sub-modal pointed
+to "Settings → Plex Integration", but the actual section name in the
+Settings modal is **Plex Webhook Bridge**. Updated the message to name
+the correct section, list the two required fields (Worker URL + Shared
+Secret), and reference `worker/DEPLOY.md` for deployment instructions.
+
+The Plex section of the Watch sub-modal still works without the Worker —
+"Watch on Plex" only requires `isPlexConfigured()` (token + server URL),
+not `isWebhookConfigured()`. The Worker is only needed for the TMDB
+watch-provider lookup (subscriptions / rent / buy / region data).
+
+---
+
 ## 5.21.2 — 2026-05-08
 **Service worker cache:** `scifi-tracker-v42` → `v43`
 
