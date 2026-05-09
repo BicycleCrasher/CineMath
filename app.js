@@ -2672,6 +2672,26 @@ function setupModals() {
     });
   }
 
+  // === V5.22.1: Receive setup via paste (for TVs where URL routing fails) ===
+  const receiveBtn = document.getElementById('pair-receive-apply');
+  if (receiveBtn) {
+    receiveBtn.addEventListener('click', () => {
+      const input = document.getElementById('pair-receive-input').value;
+      const status = document.getElementById('pair-receive-status');
+      if (!input.trim()) {
+        status.textContent = 'Paste a pair URL or base64 payload first.';
+        return;
+      }
+      const ok = applyConfigFromString(input);
+      if (ok) {
+        status.textContent = 'Setup applied — reloading…';
+        setTimeout(() => location.reload(), 800);
+      } else {
+        status.textContent = 'Could not parse — make sure you copied the full URL or full base64 string.';
+      }
+    });
+  }
+
   // === Search modal ===
   document.getElementById('search-btn').addEventListener('click', () => {
     document.getElementById('search-input').value = '';
@@ -4344,8 +4364,29 @@ function applyConfigFromUrl() {
   const params = new URLSearchParams(window.location.search);
   const cfg = params.get('config');
   if (!cfg) return false;
+  if (!applyConfigPayload(cfg)) return false;
+  history.replaceState(null, '', window.location.pathname);
+  location.reload();
+  return true;
+}
+// V5.22.1: Paste-based config import (for cases where URL routing on Google TV
+// opens the link in a browser whose storage is sandboxed away from the TWA).
+function applyConfigFromString(input) {
+  let cfg = (input || '').trim();
+  if (!cfg) return false;
+  // Accept either the full pair URL or just the BASE64 payload
+  if (/^https?:\/\//i.test(cfg)) {
+    try {
+      const u = new URL(cfg);
+      cfg = u.searchParams.get('config') || u.hash.replace(/^#config=/, '') || '';
+    } catch { return false; }
+  }
+  if (!cfg) return false;
+  return applyConfigPayload(cfg);
+}
+function applyConfigPayload(b64) {
   try {
-    const data = JSON.parse(atob(cfg));
+    const data = JSON.parse(atob(b64));
     if (data.workerUrl) setWebhookUrl(data.workerUrl);
     if (data.workerSecret) setWebhookSecret(data.workerSecret);
     if (data.plexToken) setPlexToken(data.plexToken);
@@ -4353,14 +4394,9 @@ function applyConfigFromUrl() {
     if (data.plexClientId) setPlexClientId(data.plexClientId);
     if (data.streamingRegion) setStreamingRegion(data.streamingRegion);
     if (data.mySubscriptions && Array.isArray(data.mySubscriptions)) setMySubscriptions(data.mySubscriptions);
-    // Strip the config param from URL so credentials don't linger in history
-    history.replaceState(null, '', window.location.pathname);
-    // Reload so all isPlexConfigured()/isWebhookConfigured() checks pick up the new config
-    location.reload();
     return true;
   } catch (e) {
-    console.error('Invalid pair URL:', e);
-    alert('Invalid pair URL — could not decode. Generate a fresh one.');
+    console.error('Invalid pair payload:', e);
     return false;
   }
 }

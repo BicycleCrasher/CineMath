@@ -10,6 +10,37 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.22.1 — 2026-05-08
+**Service worker cache:** `scifi-tracker-v45` → `v46`
+
+### Fix — Pair flow path-around for Google TV storage isolation
+
+5.22.0 assumed the receiving TV would either route the pair URL directly
+to the TWA, OR open it in Chrome and benefit from shared TWA/Chrome
+localStorage at the same origin. On Google TV, neither holds: clicking
+the link opens the URL in a separate browser app whose storage is
+**sandboxed away from the WatchTrack TWA**. The config gets applied — to
+the wrong sandbox.
+
+**Fix:** Add a paste-based receive path that operates entirely INSIDE
+the TWA, bypassing URL routing.
+
+- New `applyConfigFromString(input)` helper: accepts either a full pair
+  URL or just the base64 payload, normalizes, dispatches to the same
+  underlying setters as `applyConfigFromUrl()`. Factored shared logic
+  into `applyConfigPayload(b64)`.
+- Settings → Plex Webhook Bridge gains a "Receive setup from another
+  device" textarea + "Apply pasted setup" button. User pastes the URL
+  from another device (typically via temporarily-paired Bluetooth
+  keyboard's Ctrl+V), clicks Apply, page reloads with config in place.
+- Pair modal's instruction text updated to recommend this paste path
+  rather than the URL-routing path on TV setups.
+
+This makes the flow reliable on any TWA host regardless of how OEM
+browsers handle URL routing or storage isolation.
+
+---
+
 ## 5.22.0 — 2026-05-08
 **Service worker cache:** `scifi-tracker-v44` → `v45`
 

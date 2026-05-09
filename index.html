@@ -187,8 +187,10 @@
       <textarea class="modal-input" id="pair-url" rows="4" readonly></textarea>
     </div>
     <p class="settings-help" style="font-size:11px">
-      Delivery options: tap Copy and paste into a Cast Tab from Chrome, email it to
-      yourself, or use a phone keyboard app that mirrors clipboard to the TV.
+      <strong>Recommended path:</strong> Copy this URL, then on the TV — pair a Bluetooth
+      keyboard temporarily, open WatchTrack → Settings → Plex Webhook Bridge → paste it
+      into the "Receive setup from another device" field, tap Apply. Avoids URL-routing
+      issues on Google TV (where browser-app and TWA have separate localStorage).
     </p>
     <div class="modal-actions">
       <button class="action-btn" id="pair-copy">Copy</button>
@@ -372,6 +374,14 @@
         <button class="action-btn" id="webhook-pair">Pair Another Device →</button>
       </div>
       <p class="settings-status" id="webhook-status">Not configured.</p>
+      <div class="settings-row" style="margin-top:14px;border-top:1px solid var(--rule);padding-top:12px">
+        <label>Receive setup from another device</label>
+        <textarea class="modal-input" id="pair-receive-input" rows="3" placeholder="Paste the pair URL (or just the base64 payload) generated on another device" autocomplete="off"></textarea>
+      </div>
+      <div class="settings-row">
+        <button class="action-btn" id="pair-receive-apply">Apply pasted setup</button>
+      </div>
+      <p class="settings-status" id="pair-receive-status"></p>
     </div>
     </div>
     <div class="modal-actions">
