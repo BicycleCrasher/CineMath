@@ -5248,21 +5248,20 @@ function renderRateTagTriage(item, sourceTab) {
   }
   const step = triageState.step;
 
-  const meta = [item.year, item.dir, item.country, item.runtime].filter(Boolean).join(' · ');
-  const why = item.whyPriority ? `<div class="why">${escapeHtml(item.whyPriority)}</div>` : '';
   const currentRating = getRating(item.id, sourceTab);
   const currentTags = getTags(item.id, sourceTab);
   const tagSet = getTagSetForItem(item) || { positive: [], negative: [] };
   const positive = tagSet.positive || [];
   const negative = tagSet.negative || [];
 
+  // V5.26.2: Minimal card content for rate/tag flow — title + year only.
+  // Pitch, director, country, runtime, why-priority all removed: in this
+  // context the user is rating something they've already watched; if they
+  // can't recall it from the title alone they can manually navigate to the
+  // tab to read more. Keeping content tight ensures the action buttons fit.
   let cardHtml = `
     <span class="source-badge">${escapeHtml(item._watchlist_source_label || '')}</span>
-    ${item.priority ? `<span class="priority-badge ${item.priority}" style="margin-left:6px">${priorityLabel(item.priority)}</span>` : ''}
-    <h4>${escapeHtml(item.title)}</h4>
-    <div class="meta">${escapeHtml(meta)}</div>
-    ${why}
-    ${item.pitch ? `<p class="triage-pitch">${escapeHtml(item.pitch)}</p>` : ''}
+    <h4>${escapeHtml(item.title)}${item.year ? ` <span class="triage-year">(${item.year})</span>` : ''}</h4>
     <div class="triage-step-indicator">Step ${step} of 3 · ${step === 1 ? 'Rating' : (step === 2 ? 'Positive tags' : 'Critical tags')}</div>
   `;
 

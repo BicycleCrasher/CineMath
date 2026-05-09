@@ -10,6 +10,86 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.26.2 — 2026-05-09
+**Service worker cache:** `scifi-tracker-v56` → `v57`
+
+### Fix — Triage card stripped of context-irrelevant content
+
+5.26.1 made modals scrollable to keep action buttons visible. But the
+right answer was to ELIMINATE the overflow at its source — the rate/tag
+flow doesn't need a long pitch/meta/why-priority block to be useful. If
+you're rating something you've watched, the title alone is enough; if
+you can't recall it, manually navigating to the tab gives you the full
+description.
+
+**Triage card now contains:**
+- Source badge (small, tab context)
+- Title with subtle (year) suffix
+- Step-N-of-3 indicator
+- Rating buttons OR tag chips per step
+
+**Removed for the rate/tag flow:**
+- Priority badge
+- Full meta line (director · country · runtime)
+- Why-priority callout
+- Pitch paragraph
+
+The sticky-footer layout from 5.26.1 stays as defensive coverage —
+even if a future change makes the card taller, the action buttons are
+still pinned to the bottom of the modal. But in normal use, content
+now fits in the viewport without scrolling.
+
+`.triage-year` styled small + dim so the year reads as a subtle
+parenthetical rather than visual noise next to the title.
+
+Other modals (Stats, Watch sub-modal, etc.) keep their full content —
+the trim only applies to `renderRateTagTriage`.
+
+---
+
+## 5.26.1 — 2026-05-09
+**Service worker cache:** `scifi-tracker-v55` → `v56`
+
+### Fix — Modal content flowed off the bottom of the viewport
+
+5.26.0's 3-step triage card had more vertical content than the prior
+single-screen layout (step indicator + rate-buttons-or-tag-chips +
+larger action row). On a 4K TV at logical 1080p the total height
+exceeded the modal's `max-height: 80vh`, but `.modal-content` had no
+`overflow` rule — so the bottom (action buttons) got pushed below the
+visible viewport.
+
+**Sticky-footer layout for all modals:**
+
+`.modal-content` now uses `overflow: hidden; display: flex;
+flex-direction: column;` with `max-height: 92vh` (was 80vh — slightly
+more breathing room).
+
+Children explicitly tagged as fixed don't shrink:
+- `.modal-back` (top-left back arrow)
+- `h3` (title)
+- `.modal-actions` (bottom button row)
+- `.triage-progress`
+
+The "body" element (variable-content middle) is whichever of these is
+present:
+- `.triage-card` (Triage modal)
+- `.stats-content` (Stats modal)
+- `#watch-modal-body` (Watch sub-modal)
+- `.modal-textarea` (Export, Import, Pair URL)
+- `.search-results` (Search modal)
+
+These get `flex: 1 1 auto; min-height: 0; overflow-y: auto;` — they
+expand to fill available space and scroll internally when content
+overflows. Action buttons stay pinned at the bottom of the modal,
+always visible.
+
+Result: open the triage modal, no matter how much content the current
+step has, the rating/tag UI scrolls inside the card while Save & Next
+/ Back / Close stay visible at the bottom.
+
+---
+
 ## 5.26.0 — 2026-05-09
 **Service worker cache:** `scifi-tracker-v54` → `v55`
 

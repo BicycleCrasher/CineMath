@@ -319,7 +319,28 @@ footer {
 .modal-content {
   background: var(--bg-elev); border: 1px solid var(--rule);
   border-radius: 6px; padding: 20px; max-width: 500px; width: 100%;
-  max-height: 80vh; display: flex; flex-direction: column;
+  max-height: 92vh; display: flex; flex-direction: column;
+  overflow: hidden;
+}
+/* V5.26.1: Modal sticky-footer layout. Title + back arrow + variable-content
+   middle + actions row at bottom. The middle region is the only scrollable
+   part, so the close/save/back buttons stay visible regardless of content
+   height. .modal-content has overflow:hidden as the outer clip; the
+   designated body (.triage-card, .stats-content, etc.) gets overflow:auto. */
+.modal-content > .modal-back,
+.modal-content > h3,
+.modal-content > .modal-actions,
+.modal-content > .triage-progress {
+  flex-shrink: 0;
+}
+.modal-content > .triage-card,
+.modal-content > .stats-content,
+.modal-content > #watch-modal-body,
+.modal-content > .modal-textarea,
+.modal-content > .search-results {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 .modal-content h3 {
   font-family: 'Didot', 'Bodoni 72', Georgia, serif;
@@ -352,6 +373,10 @@ body.tv-mode .modal-back { width: 56px; height: 56px; font-size: 26px; }
   font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--accent); margin: 12px 0 4px;
   font-family: 'Helvetica Neue', sans-serif;
+}
+.triage-year {
+  color: var(--ink-dim); font-size: 0.7em;
+  font-weight: normal; margin-left: 4px;
 }
 .triage-step-empty {
   color: var(--ink-dim); font-size: 13px;
