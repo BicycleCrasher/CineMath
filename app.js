@@ -1077,6 +1077,7 @@ const STREAMING_SEARCH_TEMPLATES = {
   'Netflix': 'https://www.netflix.com/search?q={q}',
   'Hulu': 'https://www.hulu.com/search?q={q}',
   'Max': 'https://play.max.com/search?q={q}',
+  'HBO Max': 'https://play.max.com/search?q={q}',
   'Disney Plus': 'https://www.disneyplus.com/search?q={q}',
   'Disney+': 'https://www.disneyplus.com/search?q={q}',
   'Amazon Prime Video': 'https://www.amazon.com/s?k={q}&i=instant-video',
@@ -1085,14 +1086,91 @@ const STREAMING_SEARCH_TEMPLATES = {
   'Apple TV': 'https://tv.apple.com/search?term={q}',
   'Paramount Plus': 'https://www.paramountplus.com/search/{q}',
   'Paramount+': 'https://www.paramountplus.com/search/{q}',
+  'Paramount Plus with Showtime': 'https://www.paramountplus.com/search/{q}',
   'Peacock': 'https://www.peacocktv.com/search?q={q}',
   'BBC iPlayer': 'https://www.bbc.co.uk/iplayer/search?q={q}',
   'Crunchyroll': 'https://www.crunchyroll.com/search?q={q}',
   'YouTube': 'https://www.youtube.com/results?search_query={q}',
   'Google Play Movies': 'https://play.google.com/store/search?q={q}&c=movies',
   'Vudu': 'https://www.vudu.com/content/movies/search?searchString={q}',
+  'PBS Masterpiece Amazon Channel': 'https://www.amazon.com/s?k={q}+pbs+masterpiece&i=instant-video',
+  'PBS Masterpiece': 'https://www.pbs.org/search/?q={q}',
+  'National Theatre at Home': 'https://www.ntathome.com/search/{q}',
+  'Dropout': 'https://www.dropout.tv/search?q={q}',
+  '2nd Try': 'https://www.youtube.com/@2ndTry/search?query={q}',
+  'Mubi': 'https://mubi.com/search/films?query={q}',
+  'Criterion Channel': 'https://www.criterionchannel.com/search?q={q}',
+  'Shudder': 'https://www.shudder.com/search?q={q}',
+  'BritBox': 'https://www.britbox.com/us/search?q={q}',
+  'Acorn TV': 'https://acorn.tv/search/{q}',
+  'AMC+': 'https://www.amcplus.com/search?q={q}',
+  'Starz': 'https://www.starz.com/us/en/search?q={q}',
   // For unknown providers, fall back to Google search
 };
+
+// === V5.21.0: My Subscriptions (TMDB watch-provider prioritization) ===
+const MY_SUBS_KEY = 'watchtrack-my-subscriptions';
+
+// Default profile (Lincoln's, configured 2026-05-08). User can edit in Settings.
+const DEFAULT_MY_SUBS = [
+  'Hulu',
+  'Disney+',
+  'Max',
+  'Amazon Prime Video',
+  'Apple TV+',
+  'Paramount+',
+  'PBS Masterpiece (via Prime)',
+  'National Theatre at Home',
+  'Dropout',
+  '2nd Try'
+];
+
+// Canonical name → list of TMDB-style aliases. Used by isMySub() to match.
+// Niche services without TMDB representation (Dropout, 2nd Try, NT at Home)
+// stay in the user's list but won't match TMDB results — they show in Settings
+// as "owned" without ever appearing as a Watch button.
+const PROVIDER_ALIASES = {
+  'Netflix': ['Netflix'],
+  'Hulu': ['Hulu'],
+  'Disney+': ['Disney Plus', 'Disney+'],
+  'Max': ['Max', 'HBO Max'],
+  'Amazon Prime Video': ['Amazon Prime Video', 'Amazon Video'],
+  'Apple TV+': ['Apple TV Plus', 'Apple TV+', 'Apple TV'],
+  'Paramount+': ['Paramount Plus', 'Paramount+', 'Paramount Plus with Showtime'],
+  'Peacock': ['Peacock', 'Peacock Premium', 'Peacock Premium Plus'],
+  'PBS Masterpiece (via Prime)': ['PBS Masterpiece Amazon Channel', 'PBS Masterpiece'],
+  'Criterion Channel': ['Criterion Channel'],
+  'Mubi': ['Mubi'],
+  'Shudder': ['Shudder'],
+  'BritBox': ['BritBox'],
+  'Acorn TV': ['Acorn TV'],
+  'AMC+': ['AMC+'],
+  'Starz': ['Starz'],
+  'Crunchyroll': ['Crunchyroll'],
+  'National Theatre at Home': ['National Theatre at Home'],
+  'Dropout': ['Dropout', 'Dropout TV'],
+  '2nd Try': ['2nd Try', 'Second Try'],
+};
+
+function getMySubscriptions() {
+  try {
+    const raw = localStorage.getItem(MY_SUBS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return DEFAULT_MY_SUBS.slice();
+}
+function setMySubscriptions(arr) {
+  localStorage.setItem(MY_SUBS_KEY, JSON.stringify(arr));
+}
+// Returns true if the TMDB-returned provider name matches one of the user's subs
+function isMySub(providerName) {
+  const subs = new Set(getMySubscriptions());
+  if (subs.has(providerName)) return true;
+  for (const [canonical, aliases] of Object.entries(PROVIDER_ALIASES)) {
+    if (aliases.includes(providerName) && subs.has(canonical)) return true;
+  }
+  return false;
+}
 
 function streamingSearchUrl(providerName, title) {
   const template = STREAMING_SEARCH_TEMPLATES[providerName];
@@ -4208,6 +4286,151 @@ function renderCatalogHealth() {
   return html;
 }
 
+// === V5.21.0: Watch sub-modal (Triage → Start Watching → pick platform) ===
+async function openWatchModal(item, sourceTab) {
+  const modal = document.getElementById('watch-modal');
+  document.getElementById('watch-modal-title').textContent = `Watch · ${item.title}${item.year ? ' (' + item.year + ')' : ''}`;
+  const body = document.getElementById('watch-modal-body');
+  body.innerHTML = '<div class="streaming-loading">Looking up where to watch…</div>';
+  modal.classList.add('active');
+
+  // Stash the item so the action buttons can find it (they're outside body and survive innerHTML changes)
+  modal.dataset.itemId = item.id;
+  modal.dataset.sourceTab = sourceTab;
+
+  // 1. Plex priority — if owned, show ONLY Plex with an "Other ways" expander
+  let plexMatch = null;
+  if (isPlexConfigured()) {
+    plexMatch = plexHasItem(item);
+  }
+  if (plexMatch && plexMatch.ratingKey) {
+    const plexUrl = plexDeepLinkUrl(plexMatch.ratingKey);
+    body.innerHTML = `
+      <div class="watch-section watch-plex-section">
+        <h5>On your Plex server</h5>
+        <div class="watch-buttons">
+          <a href="${plexUrl}" class="watch-btn-large plex-btn" data-watch-launch>Open in Plex</a>
+        </div>
+      </div>
+      <details class="watch-others">
+        <summary>Other ways to watch (subscriptions, rent, buy)</summary>
+        <div id="watch-others-body"><div class="streaming-loading">Loading…</div></div>
+      </details>
+    `;
+    const detailsEl = body.querySelector('.watch-others');
+    let othersLoaded = false;
+    detailsEl.addEventListener('toggle', async () => {
+      if (detailsEl.open && !othersLoaded) {
+        othersLoaded = true;
+        await renderWatchProviders(item, document.getElementById('watch-others-body'), { skipPlex: true });
+      }
+    });
+    wireWatchModalActions(item, sourceTab);
+    return;
+  }
+
+  // 2. No Plex match — render TMDB providers in main body
+  await renderWatchProviders(item, body, { skipPlex: false });
+  wireWatchModalActions(item, sourceTab);
+}
+
+async function renderWatchProviders(item, container, opts) {
+  opts = opts || {};
+  if (!isWebhookConfigured()) {
+    container.innerHTML = '<div class="streaming-none">TMDB worker not configured. Configure in Settings → Plex Integration.</div>';
+    return;
+  }
+  const tvTabs = ['comedy-tv','crime-tv','spy-tv','drama-tv','horror-tv','fantasy-tv','scifi-tv','cons-courtroom-tv','british-comedy','heroes-comics-tv'];
+  const sourceTab = item._watchlist_source_tab || activeTab;
+  const type = tvTabs.includes(sourceTab) ? 'tv' : 'movie';
+  const enrich = getEnrichmentForItem(item.id);
+  const data = enrich && enrich.tmdbId
+    ? await tmdbLookupById(enrich.tmdbId, type)
+    : await tmdbLookup(item.title, item.year, type);
+  if (!data || !data.found || !data.watchProviders) {
+    container.innerHTML = '<div class="streaming-none">No streaming availability data.</div>';
+    return;
+  }
+  const region = getStreamingRegion();
+  const regionData = data.watchProviders[region];
+  const otherRegions = Object.keys(data.watchProviders).filter(k => k !== region && data.watchProviders[k]);
+
+  const tiers = [
+    { key: 'flatrate', label: 'Subscription' },
+    { key: 'free', label: 'Free' },
+    { key: 'ads', label: 'Free w/ ads' },
+    { key: 'rent', label: 'Rent' },
+    { key: 'buy', label: 'Buy' },
+  ];
+
+  let mySubsHtml = '';
+  let otherHtml = '';
+  if (regionData) {
+    tiers.forEach(t => {
+      const provs = regionData[t.key];
+      if (!provs || provs.length === 0) return;
+      provs.forEach(p => {
+        const url = streamingSearchUrl(p.provider_name, item.title);
+        const cls = isMySub(p.provider_name) ? 'watch-btn-large my-sub' : 'watch-btn-large';
+        const btn = `<a href="${url}" class="${cls}" data-watch-launch target="_blank" rel="noopener">${escapeHtml(p.provider_name)}<span class="watch-tier">${t.label}</span></a>`;
+        if (isMySub(p.provider_name)) mySubsHtml += btn;
+        else otherHtml += btn;
+      });
+    });
+  }
+
+  let html = '';
+  if (mySubsHtml) {
+    html += `<div class="watch-section"><h5>Your subscriptions (${region})</h5><div class="watch-buttons">${mySubsHtml}</div></div>`;
+  }
+  if (otherHtml) {
+    html += `<div class="watch-section"><h5>Other ways to watch (${region})</h5><div class="watch-buttons">${otherHtml}</div></div>`;
+  }
+  if (!mySubsHtml && !otherHtml) {
+    html += `<div class="streaming-none">Not available in ${region}.</div>`;
+  }
+  if (otherRegions.length > 0) {
+    const regionsList = otherRegions.map(r => {
+      const rd = data.watchProviders[r];
+      const all = [];
+      ['flatrate', 'free', 'ads'].forEach(t => { if (rd[t]) rd[t].forEach(p => all.push(p.provider_name)); });
+      const dedup = [...new Set(all)];
+      const regionName = (STREAMING_REGIONS.find(x => x.code === r) || {}).name || r;
+      return `<div class="watch-other-region"><strong>${escapeHtml(regionName)}:</strong> ${escapeHtml(dedup.slice(0, 5).join(', '))}${dedup.length > 5 ? `, +${dedup.length - 5} more` : ''}</div>`;
+    }).join('');
+    html += `<details class="watch-others"><summary>Available in other regions (${otherRegions.length})</summary>${regionsList}</details>`;
+  }
+  container.innerHTML = html;
+}
+
+function wireWatchModalActions(item, sourceTab) {
+  const modal = document.getElementById('watch-modal');
+  const advance = () => {
+    setStatus(item.id, 'watching', sourceTab);
+    modal.classList.remove('active');
+    if (triageState && triageState.queue && triageState.queue[triageState.idx] === item) {
+      triageState.idx++;
+      renderTriage();
+    } else {
+      render();
+    }
+  };
+  // Provider/Plex launch buttons: open URL, then mark + advance
+  modal.querySelectorAll('[data-watch-launch]').forEach((el) => {
+    el.addEventListener('click', () => {
+      // Don't preventDefault — let the link/deep-link fire. Set status afterwards.
+      setTimeout(advance, 150);
+    });
+  });
+  // "Mark watching (no platform)" — set status without launching anything
+  document.getElementById('watch-mark-only').onclick = (e) => { e.preventDefault(); advance(); };
+  // Cancel — close without changes
+  document.getElementById('watch-cancel').onclick = (e) => {
+    e.preventDefault();
+    modal.classList.remove('active');
+  };
+}
+
 // === Triage mode ===
 let triageState = null;  // { mode, queue, idx }
 
@@ -4856,10 +5079,15 @@ function triageAction(act) {
   if (!triageState) return;
   const item = triageState.queue[triageState.idx];
   const tab = item._watchlist_source_tab;
+  // V5.21.0: "Start watching" routes through the Watch sub-modal so the user
+  // can pick a platform (Plex first if owned, then their subs, then others).
+  // The Watch modal handles setStatus + advancing triageState.idx.
+  if (act === 'watching') {
+    openWatchModal(item, tab);
+    return;
+  }
   if (act === 'keep' || act === 'next') {
     // No state change
-  } else if (act === 'watching') {
-    setStatus(item.id, 'watching', tab);
   } else if (act === 'queue') {
     setStatus(item.id, 'queued', tab);
   } else if (act === 'drop') {

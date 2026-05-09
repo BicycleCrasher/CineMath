@@ -10,6 +10,58 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.21.0 — 2026-05-08
+**Service worker cache:** `scifi-tracker-v40` → `v41`
+
+### Feature — Watch sub-modal in Triage (Plex-first, your-subs prioritized)
+
+The Triage modal's "Start watching" action no longer just flips the item's
+status — it now opens a Watch sub-modal that surfaces *where* to watch,
+prioritized by what you actually have access to.
+
+**Display order:**
+1. **Plex personal server** (if `plexHasItem(item)` returns a match): the
+   Watch modal shows ONLY a large "Open in Plex" button (deep-linked via
+   `plex://play?metadataKey=…`) plus a collapsed "Other ways to watch"
+   expander. If you own it on Plex, that's the answer — no reason to push
+   subscriptions you'd be paying twice for.
+2. **Your subscriptions** (TMDB watch-providers filtered by your owned
+   list, marked with a gold ✓ and accent border): pulled from the new
+   `MY_SUBS_KEY` localStorage list, defaulting to your configured profile
+   (Hulu, Disney+, Max, Amazon Prime Video, Apple TV+, Paramount+, PBS
+   Masterpiece, National Theatre at Home, Dropout, 2nd Try). Matched
+   against TMDB names via `PROVIDER_ALIASES` (Disney Plus → Disney+,
+   Paramount Plus with Showtime → Paramount+, etc.).
+3. **Other ways to watch** in your region: the rest of TMDB's flatrate,
+   free, ads, rent, buy tiers — same UI, no priority badge.
+4. **Available in other regions** (collapsed expander): if the title has
+   providers in countries other than yours, a list of regions and top
+   providers is available without leaving the modal.
+
+**Action buttons (bottom of modal):**
+- *Mark watching (no platform)*: sets status without launching anything,
+  for cases where you started elsewhere or want to track without picking.
+- *Cancel*: closes the modal, no state change.
+- *Tapping any provider button*: launches the deep-link search URL
+  (existing `streamingSearchUrl()` map, extended in this release with
+  Dropout, PBS Masterpiece, NT at Home, Mubi, Criterion, Shudder,
+  BritBox, Acorn, AMC+, Starz), AND sets status to watching, AND
+  advances the triage queue.
+
+**Plex API limitation note:** Plex's "Linked Streaming Services" feature
+(where you connect Netflix etc. inside the Plex app) is *not* exposed via
+any official Plex API to third parties. The closest approximation —
+implemented here — is the manual "My subscriptions" list. The default is
+seeded from your configured profile and editable via `localStorage`
+(future Settings UI planned).
+
+**Niche services without TMDB representation** (Dropout, 2nd Try,
+National Theatre at Home) stay in your subscription list but won't ever
+appear as Watch buttons because TMDB doesn't index their catalog. They
+serve as visual confirmation that the app is aware of them.
+
+---
+
 ## 5.20.0 — 2026-05-08
 **Service worker cache:** `scifi-tracker-v39` → `v40`
 

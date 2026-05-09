@@ -397,6 +397,62 @@ body.tv-mode .stats-chart-legend { font-size: 14px; }
 body.tv-mode .stacked-row { font-size: 14px; }
 body.tv-mode .stacked-bar { height: 14px; border-radius: 7px; }
 
+/* === V5.21.0: Watch sub-modal (Triage → Start Watching) === */
+.watch-section { margin: 14px 0 18px; }
+.watch-section h5 {
+  font-family: 'Helvetica Neue', sans-serif;
+  font-size: 11px; letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-dim); margin: 0 0 10px;
+}
+.watch-section.watch-plex-section h5 { color: var(--accent); }
+.watch-buttons {
+  display: flex; flex-wrap: wrap; gap: 8px;
+}
+.watch-btn-large {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--bg-card); border: 1px solid var(--rule);
+  color: var(--ink); padding: 12px 16px;
+  border-radius: 4px; font-size: 14px; cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+.watch-btn-large:hover { background: var(--bg-elev); border-color: var(--accent); color: var(--accent); }
+.watch-btn-large.my-sub {
+  border-color: var(--accent); background: rgba(200, 163, 90, 0.08);
+}
+.watch-btn-large.my-sub::before {
+  content: '✓'; color: var(--accent); font-weight: 700;
+}
+.watch-btn-large.plex-btn {
+  border-color: var(--watching); background: rgba(107, 154, 154, 0.12);
+  font-size: 16px; padding: 14px 20px;
+}
+.watch-btn-large.plex-btn::before {
+  content: '⊕'; color: var(--watching); font-weight: 700;
+}
+.watch-tier {
+  font-size: 10px; color: var(--ink-faint);
+  letter-spacing: 0.05em; text-transform: uppercase;
+  margin-left: auto;
+}
+.watch-others {
+  margin-top: 14px; padding-top: 12px;
+  border-top: 1px solid var(--rule);
+}
+.watch-others summary {
+  cursor: pointer; color: var(--ink-dim); font-size: 12px;
+  padding: 4px 0; user-select: none;
+}
+.watch-others summary:hover { color: var(--accent); }
+.watch-other-region {
+  font-size: 12px; color: var(--ink-dim); padding: 4px 0;
+}
+.watch-other-region strong { color: var(--ink); }
+body.tv-mode .watch-btn-large { font-size: 16px; padding: 14px 20px; }
+body.tv-mode .watch-btn-large.plex-btn { font-size: 18px; padding: 16px 24px; }
+body.tv-mode .watch-section h5 { font-size: 13px; }
+
 /* === V8 additions: Sort, Search, Stats, Triage, Source badge === */
 .sort-select {
   background: var(--bg-elev); color: var(--ink);
