@@ -10,6 +10,64 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.32.0 — 2026-05-09
+
+### Feature — Time budget filter (Phase 3a of decision-helper roadmap)
+
+The wizard's "Find something new" / "Pick something to rewatch" flows
+now ask "How long do you have?" between the film/TV pick and the genre
+pick. Recommendations and the watch-queue are filtered by item runtime
+to match.
+
+**Five buckets:**
+- Quick (≤ 30 min)
+- Short (≤ 90 min)
+- Standard (≤ 2 hours)
+- Long (≤ 3 hours)
+- All evening (no limit)
+
+**TV interpretation:** for TV catalogs the budget compares against the
+**per-episode** runtime, not the series total. A 30-min budget surfaces
+sitcoms; a 60-min budget includes drama-length episodes. Series total
+runtime would mean nothing fits — you don't watch a whole season in one
+sitting.
+
+**Implementation:**
+- `parseRuntimeMin(item)` parses runtime strings: "126 min", "1h 47m",
+  "1 hr 47 min", "47 minutes", "47", or a raw number. Returns minutes
+  or null if unparseable.
+- `fitsTimeBudget(item, budget)` predicate. Items with unparseable
+  runtime pass through (better false-positive than dropping items —
+  the user can still see them and decide).
+- `TIME_BUDGETS` constant maps each bucket to its max minutes and
+  display label.
+- Wizard flow: `session === 'new' || 'rewatch'` → step `time` → step
+  `genre`. The `time` step uses the matrix grid layout with five
+  buttons. wizardState gains `timeBudget` field.
+- Filter integrations:
+  - `wizardLaunchTriage('watch')` filters its queue against
+    `wizardState.timeBudget`
+  - `computeRecsForTab(tabIds, { timeBudget })` drops recommended items
+    that don't fit. Discover (TMDB-orphan) candidates pass through —
+    their runtime isn't always cached yet.
+- TV-mode wizard buttons show "/ episode" suffix on the time labels
+  for clarity ("≤ 30 min / episode").
+- Back navigation: `genre` → `time` → `session`, so users can adjust
+  the budget without restarting.
+
+**Roadmap status:**
+
+| Phase | Status |
+|-------|--------|
+| 1. Settings card grid | ✅ 5.27.x |
+| 2. Cross-platform sync | ✅ 5.31.x |
+| **3a. Time budget filter** | ✅ **5.32.0 (this release)** |
+| 3b. Mood archetype filter | next |
+| 3c. Trailer embed | next+1 |
+| 3d. Streaming-leaving alerts | next+2 |
+
+---
+
 ## 5.31.2 — 2026-05-09
 
 ### Fix — Settings modal reverted to old layout after sync pull

@@ -4894,6 +4894,51 @@ function renderCatalogHealth() {
   return html;
 }
 
+// === V5.32.0: Time budget filter (Phase 3a of decision-helper roadmap) ===
+// Five buckets, escalating. parseRuntimeMin handles the various string
+// formats stored across catalogs ("126 min", "1h 47m", "47", "5 series + 14
+// episodes"). For TV the runtime field is per-episode by convention so the
+// budget compares per-episode, not series total. Items with unparseable
+// runtime are kept (don't filter out the unknown).
+const TIME_BUDGETS = {
+  quick:    { max: 30,       label: 'Quick',    sub: '≤ 30 min' },
+  short:    { max: 90,       label: 'Short',    sub: '≤ 90 min' },
+  standard: { max: 120,      label: 'Standard', sub: '≤ 2 hours' },
+  long:     { max: 180,      label: 'Long',     sub: '≤ 3 hours' },
+  any:      { max: Infinity, label: 'All evening', sub: 'No limit' },
+};
+
+function parseRuntimeMin(item) {
+  if (!item) return null;
+  const r = item.runtime;
+  if (r == null) return null;
+  if (typeof r === 'number') return r > 0 ? r : null;
+  if (typeof r !== 'string') return null;
+  const s = r.toLowerCase().trim();
+  // "1h 47m" / "1 hr 47 min" / "1h47m" / "2 hours 6 minutes"
+  const hm = s.match(/(\d+)\s*(?:h(?:r|our|ours)?)\s*(?:(\d+)\s*(?:m(?:in|inutes)?))?/);
+  if (hm) {
+    return parseInt(hm[1], 10) * 60 + (hm[2] ? parseInt(hm[2], 10) : 0);
+  }
+  // "47 min" / "47 minutes" / "47m" / leading "47" before non-numeric
+  const m = s.match(/^(\d+)\s*(?:m(?:in|inutes)?)?(?:\s|$)/);
+  if (m) {
+    const v = parseInt(m[1], 10);
+    return v > 0 ? v : null;
+  }
+  return null;
+}
+
+function fitsTimeBudget(item, budget) {
+  if (!budget || budget === 'any') return true;
+  const cfg = TIME_BUDGETS[budget];
+  if (!cfg || cfg.max === Infinity) return true;
+  const mins = parseRuntimeMin(item);
+  // Unparseable / unknown runtime → don't filter out (better false-positive than dropping items)
+  if (mins == null) return true;
+  return mins <= cfg.max;
+}
+
 // === V5.28.0: Cross-platform sync via Cloudflare Worker ===
 // Identity: SHA-256 of the user's Plex token, hex-encoded. Stable across devices.
 // Storage: Worker /sync/get and /sync/put endpoints, backed by a new SYNC_KV namespace.
@@ -5312,7 +5357,12 @@ let triageState = null;  // { mode, queue, idx }
 // recommendations/similar arrays from local enrichment, scores by source
 // rating weight, classifies candidates as catalog-matched (Recommended)
 // or TMDB-orphan (Discover), and returns the top of each.
-function computeRecsForTab(tabIds) {
+function computeRecsForTab(tabIds, opts) {
+  // V5.32.0: optional `opts.timeBudget` filters recommended results by item runtime.
+  // Discover (TMDB-orphan) candidates pass through — their runtime isn't always known
+  // until enrichment caches it; filtering them out would over-prune.
+  opts = opts || {};
+  const budget = opts.timeBudget || null;
   const tabSet = new Set(tabIds);
 
   // Sources: loved/liked items in the requested tabs that have enrichment.
@@ -5391,6 +5441,8 @@ function computeRecsForTab(tabIds) {
       break;
     }
     if (recHit) {
+      // V5.32.0: drop recommended items that don't fit the time budget
+      if (!fitsTimeBudget(recHit.item, budget)) return;
       recommended.push({ ...c, catalogTab: recHit.tabId, catalogItemId: recHit.item.id });
     } else if (matches.length === 0) {
       discover.push(c);
@@ -5415,10 +5467,11 @@ function computeRecsForTab(tabIds) {
 
 // Always start fresh on app open. State is in-memory only, never persisted.
 const wizardState = {
-  step: 'root',         // 'root' | 'rate' | 'film-tv' | 'session' | 'genre' | 'recs' | 'continue-list'
+  step: 'root',         // 'root' | 'rate' | 'film-tv' | 'session' | 'time' | 'genre' | 'recs' | 'continue-list'
   rateContext: null,    // 'specific-tab' | 'recent-watched' | 'queued' | 'unrated-loved'
   contentType: null,    // 'film' | 'tv'
   session: null,        // 'continue' | 'new' | 'rewatch'
+  timeBudget: null,     // 'quick' | 'short' | 'standard' | 'long' | 'any' (V5.32.0)
   genre: null,          // tab id, or 'not-sure'
 };
 
@@ -5432,6 +5485,7 @@ function wizardShow() {
   wizardState.rateContext = null;
   wizardState.contentType = null;
   wizardState.session = null;
+  wizardState.timeBudget = null;
   wizardState.genre = null;
   wizardRender();
 }
@@ -5489,6 +5543,16 @@ function wizardRender() {
         <span class="wizard-btn-meta">Browse one tab and rate from there</span>
       </button>
     `;
+  }
+  else if (wizardState.step === 'time') {
+    // V5.32.0: time budget step — 5 buckets, matrix-grid layout
+    subtitle.textContent = 'How long do you have?';
+    backBtn.style.display = '';
+    stepEl.className = 'wizard-step matrix';
+    const isTV = wizardState.contentType === 'tv';
+    stepEl.innerHTML = Object.entries(TIME_BUDGETS).map(([key, cfg]) =>
+      `<button class="wizard-btn" data-action="time-${key}">${cfg.label}<span class="wizard-btn-meta">${cfg.sub}${isTV && cfg.max !== Infinity ? ' / episode' : ''}</span></button>`
+    ).join('');
   }
   else if (wizardState.step === 'film-tv') {
     subtitle.textContent = 'Film or TV?';
@@ -5585,7 +5649,7 @@ function wizardRender() {
     const tabLabel = (genre === 'not-sure' || !genre)
       ? (isTV ? 'TV' : 'Film')
       : ((catalogs[genre] && catalogs[genre].title) || genre);
-    const recs = computeRecsForTab(tabIds);
+    const recs = computeRecsForTab(tabIds, { timeBudget: wizardState.timeBudget });
 
     let html = '';
     if (recs.sourceCount === 0) {
@@ -5643,7 +5707,8 @@ function wizardGoBack() {
   else if (wizardState.step === 'film-tv') wizardState.step = 'root';
   else if (wizardState.step === 'session') wizardState.step = 'film-tv';
   else if (wizardState.step === 'continue-list') wizardState.step = 'session';
-  else if (wizardState.step === 'genre') wizardState.step = 'session';
+  else if (wizardState.step === 'time') wizardState.step = 'session';
+  else if (wizardState.step === 'genre') wizardState.step = 'time';
   else if (wizardState.step === 'recs') wizardState.step = 'genre';
   wizardRender();
 }
@@ -5667,8 +5732,19 @@ function wizardHandleAction(btn) {
   if (action === 'tv') { wizardState.contentType = 'tv'; wizardState.step = 'session'; wizardRender(); return; }
   // Session step
   if (action === 'continue') { wizardState.session = 'continue'; wizardState.step = 'continue-list'; wizardRender(); return; }
-  if (action === 'new') { wizardState.session = 'new'; wizardState.step = 'genre'; wizardRender(); return; }
-  if (action === 'rewatch') { wizardState.session = 'rewatch'; wizardState.step = 'genre'; wizardRender(); return; }
+  // V5.32.0: 'new' and 'rewatch' route through the time step before genre
+  if (action === 'new') { wizardState.session = 'new'; wizardState.step = 'time'; wizardRender(); return; }
+  if (action === 'rewatch') { wizardState.session = 'rewatch'; wizardState.step = 'time'; wizardRender(); return; }
+  // Time budget step
+  if (action && action.startsWith('time-')) {
+    const budget = action.slice('time-'.length);
+    if (TIME_BUDGETS[budget]) {
+      wizardState.timeBudget = budget;
+      wizardState.step = 'genre';
+      wizardRender();
+    }
+    return;
+  }
   // Continue list — go to specific item
   if (action === 'goto-item') {
     wizardHide();
@@ -5827,6 +5903,8 @@ function wizardLaunchTriage(mode) {
     if (session === 'new') title = 'Find something new to watch';
     else if (session === 'rewatch') title = 'Pick something to rewatch';
 
+    // V5.32.0: filter by time budget if set (wizard 'time' step → 'genre')
+    const budget = wizardState.timeBudget;
     tabsToInclude.forEach(tabId => {
       const cat = catalogs[tabId];
       if (!cat) return;
@@ -5840,6 +5918,7 @@ function wizardLaunchTriage(mode) {
           // C with fallback to A: rewatchable-tagged first, then loved/liked watched
           include = s === 'watched' && (r === 'loved' || r === 'liked');
         }
+        if (include && !fitsTimeBudget(item, budget)) include = false;
         if (include) {
           const enriched = { ...item, _watchlist_source_tab: tabId, _watchlist_source_label: cat.title || tabId };
           queue.push(enriched);
