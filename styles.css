@@ -841,6 +841,51 @@ select:focus, select:focus-visible {
   padding: 12px 0 6px;
 }
 
+/* Settings: collapsible section headers */
+.settings-section-toggle {
+  cursor: pointer; user-select: none;
+  display: flex; align-items: center; justify-content: space-between;
+  margin: 0; padding: 4px 0;
+}
+.settings-section-toggle::after {
+  content: '▾'; font-size: 11px; color: var(--accent);
+  transition: transform 0.15s ease;
+  margin-left: 8px;
+}
+.settings-section.collapsed .settings-section-toggle::after {
+  transform: rotate(-90deg);
+}
+.settings-section.collapsed .settings-section-body { display: none; }
+.settings-section-toggle:hover { color: var(--accent); }
+body.tv-mode .settings-section-toggle { padding: 8px 0; min-height: 44px; }
+body.tv-mode .settings-section-toggle::after { font-size: 14px; }
+
+.sw-update-banner {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--accent); color: #1a1a1a;
+  padding: 10px 16px; gap: 12px; z-index: 1000;
+  display: none; align-items: center; justify-content: space-between;
+  font-size: 13px; font-weight: 500;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.5);
+}
+.sw-update-banner.visible { display: flex; }
+.sw-update-btn {
+  background: transparent; border: 1.5px solid currentColor;
+  color: inherit; padding: 6px 14px; border-radius: 4px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; cursor: pointer;
+}
+.sw-update-btn:hover:not(:disabled) { background: rgba(0, 0, 0, 0.18); }
+.sw-update-btn:disabled { opacity: 0.6; cursor: default; }
+
+body.tv-mode .sw-update-banner { font-size: 18px; padding: 16px 28px; }
+body.tv-mode .sw-update-btn { font-size: 14px; padding: 10px 22px; }
+/* Override global accent focus ring — invisible against accent-colored banner */
+.sw-update-btn:focus-visible {
+  outline: 3px solid #fff !important;
+  outline-offset: 2px !important;
+}
+
 /* Plex badge */
 .plex-badge {
   display: inline-block; background: rgba(229, 160, 13, 0.15);

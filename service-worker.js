@@ -1,4 +1,4 @@
-const CACHE_NAME = 'scifi-tracker-v70';
+const CACHE_NAME = 'scifi-tracker-v73';
 const inflightRevalidations = new Set();
 const ASSETS = [
   './',
@@ -38,7 +38,12 @@ const ASSETS = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
-  self.skipWaiting();
+  // Don't skipWaiting() here — wait for the page to confirm via SKIP_WAITING message
+  // so the user sees the "New version available" banner before reload.
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {

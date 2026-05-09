@@ -1895,11 +1895,12 @@ function setStatus(id, status, tab) {
     delete state[tab][id].reactionTags;
   }
   touchEntry(tab, id);
-  // Push to Trakt if connected (fire-and-forget, movies only)
+  // Push to Trakt if connected (fire-and-forget). For shows, 'watched' marks all aired episodes.
   const catItem = catalogs[tab] && catalogs[tab].items && catalogs[tab].items.find(it => it.id === id);
-  if (catItem && catItem.year && !catItem.seasons) {
-    if (status === 'watched') traktPushStatus(catItem.title, catItem.year, tab, 'watched');
-    else if (status === 'none') traktPushStatus(catItem.title, catItem.year, tab, 'none');
+  if (catItem && catItem.year) {
+    const isShow = !!catItem.seasons;
+    if (status === 'watched') traktPushStatus(catItem.title, catItem.year, tab, 'watched', isShow);
+    else if (status === 'none') traktPushStatus(catItem.title, catItem.year, tab, 'none', isShow);
   }
   saveState(); render();
 }
@@ -1912,10 +1913,11 @@ function setRating(id, rating, tab) {
   if (prev === rating) delete state[tab][id].rating;
   else state[tab][id].rating = rating;
   touchEntry(tab, id);
-  // Push to Trakt if connected (fire-and-forget, movies only)
+  // Push to Trakt if connected (fire-and-forget). Show ratings apply at the series level.
   const catItem = catalogs[tab] && catalogs[tab].items && catalogs[tab].items.find(it => it.id === id);
-  if (catItem && catItem.year && !catItem.seasons) {
-    traktPushRating(catItem.title, catItem.year, tab, prev === rating ? null : rating);
+  if (catItem && catItem.year) {
+    const isShow = !!catItem.seasons;
+    traktPushRating(catItem.title, catItem.year, tab, prev === rating ? null : rating, isShow);
   }
   saveState(); updateItemInPlace(id);
 }
@@ -2010,25 +2012,29 @@ function updateTraktStatusLine() {
   }
 }
 
-function traktPushStatus(title, year, tab, status) {
+function traktPushStatus(title, year, tab, status, isShow) {
   if (!isTraktConnected()) return;
-  const movie = buildTraktMoviePayload(title, year, tab);
+  const item = buildTraktMoviePayload(title, year, tab);
+  const key = isShow ? 'shows' : 'movies';
   if (status === 'watched') {
-    traktApiCall('/sync/history', 'POST', { movies: [{ ...movie, watched_at: new Date().toISOString() }] });
+    // For shows, omit watched_at so Trakt marks all aired episodes watched.
+    const payload = isShow ? item : { ...item, watched_at: new Date().toISOString() };
+    traktApiCall('/sync/history', 'POST', { [key]: [payload] });
   } else {
-    traktApiCall('/sync/history/remove', 'POST', { movies: [movie] });
+    traktApiCall('/sync/history/remove', 'POST', { [key]: [item] });
   }
 }
 
-function traktPushRating(title, year, tab, rating) {
+function traktPushRating(title, year, tab, rating, isShow) {
   if (!isTraktConnected()) return;
-  const movie = buildTraktMoviePayload(title, year, tab);
+  const item = buildTraktMoviePayload(title, year, tab);
+  const key = isShow ? 'shows' : 'movies';
   const ratingMap = { loved: 8, liked: 6 };
   const score = ratingMap[rating];
   if (score) {
-    traktApiCall('/sync/ratings', 'POST', { movies: [{ ...movie, rating: score, rated_at: new Date().toISOString() }] });
+    traktApiCall('/sync/ratings', 'POST', { [key]: [{ ...item, rating: score, rated_at: new Date().toISOString() }] });
   } else {
-    traktApiCall('/sync/ratings/remove', 'POST', { movies: [movie] });
+    traktApiCall('/sync/ratings/remove', 'POST', { [key]: [item] });
   }
 }
 
@@ -3056,7 +3062,57 @@ function setupModals() {
   document.getElementById('triage-queue-btn').addEventListener('click', () => startTriage('queue'));
   document.getElementById('triage-suggest-btn').addEventListener('click', () => startTriage('suggest'));
 
+  // === Settings: collapsible sections ===
+  // State stored as { sectionId: true (collapsed) | false (open) } in localStorage.
+  // Defaults: Display always open; others open if their feature is configured, else collapsed.
+  const SETTINGS_COLLAPSED_KEY = 'watchtrack-settings-collapsed';
+  function getStoredCollapsed() {
+    try { return JSON.parse(localStorage.getItem(SETTINGS_COLLAPSED_KEY) || '{}'); }
+    catch { return {}; }
+  }
+  function setStoredCollapsed(map) {
+    localStorage.setItem(SETTINGS_COLLAPSED_KEY, JSON.stringify(map));
+  }
+  function defaultCollapsed(id) {
+    if (id === 'display') return false;
+    if (id === 'plex') return !isPlexConfigured();
+    if (id === 'webhook') return !isWebhookConfigured();
+    if (id === 'trakt') return !isTraktConnected();
+    return true;
+  }
+  function applySettingsCollapseState() {
+    const stored = getStoredCollapsed();
+    document.querySelectorAll('#settings-modal .settings-section').forEach(sec => {
+      const id = sec.dataset.section;
+      if (!id) return;
+      const collapsed = id in stored ? stored[id] : defaultCollapsed(id);
+      sec.classList.toggle('collapsed', collapsed);
+      const toggle = sec.querySelector('.settings-section-toggle');
+      if (toggle) toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    });
+  }
+  function setupSettingsCollapse() {
+    document.querySelectorAll('#settings-modal .settings-section').forEach(sec => {
+      const id = sec.dataset.section;
+      if (!id) return;
+      const toggle = sec.querySelector('.settings-section-toggle');
+      if (!toggle) return;
+      const handler = () => {
+        const collapsed = sec.classList.toggle('collapsed');
+        toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        const stored = getStoredCollapsed();
+        stored[id] = collapsed;
+        setStoredCollapsed(stored);
+      };
+      toggle.addEventListener('click', handler);
+      toggle.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handler(); }
+      });
+    });
+  }
+
   // === Settings modal ===
+  setupSettingsCollapse();
   const settingsModal = document.getElementById('settings-modal');
   document.getElementById('settings-btn').addEventListener('click', () => {
     // Populate fields
@@ -3074,6 +3130,7 @@ function setupModals() {
     updatePlexStatusLine();
     updateWebhookStatusLine();
     updateTraktStatusLine();
+    applySettingsCollapseState();
     settingsModal.classList.add('active');
   });
   document.getElementById('settings-close').addEventListener('click', () => {

@@ -10,6 +10,29 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.30.0 — 2026-05-09
+**Service worker cache:** `scifi-tracker-v70` → `v73`
+
+### Quality-of-life improvements
+
+**Catalog lint script** — `scripts/lint-catalogs.py` checks every genre catalog for duplicate `(title, year)` entries, missing required fields, and JSON syntax errors. Run manually before committing: `python3 scripts/lint-catalogs.py`. Exits 1 on any issue. Skips `auteur.json` and `catalogs.json`. Already caught the 6 duplicates fixed in this same release.
+
+**Service worker update banner** — When a new version is detected, a gold banner appears at the bottom of the screen with a "Reload" button. Replaces the manual unregister-and-clear-cache dance. The SW now waits for an explicit `SKIP_WAITING` postMessage from the page (triggered by clicking Reload) before activating, then a `controllerchange` listener reloads the page. Banner sizing scales for TV mode (18px font, larger padding) and the focus ring uses white instead of the default accent color so it's visible against the gold background.
+
+**Settings: collapsible sections** — Each settings section header (Display, Plex Integration, Plex Webhook Bridge, Trakt Integration) is now a focusable toggle button with a chevron indicator. Open/closed state persists in localStorage per section. First-load defaults: Display open; Plex/Webhook/Trakt open if their feature is configured, collapsed otherwise. TV mode gets larger touch targets (44px min-height) and Enter/Space keyboard activation for D-pad use.
+
+**Trakt: TV show support** — Push hooks (`setStatus`, `setRating`) no longer skip TV shows. Marking a series Watched now pushes to Trakt's `/sync/history` with the show payload (no `watched_at`, which marks all aired episodes watched). Show ratings push to `/sync/ratings` at the series level. Pull-sync for TV shows is deferred — it requires episode-count heuristics to map Trakt's per-episode tracking onto WatchTrack's series-level statuses.
+
+### Bug fixes
+
+**6 duplicate catalog entries removed** —
+- `scifi-tv.json` — Mr. Robot, Counterpart, Devs, DS9 removed from "C · High Priority — Recommended" (originals in main sections)
+- `scifi-tv.json` — Severance removed from same section
+- `cons-courtroom-tv.json` — Boston Legal section V removed; its `commitment`/`commitmentTag`/`contentType`/`tvCompletionMode` fields merged into the section IV entry
+- `cons-courtroom.json` — Witness for the Prosecution removed from "Cross-Listed" section, kept in Foundational
+
+---
+
 ## 5.29.0 — 2026-05-09
 **Service worker cache:** `scifi-tracker-v69` → `v70`
 
