@@ -10,6 +10,56 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.26.0 — 2026-05-09
+**Service worker cache:** `scifi-tracker-v54` → `v55`
+
+### Fix — Triage now 3-step (rate → positive → critical) + hardened focus trap
+
+**Triage modal split into three steps:**
+
+5.24.0 grouped positive and critical tags together in one screen. On a
+TV at couch distance the row got busy; users (correctly) wanted each
+category to get its own focused step.
+
+- **Step 1 — Rating** (Loved / Liked / Mixed / Disliked). Auto-advances
+  to step 2 on selection.
+- **Step 2 — Positive tags only**. Tag chips for positive reactions
+  appropriate to the item's content type. Action buttons: *Continue →*
+  to step 3, *Skip tagging* to advance to next item, *← Back to rating*,
+  *Close*.
+- **Step 3 — Critical tags only**. Tag chips for negative reactions.
+  Action buttons: *Save & Next ✓*, *Skip critical*, *← Back to
+  positive*, *Close*.
+
+State tracked via `triageState.step` (1/2/3, reset to `null` between
+items). `rate-loved-untagged` mode opens directly at step 2 (rating
+already exists).
+
+A small step indicator at the top of the card shows "Step N of 3 ·
+[step name]" so the user always knows where they are in the flow.
+
+**Hardened modal focus trap:**
+
+5.19.0's trap relied on the D-pad keydown handler scoping its
+focusables list to the open modal. That works for arrow-key
+navigation, but doesn't catch focus that escapes via:
+- Tab key (browser default tab order)
+- Programmatic `.focus()` calls in app code (e.g., search input
+  auto-focus that fires before the modal observer)
+- Focus state that was already outside the modal when it opened
+
+New global `focusin` listener: any time focus lands on an element,
+checks if a modal is `.active`. If yes and the focused element is NOT
+inside that modal (via `openModal.contains(target)`), focus immediately
+redirects back to the first valid focusable inside the modal (priority:
+.modal-actions button → .watch-btn-large → other content button →
+input/textarea/select → .modal-back).
+
+Result: while a modal is open, the only highlightable elements are
+inside it — by any focus mechanism, not just D-pad arrows.
+
+---
+
 ## 5.25.0 — 2026-05-09
 **Service worker cache:** `scifi-tracker-v53` → `v54`
 

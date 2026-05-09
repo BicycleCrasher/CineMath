@@ -347,7 +347,17 @@ footer {
 .modal-back:hover { background: var(--bg-card); border-color: var(--accent); color: var(--accent); }
 body.tv-mode .modal-back { width: 56px; height: 56px; font-size: 26px; }
 
-/* === V5.24.0: Progressive rate+tag triage modal === */
+/* === V5.24.0/5.26.0: Progressive rate+tag triage modal (3 steps) === */
+.triage-step-indicator {
+  font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--accent); margin: 12px 0 4px;
+  font-family: 'Helvetica Neue', sans-serif;
+}
+.triage-step-empty {
+  color: var(--ink-dim); font-size: 13px;
+  font-style: italic; padding: 12px 0;
+}
+body.tv-mode .triage-step-indicator { font-size: 13px; }
 .triage-pitch { color: var(--ink-dim); font-size: 13px; line-height: 1.5; margin: 8px 0 16px; }
 .triage-rate-step h5,
 .triage-tag-step h5 {

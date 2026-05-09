@@ -5227,10 +5227,11 @@ function renderTriage() {
     btn.addEventListener('click', () => triageAction(btn.dataset.act));
   });
 }
-// V5.24.0: Progressive rate→tag triage modal for TV remote.
-// Step 1 (no rating yet): four large rating buttons. Tap one → auto-advances to step 2.
-// Step 2 (rating set, tags missing): tag chips for the item's content type.
-//                                     Save & Next commits and moves on. Back returns to rate.
+// V5.26.0: 3-step progressive triage modal for TV remote.
+// Step 1 (rate): four large rating buttons. Tap one → auto-advances to step 2.
+// Step 2 (positive): positive tag chips only. Continue → step 3.
+// Step 3 (critical): critical tag chips only. Save & Next → next item.
+// Each step also has Skip / Back / Close. State stored in triageState.step.
 function renderRateTagTriage(item, sourceTab) {
   const requestMode = triageState.requestMode;
   const titleEl = document.getElementById('triage-title');
@@ -5239,12 +5240,21 @@ function renderRateTagTriage(item, sourceTab) {
     : 'Rate & tag watched items';
   document.getElementById('triage-progress').textContent = `${triageState.idx + 1} / ${triageState.queue.length}`;
 
+  // Resolve current step. If unset (new item), default based on existing data:
+  //   no rating → step 1 (rate); has rating → step 2 (positive tags).
+  if (!triageState.step) {
+    const r = getRating(item.id, sourceTab);
+    triageState.step = (r && r !== 'none') ? 2 : 1;
+  }
+  const step = triageState.step;
+
   const meta = [item.year, item.dir, item.country, item.runtime].filter(Boolean).join(' · ');
   const why = item.whyPriority ? `<div class="why">${escapeHtml(item.whyPriority)}</div>` : '';
   const currentRating = getRating(item.id, sourceTab);
   const currentTags = getTags(item.id, sourceTab);
-  const hasRating = currentRating && currentRating !== 'none';
-  const step = hasRating ? 'tag' : 'rate';
+  const tagSet = getTagSetForItem(item) || { positive: [], negative: [] };
+  const positive = tagSet.positive || [];
+  const negative = tagSet.negative || [];
 
   let cardHtml = `
     <span class="source-badge">${escapeHtml(item._watchlist_source_label || '')}</span>
@@ -5253,9 +5263,10 @@ function renderRateTagTriage(item, sourceTab) {
     <div class="meta">${escapeHtml(meta)}</div>
     ${why}
     ${item.pitch ? `<p class="triage-pitch">${escapeHtml(item.pitch)}</p>` : ''}
+    <div class="triage-step-indicator">Step ${step} of 3 · ${step === 1 ? 'Rating' : (step === 2 ? 'Positive tags' : 'Critical tags')}</div>
   `;
 
-  if (step === 'rate') {
+  if (step === 1) {
     cardHtml += `
       <div class="triage-rate-step">
         <h5>How did you like it?</h5>
@@ -5267,54 +5278,66 @@ function renderRateTagTriage(item, sourceTab) {
         </div>
       </div>
     `;
-  } else {
-    const tagSet = getTagSetForItem(item) || { positive: [], negative: [] };
-    const positive = tagSet.positive || [];
-    const negative = tagSet.negative || [];
+  } else if (step === 2) {
     cardHtml += `
       <div class="triage-tag-step">
-        <h5>What stood out? <span class="step-meta">Rated ${ratingLabel(currentRating)}</span></h5>
-        ${positive.length ? `
-        <div class="triage-tag-section">
-          <div class="triage-tag-label">Positive</div>
-          <div class="triage-tag-row">
-            ${positive.map(t => `<button class="triage-tag-btn pos${currentTags.includes(t) ? ' active' : ''}" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</button>`).join('')}
-          </div>
-        </div>` : ''}
-        ${negative.length ? `
-        <div class="triage-tag-section">
-          <div class="triage-tag-label">Critical</div>
-          <div class="triage-tag-row">
-            ${negative.map(t => `<button class="triage-tag-btn neg${currentTags.includes(t) ? ' active' : ''}" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</button>`).join('')}
-          </div>
-        </div>` : ''}
+        <h5>What was good? <span class="step-meta">Rated ${ratingLabel(currentRating)}</span></h5>
+        ${positive.length
+          ? `<div class="triage-tag-row">${positive.map(t => `<button class="triage-tag-btn pos${currentTags.includes(t) ? ' active' : ''}" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</button>`).join('')}</div>`
+          : `<p class="triage-step-empty">No positive tags defined for this content type. Skip ahead.</p>`}
+      </div>
+    `;
+  } else if (step === 3) {
+    cardHtml += `
+      <div class="triage-tag-step">
+        <h5>What didn't work? <span class="step-meta">Rated ${ratingLabel(currentRating)}</span></h5>
+        ${negative.length
+          ? `<div class="triage-tag-row">${negative.map(t => `<button class="triage-tag-btn neg${currentTags.includes(t) ? ' active' : ''}" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</button>`).join('')}</div>`
+          : `<p class="triage-step-empty">No critical tags defined for this content type. Save & Next to finish.</p>`}
       </div>
     `;
   }
 
   document.getElementById('triage-card').innerHTML = cardHtml;
 
-  if (step === 'rate') {
-    document.getElementById('triage-actions').innerHTML = `
-      <button class="action-btn" data-act="rate-skip">Skip this item</button>
+  // Action buttons per step
+  let actionsHtml = '';
+  if (step === 1) {
+    actionsHtml = `
+      <button class="action-btn" data-act="rate-skip">Skip item</button>
       <button class="action-btn" data-act="rate-close">Close</button>
     `;
+  } else if (step === 2) {
+    actionsHtml = `
+      <button class="action-btn primary" data-act="step2-next">Continue →</button>
+      <button class="action-btn" data-act="step2-skip">Skip tagging</button>
+      <button class="action-btn" data-act="step2-back">← Back to rating</button>
+      <button class="action-btn" data-act="rate-close">Close</button>
+    `;
+  } else if (step === 3) {
+    actionsHtml = `
+      <button class="action-btn primary" data-act="step3-save">Save &amp; Next ✓</button>
+      <button class="action-btn" data-act="step3-skip">Skip critical</button>
+      <button class="action-btn" data-act="step3-back">← Back to positive</button>
+      <button class="action-btn" data-act="rate-close">Close</button>
+    `;
+  }
+  document.getElementById('triage-actions').innerHTML = actionsHtml;
+
+  // Wire interactive elements
+  if (step === 1) {
     document.querySelectorAll('.triage-rate-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         setRating(item.id, btn.dataset.rate, sourceTab);
-        renderTriage(); // re-render now that rating exists, will show tag step
+        triageState.step = 2;
+        renderRateTagTriage(item, sourceTab);
       });
     });
   } else {
-    document.getElementById('triage-actions').innerHTML = `
-      <button class="action-btn primary" data-act="tag-save">Save &amp; Next</button>
-      <button class="action-btn" data-act="tag-back">Back to rating</button>
-      <button class="action-btn" data-act="rate-close">Close</button>
-    `;
     document.querySelectorAll('.triage-tag-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         toggleTag(item.id, btn.dataset.tag, sourceTab);
-        renderRateTagTriage(item, sourceTab); // refresh active states
+        renderRateTagTriage(item, sourceTab); // refresh active states, stay on this step
       });
     });
   }
@@ -5322,15 +5345,29 @@ function renderRateTagTriage(item, sourceTab) {
   document.querySelectorAll('#triage-actions .action-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const act = btn.dataset.act;
-      if (act === 'rate-skip' || act === 'tag-save') {
+      if (act === 'rate-skip') {
+        // Skip item entirely without rating
         triageState.idx++;
+        triageState.step = null; // reset for next item
         renderTriage();
-      } else if (act === 'tag-back') {
-        // Clear rating to return to rate step
+      } else if (act === 'step2-next') {
+        triageState.step = 3;
+        renderRateTagTriage(item, sourceTab);
+      } else if (act === 'step2-skip' || act === 'step3-save' || act === 'step3-skip') {
+        // Save what's there, advance to next item
+        triageState.idx++;
+        triageState.step = null;
+        renderTriage();
+      } else if (act === 'step2-back') {
+        // Clear rating to return to step 1
         if (state[sourceTab] && state[sourceTab][item.id]) {
           delete state[sourceTab][item.id].rating;
           saveState();
         }
+        triageState.step = 1;
+        renderRateTagTriage(item, sourceTab);
+      } else if (act === 'step3-back') {
+        triageState.step = 2;
         renderRateTagTriage(item, sourceTab);
       } else if (act === 'rate-close') {
         document.getElementById('triage-modal').classList.remove('active');
@@ -5424,6 +5461,23 @@ function triageAction(act) {
     const modal = back.closest('.modal');
     if (modal) modal.classList.remove('active');
   });
+  // V5.26.0: Hardened focus trap. focusin fires whenever ANY element gains
+  // focus — if focus escapes the open modal (via Tab, programmatic .focus(),
+  // or browser defaults), this listener immediately redirects it back into
+  // the modal. Complements the keydown D-pad scoping for full coverage.
+  document.addEventListener('focusin', (e) => {
+    const openModal = document.querySelector('.modal.active');
+    if (!openModal) return;
+    if (openModal.contains(e.target)) return;
+    const first =
+      openModal.querySelector('.modal-actions button:not([disabled])') ||
+      openModal.querySelector('.watch-btn-large') ||
+      openModal.querySelector('.modal-content button:not(.modal-back):not([disabled])') ||
+      openModal.querySelector('input:not([disabled]), textarea:not([disabled]), select:not([disabled])') ||
+      openModal.querySelector('.modal-back');
+    if (first) first.focus();
+  });
+
   // When a modal opens, focus its first ACTION button (not the top-left Back).
   // Priority: .modal-actions button > primary content button > input/select > .modal-back.
   // This avoids the "Down from Back jumps weirdly across the modal" pattern.
