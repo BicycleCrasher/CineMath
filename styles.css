@@ -835,6 +835,12 @@ select:focus, select:focus-visible {
 .settings-status.ok { color: var(--love); }
 .settings-status.err { color: var(--pri-high); }
 
+.trakt-user-code {
+  font-size: 28px; font-weight: 700; letter-spacing: 0.15em;
+  color: var(--accent); text-align: center;
+  padding: 12px 0 6px;
+}
+
 /* Plex badge */
 .plex-badge {
   display: inline-block; background: rgba(229, 160, 13, 0.15);

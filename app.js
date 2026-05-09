@@ -600,6 +600,22 @@ function getWebhookLastPoll() {
 function setWebhookLastPoll(ts) {
   localStorage.setItem(WEBHOOK_LAST_POLL_KEY, String(ts));
 }
+
+// === Trakt settings ===
+const TRAKT_WORKER_URL_KEY   = 'watchtrack-trakt-worker-url';
+const TRAKT_ACCESS_TOKEN_KEY  = 'watchtrack-trakt-access-token';
+const TRAKT_REFRESH_TOKEN_KEY = 'watchtrack-trakt-refresh-token';
+const TRAKT_USERNAME_KEY      = 'watchtrack-trakt-username';
+
+function getTraktWorkerUrl()    { return localStorage.getItem(TRAKT_WORKER_URL_KEY) || ''; }
+function setTraktWorkerUrl(u)   { if (!u) localStorage.removeItem(TRAKT_WORKER_URL_KEY); else localStorage.setItem(TRAKT_WORKER_URL_KEY, u.replace(/\/$/, '')); }
+function getTraktAccessToken()  { return localStorage.getItem(TRAKT_ACCESS_TOKEN_KEY) || ''; }
+function setTraktAccessToken(t) { if (!t) localStorage.removeItem(TRAKT_ACCESS_TOKEN_KEY); else localStorage.setItem(TRAKT_ACCESS_TOKEN_KEY, t); }
+function getTraktRefreshToken() { return localStorage.getItem(TRAKT_REFRESH_TOKEN_KEY) || ''; }
+function setTraktRefreshToken(t){ if (!t) localStorage.removeItem(TRAKT_REFRESH_TOKEN_KEY); else localStorage.setItem(TRAKT_REFRESH_TOKEN_KEY, t); }
+function getTraktUsername()     { return localStorage.getItem(TRAKT_USERNAME_KEY) || ''; }
+function setTraktUsername(u)    { if (!u) localStorage.removeItem(TRAKT_USERNAME_KEY); else localStorage.setItem(TRAKT_USERNAME_KEY, u); }
+function isTraktConnected()     { return Boolean(getTraktWorkerUrl() && getTraktAccessToken()); }
 function isWebhookConfigured() {
   return Boolean(getWebhookUrl() && getWebhookSecret());
 }
@@ -1875,6 +1891,12 @@ function setStatus(id, status, tab) {
     delete state[tab][id].reactionTags;
   }
   touchEntry(tab, id);
+  // Push to Trakt if connected (fire-and-forget, movies only)
+  const catItem = catalogs[tab] && catalogs[tab].items && catalogs[tab].items.find(it => it.id === id);
+  if (catItem && catItem.year && !catItem.seasons) {
+    if (status === 'watched') traktPushStatus(catItem.title, catItem.year, tab, 'watched');
+    else if (status === 'none') traktPushStatus(catItem.title, catItem.year, tab, 'none');
+  }
   saveState(); render();
 }
 
@@ -1882,10 +1904,182 @@ function setRating(id, rating, tab) {
   tab = tab || activeTab;
   if (!state[tab]) state[tab] = {};
   if (!state[tab][id]) state[tab][id] = {};
-  if (state[tab][id].rating === rating) delete state[tab][id].rating;
+  const prev = state[tab][id].rating;
+  if (prev === rating) delete state[tab][id].rating;
   else state[tab][id].rating = rating;
   touchEntry(tab, id);
+  // Push to Trakt if connected (fire-and-forget, movies only)
+  const catItem = catalogs[tab] && catalogs[tab].items && catalogs[tab].items.find(it => it.id === id);
+  if (catItem && catItem.year && !catItem.seasons) {
+    traktPushRating(catItem.title, catItem.year, tab, prev === rating ? null : rating);
+  }
   saveState(); updateItemInPlace(id);
+}
+
+// === Trakt helpers ===
+
+function traktItemId(title, year) {
+  return `${String(title).replace(/[^a-z0-9]+/gi, '-').toLowerCase().replace(/^-|-$/g, '')}-${year}`;
+}
+
+function buildTraktMoviePayload(title, year, tab) {
+  const enrichment = getEnrichmentForItem(traktItemId(title, year));
+  const ids = {};
+  if (enrichment && enrichment.tmdbId) ids.tmdb = enrichment.tmdbId;
+  return { title, year: Number(year), ids };
+}
+
+async function traktApiCall(path, method, body, isRetry) {
+  const base = getTraktWorkerUrl();
+  if (!base) return { ok: false, status: 0 };
+  const opts = {
+    method: method || 'GET',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getTraktAccessToken()}` },
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const resp = await fetch(`${base}${path}`, opts);
+  if (resp.status === 401 && !isRetry) {
+    const refreshed = await traktRefreshTokens();
+    if (refreshed) return traktApiCall(path, method, body, true);
+    traktDisconnect();
+    return { ok: false, status: 401 };
+  }
+  const data = resp.ok ? await resp.json().catch(() => ({})) : {};
+  return { ok: resp.ok, status: resp.status, data };
+}
+
+async function traktRefreshTokens() {
+  const base = getTraktWorkerUrl();
+  const refresh = getTraktRefreshToken();
+  if (!base || !refresh) return false;
+  try {
+    const resp = await fetch(`${base}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: refresh }),
+    });
+    if (!resp.ok) return false;
+    const data = await resp.json();
+    setTraktAccessToken(data.access_token);
+    setTraktRefreshToken(data.refresh_token);
+    return true;
+  } catch { return false; }
+}
+
+function traktDisconnect() {
+  setTraktAccessToken('');
+  setTraktRefreshToken('');
+  setTraktUsername('');
+  updateTraktStatusLine();
+}
+
+function updateTraktStatusLine() {
+  const el = document.getElementById('trakt-status');
+  const disconnectBtn = document.getElementById('trakt-disconnect');
+  const connectBtn = document.getElementById('trakt-connect');
+  const syncBtn = document.getElementById('trakt-sync');
+  if (!el) return;
+  if (isTraktConnected()) {
+    const user = getTraktUsername();
+    el.textContent = user ? `Connected as @${user}.` : 'Connected.';
+    el.className = 'settings-status ok';
+    if (disconnectBtn) disconnectBtn.style.display = '';
+    if (connectBtn) connectBtn.style.display = 'none';
+    if (syncBtn) syncBtn.style.display = '';
+  } else {
+    el.textContent = 'Not connected.';
+    el.className = 'settings-status';
+    if (disconnectBtn) disconnectBtn.style.display = 'none';
+    if (connectBtn) connectBtn.style.display = '';
+    if (syncBtn) syncBtn.style.display = 'none';
+  }
+}
+
+function traktPushStatus(title, year, tab, status) {
+  if (!isTraktConnected()) return;
+  const movie = buildTraktMoviePayload(title, year, tab);
+  if (status === 'watched') {
+    traktApiCall('/sync/history', 'POST', { movies: [{ ...movie, watched_at: new Date().toISOString() }] });
+  } else {
+    traktApiCall('/sync/history', 'DELETE', { movies: [movie] });
+  }
+}
+
+function traktPushRating(title, year, tab, rating) {
+  if (!isTraktConnected()) return;
+  const movie = buildTraktMoviePayload(title, year, tab);
+  const ratingMap = { loved: 8, liked: 6 };
+  const score = ratingMap[rating];
+  if (score) {
+    traktApiCall('/sync/ratings', 'POST', { movies: [{ ...movie, rating: score, rated_at: new Date().toISOString() }] });
+  } else {
+    traktApiCall('/sync/ratings', 'DELETE', { movies: [movie] });
+  }
+}
+
+async function traktPullSync() {
+  const status = document.getElementById('trakt-status');
+  if (status) { status.textContent = 'Fetching from Trakt...'; status.className = 'settings-status'; }
+
+  const [histResult, ratResult] = await Promise.all([
+    traktApiCall('/sync/history', 'GET'),
+    traktApiCall('/sync/ratings', 'GET'),
+  ]);
+
+  if (!histResult.ok && !ratResult.ok) {
+    if (status) { status.textContent = 'Sync failed — check connection.'; status.className = 'settings-status err'; }
+    return;
+  }
+
+  // Build lookup maps keyed by WatchTrack item ID
+  const historyMap = new Map();
+  for (const entry of (histResult.data || [])) {
+    const m = entry.movie;
+    if (!m) continue;
+    const id = traktItemId(m.title, m.year);
+    if (!historyMap.has(id)) historyMap.set(id, { title: m.title, year: m.year, ids: m.ids });
+  }
+
+  const ratingMap = new Map();
+  for (const entry of (ratResult.data || [])) {
+    const m = entry.movie;
+    if (!m) continue;
+    const id = traktItemId(m.title, m.year);
+    ratingMap.set(id, entry.rating);
+  }
+
+  let matched = 0, rated = 0;
+
+  for (const tabId in catalogs) {
+    if (tabId === 'watchlist' || tabId === 'auteur') continue;
+    const cat = catalogs[tabId];
+    if (!cat || !cat.items) continue;
+    for (const item of cat.items) {
+      const inHistory = historyMap.has(item.id);
+      const traktRating = ratingMap.get(item.id);
+      if (!inHistory && !traktRating) continue;
+      if (!state[tabId]) state[tabId] = {};
+      if (!state[tabId][item.id]) state[tabId][item.id] = {};
+      if (inHistory && getStatus(item.id, tabId) !== 'watched') {
+        const traktIds = historyMap.get(item.id).ids || {};
+        state[tabId][item.id].status = 'watched';
+        if (traktIds.tmdb) state[tabId][item.id].traktTmdbId = traktIds.tmdb;
+        state[tabId][item.id].lastUpdated = Date.now();
+        matched++;
+      }
+      if (traktRating && !state[tabId][item.id].rating) {
+        const wtRating = traktRating >= 8 ? 'loved' : traktRating >= 5 ? 'liked' : null;
+        if (wtRating) { state[tabId][item.id].rating = wtRating; rated++; }
+      }
+    }
+  }
+
+  saveState();
+  render();
+  if (status) {
+    status.textContent = `Sync complete — ${matched} watched, ${rated} rated.`;
+    status.className = 'settings-status ok';
+  }
 }
 
 function toggleTag(id, tag, tab) {
@@ -2860,8 +3054,10 @@ function setupModals() {
     document.getElementById('plex-client-id').value = getPlexClientId();
     document.getElementById('webhook-url').value = getWebhookUrl();
     document.getElementById('webhook-secret').value = getWebhookSecret();
+    document.getElementById('trakt-worker-url').value = getTraktWorkerUrl();
     updatePlexStatusLine();
     updateWebhookStatusLine();
+    updateTraktStatusLine();
     settingsModal.classList.add('active');
   });
   document.getElementById('settings-close').addEventListener('click', () => {
@@ -2875,6 +3071,7 @@ function setupModals() {
     setPlexClientId(document.getElementById('plex-client-id').value.trim());
     setWebhookUrl(document.getElementById('webhook-url').value.trim());
     setWebhookSecret(document.getElementById('webhook-secret').value.trim());
+    setTraktWorkerUrl(document.getElementById('trakt-worker-url').value.trim());
     applyDisplayMode();
     settingsModal.classList.remove('active');
     if (isPlexConfigured()) fetchPlexLibrary();
@@ -3094,6 +3291,80 @@ function setupModals() {
       status.textContent = `Error: ${e.message}`;
       status.className = 'settings-status err';
     }
+  });
+
+  // === Trakt integration ===
+  document.getElementById('trakt-worker-save').addEventListener('click', () => {
+    const url = document.getElementById('trakt-worker-url').value.trim();
+    setTraktWorkerUrl(url);
+    const status = document.getElementById('trakt-status');
+    status.textContent = url ? 'Worker URL saved.' : 'Worker URL cleared.';
+    status.className = 'settings-status ok';
+  });
+
+  document.getElementById('trakt-connect').addEventListener('click', async () => {
+    const base = getTraktWorkerUrl() || document.getElementById('trakt-worker-url').value.trim();
+    const status = document.getElementById('trakt-status');
+    const codeBlock = document.getElementById('trakt-device-code-block');
+    const codeEl = document.getElementById('trakt-user-code');
+    const codeStatus = document.getElementById('trakt-code-status');
+    if (!base) {
+      status.textContent = 'Save the Worker URL first.';
+      status.className = 'settings-status err';
+      return;
+    }
+    setTraktWorkerUrl(base);
+    status.textContent = 'Requesting device code...';
+    status.className = 'settings-status';
+    try {
+      const resp = await fetch(`${base}/auth/device/code`, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+      if (!resp.ok) { status.textContent = `Worker error: HTTP ${resp.status}`; status.className = 'settings-status err'; return; }
+      const { user_code, verification_url, device_code, interval, expires_in } = await resp.json();
+      codeEl.textContent = user_code;
+      codeBlock.style.display = '';
+      codeStatus.textContent = 'Waiting for activation…';
+      status.textContent = '';
+      const deadline = Date.now() + (expires_in || 600) * 1000;
+      const pollInterval = (interval || 5) * 1000;
+      const poll = setInterval(async () => {
+        if (Date.now() > deadline) {
+          clearInterval(poll);
+          codeBlock.style.display = 'none';
+          status.textContent = 'Code expired. Try again.';
+          status.className = 'settings-status err';
+          return;
+        }
+        const r = await fetch(`${base}/auth/device/token`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ device_code }),
+        });
+        const d = await r.json();
+        if (d.pending) return;
+        if (d.error === 'expired') { clearInterval(poll); codeBlock.style.display = 'none'; status.textContent = 'Code expired. Try again.'; status.className = 'settings-status err'; return; }
+        if (d.access_token) {
+          clearInterval(poll);
+          setTraktAccessToken(d.access_token);
+          setTraktRefreshToken(d.refresh_token || '');
+          codeBlock.style.display = 'none';
+          // Fetch username
+          const me = await traktApiCall('/users/me', 'GET');
+          if (me.ok && me.data.username) setTraktUsername(me.data.username);
+          updateTraktStatusLine();
+        }
+      }, pollInterval);
+    } catch (e) {
+      status.textContent = `Error: ${e.message}`;
+      status.className = 'settings-status err';
+    }
+  });
+
+  document.getElementById('trakt-sync').addEventListener('click', async () => {
+    await traktPullSync();
+  });
+
+  document.getElementById('trakt-disconnect').addEventListener('click', () => {
+    traktDisconnect();
   });
 
   // === Plex History modal ===

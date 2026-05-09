@@ -10,6 +10,29 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.29.0 — 2026-05-09
+**Service worker cache:** `scifi-tracker-v69` → `v70`
+
+### Feature — Trakt integration (bidirectional sync)
+
+**New Cloudflare Worker: `watchtrack-trakt`**
+
+A separate Worker handles all Trakt communication, keeping the client secret server-side. Routes: device code init, device token polling, token refresh, GET/POST history, GET/POST/DELETE ratings, GET user profile. The existing Plex Worker is unchanged.
+
+**Settings — Trakt Integration section**
+
+New section in Settings below Plex Webhook Bridge. Enter the `watchtrack-trakt` Worker URL once, then click Connect Trakt to start the OAuth device code flow: the app displays a short code and instructs you to go to `trakt.tv/activate`. Once activated, WatchTrack stores the access and refresh tokens in localStorage and shows "Connected as @username." Tokens are refreshed automatically on 401; if the refresh fails the session clears and prompts reconnection.
+
+**Pull sync (Trakt → WatchTrack)**
+
+"Sync from Trakt" button fetches your full movie history and ratings from Trakt, matches against every genre catalog by title+year slug, and applies results without overwriting existing state. Rating mapping: Trakt 8–10 → Loved, 5–7 → Liked, 1–4 → no rating set (below WatchTrack's floor). Ends with a summary ("N watched, N rated").
+
+**Push sync (WatchTrack → Trakt)**
+
+`setStatus` and `setRating` now fire-and-forget to the Trakt Worker whenever Trakt is connected. Marking a film Watched pushes a history entry; setting back to None removes it. Setting a rating pushes the numeric score (Loved → 8, Liked → 6, cleared → removes rating). TV series are excluded from push (no `seasons` field check bypassed). If catalog enrichment has been run, the TMDB ID is included in payloads for exact matching.
+
+---
+
 ## 5.28.0 — 2026-05-09
 **Service worker cache:** `scifi-tracker-v68` → `v69`
 

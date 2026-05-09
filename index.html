@@ -383,6 +383,26 @@
       </div>
       <p class="settings-status" id="pair-receive-status"></p>
     </div>
+    <div class="settings-section">
+      <h4>Trakt Integration</h4>
+      <p class="settings-help">Sync watch history and ratings with Trakt — both directions. Marking something watched here pushes to Trakt; importing pulls Trakt history into WatchTrack.</p>
+      <div class="settings-row">
+        <label>Worker URL</label>
+        <input type="url" class="modal-input" id="trakt-worker-url" placeholder="https://watchtrack-trakt.YOURSUBDOMAIN.workers.dev" autocomplete="off">
+      </div>
+      <div class="settings-row">
+        <button class="action-btn" id="trakt-worker-save">Save URL</button>
+        <button class="action-btn" id="trakt-connect">Connect Trakt</button>
+        <button class="action-btn" id="trakt-sync" style="display:none">Sync from Trakt</button>
+        <button class="action-btn" id="trakt-disconnect" style="display:none">Disconnect</button>
+      </div>
+      <div id="trakt-device-code-block" style="display:none">
+        <p class="settings-help">Go to <strong>trakt.tv/activate</strong> and enter this code:</p>
+        <div id="trakt-user-code" class="trakt-user-code"></div>
+        <p class="settings-status" id="trakt-code-status">Waiting for activation…</p>
+      </div>
+      <p class="settings-status" id="trakt-status">Not connected.</p>
+    </div>
     </div>
     <div class="modal-actions">
       <button class="action-btn" id="settings-save">Save</button>
