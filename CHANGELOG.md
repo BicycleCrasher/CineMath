@@ -10,6 +10,33 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.23.1 — 2026-05-08
+**Service worker cache:** `scifi-tracker-v48` → `v49`
+
+### Fix — Form fields show focus ring on D-pad navigation
+
+A legacy CSS rule from V8 (`.modal-input:focus { outline: none; }`)
+killed the focus outline on every textarea, input, and select that used
+the `.modal-input` class. The 5.19.0 mode-agnostic `*:focus-visible`
+rule with `!important` added the gold ring back — but only on browsers
+that support `:focus-visible`. Older Chromium-based TV WebViews fall
+back to plain `:focus`, where the legacy `outline: none` won.
+
+Result: D-pad navigation WAS reaching the new pair-receive textarea
+(and the existing search input, period-review fields, settings inputs,
+etc.), but you couldn't see the focus ring — the field looked unfocused
+even when it had focus.
+
+Fix: apply the gold focus ring on both `:focus` and `:focus-visible` for
+all form fields (`.modal-input`, `input`, `textarea`, `select`). Now
+visible regardless of WebView's `:focus-visible` support.
+
+Side benefit: every text input across the app gets the same prominent
+focus indicator as buttons. Previously the form fields had a subtle
+border-color change only.
+
+---
+
 ## 5.23.0 — 2026-05-08
 **Service worker cache:** `scifi-tracker-v47` → `v48`
 

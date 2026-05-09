@@ -468,7 +468,20 @@ body.tv-mode .watch-section h5 { font-size: 13px; }
   font-size: 14px; font-family: 'Helvetica Neue', sans-serif;
   margin-bottom: 8px; box-sizing: border-box;
 }
-.modal-input:focus { outline: none; border-color: var(--accent); }
+/* V5.23.1: Form fields use the same prominent focus ring as buttons.
+   Old rule (outline: none) made the textarea invisible-when-focused on
+   WebViews without :focus-visible support — the user couldn't tell whether
+   D-pad navigation had reached a paste field. Apply both :focus and
+   :focus-visible so it works regardless of browser support. */
+.modal-input:focus,
+.modal-input:focus-visible,
+input:focus, input:focus-visible,
+textarea:focus, textarea:focus-visible,
+select:focus, select:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: -3px;
+  border-color: var(--accent);
+}
 .search-results {
   max-height: 50vh; overflow-y: auto;
   border-top: 1px solid var(--rule);
