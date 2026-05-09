@@ -10,6 +10,45 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.26.8 — 2026-05-09
+**Service worker cache:** `scifi-tracker-v62` → `v63`
+
+### Fix — Three D-pad/triage code-quality fixes
+
+**1. `scrollIntoView` no longer uses `smooth` behavior on D-pad moves.**
+Every arrow-key navigation step called
+`scrollIntoView({ behavior: 'smooth', ... })`. On Android TV WebViews
+smooth scrolling is hardware-accelerated but still produces visible
+stutter when fired continuously (every D-pad press). Removed
+`behavior: 'smooth'`; the browser now defaults to `'auto'`/instant,
+which is imperceptible and costs nothing on TV.
+
+**2. D-pad body-focus path now respects modal scope.**
+When focus falls to `document.body` (e.g., after innerHTML replacement
+destroys the focused element during a triage re-render) and a D-pad key
+is pressed, the handler tried to focus `.tab-btn.active` before searching
+inside the modal. The tab button lives behind the modal overlay — it
+received momentary focus, the `focusin` trap fired to pull focus back in,
+and the user saw a brief focus-ring flicker on the background tab.
+
+Fix: skip the `activeTab` shortcut entirely when a modal is open.
+```js
+// Before:
+const activeTab = document.querySelector('.tab-btn.active');
+// After:
+const activeTab = !openModalRoot ? document.querySelector('.tab-btn.active') : null;
+```
+
+**3. `renderTriage` regular card now uses `escapeHtml()` consistently.**
+The queue-triage and suggest-triage card injected `item.title`,
+`item.pitch`, `item.whyPriority`, and `item._watchlist_source_label`
+as raw strings. The `renderRateTagTriage` path (added in 5.26.0) already
+used `escapeHtml()` throughout. Made the regular path match: all
+user-visible strings are now escaped before insertion, preventing display
+glitches if any catalog item's pitch or title contains `<`, `>`, or `&`.
+
+---
+
 ## 5.26.7 — 2026-05-09
 **Service worker cache:** `scifi-tracker-v61` → `v62`
 

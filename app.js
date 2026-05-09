@@ -5201,15 +5201,15 @@ function renderTriage() {
   titleEl.textContent = mode === 'queue' ? 'Triage your queue' : 'Triage suggested items';
   document.getElementById('triage-progress').textContent = `${idx + 1} / ${queue.length}`;
 
-  const meta = [item.year, item.dir, item.country, item.runtime].filter(Boolean).join(' · ');
-  const why = item.whyPriority ? `<div class="why">${item.whyPriority}</div>` : '';
+  const meta = [item.year, item.dir, item.country, item.runtime].filter(Boolean).map(escapeHtml).join(' · ');
+  const why = item.whyPriority ? `<div class="why">${escapeHtml(item.whyPriority)}</div>` : '';
   document.getElementById('triage-card').innerHTML = `
-    <span class="source-badge">${item._watchlist_source_label}</span>
-    ${item.priority ? `<span class="priority-badge ${item.priority}" style="margin-left:6px">${priorityLabel(item.priority)}</span>` : ''}
-    <h4>${item.title}</h4>
+    <span class="source-badge">${escapeHtml(item._watchlist_source_label || '')}</span>
+    ${item.priority ? `<span class="priority-badge ${escapeHtml(item.priority)}" style="margin-left:6px">${priorityLabel(item.priority)}</span>` : ''}
+    <h4>${escapeHtml(item.title)}</h4>
     <div class="meta">${meta}</div>
     ${why}
-    <p>${item.pitch || ''}</p>
+    <p>${escapeHtml(item.pitch || '')}</p>
   `;
 
   if (mode === 'queue') {
@@ -5575,7 +5575,7 @@ function triageAction(act) {
       // Without this filter, querySelector matches the first .modal-back in
       // DOM order — which lives inside a hidden modal — and .focus() on a
       // display:none element silently no-ops, leaving the user stuck.
-      const activeTab = document.querySelector('.tab-btn.active');
+      const activeTab = !openModalRoot ? document.querySelector('.tab-btn.active') : null;
       if (activeTab && activeTab.offsetParent !== null) {
         activeTab.focus();
         return;
@@ -5637,7 +5637,7 @@ function triageAction(act) {
 
     if (best) {
       best.focus();
-      best.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+      best.scrollIntoView({ block: 'nearest', inline: 'nearest' });
     }
   });
 
