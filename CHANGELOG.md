@@ -10,6 +10,39 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.26.9 — 2026-05-09
+**Service worker cache:** `scifi-tracker-v63` → `v64`
+
+### Fix — Watch sub-modal selections blocked when opened from triage
+
+When "Start watching" is pressed in triage, the watch modal opens while
+the triage modal remains `.active` in the DOM. Both modals had the
+`.modal.active` class simultaneously.
+
+The focusin trap and D-pad scoping both used `document.querySelector(
+'.modal.active')`, which returns the **first** match in DOM order.
+`triage-modal` is earlier in the HTML than `watch-modal`, so every
+focus event that landed on a watch-modal button was immediately stolen
+back into the triage modal — making it impossible to click a platform
+or "Mark as watching."
+
+**Fix:** replace `querySelector` with `querySelectorAll(...).pop()` in
+all three places that needed the topmost (last-opened) active modal:
+
+1. **focusin trap** — correctly scoped to watch-modal while it's open
+2. **Escape/Backspace handler** — dismisses watch-modal first, not triage
+3. **D-pad searchRoot** — arrow-key navigation confined to watch-modal
+
+```js
+// Before — returns first .modal.active in DOM order (triage-modal)
+document.querySelector('.modal.active')
+
+// After — returns last .modal.active in DOM order (topmost, watch-modal)
+Array.from(document.querySelectorAll('.modal.active')).pop() || null
+```
+
+---
+
 ## 5.26.8 — 2026-05-09
 **Service worker cache:** `scifi-tracker-v62` → `v63`
 

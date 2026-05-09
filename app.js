@@ -5485,7 +5485,7 @@ function triageAction(act) {
   // or browser defaults), this listener immediately redirects it back into
   // the modal. Complements the keydown D-pad scoping for full coverage.
   document.addEventListener('focusin', (e) => {
-    const openModal = document.querySelector('.modal.active');
+    const openModal = Array.from(document.querySelectorAll('.modal.active')).pop() || null;
     if (!openModal) return;
     if (openModal.contains(e.target)) return;
     const first =
@@ -5537,7 +5537,7 @@ function triageAction(act) {
 
     if (key === 'Escape' || key === 'Backspace') {
       // Close any open modal
-      const openModal = document.querySelector('.modal.active');
+      const openModal = Array.from(document.querySelectorAll('.modal.active')).pop() || null;
       if (openModal) {
         e.preventDefault();
         openModal.classList.remove('active');
@@ -5567,7 +5567,7 @@ function triageAction(act) {
     e.preventDefault();
     const focused = document.activeElement;
     // If a modal is open, restrict the focusables to its contents (focus trap)
-    const openModalRoot = document.querySelector('.modal.active');
+    const openModalRoot = Array.from(document.querySelectorAll('.modal.active')).pop() || null;
     const searchRoot = openModalRoot || document;
     if (!focused || focused === document.body) {
       // V5.21.2: Filter for visibility (offsetParent !== null) and prefer the
