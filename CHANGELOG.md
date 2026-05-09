@@ -10,6 +10,25 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.31.2 — 2026-05-09
+
+### Fix — Settings modal reverted to old layout after sync pull
+
+The Settings card grid (5.27.0) was injected via `buildSettingsCardGrid()`
+called once at `setupModals()` time. After a sync pull triggered
+`location.reload()`, the rebuild step wasn't reliably re-injecting the
+cards in some environments — Settings would open with the old
+stacked-sections layout instead of the card grid.
+
+Moved `buildSettingsCardGrid()` from setup-time (one shot) into the
+settings-btn click handler. The function has its own idempotency guard
+(skips if the grid already exists in the DOM), so calling it on every
+Settings open is cheap and guarantees the cards are present regardless
+of what happened to the modal between opens — sync reloads, JS errors,
+DOM mutations, anything.
+
+---
+
 ## 5.31.1 — 2026-05-09
 
 ### Fix — Sync was reverting devices to older state ("clobber on pull")

@@ -3224,10 +3224,13 @@ function setupModals() {
   setupSettingsCollapse();
   const settingsModal = document.getElementById('settings-modal');
   // V5.27.0: Settings card grid + detail panels.
-  // Replaces the long stacked-sections layout with a card grid entry point.
-  // Each card opens its corresponding section as a focused detail panel.
-  buildSettingsCardGrid();
+  // V5.31.2: buildSettingsCardGrid moved INSIDE the click handler so cards
+  // are guaranteed to exist on every Settings open, defensively. The function
+  // is idempotent — it short-circuits if the grid is already in the DOM —
+  // so rebuilding on every open is cheap and prevents reverts after sync
+  // pulls or any other DOM disruption.
   document.getElementById('settings-btn').addEventListener('click', () => {
+    buildSettingsCardGrid();
     // Populate fields
     const pref = getDisplayModePref();
     document.querySelectorAll('input[name="display-mode"]').forEach(r => {
