@@ -10,6 +10,51 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.26.3 — 2026-05-09
+**Service worker cache:** `scifi-tracker-v57` → `v58`
+
+### Fix — Modal still overflowing on Android TV WebView (real cause: vh quirk)
+
+5.26.2 trimmed the triage card content but the user reported buttons
+still appearing below the viewport. Diagnosis: Android TV WebView's
+`vh` unit measures the **full window**, including any space reserved
+for system UI overlays (top status bar, bottom action bar). The visible
+area can be smaller than `100vh` reports, so `max-height: 92vh` could
+still exceed the actually-visible space.
+
+**Two-part fix:**
+
+**1. Switch to `dvh` (dynamic viewport height).** `dvh` excludes any
+system UI that's currently visible — what you can actually see. CSS
+declared with `vh` fallback first, `dvh` second so older WebViews still
+get the `vh` value:
+```css
+max-height: 85vh;     /* fallback for browsers without dvh */
+max-height: 85dvh;    /* used on Chrome 108+, modern Android WebView */
+```
+Also tightened from 92 to 85 for additional breathing room.
+
+**2. 2-column grid for triage action buttons.** Step 2 and step 3 each
+have 4 action buttons (Continue/Skip/Back/Close). Old flex-row layout
+risked horizontal overflow on narrower modal widths and made D-pad
+navigation between them less predictable.
+
+```css
+#triage-actions {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+#triage-actions .action-btn.primary {
+  grid-column: 1 / -1;  /* Save & Next spans full width */
+}
+```
+
+The `primary` action (Save & Next on step 3, Continue on step 2) gets
+full-width emphasis, the other three buttons sit in a 2x2 below.
+
+---
+
 ## 5.26.2 — 2026-05-09
 **Service worker cache:** `scifi-tracker-v56` → `v57`
 

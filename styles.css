@@ -319,7 +319,14 @@ footer {
 .modal-content {
   background: var(--bg-elev); border: 1px solid var(--rule);
   border-radius: 6px; padding: 20px; max-width: 500px; width: 100%;
-  max-height: 92vh; display: flex; flex-direction: column;
+  /* V5.26.3: Use 85dvh (dynamic viewport height) on browsers that support it.
+     vh on Android TV WebView measures the full window even when system UI
+     overlays are present, so 92vh could exceed the actually-visible area.
+     dvh accounts for the visible space; vh is the fallback for older
+     browsers. 85 (vs 92) leaves more breathing room either way. */
+  max-height: 85vh;
+  max-height: 85dvh;
+  display: flex; flex-direction: column;
   overflow: hidden;
 }
 /* V5.26.1: Modal sticky-footer layout. Title + back arrow + variable-content
@@ -377,6 +384,19 @@ body.tv-mode .modal-back { width: 56px; height: 56px; font-size: 26px; }
 .triage-year {
   color: var(--ink-dim); font-size: 0.7em;
   font-weight: normal; margin-left: 4px;
+}
+/* V5.26.3: Triage action buttons in a 2-column grid so 4 buttons (Continue,
+   Skip, Back, Close in step 2/3) wrap predictably to 2 rows of 2 instead of
+   flex-row that risks horizontal overflow on smaller modal widths. Each
+   button gets ~half modal width — comfortable text, clean D-pad nav. */
+#triage-actions {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+#triage-actions .action-btn { flex: none; }
+#triage-actions .action-btn.primary {
+  grid-column: 1 / -1;  /* primary action spans full width when present */
 }
 .triage-step-empty {
   color: var(--ink-dim); font-size: 13px;
