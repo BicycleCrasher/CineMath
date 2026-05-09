@@ -1,3 +1,9 @@
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[c]);
+}
+
 // === Reaction tag taxonomy by content type ===
 // Each item resolves to ONE content type. The UI shows the matching set.
 // Tags stored on items that aren't in the current type's set are preserved silently.
@@ -614,11 +620,15 @@ async function pollPlexWebhookEvents() {
       }
     }
     if (ackIds.length > 0) {
-      await fetch(`${url}/events/ack`, {
+      const ackResp = await fetch(`${url}/events/ack`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ secret, eventIds: ackIds }),
       });
+      if (!ackResp.ok) {
+        // Don't advance the poll cursor — let these events re-deliver next cycle.
+        return { applied, errors: errors + 1 };
+      }
     }
     setWebhookLastPoll(Date.now());
     return { applied, errors };
@@ -1917,8 +1927,8 @@ function updateItemInPlace(id, tab) {
     if (!badge) {
       badge = document.createElement('span');
       badge.className = 'rating-badge';
-      const badgeRow = itemEl.querySelector('.badge-row');
-      if (badgeRow) badgeRow.appendChild(badge);
+      const parent = itemEl.querySelector('.badge-row') || itemEl.querySelector('.item-head') || itemEl;
+      parent.appendChild(badge);
     }
     badge.className = `rating-badge ${rating}`;
     badge.textContent = ratingLabel(rating);
@@ -2469,7 +2479,7 @@ function render() {
           <div class="tag-group-label">What didn't</div>
           <div class="tag-cloud">${negTagsHtml}</div>
         </div>
-        <textarea class="notes-input" placeholder="Notes after viewing..." data-id="${item.id}">${notes}</textarea>
+        <textarea class="notes-input" placeholder="Notes after viewing..." data-id="${item.id}">${escapeHtml(notes)}</textarea>
       </div>
     `;
 
@@ -3864,7 +3874,7 @@ function renderBulkSyncReport(r) {
       .sort((a, b) => b.plays - a.plays)
       .slice(0, 15)
       .forEach(o => {
-        html += `<div class="stat-line"><span>${o.title} (${o.year || '?'})</span><strong>${o.plays} play${o.plays === 1 ? '' : 's'}</strong></div>`;
+        html += `<div class="stat-line"><span>${escapeHtml(o.title)} (${escapeHtml(o.year || '?')})</span><strong>${o.plays} play${o.plays === 1 ? '' : 's'}</strong></div>`;
       });
   }
   if (r.showOrphans.length > 0) {
@@ -3872,7 +3882,7 @@ function renderBulkSyncReport(r) {
     r.showOrphans
       .sort((a, b) => b.distinct - a.distinct)
       .forEach(o => {
-        html += `<div class="stat-line"><span>${o.show}</span><strong>${o.distinct} ep / ${o.plays} play${o.plays === 1 ? '' : 's'}</strong></div>`;
+        html += `<div class="stat-line"><span>${escapeHtml(o.show)}</span><strong>${o.distinct} ep / ${o.plays} play${o.plays === 1 ? '' : 's'}</strong></div>`;
       });
   }
   html += '<p class="settings-help" style="margin-top:12px">Orphans were logged to your durable Plex history (Cloudflare KV). Future versions will surface them in a Plex History modal where you can promote frequently-watched items into the catalog.</p>';
@@ -4722,8 +4732,8 @@ function wizardRender() {
     backBtn.style.display = '';
     stepEl.innerHTML = `
       <button class="wizard-btn" data-action="rate-recent">
-        Recently watched, unrated
-        <span class="wizard-btn-meta">Items marked Watched but not yet rated</span>
+        Watched but untagged
+        <span class="wizard-btn-meta">All items marked Watched without reaction tags — rate &amp; tag in one flow</span>
       </button>
       <button class="wizard-btn" data-action="rate-queued">
         Things on my queue
@@ -5018,15 +5028,19 @@ function wizardLaunchTriage(mode) {
   let title = 'Triage';
 
   if (mode === 'rate-recent') {
-    title = 'Rate recently watched';
+    // V5.24.0: filter changed from "watched AND no rating" to "watched AND
+    // no reaction tags" — covers rated-but-untagged items too. The rate+tag
+    // triage modal handles both rating and tagging in a progressive flow.
+    title = 'Rate & tag watched items';
     Object.keys(catalogs).forEach(tabId => {
       if (tabId === 'watchlist') return;
       const cat = catalogs[tabId];
       cat.items.forEach(item => {
-        if (getStatus(item.id, tabId) === 'watched' && !getRating(item.id, tabId)) {
-          const enriched = { ...item, _watchlist_source_tab: tabId, _watchlist_source_label: cat.title || tabId, _watchlist_lastUpdated: getLastUpdated(item.id, tabId) };
-          queue.push(enriched);
-        }
+        if (getStatus(item.id, tabId) !== 'watched') return;
+        const tags = getTags(item.id, tabId);
+        if (tags && tags.length > 0) return;
+        const enriched = { ...item, _watchlist_source_tab: tabId, _watchlist_source_label: cat.title || tabId, _watchlist_lastUpdated: getLastUpdated(item.id, tabId) };
+        queue.push(enriched);
       });
     });
     queue.sort((a, b) => (b._watchlist_lastUpdated || 0) - (a._watchlist_lastUpdated || 0));
@@ -5166,6 +5180,14 @@ function renderTriage() {
   }
   const item = queue[idx];
   const sourceTab = item._watchlist_source_tab;
+
+  // V5.24.0: rate-recent and rate-loved-untagged use a progressive rate→tag UI
+  // designed for TV remote use. Rating mode kicks in if the item is unrated
+  // (or after Back-to-rating); tag mode appears once a rating is set.
+  if (triageState && (triageState.requestMode === 'rate-recent' || triageState.requestMode === 'rate-loved-untagged')) {
+    return renderRateTagTriage(item, sourceTab);
+  }
+
   const titleEl = document.getElementById('triage-title');
   titleEl.textContent = mode === 'queue' ? 'Triage your queue' : 'Triage suggested items';
   document.getElementById('triage-progress').textContent = `${idx + 1} / ${queue.length}`;

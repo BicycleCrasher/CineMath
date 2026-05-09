@@ -272,15 +272,24 @@
         {
           "title": "House MD",
           "year": 2004,
+          "aliases": [
+            "House",
+            "House M.D."
+          ],
           "dir": "David Shore",
           "country": "USA",
-          "runtime": "8 seasons \u00b7 177 episodes",
+          "runtime": "8 seasons · 177 episodes",
           "seasons": "All 8 (ended 2012)",
           "tags": [
             "foundational"
           ],
-          "pitch": "Sherlock Holmes as a diagnostic medicine doctor. Hugh Laurie as an American with a cane and a limp. Long-running procedural with character depth.",
+          "pitch": "Misanthropic genius diagnostician solves medical mysteries while alienating everyone around him. Hugh Laurie and the case-of-the-week-with-Vicodin-subplot template that defined network drama for a decade.",
           "critics": [
+            {
+              "who": "NYT",
+              "rating": "Acclaimed",
+              "note": "A character study disguised as a procedural."
+            },
             {
               "who": "Reception",
               "quote": "Most-watched TV show in the world during peak years (2008). Laurie won six SAG/Globe awards combined."
@@ -288,26 +297,6 @@
           ],
           "categories": [
             "network"
-          ]
-        },
-        {
-          "title": "House MD",
-          "year": 2004,
-          "aliases": [
-            "House",
-            "House M.D."
-          ],
-          "pitch": "Misanthropic genius diagnostician solves medical mysteries while alienating everyone around him. Hugh Laurie and the case-of-the-week-with-Vicodin-subplot template that defined network drama for a decade.",
-          "priority": "med",
-          "whyPriority": "You have watched this extensively (110+ episodes per Plex history). Cataloged here for tracking and rating purposes.",
-          "commitment": "8 seasons",
-          "commitmentTag": "long",
-          "critics": [
-            {
-              "who": "NYT",
-              "rating": "Acclaimed",
-              "note": "A character study disguised as a procedural."
-            }
           ],
           "contentType": "tv-prestige",
           "tvCompletionMode": "flexible"

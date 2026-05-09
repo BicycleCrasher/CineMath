@@ -1,4 +1,5 @@
-const CACHE_NAME = 'scifi-tracker-v51';
+const CACHE_NAME = 'scifi-tracker-v52';
+const inflightRevalidations = new Set();
 const ASSETS = [
   './',
   './index.html',
@@ -62,12 +63,15 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) {
-        if (event.request.url.includes('/data/')) {
+        if (event.request.url.includes('/data/') && !inflightRevalidations.has(event.request.url)) {
+          inflightRevalidations.add(event.request.url);
           fetch(event.request).then((resp) => {
             if (resp && resp.ok) {
               caches.open(CACHE_NAME).then((cache) => cache.put(event.request, resp.clone()));
             }
-          }).catch(() => {});
+          }).catch(() => {}).finally(() => {
+            inflightRevalidations.delete(event.request.url);
+          });
         }
         return cached;
       }
