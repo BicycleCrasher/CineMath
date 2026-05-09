@@ -10,6 +10,48 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.26.4 — 2026-05-09
+**Service worker cache:** `scifi-tracker-v58` → `v59`
+
+### Fix — Item title visible at all times in triage flow
+
+Previous renderRateTagTriage layouts had the item's title (the actual
+movie or show) inside `.triage-card` — the scrollable body. When
+stepping back from rating to the previous item, or scrolling within a
+tag list, the title could disappear. Users had no persistent reference
+for what they were rating.
+
+**Header restructured:**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ [←]  [Tab Badge] Movie Title (2024)    Rate & tag watched   │  ← Fixed
+│                                                  3 of 18    │  ← Fixed
+├─────────────────────────────────────────────────────────────┤
+│  Step 2 of 3 · Positive tags                                │  ← Card
+│  [Stayed with me] [Rewatchable] [Visually stunning] ...    │   (scrollable)
+├─────────────────────────────────────────────────────────────┤
+│  [Continue →]                                                │  ← Footer
+│  [Skip]              [Back]              [Close]             │   (pinned)
+└─────────────────────────────────────────────────────────────┘
+```
+
+`h3#triage-title` becomes a flex container:
+- Left: source badge + item title (Didot serif, 22px / 26px TV)
+- Right: mode label ("Rate & tag watched items") right-justified, all caps
+
+`triage-progress` ("3 of 18") moved beneath header, right-aligned in
+accent gold.
+
+Inside `.triage-card` the only context now is the step indicator
+("Step 2 of 3 · Positive tags"). Item title removed from the scrollable
+body so it doesn't repeat or scroll away.
+
+Result: across step 1 → 2 → 3, AND across step 3 → 2 → 1 (Back), the
+title stays put. User can always tell what they're rating.
+
+---
+
 ## 5.26.3 — 2026-05-09
 **Service worker cache:** `scifi-tracker-v57` → `v58`
 

@@ -381,6 +381,54 @@ body.tv-mode .modal-back { width: 56px; height: 56px; font-size: 26px; }
   color: var(--accent); margin: 12px 0 4px;
   font-family: 'Helvetica Neue', sans-serif;
 }
+/* V5.26.4: Persistent triage header.
+   h3 becomes a flex container; item info on left, mode label right-justified.
+   Item title visible at all times across steps and back/forward navigation. */
+#triage-modal #triage-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin: 0 0 6px;
+  font-family: inherit;
+  font-weight: inherit;
+  font-size: inherit;
+}
+.triage-header-item {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.triage-header-mode {
+  font-family: 'Helvetica Neue', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  text-align: right;
+  flex-shrink: 0;
+  padding-top: 4px;
+  white-space: nowrap;
+}
+.triage-item-title {
+  display: block;
+  font-family: 'Didot', 'Bodoni 72', Georgia, serif;
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--ink);
+  margin-top: 4px;
+  line-height: 1.2;
+}
+#triage-modal .triage-progress {
+  text-align: right;
+  margin: 0 0 12px;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  font-family: 'Helvetica Neue', sans-serif;
+}
+body.tv-mode .triage-item-title { font-size: 26px; }
+body.tv-mode .triage-header-mode { font-size: 13px; }
+body.tv-mode #triage-modal .triage-progress { font-size: 13px; }
 .triage-year {
   color: var(--ink-dim); font-size: 0.7em;
   font-weight: normal; margin-left: 4px;

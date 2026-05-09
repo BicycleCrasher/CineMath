@@ -5234,11 +5234,21 @@ function renderTriage() {
 // Each step also has Skip / Back / Close. State stored in triageState.step.
 function renderRateTagTriage(item, sourceTab) {
   const requestMode = triageState.requestMode;
-  const titleEl = document.getElementById('triage-title');
-  titleEl.textContent = requestMode === 'rate-loved-untagged'
+  // V5.26.4: Persistent item-title header. Title + year + source badge live
+  // in the FIXED header area (h3, above the scrollable card body) so they
+  // remain visible across step transitions. Mode label right-justified;
+  // progress count beneath it. Item title now never scrolls out of view.
+  const modeLabel = requestMode === 'rate-loved-untagged'
     ? 'Tag your loved items'
-    : 'Rate & tag watched items';
-  document.getElementById('triage-progress').textContent = `${triageState.idx + 1} / ${triageState.queue.length}`;
+    : 'Rate &amp; tag watched items';
+  document.getElementById('triage-title').innerHTML = `
+    <div class="triage-header-item">
+      <span class="source-badge">${escapeHtml(item._watchlist_source_label || '')}</span>
+      <span class="triage-item-title">${escapeHtml(item.title)}${item.year ? ` <span class="triage-year">(${item.year})</span>` : ''}</span>
+    </div>
+    <div class="triage-header-mode">${modeLabel}</div>
+  `;
+  document.getElementById('triage-progress').textContent = `${triageState.idx + 1} of ${triageState.queue.length}`;
 
   // Resolve current step. If unset (new item), default based on existing data:
   //   no rating → step 1 (rate); has rating → step 2 (positive tags).
@@ -5254,14 +5264,10 @@ function renderRateTagTriage(item, sourceTab) {
   const positive = tagSet.positive || [];
   const negative = tagSet.negative || [];
 
-  // V5.26.2: Minimal card content for rate/tag flow — title + year only.
-  // Pitch, director, country, runtime, why-priority all removed: in this
-  // context the user is rating something they've already watched; if they
-  // can't recall it from the title alone they can manually navigate to the
-  // tab to read more. Keeping content tight ensures the action buttons fit.
+  // V5.26.4: Item title moved to fixed header (h3). Card body now holds only
+  // the step indicator + the step's interactive UI. Item title is always
+  // visible regardless of step, scrolling, or back/forward navigation.
   let cardHtml = `
-    <span class="source-badge">${escapeHtml(item._watchlist_source_label || '')}</span>
-    <h4>${escapeHtml(item.title)}${item.year ? ` <span class="triage-year">(${item.year})</span>` : ''}</h4>
     <div class="triage-step-indicator">Step ${step} of 3 · ${step === 1 ? 'Rating' : (step === 2 ? 'Positive tags' : 'Critical tags')}</div>
   `;
 
