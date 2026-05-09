@@ -10,6 +10,40 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.21.2 — 2026-05-08
+**Service worker cache:** `scifi-tracker-v42` → `v43`
+
+### Fix — Tabs page unresponsive on TV after wizard exit
+
+Regression introduced by 5.19.0's `.modal-back` injection. Every modal
+got a Back arrow at the top of its content; they live in the DOM at all
+times, even when the modal is hidden via `.modal { display: none; }`.
+
+The D-pad keydown handler's first-focusable fallback used:
+`searchRoot.querySelector('.modal-back, .wizard-btn, .item, .tab-btn, button')`.
+`querySelector` returns the first match in **DOM order**, which is now
+always a hidden `.modal-back`. Calling `.focus()` on a `display: none`
+element is a silent no-op, so the user pressed arrows and nothing
+happened. Could only recover by Force-Closing the app.
+
+**Two-part fix:**
+
+1. **First-focusable fallback now filters for visibility** — uses
+   `el.offsetParent !== null` (the same check the direction-scoring code
+   already had) and excludes `.modal-back` from the selector. Prefers
+   `.tab-btn.active` as the starting point when entering the tabs view.
+
+2. **`wizardHide()` seeds focus on the active tab** — when you tap "or
+   browse all 25 tabs →" or otherwise dismiss the wizard, focus moves to
+   `.tab-btn.active` after a 50ms tick (giving the layout time to settle).
+   Previously focus stayed on the now-hidden wizard-browse button,
+   falling back to body.
+
+Combined: D-pad on the tabs page now reliably picks up where you'd
+expect, regardless of how you got there.
+
+---
+
 ## 5.21.1 — 2026-05-08
 **Service worker cache:** `scifi-tracker-v41` → `v42`
 

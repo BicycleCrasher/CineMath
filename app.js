@@ -4568,6 +4568,13 @@ function wizardShow() {
 function wizardHide() {
   document.getElementById('wizard').style.display = 'none';
   document.getElementById('app-shell').style.display = '';
+  // V5.21.2: Seed focus on the active tab so D-pad nav has a starting point.
+  // Without this, focus stays on the now-hidden wizard-browse button, falling
+  // back to document.body — and the user can't navigate anywhere.
+  setTimeout(() => {
+    const activeTab = document.querySelector('.tab-btn.active') || document.querySelector('.tab-btn');
+    if (activeTab && activeTab.offsetParent !== null) activeTab.focus();
+  }, 50);
 }
 
 function wizardRender() {
@@ -5220,9 +5227,20 @@ function triageAction(act) {
     const openModalRoot = document.querySelector('.modal.active');
     const searchRoot = openModalRoot || document;
     if (!focused || focused === document.body) {
-      // Focus first visible interactive element (wizard button, item, or any button)
-      const first = searchRoot.querySelector('.modal-back, .wizard-btn, .item, .tab-btn, button');
-      if (first) first.focus();
+      // V5.21.2: Filter for visibility (offsetParent !== null) and prefer the
+      // active tab as a sensible starting point when entering the tabs view.
+      // Without this filter, querySelector matches the first .modal-back in
+      // DOM order — which lives inside a hidden modal — and .focus() on a
+      // display:none element silently no-ops, leaving the user stuck.
+      const activeTab = document.querySelector('.tab-btn.active');
+      if (activeTab && activeTab.offsetParent !== null) {
+        activeTab.focus();
+        return;
+      }
+      const candidates = Array.from(searchRoot.querySelectorAll(
+        '.wizard-btn, .item, .tab-btn, .header-btn, button:not(.modal-back), a, input'
+      )).filter(el => el.offsetParent !== null && !el.disabled);
+      if (candidates.length > 0) candidates[0].focus();
       return;
     }
 
