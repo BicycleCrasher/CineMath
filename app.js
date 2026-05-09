@@ -2465,6 +2465,7 @@ function render() {
         ${criticsHtml}
         <div class="streaming-providers" data-streaming-loaded="false"></div>
         <div class="actions">
+          <button class="action-btn watch-start-btn">▶ Start Watching</button>
           <button class="action-btn ${status === 'queued' ? 'active-queued' : ''}" data-action="queued">Queue</button>
           <button class="action-btn ${status === 'watching' ? 'active-watching' : ''}" data-action="watching">Watching</button>
           <button class="action-btn ${status === 'watched' ? 'active-watched' : ''}" data-action="watched">Watched</button>
@@ -2501,9 +2502,13 @@ function render() {
     itemEl.querySelector('.status-pill').addEventListener('click', (e) => {
       e.stopPropagation(); cycleStatus(item.id, itemTab);
     });
-    itemEl.querySelectorAll('.action-btn').forEach(btn => {
+    itemEl.querySelectorAll('.action-btn[data-action]').forEach(btn => {
       btn.addEventListener('click', (e) => { e.stopPropagation(); setStatus(item.id, btn.dataset.action, itemTab); });
     });
+    const watchStartBtn = itemEl.querySelector('.watch-start-btn');
+    if (watchStartBtn) {
+      watchStartBtn.addEventListener('click', (e) => { e.stopPropagation(); openWatchModal(item, itemTab); });
+    }
     const plexPlayBtn = itemEl.querySelector('.plex-play-btn');
     if (plexPlayBtn) {
       plexPlayBtn.addEventListener('click', (e) => {
@@ -4487,50 +4492,48 @@ async function renderWatchProviders(item, container, opts) {
   const regionData = data.watchProviders[region];
   const otherRegions = Object.keys(data.watchProviders).filter(k => k !== region && data.watchProviders[k]);
 
-  const tiers = [
-    { key: 'flatrate', label: 'Subscription' },
-    { key: 'free', label: 'Free' },
-    { key: 'ads', label: 'Free w/ ads' },
-    { key: 'rent', label: 'Rent' },
-    { key: 'buy', label: 'Buy' },
-  ];
-
+  // Home region: subscription tier only (flatrate). No rent, buy, or ad-supported.
   let mySubsHtml = '';
-  let otherHtml = '';
-  if (regionData) {
-    tiers.forEach(t => {
-      const provs = regionData[t.key];
-      if (!provs || provs.length === 0) return;
-      provs.forEach(p => {
-        const url = streamingSearchUrl(p.provider_name, item.title);
-        const cls = isMySub(p.provider_name) ? 'watch-btn-large my-sub' : 'watch-btn-large';
-        const btn = `<a href="${url}" class="${cls}" data-watch-launch target="_blank" rel="noopener">${escapeHtml(p.provider_name)}<span class="watch-tier">${t.label}</span></a>`;
-        if (isMySub(p.provider_name)) mySubsHtml += btn;
-        else otherHtml += btn;
-      });
+  if (regionData && regionData.flatrate) {
+    regionData.flatrate.forEach(p => {
+      if (!isMySub(p.provider_name)) return;
+      const url = streamingSearchUrl(p.provider_name, item.title);
+      mySubsHtml += `<a href="${url}" class="watch-btn-large my-sub" data-watch-launch target="_blank" rel="noopener">${escapeHtml(p.provider_name)}</a>`;
     });
   }
 
   let html = '';
   if (mySubsHtml) {
-    html += `<div class="watch-section"><h5>Your subscriptions (${region})</h5><div class="watch-buttons">${mySubsHtml}</div></div>`;
+    html += `<div class="watch-section"><h5>On your subscriptions — ${region}</h5><div class="watch-buttons">${mySubsHtml}</div></div>`;
+  } else {
+    html += `<div class="streaming-none">Not on your subscriptions in ${region}.</div>`;
   }
-  if (otherHtml) {
-    html += `<div class="watch-section"><h5>Other ways to watch (${region})</h5><div class="watch-buttons">${otherHtml}</div></div>`;
-  }
-  if (!mySubsHtml && !otherHtml) {
-    html += `<div class="streaming-none">Not available in ${region}.</div>`;
-  }
-  if (otherRegions.length > 0) {
-    const regionsList = otherRegions.map(r => {
-      const rd = data.watchProviders[r];
-      const all = [];
-      ['flatrate', 'free', 'ads'].forEach(t => { if (rd[t]) rd[t].forEach(p => all.push(p.provider_name)); });
-      const dedup = [...new Set(all)];
-      const regionName = (STREAMING_REGIONS.find(x => x.code === r) || {}).name || r;
-      return `<div class="watch-other-region"><strong>${escapeHtml(regionName)}:</strong> ${escapeHtml(dedup.slice(0, 5).join(', '))}${dedup.length > 5 ? `, +${dedup.length - 5} more` : ''}</div>`;
+
+  // VPN section: other regions where user's own subscriptions carry it on flatrate.
+  // Group by provider so the user knows which VPN country to pick for each service.
+  const vpnByProvider = {};
+  otherRegions.forEach(r => {
+    const rd = data.watchProviders[r];
+    if (!rd || !rd.flatrate) return;
+    rd.flatrate.forEach(p => {
+      if (!isMySub(p.provider_name)) return;
+      if (!vpnByProvider[p.provider_name]) vpnByProvider[p.provider_name] = [];
+      vpnByProvider[p.provider_name].push(r);
+    });
+  });
+  const vpnEntries = Object.entries(vpnByProvider);
+  if (vpnEntries.length > 0) {
+    const rows = vpnEntries.map(([provider, regions]) => {
+      const names = regions.map(r => (STREAMING_REGIONS.find(x => x.code === r) || {}).name || r).join(' · ');
+      return `<div class="watch-vpn-row"><span class="watch-vpn-provider">${escapeHtml(provider)}</span><span class="watch-vpn-regions">${escapeHtml(names)}</span></div>`;
     }).join('');
-    html += `<details class="watch-others"><summary>Available in other regions (${otherRegions.length})</summary>${regionsList}</details>`;
+    const label = vpnEntries.length === 1 ? '1 service' : `${vpnEntries.length} services`;
+    html += `
+      <details class="watch-vpn-section">
+        <summary>Available on your subs abroad — ${label} (VPN)</summary>
+        ${rows}
+        <div class="watch-vpn-tip">Your home region is <strong>${region}</strong>. Set PIA to any listed country and open the service normally.</div>
+      </details>`;
   }
   container.innerHTML = html;
 }

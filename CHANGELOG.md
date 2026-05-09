@@ -10,6 +10,55 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.27.0 — 2026-05-09
+**Service worker cache:** `scifi-tracker-v66` → `v67`
+
+### Feature — "Start Watching" button in every item card + subscription-only watch modal with VPN lookup
+
+**"Start Watching" in item cards**
+
+A `▶ Start Watching` button now appears at the top of every item card's
+action row when expanded. It opens the same Watch sub-modal used by the
+triage flow — showing where the title is available on your subscriptions
+and surfacing VPN options. Previously this modal was only reachable via
+triage, not from browsing.
+
+The status-button `querySelectorAll` now uses `[data-action]` to avoid
+accidentally calling `setStatus` on the new button (which has no
+`data-action` attribute).
+
+**Watch modal: subscription-only, no rent/buy/ads**
+
+`renderWatchProviders` previously showed all TMDB tiers: flatrate,
+free-with-ads, rent, and buy. Now it shows only the `flatrate`
+(subscription) tier — the services you already pay for. Rent, buy,
+and ad-supported tiers are removed entirely.
+
+- **Home region** (your configured region, default US): shows only
+  providers matching your subscription list. If none of your subs carry
+  it in your region, the card says so plainly.
+- **Removed:** "Other ways to watch" section that listed non-subscription
+  providers in your home region.
+
+**VPN lookup — your subs abroad**
+
+A new collapsible "Available on your subs abroad (VPN)" section lists
+every other TMDB region where at least one of your known subscriptions
+carries the title on `flatrate`. Entries are grouped by **service** (not
+by region), so you can see at a glance which VPN country to pick:
+
+```
+Netflix    United Kingdom · Canada · Australia
+Max        Canada
+Disney+    Germany · Mexico
+```
+
+A tip line reminds you that your home region is set to US and instructs
+to set PIA to any listed country before opening the service normally.
+Only your own subscriptions appear here — no generic streaming noise.
+
+---
+
 ## 5.26.11 — 2026-05-09
 **Service worker cache:** `scifi-tracker-v65` → `v66`
 
