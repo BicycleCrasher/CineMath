@@ -2283,8 +2283,10 @@ function buildWatchlistCatalog() {
   const watching = [];
   const queued = [];
   const suggested = [];
-  // Walk every loaded catalog
+  // Walk every loaded catalog (skip the virtual watchlist — iterating it causes
+  // circular inflation: each render() call adds watchlist items back into suggested)
   for (const tabId in catalogs) {
+    if (tabId === 'watchlist') continue;
     const cat = catalogs[tabId];
     cat.items.forEach(item => {
       const entry = (state[tabId] && state[tabId][item.id]) || {};

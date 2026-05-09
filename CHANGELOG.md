@@ -10,6 +10,33 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.27.1 — 2026-05-09
+**Service worker cache:** `scifi-tracker-v67` → `v68`
+
+### Bug fix — Suggestion triage: inflated item count + empty card
+
+**Root cause (two bugs, one symptom):**
+
+1. **Inflated suggestion count**: `buildWatchlistCatalog` iterated all
+   entries in `catalogs`, including the `'watchlist'` virtual catalog
+   itself. Because `state['watchlist']` is always empty, every item in
+   the already-built watchlist was treated as status `'none'` and
+   re-added to the suggested list on every `render()` call — growing
+   the count from ~374 real suggestions to 1974+ after a few renders.
+   Fixed by skipping `tabId === 'watchlist'` in the `buildWatchlistCatalog`
+   loop.
+
+2. **Empty triage card**: a duplicate `escapeHtml` definition (removed in
+   v5.26.11) broke the `meta` array: `item.year` is an integer, and the
+   broken version used `(s || '').replace()` which throws a TypeError on
+   non-strings. The exception fired after `triage-progress` was set
+   (line 5201) but before `triage-card.innerHTML` was assigned (line 5205),
+   so the progress counter appeared while the card stayed blank. The fix
+   (`String(s ?? '')`) was already in v5.26.11; v5.27.1 contains the count
+   fix above.
+
+---
+
 ## 5.27.0 — 2026-05-09
 **Service worker cache:** `scifi-tracker-v66` → `v67`
 
