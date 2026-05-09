@@ -4771,10 +4771,48 @@ function triageAction(act) {
     pollPlexWebhookEvents();
   }
 
+  // === Modal back-button injection + auto-focus + focus-trap ===
+  // (Mode-agnostic: works whether tv-mode is detected or not, important for TWA
+  // WebViews on Google TV where the UA doesn't always match detectTVMode().)
+  document.querySelectorAll('.modal .modal-content').forEach((content) => {
+    if (content.querySelector('.modal-back')) return;
+    const btn = document.createElement('button');
+    btn.className = 'modal-back';
+    btn.type = 'button';
+    btn.setAttribute('aria-label', 'Close this modal');
+    btn.textContent = '←'; // ←
+    content.insertBefore(btn, content.firstChild);
+  });
+  document.addEventListener('click', (e) => {
+    const back = e.target.closest('.modal-back');
+    if (!back) return;
+    const modal = back.closest('.modal');
+    if (modal) modal.classList.remove('active');
+  });
+  // When a modal opens, focus its first interactive element so D-pad nav can find it
+  const modalObs = new MutationObserver((muts) => {
+    muts.forEach((m) => {
+      if (m.type !== 'attributes' || m.attributeName !== 'class') return;
+      const el = m.target;
+      if (el.classList.contains('modal') && el.classList.contains('active')) {
+        setTimeout(() => {
+          const first = el.querySelector(
+            'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+          );
+          if (first) first.focus();
+        }, 50);
+      }
+    });
+  });
+  document.querySelectorAll('.modal').forEach((m) => {
+    modalObs.observe(m, { attributes: true, attributeFilter: ['class'] });
+  });
+
   // === D-pad / arrow-key navigation ===
-  // Active by default in TV mode; harmless in phone mode (browsers handle arrows in inputs naturally).
+  // Mode-agnostic: Escape/Back must close modals on any device (TWA WebViews
+  // on Google TV may not match detectTVMode's UA regex). Arrow-key navigation
+  // is harmless on phone since the handler early-returns inside text inputs.
   document.addEventListener('keydown', (e) => {
-    if (!document.body.classList.contains('tv-mode')) return;
     // Don't intercept inside text inputs or textareas
     const tag = (e.target.tagName || '').toLowerCase();
     if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
@@ -4810,16 +4848,19 @@ function triageAction(act) {
 
     e.preventDefault();
     const focused = document.activeElement;
+    // If a modal is open, restrict the focusables to its contents (focus trap)
+    const openModalRoot = document.querySelector('.modal.active');
+    const searchRoot = openModalRoot || document;
     if (!focused || focused === document.body) {
       // Focus first visible interactive element (wizard button, item, or any button)
-      const first = document.querySelector('.wizard-btn, .item, .tab-btn, button');
+      const first = searchRoot.querySelector('.modal-back, .wizard-btn, .item, .tab-btn, button');
       if (first) first.focus();
       return;
     }
 
     // D-pad logic: simple "find nearest focusable in direction"
-    const focusables = Array.from(document.querySelectorAll(
-      '.wizard-btn, .tab-btn, .filter-btn, .category-btn, .header-btn, .item, .action-btn, .rating-btn, .tag-btn, .plex-play-btn, .sort-select, button, a, input'
+    const focusables = Array.from(searchRoot.querySelectorAll(
+      '.modal-back, .wizard-btn, .tab-btn, .filter-btn, .category-btn, .header-btn, .item, .action-btn, .rating-btn, .tag-btn, .plex-play-btn, .sort-select, button, a, input'
     )).filter(el => el.offsetParent !== null && !el.disabled);
     if (focusables.length === 0) return;
 

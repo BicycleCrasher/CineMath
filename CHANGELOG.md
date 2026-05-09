@@ -10,6 +10,50 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.19.0 — 2026-05-08
+**Service worker cache:** `scifi-tracker-v38` → `v39`
+
+### Feature/Fix — TV-mode-agnostic modal navigation, back buttons, focus rings
+
+Root cause behind several TV symptoms (focus ring not updating, modals
+unusable, remote-back exiting the app forcing a Force Close): the TWA
+WebView on Google TV doesn't always match `detectTVMode()`'s UA regex, so
+`body.tv-mode` wasn't applied — and every TV-mode-specific behavior was
+gated behind that class. This release decouples those behaviors from the
+mode class so they work regardless of detection.
+
+**Focus rings (`styles.css`):** Dropped the `body.tv-mode *:focus` /
+`body.phone-mode *:focus-visible` prefixed rules. The ring is now applied
+globally via `*:focus-visible` (3px gold, `outline-offset: -3px`, fully
+inset). `*:focus { outline: none; }` still suppresses the click-activation
+ring, so touch users on phone don't see it.
+
+**Keydown / remote back (`app.js`):** Removed the `tv-mode` gate from the
+document `keydown` handler. Escape and Backspace (Android KEYCODE_BACK
+maps to Backspace in WebView) now close any open modal regardless of
+device mode. This is the fix for "back button exits the app." The handler
+still early-returns inside text inputs so it won't hijack typing.
+
+**Modal back button (`app.js` + `styles.css`):** A `← Back` arrow button is
+now injected programmatically into every `.modal-content` at the top-left.
+44×44px on phone, 56×56px in TV mode. Tapping or pressing Enter on it
+closes the modal — a pointer/D-pad fallback for users who can't or
+shouldn't have to use the remote back key.
+
+**Modal focus management (`app.js`):**
+- `MutationObserver` watches every `.modal` for the `active` class. When
+  a modal opens, focus moves to the first interactive element inside it
+  (typically the new `← Back` button).
+- D-pad nav now scopes its focusables list to the open modal when one is
+  active (focus trap). The user can no longer accidentally navigate from
+  a modal control out into the underlying page.
+
+**Net effect:** Triage modal, recommendations, search, stats, settings,
+and every other modal are now navigable on the TV via D-pad, and the
+remote back button closes them cleanly without exiting the app.
+
+---
+
 ## 5.18.2 — 2026-05-08
 **Service worker cache:** `scifi-tracker-v37` → `v38`
 
