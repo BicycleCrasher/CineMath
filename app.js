@@ -4779,7 +4779,9 @@ function triageAction(act) {
     const tag = (e.target.tagName || '').toLowerCase();
     if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
 
-    const key = e.key;
+    // Normalize key names: older WebViews (Android TV) send "Up" not "ArrowUp", etc.
+    const KEY_ALIASES = {'Up':'ArrowUp','Down':'ArrowDown','Left':'ArrowLeft','Right':'ArrowRight','Esc':'Escape'};
+    const key = KEY_ALIASES[e.key] || e.key;
     if (!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Enter','Escape','Backspace'].includes(key)) return;
 
     if (key === 'Escape' || key === 'Backspace') {
@@ -4809,15 +4811,15 @@ function triageAction(act) {
     e.preventDefault();
     const focused = document.activeElement;
     if (!focused || focused === document.body) {
-      // Focus first item
-      const firstItem = document.querySelector('.item');
-      if (firstItem) firstItem.focus();
+      // Focus first visible interactive element (wizard button, item, or any button)
+      const first = document.querySelector('.wizard-btn, .item, .tab-btn, button');
+      if (first) first.focus();
       return;
     }
 
     // D-pad logic: simple "find nearest focusable in direction"
     const focusables = Array.from(document.querySelectorAll(
-      '.tab-btn, .filter-btn, .category-btn, .header-btn, .item, .action-btn, .rating-btn, .tag-btn, .plex-play-btn, .sort-select, button, a, input'
+      '.wizard-btn, .tab-btn, .filter-btn, .category-btn, .header-btn, .item, .action-btn, .rating-btn, .tag-btn, .plex-play-btn, .sort-select, button, a, input'
     )).filter(el => el.offsetParent !== null && !el.disabled);
     if (focusables.length === 0) return;
 
