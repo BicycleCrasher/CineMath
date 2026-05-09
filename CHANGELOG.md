@@ -10,6 +10,45 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.21.1 — 2026-05-08
+**Service worker cache:** `scifi-tracker-v41` → `v42`
+
+### Fix — Modal auto-focus + D-pad direction scoring
+
+Two TV-mode regressions from 5.19.0/5.21.0:
+
+**1. Auto-focus on Back button (top-left).** When a modal opened, the
+MutationObserver focused the document-order-first focusable, which after
+5.19.0 is always the injected `.modal-back` arrow. Pressing Down from
+there made the next focus jump diagonal-ish to the bottom action buttons,
+feeling like it skipped half the modal.
+
+  → Auto-focus now prefers `.modal-actions button` first, then primary
+  content buttons (`.watch-btn-large` etc.), then inputs, with
+  `.modal-back` as last resort. Modal opens, focus is on Queue / Start
+  watching / Close — what muscle memory expects. Back is still reachable
+  via D-pad Up.
+
+**2. D-pad "nearest in direction" picking the wrong button.** Old
+algorithm scored candidates by `Math.hypot(dx, dy)` — pure Euclidean
+distance — which meant a button slightly in the desired direction but
+heavily offset perpendicularly could beat a button directly aligned but
+slightly farther away. Combined with flex-wrap layouts in the new Watch
+modal (rows of provider buttons of unequal counts), this caused
+unpredictable jumps.
+
+  → New scoring: `primary_axis_distance + 2 × perpendicular_axis_distance`.
+  Heavy penalty for perpendicular offset, so D-pad strongly prefers
+  axis-aligned moves. Direction cone tightened to 60° (`perpendicular ≤
+  2 × primary`). The minimum-delta threshold raised from 5px to 10px to
+  avoid catching elements in the same visual row when moving up/down.
+
+Result: Down from a button in the middle of a wrap-row now reliably hits
+the corresponding column in the next row, falling through to the
+bottom action buttons when the row ends.
+
+---
+
 ## 5.21.0 — 2026-05-08
 **Service worker cache:** `scifi-tracker-v40` → `v41`
 

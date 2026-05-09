@@ -5152,16 +5152,21 @@ function triageAction(act) {
     const modal = back.closest('.modal');
     if (modal) modal.classList.remove('active');
   });
-  // When a modal opens, focus its first interactive element so D-pad nav can find it
+  // When a modal opens, focus its first ACTION button (not the top-left Back).
+  // Priority: .modal-actions button > primary content button > input/select > .modal-back.
+  // This avoids the "Down from Back jumps weirdly across the modal" pattern.
   const modalObs = new MutationObserver((muts) => {
     muts.forEach((m) => {
       if (m.type !== 'attributes' || m.attributeName !== 'class') return;
       const el = m.target;
       if (el.classList.contains('modal') && el.classList.contains('active')) {
         setTimeout(() => {
-          const first = el.querySelector(
-            'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-          );
+          const first =
+            el.querySelector('.modal-actions button:not([disabled])') ||
+            el.querySelector('.watch-btn-large') ||
+            el.querySelector('.modal-content button:not(.modal-back):not([disabled])') ||
+            el.querySelector('input:not([disabled]), select:not([disabled]), textarea:not([disabled])') ||
+            el.querySelector('.modal-back');
           if (first) first.focus();
         }, 50);
       }
@@ -5231,8 +5236,15 @@ function triageAction(act) {
     const cx = r.left + r.width / 2;
     const cy = r.top + r.height / 2;
 
+    // V5.21.1: Tightened D-pad algorithm. Old version used Math.hypot which
+    // weighed perpendicular distance equally with primary-axis distance, so a
+    // button slightly down and far to the side could win over one directly
+    // below. New scoring: primary-axis distance + 2× perpendicular-axis,
+    // strongly preferring axis-aligned movement. Direction cone widened to
+    // 60° (perpendicular ≤ 2× primary) so wrap-row layouts still reach.
     let best = null;
     let bestDist = Infinity;
+    const MIN_DELTA = 10; // ignore elements within ~10px of center on the primary axis
     focusables.forEach(el => {
       if (el === focused) return;
       const er = el.getBoundingClientRect();
@@ -5241,13 +5253,22 @@ function triageAction(act) {
       const dx = ecx - cx;
       const dy = ecy - cy;
       let valid = false;
-      if (key === 'ArrowRight' && dx > 5) valid = Math.abs(dy) < 100 || Math.abs(dy) < Math.abs(dx) * 1.5;
-      else if (key === 'ArrowLeft' && dx < -5) valid = Math.abs(dy) < 100 || Math.abs(dy) < Math.abs(dx) * 1.5;
-      else if (key === 'ArrowDown' && dy > 5) valid = Math.abs(dx) < 200 || Math.abs(dx) < Math.abs(dy) * 1.5;
-      else if (key === 'ArrowUp' && dy < -5) valid = Math.abs(dx) < 200 || Math.abs(dx) < Math.abs(dy) * 1.5;
+      let score = 0;
+      if (key === 'ArrowRight' && dx > MIN_DELTA && Math.abs(dy) < Math.abs(dx) * 2) {
+        valid = true;
+        score = dx + Math.abs(dy) * 2;
+      } else if (key === 'ArrowLeft' && dx < -MIN_DELTA && Math.abs(dy) < Math.abs(dx) * 2) {
+        valid = true;
+        score = -dx + Math.abs(dy) * 2;
+      } else if (key === 'ArrowDown' && dy > MIN_DELTA && Math.abs(dx) < Math.abs(dy) * 2) {
+        valid = true;
+        score = dy + Math.abs(dx) * 2;
+      } else if (key === 'ArrowUp' && dy < -MIN_DELTA && Math.abs(dx) < Math.abs(dy) * 2) {
+        valid = true;
+        score = -dy + Math.abs(dx) * 2;
+      }
       if (!valid) return;
-      const dist = Math.hypot(dx, dy);
-      if (dist < bestDist) { bestDist = dist; best = el; }
+      if (score < bestDist) { bestDist = score; best = el; }
     });
 
     if (best) {
