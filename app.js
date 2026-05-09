@@ -172,7 +172,12 @@ const CATEGORY_TO_CONTENT_TYPE = {
   'sitcom': 'tv-sitcom'
 };
 
-function resolveContentType(item) {
+// V5.26.6: resolveContentType now accepts an optional sourceTab parameter so
+// items being rendered outside their home tab (e.g. in the watchlist or
+// triage queue) still fall back to the right per-tab default. Without this,
+// activeTab would be 'watchlist' for triage and items without categories
+// would resolve to 'film-narrative' regardless of source.
+function resolveContentType(item, sourceTab) {
   // 1. Explicit item override wins
   if (item && item.contentType) return item.contentType;
   // 2. British Comedy: look at item categories
@@ -181,12 +186,13 @@ function resolveContentType(item) {
       if (CATEGORY_TO_CONTENT_TYPE[cat]) return CATEGORY_TO_CONTENT_TYPE[cat];
     }
   }
-  // 3. Tab default
-  return TAB_DEFAULT_CONTENT_TYPE[activeTab] || 'film-narrative';
+  // 3. Source tab default (preferred), then activeTab default, then film-narrative
+  const tab = sourceTab || (item && item._watchlist_source_tab) || activeTab;
+  return TAB_DEFAULT_CONTENT_TYPE[tab] || 'film-narrative';
 }
 
-function getTagSetForItem(item) {
-  const t = resolveContentType(item);
+function getTagSetForItem(item, sourceTab) {
+  const t = resolveContentType(item, sourceTab);
   return TAG_SETS[t] || TAG_SETS['film-narrative'];
 }
 
@@ -5260,7 +5266,7 @@ function renderRateTagTriage(item, sourceTab) {
 
   const currentRating = getRating(item.id, sourceTab);
   const currentTags = getTags(item.id, sourceTab);
-  const tagSet = getTagSetForItem(item) || { positive: [], negative: [] };
+  const tagSet = getTagSetForItem(item, sourceTab) || { positive: [], negative: [] };
   const positive = tagSet.positive || [];
   const negative = tagSet.negative || [];
 
@@ -5544,11 +5550,16 @@ function triageAction(act) {
     }
 
     if (key === 'Enter') {
-      // Default browser behavior handles Enter on focused button. Only intercept if focus is on .item card.
+      // Default browser behavior handles Enter on focused button. Intercept
+      // for .item cards, where the actual click handler is on the inner
+      // .item-head child (not the .item parent that D-pad nav focuses).
+      // V5.26.7: dispatch click on .item-head, falling back to .item itself
+      // for compatibility with any items that don't have an .item-head child.
       const focused = document.activeElement;
       if (focused && focused.classList.contains('item')) {
         e.preventDefault();
-        focused.click();
+        const head = focused.querySelector('.item-head');
+        (head || focused).click();
       }
       return;
     }

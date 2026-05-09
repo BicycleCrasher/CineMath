@@ -10,6 +10,77 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.26.7 — 2026-05-09
+**Service worker cache:** `scifi-tracker-v61` → `v62`
+
+### Fix — Pressing Enter on a focused item card on TV did nothing
+
+D-pad navigation focuses on `.item` elements (they're in the keydown
+handler's focusables selector). The keydown handler called
+`focused.click()` to "activate" the focused element on Enter. But the
+expand/collapse click handler is registered on the inner `.item-head`
+child — not on `.item` itself. So `.item.click()` triggered no action;
+the show didn't open on Enter press from the remote.
+
+**Fix:** when Enter fires on a focused `.item`, look for an `.item-head`
+child first and click that. Falls back to clicking the `.item` itself
+if no child is found (defensive against future markup changes).
+
+```js
+const head = focused.querySelector('.item-head');
+(head || focused).click();
+```
+
+Mouse/touch click on the `.item-head` already worked — only the D-pad
+Enter path was broken. Affects every catalog tab, not just Heroes &
+Comics.
+
+---
+
+## 5.26.6 — 2026-05-09
+**Service worker cache:** `scifi-tracker-v60` → `v61`
+
+### Fix — Wrong tag set on items triaged from the watchlist (e.g. sitcoms getting panel tags)
+
+`resolveContentType(item)` had three resolution steps: explicit
+`item.contentType` → `item.categories` map → `TAB_DEFAULT_CONTENT_TYPE[activeTab]`.
+
+The third step's fallback used the GLOBAL `activeTab`. When triaging
+from the wizard, `activeTab` is `'watchlist'`, which isn't in the
+default map — so any item without categories (or that hit a code path
+where categories were stripped) resolved to `'film-narrative'` instead
+of its real source tab's default.
+
+For british-comedy items specifically, the resolver almost always
+returned the right thing because items have `categories: ['sitcom']`
+or `['panel']`. But ANY item that lost categories metadata in transit,
+OR future items added without categories, would silently get the wrong
+tag set when rated from triage. Vicious is the symptom — sitcom
+content showing tags written for panel shows or generic film.
+
+**Fix:**
+- `resolveContentType(item, sourceTab)` now accepts an optional
+  `sourceTab` parameter
+- Falls back to `item._watchlist_source_tab` if present (the enriched
+  property set when items get added to the triage queue), then
+  `activeTab`, then `'film-narrative'`
+- `getTagSetForItem(item, sourceTab)` plumbs sourceTab through
+- `renderRateTagTriage` now passes its `sourceTab` argument when calling
+  `getTagSetForItem`
+
+Result: a triaged Vicious resolves via `categories: ['sitcom']` →
+`'tv-sitcom'` (already correct in your data); even if categories were
+missing, the resolver would now use british-comedy's tab default
+(`'tv-sitcom'`) instead of falling all the way to `'film-narrative'`.
+
+**If you ever want item-specific overrides:** add `"contentType":
+"tv-anthology"` (or any TAG_SETS key) directly to a catalog item's
+JSON. Inside No. 9, for example, might benefit from being explicitly
+`tv-anthology` rather than the `tv-sitcom` it currently inherits from
+its category.
+
+---
+
 ## 5.26.5 — 2026-05-09
 **Service worker cache:** `scifi-tracker-v59` → `v60`
 
