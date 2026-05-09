@@ -6,49 +6,138 @@
     {
       "name": "I. Marvel — Disney+",
       "desc": "WandaVision, Loki, Hawkeye, Moon Knight, X-Men 97, etc.",
-      "categories": ["marvel-disney-plus"],
+      "categories": [
+        "marvel-disney-plus"
+      ],
       "items": [
-        { "id": "wandavision-2021", "title": "WandaVision", "year": 2021, "pitch": "Phase Four opener. Wanda and Vision live through a sequence of TV-history pastiches — 50s sitcom, 70s family comedy, 90s mockumentary — while her grief metastasizes. Best-received Marvel D+ show by most lights.", "categories": ["marvel-disney-plus"], "contentType": "tv-limited" },
-        { "id": "loki-2021", "title": "Loki", "year": 2021, "pitch": "Loki vs. the bureaucratic TVA, vs. variants of himself, vs. Kang. Two seasons that arguably set up the entire next phase of the MCU.", "categories": ["marvel-disney-plus"], "contentType": "tv-limited" },
-        { "id": "x-men-97-2024", "title": "X-Men '97", "year": 2024, "pitch": "Direct continuation of the 90s animated series. Picks up after Xavier's apparent death; surprised everyone by being legitimately great.", "categories": ["marvel-disney-plus", "animated"], "contentType": "tv-limited" }
+        {
+          "id": "wandavision-2021",
+          "title": "WandaVision",
+          "year": 2021,
+          "pitch": "Phase Four opener. Wanda and Vision live through a sequence of TV-history pastiches — 50s sitcom, 70s family comedy, 90s mockumentary — while her grief metastasizes. Best-received Marvel D+ show by most lights.",
+          "categories": [
+            "marvel-disney-plus"
+          ],
+          "contentType": "tv-limited"
+        },
+        {
+          "id": "loki-2021",
+          "title": "Loki",
+          "year": 2021,
+          "pitch": "Loki vs. the bureaucratic TVA, vs. variants of himself, vs. Kang. Two seasons that arguably set up the entire next phase of the MCU.",
+          "categories": [
+            "marvel-disney-plus"
+          ],
+          "contentType": "tv-limited"
+        },
+        {
+          "id": "x-men-97-2024",
+          "title": "X-Men '97",
+          "year": 2024,
+          "pitch": "Direct continuation of the 90s animated series. Picks up after Xavier's apparent death; surprised everyone by being legitimately great.",
+          "categories": [
+            "marvel-disney-plus",
+            "animated"
+          ],
+          "contentType": "tv-limited"
+        }
       ]
     },
     {
       "name": "II. Marvel — Netflix",
       "desc": "Daredevil, Jessica Jones, Luke Cage, Iron Fist, Punisher, Defenders.",
-      "categories": ["marvel-netflix"],
+      "categories": [
+        "marvel-netflix"
+      ],
       "items": [
-        { "id": "daredevil-2015", "title": "Daredevil", "year": 2015, "pitch": "Charlie Cox as Matt Murdock. Hallway fight scenes, Vincent D'Onofrio's Wilson Fisk, the gold standard for street-level Marvel TV.", "categories": ["marvel-netflix", "street-level"], "contentType": "tv-prestige" }
+        {
+          "id": "daredevil-2015",
+          "title": "Daredevil",
+          "year": 2015,
+          "pitch": "Charlie Cox as Matt Murdock. Hallway fight scenes, Vincent D'Onofrio's Wilson Fisk, the gold standard for street-level Marvel TV.",
+          "categories": [
+            "marvel-netflix",
+            "street-level"
+          ],
+          "contentType": "tv-prestige"
+        }
       ]
     },
     {
       "name": "III. DC",
       "desc": "Smallville, Arrow, Flash, Gotham, Watchmen HBO, Peacemaker, Titans.",
-      "categories": ["dc"],
+      "categories": [
+        "dc"
+      ],
       "items": []
     },
     {
       "name": "IV. Animated",
       "desc": "X-Men: The Animated Series, Batman: TAS, Justice League Unlimited, Spider-Verse animation.",
-      "categories": ["animated"],
+      "categories": [
+        "animated"
+      ],
       "items": [
-        { "id": "batman-the-animated-series-1992", "title": "Batman: The Animated Series", "year": 1992, "pitch": "Bruce Timm/Paul Dini's noir-coded Batman. Mark Hamill as Joker, Kevin Conroy as Bruce. Defining versions for many.", "categories": ["animated", "dc"], "contentType": "tv-prestige" }
+        {
+          "id": "batman-the-animated-series-1992",
+          "title": "Batman: The Animated Series",
+          "year": 1992,
+          "pitch": "Bruce Timm/Paul Dini's noir-coded Batman. Mark Hamill as Joker, Kevin Conroy as Bruce. Defining versions for many.",
+          "categories": [
+            "animated",
+            "dc"
+          ],
+          "contentType": "tv-prestige"
+        }
       ]
     },
     {
       "name": "V. Deconstructive",
       "desc": "The Boys, Invincible, Watchmen HBO — the genre questioning itself.",
-      "categories": ["deconstructive"],
+      "categories": [
+        "deconstructive"
+      ],
       "items": [
-        { "id": "the-boys-2019", "title": "The Boys", "year": 2019, "pitch": "Garth Ennis adaptation. Supes are corporate-controlled celebrities; Homelander is what happens when Superman has unmet emotional needs. Goes harder than the comics in places.", "categories": ["deconstructive"], "contentType": "tv-prestige" },
-        { "id": "invincible-2021", "title": "Invincible", "year": 2021, "pitch": "Animated Robert Kirkman adaptation. Pulls a brutal twist in the pilot that reframes the entire genre. Surprisingly violent for animation, surprisingly emotional.", "categories": ["deconstructive", "animated"], "contentType": "tv-prestige" },
-        { "id": "watchmen-hbo-2019", "title": "Watchmen", "year": 2019, "pitch": "Damon Lindelof's HBO sequel-not-sequel to the Moore/Gibbons graphic novel. Set in modern-day Tulsa, anchored to the 1921 race massacre. The genre done well.", "categories": ["deconstructive", "indie"], "contentType": "tv-limited" }
+        {
+          "id": "the-boys-2019",
+          "title": "The Boys",
+          "year": 2019,
+          "pitch": "Garth Ennis adaptation. Supes are corporate-controlled celebrities; Homelander is what happens when Superman has unmet emotional needs. Goes harder than the comics in places.",
+          "categories": [
+            "deconstructive"
+          ],
+          "contentType": "tv-prestige"
+        },
+        {
+          "id": "invincible-2021",
+          "title": "Invincible",
+          "year": 2021,
+          "pitch": "Animated Robert Kirkman adaptation. Pulls a brutal twist in the pilot that reframes the entire genre. Surprisingly violent for animation, surprisingly emotional.",
+          "categories": [
+            "deconstructive",
+            "animated"
+          ],
+          "contentType": "tv-prestige"
+        },
+        {
+          "id": "watchmen-hbo-2019",
+          "title": "Watchmen",
+          "year": 2019,
+          "pitch": "Damon Lindelof's HBO sequel-not-sequel to the Moore/Gibbons graphic novel. Set in modern-day Tulsa, anchored to the 1921 race massacre. The genre done well.",
+          "categories": [
+            "deconstructive",
+            "indie"
+          ],
+          "contentType": "tv-limited"
+        }
       ]
     },
     {
       "name": "VI. Indie / Other",
       "desc": "Preacher, The Umbrella Academy, The Tick, etc.",
-      "categories": ["indie"],
+      "categories": [
+        "indie"
+      ],
       "items": []
     }
   ]
