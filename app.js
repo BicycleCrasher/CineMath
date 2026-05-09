@@ -423,8 +423,14 @@ function clearTagFilters(tab) {
   if (activeTagFilters[tab]) activeTagFilters[tab].clear();
 }
 
-// === Display mode (tv vs phone) — persisted in localStorage ===
-const DISPLAY_MODE_KEY = 'watchtrack-display-mode';  // 'auto' | 'tv' | 'phone'
+// === Display mode — persisted in localStorage ===
+// 'auto' | 'tv' | 'phone' | 'computer'
+// Detection picks one of: 'tv' (TV UA or large landscape no-touch), 'computer'
+// (non-TV with viewport ≥ 1024px and mouse-class input), or 'phone' (everything
+// else). Manual pref overrides detection. The 'computer' option is shown in
+// Settings only when detection says 'computer' — that lets the user preview
+// other modes from a laptop without polluting the option list on phones/TVs.
+const DISPLAY_MODE_KEY = 'watchtrack-display-mode';
 function getDisplayModePref() {
   return localStorage.getItem(DISPLAY_MODE_KEY) || 'auto';
 }
@@ -434,24 +440,42 @@ function setDisplayModePref(mode) {
 }
 function detectTVMode() {
   const ua = navigator.userAgent.toLowerCase();
-  // Common TV user agent strings
   if (/\b(googletv|google_tv|smarttv|smart-tv|crkey|chromecast|bravia|aftv|webos|tizen|netcast)\b/.test(ua)) return true;
-  // Fallback: large landscape viewport with no touch (most TVs)
   const big = window.innerWidth >= 1280 && window.innerHeight >= 720;
   const landscape = window.innerWidth > window.innerHeight;
   const noTouch = !('ontouchstart' in window) && navigator.maxTouchPoints === 0;
   return big && landscape && noTouch;
 }
-function isTVMode() {
-  const pref = getDisplayModePref();
-  if (pref === 'tv') return true;
-  if (pref === 'phone') return false;
-  return detectTVMode();
+function detectComputerMode() {
+  if (detectTVMode()) return false;
+  const wide = window.innerWidth >= 1024;
+  const hasMouse = matchMedia('(pointer: fine)').matches;
+  return wide && hasMouse;
 }
+function getDetectedMode() {
+  if (detectTVMode()) return 'tv';
+  if (detectComputerMode()) return 'computer';
+  return 'phone';
+}
+function getEffectiveMode() {
+  const pref = getDisplayModePref();
+  if (pref === 'tv' || pref === 'phone' || pref === 'computer') return pref;
+  return getDetectedMode();
+}
+function isTVMode() { return getEffectiveMode() === 'tv'; }
 function applyDisplayMode() {
-  const tv = isTVMode();
-  document.body.classList.toggle('tv-mode', tv);
-  document.body.classList.toggle('phone-mode', !tv);
+  const mode = getEffectiveMode();
+  document.body.classList.toggle('tv-mode', mode === 'tv');
+  document.body.classList.toggle('phone-mode', mode === 'phone');
+  document.body.classList.toggle('computer-mode', mode === 'computer');
+}
+// Show the "Computer" radio option in Settings only when the device looks
+// like a desktop browser. This lets the user preview phone/TV layouts from
+// their laptop without putting an irrelevant option on phones and TVs.
+function updateDisplayModePicker() {
+  const label = document.getElementById('display-mode-computer-label');
+  if (!label) return;
+  label.style.display = (getDetectedMode() === 'computer') ? '' : 'none';
 }
 
 // === Plex settings ===
@@ -2205,13 +2229,41 @@ function updateStats() {
   document.getElementById('progress').style.width = `${(watched / items.length) * 100}%`;
 }
 
+// Tab content-type filter — 'all' | 'film' | 'tv'. Persists in localStorage.
+// Virtual tabs (watchlist, auteur) always show regardless of filter.
+const TAB_FILTER_KEY = 'watchtrack-tab-filter';
+function getTabFilter() {
+  const v = localStorage.getItem(TAB_FILTER_KEY);
+  return v === 'film' || v === 'tv' ? v : 'all';
+}
+function setTabFilter(v) {
+  if (v === 'all') localStorage.removeItem(TAB_FILTER_KEY);
+  else localStorage.setItem(TAB_FILTER_KEY, v);
+}
+function tabPassesFilter(c, filter) {
+  if (filter === 'all') return true;
+  if (c.virtual) return true;
+  const isTv = WIZARD_TV_TABS.has(c.id);
+  return filter === 'tv' ? isTv : !isTv;
+}
 function buildTabs() {
+  const filter = getTabFilter();
   const nav = document.getElementById('tab-nav');
-  nav.innerHTML = catalogManifest.map(c =>
+  const visible = catalogManifest.filter(c => tabPassesFilter(c, filter));
+  // If the active tab got filtered out, switch to the first visible one so
+  // the user isn't stranded on a tab whose button is hidden.
+  if (!visible.some(c => c.id === activeTab) && visible.length > 0) {
+    activeTab = visible[0].id;
+  }
+  nav.innerHTML = visible.map(c =>
     `<button class="tab-btn ${activeTab === c.id ? 'active' : ''}" data-tab="${c.id}">${c.label}</button>`
   ).join('');
   nav.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  });
+  // Sync the filter pill row with current state
+  document.querySelectorAll('#tab-filter .tab-filter-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.filter === filter);
   });
 }
 
@@ -2616,10 +2668,110 @@ function getActiveCatalog() {
   return catalogs[activeTab];
 }
 
+// v5.36.0 Tier A perf pass:
+//   A2 — single delegated listener on #items-container instead of 8/item
+//   A3 — render() RAF-coalesces; multiple state changes in one frame batch
+//   A5 — getTagSetForItem called once per item, not twice
+//   A6 — visibleCountBySection precomputed in one pass (was O(n²) inside loop)
+const _itemRegistry = new Map();
+let _itemDelegationAttached = false;
+
+function _attachItemDelegation() {
+  if (_itemDelegationAttached) return;
+  const container = document.getElementById('items-container');
+  if (!container) return;
+
+  container.addEventListener('click', (e) => {
+    const itemEl = e.target.closest('.item');
+    if (!itemEl) return;
+    const id = itemEl.dataset.id;
+    const reg = _itemRegistry.get(id);
+    if (!reg) return;
+    const { item, itemTab } = reg;
+
+    if (e.target.closest('.status-pill')) {
+      e.stopPropagation();
+      cycleStatus(id, itemTab);
+      return;
+    }
+    const actionBtn = e.target.closest('.action-btn[data-action]');
+    if (actionBtn) {
+      e.stopPropagation();
+      setStatus(id, actionBtn.dataset.action, itemTab);
+      return;
+    }
+    if (e.target.closest('.watch-start-btn')) {
+      e.stopPropagation();
+      openWatchModal(item, itemTab);
+      return;
+    }
+    const plexBtn = e.target.closest('.plex-play-btn');
+    if (plexBtn) {
+      e.stopPropagation();
+      const ratingKey = plexBtn.dataset.plexKey;
+      setStatus(id, 'watching', itemTab);
+      const deepLink = plexDeepLinkUrl(ratingKey);
+      window.location.href = deepLink;
+      setTimeout(() => {
+        const fallbackUrl = `${getPlexServerUrl()}/web/index.html#!/server/${getPlexClientId() || ''}/details?key=%2Flibrary%2Fmetadata%2F${ratingKey}`;
+        window.open(fallbackUrl, '_blank');
+      }, 1000);
+      return;
+    }
+    const ratingBtn = e.target.closest('.rating-btn');
+    if (ratingBtn) {
+      e.stopPropagation();
+      setRating(id, ratingBtn.dataset.rating, itemTab);
+      return;
+    }
+    const tagBtn = e.target.closest('.tag-btn');
+    if (tagBtn) {
+      e.stopPropagation();
+      toggleTag(id, tagBtn.dataset.tag, itemTab);
+      return;
+    }
+    if (e.target.closest('.item-head')) {
+      if (expandedIds.has(id)) {
+        expandedIds.delete(id);
+        itemEl.classList.remove('expanded');
+      } else {
+        expandedIds.add(id);
+        itemEl.classList.add('expanded');
+        loadStreamingProviders(itemEl, item);
+      }
+    }
+  });
+
+  // focusout bubbles where blur doesn't, so a single delegated handler covers
+  // every notes textarea regardless of how many items are in the registry.
+  container.addEventListener('focusout', (e) => {
+    if (!e.target.classList.contains('notes-input')) return;
+    const itemEl = e.target.closest('.item');
+    if (!itemEl) return;
+    const reg = _itemRegistry.get(itemEl.dataset.id);
+    if (reg) setNotes(itemEl.dataset.id, e.target.value, reg.itemTab);
+  });
+
+  _itemDelegationAttached = true;
+}
+
+let _renderQueued = false;
 function render() {
+  if (_renderQueued) return;
+  _renderQueued = true;
+  requestAnimationFrame(() => {
+    _renderQueued = false;
+    _renderImpl();
+  });
+}
+
+function _renderImpl() {
   if (!isVirtualTab(activeTab) && !catalogs[activeTab]) return;
   const catalog = getActiveCatalog();
   document.getElementById('tab-subtitle').textContent = catalog.subtitle;
+
+  _attachItemDelegation();
+  _itemRegistry.clear();
 
   const container = document.getElementById('items-container');
   container.innerHTML = '';
@@ -2644,11 +2796,19 @@ function render() {
     });
   }
 
+  // A6: pre-compute visible counts per section in one pass.
+  // The old code called catalog.items.filter() once per item-with-section-change,
+  // which was O(n²) inside a single render. One walk is enough.
+  const visibleCountBySection = new Map();
+  for (const it of catalog.items) {
+    if (itemMatchesFilter(it) && itemMatchesCategory(it)) {
+      visibleCountBySection.set(it.section, (visibleCountBySection.get(it.section) || 0) + 1);
+    }
+  }
+
   renderItems.forEach(item => {
     if (item.section !== lastSection) {
-      const sectionItems = catalog.items.filter(f => f.section === item.section);
-      const visibleCount = sectionItems.filter(it => itemMatchesFilter(it) && itemMatchesCategory(it)).length;
-      if (visibleCount > 0) {
+      if ((visibleCountBySection.get(item.section) || 0) > 0) {
         const sectionEl = document.createElement('div');
         sectionEl.className = 'section-header';
         const parts = item.section.split('.');
@@ -2667,6 +2827,9 @@ function render() {
 
     // For watchlist virtual tab, items operate on their source tab's state
     const itemTab = item._watchlist_source_tab || item._auteur_source_tab || activeTab;
+
+    // A2: register so the delegated handlers can dispatch on this id
+    _itemRegistry.set(item.id, { item, itemTab });
 
     const status = getStatus(item.id, itemTab);
     const rating = getRating(item.id, itemTab);
@@ -2703,18 +2866,18 @@ function render() {
     const plexBadge = plexMatch ? `<span class="plex-badge" title="In your Plex library">⊕ Plex</span>` : '';
     const whyHtml = item.whyPriority ? `<div class="why-priority"><strong>Why this priority:</strong> ${item.whyPriority}</div>` : '';
 
-    const itemTagSet = getTagSetForItem(item);
-    const tagSetForIndicator = getTagSetForItem(item, itemTab);
-    const posCount = reactionTags.filter(t => tagSetForIndicator.positive.includes(t)).length;
-    const negCount = reactionTags.filter(t => tagSetForIndicator.negative.includes(t)).length;
+    // A5: getTagSetForItem(item) and getTagSetForItem(item, itemTab) resolve to
+    // the same set — resolveContentType falls through to the same source-tab
+    // either way. One call is enough.
+    const itemTagSet = getTagSetForItem(item, itemTab);
+    const posCount = reactionTags.filter(t => itemTagSet.positive.includes(t)).length;
+    const negCount = reactionTags.filter(t => itemTagSet.negative.includes(t)).length;
     const reactionIndicator = (posCount > 0 || negCount > 0) ? `<span class="reaction-indicator">${posCount > 0 ? `<span class="pos-count">+${posCount}</span>` : ''}${negCount > 0 ? `<span class="neg-count">−${negCount}</span>` : ''}</span>` : '';
-    const itemPositive = itemTagSet.positive;
-    const itemNegative = itemTagSet.negative;
-    const posTagsHtml = itemPositive.map(t => {
+    const posTagsHtml = itemTagSet.positive.map(t => {
       const active = reactionTags.includes(t);
       return `<button class="tag-btn ${active ? 'active-pos' : ''}" data-tag="${t}">${t}</button>`;
     }).join('');
-    const negTagsHtml = itemNegative.map(t => {
+    const negTagsHtml = itemTagSet.negative.map(t => {
       const active = reactionTags.includes(t);
       return `<button class="tag-btn ${active ? 'active-neg' : ''}" data-tag="${t}">${t}</button>`;
     }).join('');
@@ -2768,49 +2931,6 @@ function render() {
       </div>
     `;
 
-    itemEl.querySelector('.item-head').addEventListener('click', (e) => {
-      if (e.target.classList.contains('status-pill')) return;
-      if (expandedIds.has(item.id)) { expandedIds.delete(item.id); itemEl.classList.remove('expanded'); }
-      else {
-        expandedIds.add(item.id); itemEl.classList.add('expanded');
-        // Lazy-load streaming providers when item first expands
-        loadStreamingProviders(itemEl, item);
-      }
-    });
-    itemEl.querySelector('.status-pill').addEventListener('click', (e) => {
-      e.stopPropagation(); cycleStatus(item.id, itemTab);
-    });
-    itemEl.querySelectorAll('.action-btn[data-action]').forEach(btn => {
-      btn.addEventListener('click', (e) => { e.stopPropagation(); setStatus(item.id, btn.dataset.action, itemTab); });
-    });
-    const watchStartBtn = itemEl.querySelector('.watch-start-btn');
-    if (watchStartBtn) {
-      watchStartBtn.addEventListener('click', (e) => { e.stopPropagation(); openWatchModal(item, itemTab); });
-    }
-    const plexPlayBtn = itemEl.querySelector('.plex-play-btn');
-    if (plexPlayBtn) {
-      plexPlayBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const ratingKey = plexPlayBtn.dataset.plexKey;
-        // Set status to watching automatically when launching playback
-        setStatus(item.id, 'watching', itemTab);
-        // Try the deep link — Plex Android TV catches plex://
-        const deepLink = plexDeepLinkUrl(ratingKey);
-        window.location.href = deepLink;
-        // Fallback: if deep link doesn't fire (browser blocks unknown protocol), open Plex web client
-        setTimeout(() => {
-          const fallbackUrl = `${getPlexServerUrl()}/web/index.html#!/server/${getPlexClientId() || ''}/details?key=%2Flibrary%2Fmetadata%2F${ratingKey}`;
-          window.open(fallbackUrl, '_blank');
-        }, 1000);
-      });
-    }
-    itemEl.querySelectorAll('.rating-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => { e.stopPropagation(); setRating(item.id, btn.dataset.rating, itemTab); });
-    });
-    itemEl.querySelectorAll('.tag-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => { e.stopPropagation(); toggleTag(item.id, btn.dataset.tag, itemTab); });
-    });
-    itemEl.querySelector('.notes-input').addEventListener('blur', (e) => setNotes(item.id, e.target.value, itemTab));
     container.appendChild(itemEl);
   });
 
@@ -2846,14 +2966,44 @@ function switchTab(tab) {
 }
 
 function setupModals() {
+  // Tab filter pills — Film / TV / All. Stored in localStorage; rebuild
+  // tabs when changed so the visible list reflects the filter immediately.
+  document.querySelectorAll('#tab-filter .tab-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      setTabFilter(btn.dataset.filter);
+      buildTabs();
+      render();
+    });
+  });
+  // Reset flow: explicit modal with explanation. Hidden on TV (CSS),
+  // visible on phone and computer. Replaces the native confirm() dialog
+  // which is awkward to dismiss with a D-pad and offered no rollback info.
   document.getElementById('reset-btn').addEventListener('click', () => {
     if (isVirtualTab(activeTab)) {
       alert('The Watchlist tab is virtual and cannot be reset directly. Reset individual tabs to clear their data.');
       return;
     }
-    if (!confirm(`Reset ${activeTab} progress? This restores seed data for this tab only.`)) return;
+    const tabDef = catalogManifest.find(c => c.id === activeTab);
+    const tabLabel = (tabDef && tabDef.label) || activeTab;
+    const cat = catalogs[activeTab];
+    const itemCount = (cat && cat.items) ? cat.items.length : 0;
+    const detail = document.getElementById('reset-confirm-detail');
+    if (detail) {
+      detail.textContent =
+        `Reset ${tabLabel}? This restores the seed data for this tab — ` +
+        `every status, rating, reaction tag, and note for the ${itemCount} ` +
+        `item${itemCount === 1 ? '' : 's'} in this tab on this device will be ` +
+        `replaced with the starter data shipped with the app. Other tabs are not affected.`;
+    }
+    document.getElementById('reset-confirm-modal').classList.add('active');
+  });
+  document.getElementById('reset-confirm-go').addEventListener('click', () => {
+    document.getElementById('reset-confirm-modal').classList.remove('active');
     state[activeTab] = JSON.parse(JSON.stringify(SEED_STATE[activeTab] || {}));
     saveState(); render();
+  });
+  document.getElementById('reset-confirm-cancel').addEventListener('click', () => {
+    document.getElementById('reset-confirm-modal').classList.remove('active');
   });
   document.getElementById('export-btn').addEventListener('click', () => {
     document.getElementById('export-text').value = JSON.stringify(state, null, 2);
@@ -3004,7 +3154,13 @@ function setupModals() {
   let searchDebounce = null;
   document.getElementById('search-input').addEventListener('input', (e) => {
     if (searchDebounce) clearTimeout(searchDebounce);
-    searchDebounce = setTimeout(() => doSearch(e.target.value), 100);
+    const value = e.target.value;
+    // v5.36.0: defer the per-tab walk to idle time so keystrokes stay smooth
+    // on the Bravia D-pad. Falls back to setTimeout(0) where rIC isn't supported.
+    searchDebounce = setTimeout(() => {
+      const run = () => doSearch(value);
+      (window.requestIdleCallback || ((cb) => setTimeout(cb, 0)))(run);
+    }, 100);
   });
 
   // === Notes search modal ===
@@ -3020,7 +3176,11 @@ function setupModals() {
   let notesDebounce = null;
   document.getElementById('notes-search-input').addEventListener('input', (e) => {
     if (notesDebounce) clearTimeout(notesDebounce);
-    notesDebounce = setTimeout(() => doNotesSearch(e.target.value), 100);
+    const value = e.target.value;
+    notesDebounce = setTimeout(() => {
+      const run = () => doNotesSearch(value);
+      (window.requestIdleCallback || ((cb) => setTimeout(cb, 0)))(run);
+    }, 100);
   });
 
   // === Stats modal ===
@@ -3064,56 +3224,12 @@ function setupModals() {
   document.getElementById('triage-queue-btn').addEventListener('click', () => startTriage('queue'));
   document.getElementById('triage-suggest-btn').addEventListener('click', () => startTriage('suggest'));
 
-  // === Settings: collapsible sections ===
-  // State stored as { sectionId: true (collapsed) | false (open) } in localStorage.
-  // Defaults: Display always open; others open if their feature is configured, else collapsed.
-  const SETTINGS_COLLAPSED_KEY = 'watchtrack-settings-collapsed';
-  function getStoredCollapsed() {
-    try { return JSON.parse(localStorage.getItem(SETTINGS_COLLAPSED_KEY) || '{}'); }
-    catch { return {}; }
-  }
-  function setStoredCollapsed(map) {
-    localStorage.setItem(SETTINGS_COLLAPSED_KEY, JSON.stringify(map));
-  }
-  function defaultCollapsed(id) {
-    if (id === 'display') return false;
-    if (id === 'plex') return !isPlexConfigured();
-    if (id === 'webhook') return !isWebhookConfigured();
-    if (id === 'trakt') return !isTraktConnected();
-    return true;
-  }
-  function applySettingsCollapseState() {
-    const stored = getStoredCollapsed();
-    document.querySelectorAll('#settings-modal .settings-section').forEach(sec => {
-      const id = sec.dataset.section;
-      if (!id) return;
-      const collapsed = id in stored ? stored[id] : defaultCollapsed(id);
-      sec.classList.toggle('collapsed', collapsed);
-      const toggle = sec.querySelector('.settings-section-toggle');
-      if (toggle) toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-    });
-  }
-  function setupSettingsCollapse() {
-    document.querySelectorAll('#settings-modal .settings-section').forEach(sec => {
-      const id = sec.dataset.section;
-      if (!id) return;
-      const toggle = sec.querySelector('.settings-section-toggle');
-      if (!toggle) return;
-      const handler = () => {
-        const collapsed = sec.classList.toggle('collapsed');
-        toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-        const stored = getStoredCollapsed();
-        stored[id] = collapsed;
-        setStoredCollapsed(stored);
-      };
-      toggle.addEventListener('click', handler);
-      toggle.addEventListener('keydown', e => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handler(); }
-      });
-    });
-  }
-
   // === Settings modal ===
+  // (Per-section collapsibles removed in 5.35.0 — the card grid handles
+  // navigation, which made the header toggles redundant and broken when
+  // a section was navigated into while collapsed. data-section attrs stay
+  // because setSettingsView() uses them to show/hide individual sections.)
+
   // V5.27.0: Settings card definitions — each maps a card to a section in the
   // settings-modal. Status function returns 'ok' / 'warn' / 'empty' for the
   // colored badge on the card. Sync card is a placeholder until Phase 2.
@@ -3221,7 +3337,6 @@ function setupModals() {
       });
     }
   }
-  setupSettingsCollapse();
   const settingsModal = document.getElementById('settings-modal');
   // V5.27.0: Settings card grid + detail panels.
   // V5.31.2: buildSettingsCardGrid moved INSIDE the click handler so cards
@@ -3246,7 +3361,7 @@ function setupModals() {
     updatePlexStatusLine();
     updateWebhookStatusLine();
     updateTraktStatusLine();
-    applySettingsCollapseState();
+    updateDisplayModePicker();
     setSettingsView('grid'); // always open at the grid root
     settingsModal.classList.add('active');
   });
@@ -5777,6 +5892,13 @@ function wizardRender() {
   // Wire all buttons
   stepEl.querySelectorAll('.wizard-btn').forEach(btn => {
     btn.addEventListener('click', () => wizardHandleAction(btn));
+  });
+  // V5.35.0: focus the first button so D-pad navigation stays alive after
+  // each step transition. Without this, focus falls back to <body> and TV
+  // users have no D-pad target.
+  requestAnimationFrame(() => {
+    const first = stepEl.querySelector('.wizard-btn');
+    if (first) first.focus();
   });
 }
 

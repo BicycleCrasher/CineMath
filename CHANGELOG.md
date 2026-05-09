@@ -10,6 +10,108 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.36.0 — 2026-05-09
+**Service worker cache:** `scifi-tracker-v74` → `v75`
+
+### Tier A performance pass — render, search, scroll
+
+Six targeted refactors aimed squarely at the Bravia / Google TV experience.
+No behavioral change: every status, rating, tag, note, and Plex flow works
+exactly as before. The catalog renders the same DOM. What changes is *how*
+the app builds and updates that DOM.
+
+**Off-screen items skip layout and paint.** `.item` now declares
+`content-visibility: auto` with a `contain-intrinsic-size` hint, so cards
+below the fold are not laid out or painted until they scroll near the
+viewport. The Sci-Fi tab (~200 items) no longer pays full-tab rendering
+cost on every tab switch; expanded cards still render fully because the
+expanded class flips `content-visibility` back to `visible`.
+
+**One delegated event listener replaces eight per item.** The previous
+render attached eight separate `addEventListener` calls per card — for a
+200-item tab, ~1,600 listeners installed and torn down on every status
+change. R1 attaches a single click handler and a single focusout handler
+to `#items-container` once on first render, then maintains a small
+`_itemRegistry` Map keyed by item id. The handlers walk to the nearest
+matching ancestor (`closest('.action-btn[data-action]')`, etc.) and
+dispatch on the registry entry. `focusout` is used in place of `blur`
+for notes because blur doesn't bubble to the container.
+
+**Render calls coalesce into one frame.** `render()` is now a thin
+wrapper that schedules `_renderImpl()` via `requestAnimationFrame` and
+returns immediately if a render is already queued. The Trakt pull-sync
+loop, which calls `setStatus()` for every matched item and used to
+trigger one full render per item, now produces exactly one render no
+matter how many state changes land in the same frame.
+
+**Per-section visible counts precomputed.** The old loop called
+`catalog.items.filter(...)` once per item-with-section-change to count
+visible items in that section — quadratic inside a single render. The
+new code makes one pass over the catalog up front, building a
+`visibleCountBySection` Map. The render loop reads from the map in O(1).
+
+**Tag set resolved once per item.** `getTagSetForItem(item)` and
+`getTagSetForItem(item, itemTab)` resolved to the same set in every
+case — `resolveContentType()` falls through to the same source-tab
+either way. The duplicate call is removed.
+
+**Search defers to idle time.** Both the title/director search and the
+notes search wrap their per-keystroke work in `requestIdleCallback`
+(falling back to `setTimeout(0)`). The 100 ms keystroke debounce is
+preserved; the change just moves the actual catalog walk off the input
+critical path so D-pad typing on TV stays responsive.
+
+---
+
+## 5.35.0 — 2026-05-09
+**Service worker cache:** `scifi-tracker-v73` → `v74`
+
+### TV-mode cleanup batch
+
+Four targeted fixes for issues that surfaced on Google TV (TWA / .apk).
+Wizard restructure and modular recs cards are queued for a planned redesign;
+this release covers the small isolated fixes only.
+
+**Removed redundant Settings collapsibles.** The 5.30.0 per-section toggle
+headers fought the 5.27.0 card grid: navigating to a section via a card
+showed only the header if the section had been collapsed previously, with
+the form fields hidden behind a tiny chevron. The card grid is now the
+only navigation; section bodies always render when a card is opened.
+Removed the toggle UI, the body wrapper divs, and the
+`watchtrack-settings-collapsed` localStorage state. The `data-section`
+attributes stay because `setSettingsView()` uses them.
+
+**Wizard now keeps focus alive across step transitions.** After every
+`wizardRender()`, focus moves to the first `.wizard-btn` (via
+`requestAnimationFrame` so it runs after layout). Without this, focus
+fell back to `<body>` after each click and TV users had no D-pad target —
+the wizard appeared frozen until they re-opened it.
+
+**Tab-nav content-type filter.** A new sticky row above the tab nav with
+an eye glyph and three pills: All / Film / TV. Active pill flips to a
+gold background with black text. Filter persists in localStorage
+(`watchtrack-tab-filter`). Virtual tabs (Watchlist, Auteur) remain visible
+under all filters since they aggregate from both content types. If the
+active tab is hidden by a filter change, the first visible tab takes over
+so the user isn't stranded on a tab whose button is gone.
+
+**Display mode adds `computer`. Reset visibility tied to it.**
+- `getDetectedMode()` now returns `tv` | `computer` | `phone`. Computer is
+  detected as not-TV with viewport ≥ 1024px and a fine pointer. Body class
+  is one of `tv-mode` / `computer-mode` / `phone-mode`.
+- The "Computer" radio in Settings → Display appears only when the
+  detected mode is `computer`. That keeps the option list clean on phones
+  and TVs while letting a laptop user preview each mode.
+- Reset is hidden via CSS in `tv-mode`. On phone/computer, clicking Reset
+  now opens an explicit confirmation modal that names the tab, shows the
+  item count being affected, and warns that the reset is per-device — so
+  cross-device sync from another device will overwrite it on next pull
+  unless the user pushes from this device after resetting. Replaces the
+  native `confirm()` dialog, which dismissed awkwardly on D-pad and
+  carried no rollback information.
+
+---
+
 ## 5.34.0 — 2026-05-09
 **Requires Worker patch:** worker.js v5.5 — appends `videos` to TMDB lookup, returns `trailerKey`. Existing enrichments will refresh on the 30-day cache TTL automatically; force-refresh by re-running Pre-enrich catalog if you want trailers immediately.
 

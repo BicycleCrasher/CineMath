@@ -62,6 +62,12 @@
   </div>
 </header>
 
+<div class="tab-filter" id="tab-filter" role="group" aria-label="Filter tabs by content type">
+  <span class="tab-filter-eye" aria-hidden="true">👁</span>
+  <button class="tab-filter-btn" data-filter="all" type="button">All</button>
+  <button class="tab-filter-btn" data-filter="film" type="button">Film</button>
+  <button class="tab-filter-btn" data-filter="tv" type="button">TV</button>
+</div>
 <nav class="tab-nav" id="tab-nav"></nav>
 <div class="categories" id="categories"></div>
 <div class="filters" id="filters"></div>
@@ -319,9 +325,8 @@
     <h3>Settings</h3>
     <div class="settings-scroll">
     <div class="settings-section" data-section="display">
-      <h4 class="settings-section-toggle" tabindex="0" role="button" aria-expanded="true">Display</h4>
-      <div class="settings-section-body">
-      <p class="settings-help">TV mode uses larger fonts, focus rings, and D-pad navigation. Auto-detects based on device.</p>
+      <h4>Display</h4>
+      <p class="settings-help">TV mode uses larger fonts, focus rings, and D-pad navigation. Auto-detects based on device. The Computer option appears when running in a desktop browser, useful for previewing other modes from your laptop.</p>
       <div class="settings-row">
         <label>
           <input type="radio" name="display-mode" value="auto"> Auto (detect)
@@ -329,15 +334,16 @@
         <label>
           <input type="radio" name="display-mode" value="phone"> Phone
         </label>
+        <label id="display-mode-computer-label" style="display:none">
+          <input type="radio" name="display-mode" value="computer"> Computer
+        </label>
         <label>
           <input type="radio" name="display-mode" value="tv"> TV
         </label>
       </div>
-      </div>
     </div>
     <div class="settings-section" data-section="plex">
-      <h4 class="settings-section-toggle" tabindex="0" role="button">Plex Integration</h4>
-      <div class="settings-section-body">
+      <h4>Plex Integration</h4>
       <p class="settings-help">Connect your Plex Media Server to mark items as in-library and launch playback. URL + token are pushed to your Cloudflare Worker (via "Save to Worker") and proxied from there — the seedbox no longer accepts cross-origin browser requests directly.</p>
       <div class="settings-row">
         <label>Server URL</label>
@@ -360,11 +366,9 @@
         <button class="action-btn" id="promotions-manage">Manage promotions</button>
       </div>
       <p class="settings-status" id="plex-status">Not configured.</p>
-      </div>
     </div>
     <div class="settings-section" data-section="webhook">
-      <h4 class="settings-section-toggle" tabindex="0" role="button">Plex Webhook Bridge</h4>
-      <div class="settings-section-body">
+      <h4>Plex Webhook Bridge</h4>
       <p class="settings-help">When you watch something on Plex, it tells WatchTrack to mark it watched. Requires a Cloudflare Worker (free tier — see deployment instructions in the repo). Works with any Plex Pass account.</p>
       <div class="settings-row">
         <label>Worker URL</label>
@@ -387,11 +391,9 @@
         <button class="action-btn" id="pair-receive-apply">Apply pasted setup</button>
       </div>
       <p class="settings-status" id="pair-receive-status"></p>
-      </div>
     </div>
     <div class="settings-section" data-section="trakt">
-      <h4 class="settings-section-toggle" tabindex="0" role="button">Trakt Integration</h4>
-      <div class="settings-section-body">
+      <h4>Trakt Integration</h4>
       <p class="settings-help">Sync watch history and ratings with Trakt — both directions. Marking something watched here pushes to Trakt; importing pulls Trakt history into WatchTrack. Get your credentials at trakt.tv/oauth/applications.</p>
       <div class="settings-row">
         <label>Client ID</label>
@@ -413,7 +415,6 @@
         <p class="settings-status" id="trakt-code-status">Waiting for activation…</p>
       </div>
       <p class="settings-status" id="trakt-status">Not connected.</p>
-      </div>
     </div>
     </div>
     <div class="modal-actions">
@@ -435,6 +436,22 @@
 <footer>
   Tap a card to expand. Tap circle to cycle status.
 </footer>
+
+<div class="modal" id="reset-confirm-modal">
+  <div class="modal-content">
+    <h3>Reset this tab?</h3>
+    <p class="settings-help" id="reset-confirm-detail"></p>
+    <p class="settings-help" style="color:var(--pri-high)">
+      This affects only the current device. If cross-device sync is enabled,
+      your other devices will overwrite this reset on their next pull unless
+      you also push from here afterward.
+    </p>
+    <div class="modal-actions">
+      <button class="action-btn" id="reset-confirm-go">Reset tab</button>
+      <button class="action-btn" id="reset-confirm-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
 
 <div class="sw-update-banner" id="sw-update-banner" role="status" aria-live="polite">
   <span>New version available.</span>

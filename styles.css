@@ -59,6 +59,41 @@ h1 em { font-style: italic; color: var(--accent); }
 }
 .header-btn:active { background: var(--bg-card); color: var(--ink); }
 
+/* Film / TV / All tab filter — sits above the tab nav. The eye glyph
+   signals "show only…". Active button flips colors: gold bg, black text. */
+.tab-filter {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 12px;
+  background: var(--bg-elev);
+  border-bottom: 1px solid var(--rule);
+}
+.tab-filter-eye {
+  font-size: 14px;
+  color: var(--ink-faint);
+  margin-right: 4px;
+  user-select: none;
+}
+.tab-filter-btn {
+  background: transparent;
+  border: 1px solid var(--rule);
+  color: var(--ink-dim);
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-family: 'Helvetica Neue', sans-serif;
+  font-size: 11px; letter-spacing: 0.08em;
+  text-transform: uppercase; cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.tab-filter-btn.active {
+  background: var(--accent);
+  color: #1a1612;
+  border-color: var(--accent);
+  font-weight: 600;
+}
+body.tv-mode .tab-filter { padding: 12px 16px; gap: 10px; }
+body.tv-mode .tab-filter-eye { font-size: 18px; }
+body.tv-mode .tab-filter-btn { padding: 8px 18px; font-size: 13px; }
+
 .tab-nav {
   position: sticky; top: 0; z-index: 60;
   display: flex; background: var(--bg-elev);
@@ -146,7 +181,13 @@ main { padding: 8px 0 80px; }
   border-bottom: 1px solid var(--rule);
   padding: 18px 20px; transition: background 0.2s ease;
   position: relative;
+  /* v5.36.0: skip layout/paint for off-screen items. ~5–10× scroll perf
+     on long tabs (Sci-Fi has ~200 items). The intrinsic size is a hint
+     for the scrollbar so reserved height is roughly correct before paint. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 140px;
 }
+.item.expanded { content-visibility: visible; }
 .item.priority-high { border-left: 3px solid var(--pri-high); }
 .item.priority-med { border-left: 3px solid var(--pri-med); }
 .item-head { display: flex; align-items: flex-start; gap: 12px; cursor: pointer; }
@@ -951,24 +992,9 @@ select:focus, select:focus-visible {
   padding: 12px 0 6px;
 }
 
-/* Settings: collapsible section headers */
-.settings-section-toggle {
-  cursor: pointer; user-select: none;
-  display: flex; align-items: center; justify-content: space-between;
-  margin: 0; padding: 4px 0;
-}
-.settings-section-toggle::after {
-  content: '▾'; font-size: 11px; color: var(--accent);
-  transition: transform 0.15s ease;
-  margin-left: 8px;
-}
-.settings-section.collapsed .settings-section-toggle::after {
-  transform: rotate(-90deg);
-}
-.settings-section.collapsed .settings-section-body { display: none; }
-.settings-section-toggle:hover { color: var(--accent); }
-body.tv-mode .settings-section-toggle { padding: 8px 0; min-height: 44px; }
-body.tv-mode .settings-section-toggle::after { font-size: 14px; }
+/* Reset is destructive admin work; hide it on TV where the user is
+   consuming content, not managing the catalog. Visible on phone + computer. */
+body.tv-mode #reset-btn { display: none; }
 
 .sw-update-banner {
   position: fixed; bottom: 0; left: 0; right: 0;
