@@ -1,7 +1,17 @@
 {
   "catalogs": [
     { "id": "watchlist", "label": "Watchlist", "virtual": true },
-    { "id": "auteur", "label": "Auteur" },
+    { "id": "auteur", "label": "Auteur", "virtual": true, "directors": [
+      { "name": "Ingmar Bergman",        "label": "I. Ingmar Bergman",        "desc": "Swedish. The most acclaimed filmmaker of post-war European cinema." },
+      { "name": "Akira Kurosawa",        "label": "II. Akira Kurosawa",        "desc": "Japanese. The most internationally influential Asian director." },
+      { "name": "Federico Fellini",      "label": "III. Federico Fellini",      "desc": "Italian. From neo-realism to surrealism." },
+      { "name": "Andrei Tarkovsky",      "label": "IV. Andrei Tarkovsky",      "desc": "Russian. Slow cinema's defining figure." },
+      { "name": "Denis Villeneuve",      "label": "V. Denis Villeneuve",      "desc": "Canadian. The most acclaimed working sci-fi filmmaker." },
+      { "name": "David Lynch",           "label": "VI. David Lynch",           "desc": "American. The most singular sensibility in cinema." },
+      { "name": "Paul Thomas Anderson",  "label": "VII. Paul Thomas Anderson",  "desc": "American. The most acclaimed working American auteur." },
+      { "name": "Joel & Ethan Coen",     "label": "VIII. Coen Brothers",       "desc": "Cross-referenced with comedy and crime catalogs. Listed here in full." },
+      { "name": "Robert Eggers",         "label": "IX. Robert Eggers",         "desc": "American. Period-precise horror specialist." }
+    ] },
     { "id": "british-comedy", "label": "British Comedy" },
     { "id": "pre1960", "label": "Classics" },
     { "id": "comedy", "label": "Comedy" },

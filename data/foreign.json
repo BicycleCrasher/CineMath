@@ -773,6 +773,258 @@
       "categories": [
         "foundational"
       ]
+    },
+    {
+      "name": "IV. Auteur Filmographies",
+      "desc": "Primary genre home for director-specific works appearing in the Auteur tab. Organized by director.",
+      "items": [
+        {
+          "title": "The Seventh Seal",
+          "year": 1957,
+          "dir": "Ingmar Bergman",
+          "country": "Sweden",
+          "runtime": "96 min",
+          "priority": "high",
+          "tags": ["foundational", "intl"],
+          "whyPriority": "Best entry point. Knight + Death + chess + plague.",
+          "pitch": "A medieval knight returning from the Crusades challenges Death to a game of chess as the Black Plague sweeps Sweden — buying time to do one meaningful act before he dies.",
+          "critics": [{ "who": "Cannes 1957", "quote": "Special Jury Prize." }]
+        },
+        {
+          "title": "Wild Strawberries",
+          "year": 1957,
+          "dir": "Ingmar Bergman",
+          "country": "Sweden",
+          "runtime": "91 min",
+          "priority": "high",
+          "tags": ["foundational", "intl"],
+          "whyPriority": "His most accessible great film. Aging professor confronts his life.",
+          "pitch": "An aging professor, driving to receive an honorary degree, is overtaken by memories and dreams of his life and its failures. Bergman's warmest film.",
+          "critics": [{ "who": "Reception", "quote": "Berlin Golden Bear." }]
+        },
+        {
+          "title": "Persona",
+          "year": 1966,
+          "dir": "Ingmar Bergman",
+          "country": "Sweden",
+          "runtime": "84 min",
+          "priority": "high",
+          "tags": ["foundational", "intl"],
+          "whyPriority": "Bergman at his most experimental. Two women — actress and nurse — merge identities. The film school masterclass.",
+          "pitch": "An actress stops speaking. Her nurse cares for her at a remote cottage. The boundary between them dissolves.",
+          "critics": [{ "who": "Reception", "quote": "Routinely cited as Bergman's masterpiece. Sight & Sound canonical." }]
+        },
+        {
+          "title": "Cries and Whispers",
+          "year": 1972,
+          "dir": "Ingmar Bergman",
+          "country": "Sweden",
+          "runtime": "91 min",
+          "priority": "med",
+          "tags": ["foundational", "intl"],
+          "pitch": "Three sisters at a country estate as one of them dies. Bergman's most painful film.",
+          "critics": [{ "who": "Academy Awards 1974", "quote": "Five Oscar nominations including Best Picture, Best Director." }]
+        },
+        {
+          "title": "Fanny and Alexander",
+          "year": 1982,
+          "dir": "Ingmar Bergman",
+          "country": "Sweden/France/W. Germany",
+          "runtime": "188 min · or 312 min TV cut",
+          "priority": "high",
+          "tags": ["foundational", "intl"],
+          "whyPriority": "Bergman's farewell. Warmer than most of his catalog. Watch the 312-min TV version if you commit.",
+          "pitch": "An early-1900s Swedish family across years. Wealth, marriage, theater, magic, religion.",
+          "critics": [{ "who": "Academy Awards 1984", "quote": "Won 4 Oscars including Best Foreign Language Film, Cinematography, Art Direction, Costume Design." }]
+        },
+        {
+          "title": "Scenes from a Marriage",
+          "year": 1973,
+          "dir": "Ingmar Bergman",
+          "country": "Sweden",
+          "runtime": "281 min · TV / 168 min · theatrical",
+          "priority": "med",
+          "tags": ["foundational", "intl"],
+          "pitch": "A marriage across years, fights, separation, return. The TV version is the one to watch.",
+          "critics": [{ "who": "Reception", "quote": "Cited by many as the most honest depiction of marriage ever filmed." }]
+        },
+        {
+          "title": "Winter Light",
+          "year": 1963,
+          "dir": "Ingmar Bergman",
+          "country": "Sweden",
+          "runtime": "81 min",
+          "tags": ["foundational", "intl"],
+          "pitch": "A pastor losing his faith during one Sunday's services. Sparse, brutal.",
+          "critics": []
+        },
+        {
+          "title": "Through a Glass Darkly",
+          "year": 1961,
+          "dir": "Ingmar Bergman",
+          "country": "Sweden",
+          "runtime": "89 min",
+          "tags": ["foundational", "intl"],
+          "pitch": "A young woman recovering from mental illness during a family vacation. Won Best Foreign Language Film.",
+          "critics": [{ "who": "Academy Awards 1962", "quote": "Won Best Foreign Language Film." }]
+        },
+        {
+          "title": "Rashomon",
+          "year": 1950,
+          "dir": "Akira Kurosawa",
+          "country": "Japan",
+          "runtime": "88 min",
+          "priority": "high",
+          "tags": ["foundational", "intl"],
+          "whyPriority": "His international breakthrough. The film that gave us the word 'rashomon' for contradictory testimonies.",
+          "pitch": "A samurai's murder in feudal Japan is recounted by four witnesses, each giving a contradictory account. The foundational film on unreliable narration.",
+          "critics": [{ "who": "Reception", "quote": "Won Golden Lion at Venice." }]
+        },
+        {
+          "title": "Ikiru",
+          "year": 1952,
+          "dir": "Akira Kurosawa",
+          "country": "Japan",
+          "runtime": "143 min",
+          "priority": "high",
+          "tags": ["foundational", "intl"],
+          "whyPriority": "A bureaucrat with cancer tries to do one meaningful thing before dying. Many call it Kurosawa's most emotional film.",
+          "pitch": "An aging Tokyo civil servant, told he has months to live, tries to make his life mean something.",
+          "critics": [{ "who": "Reception", "quote": "Routinely cited among Kurosawa's masterpieces. Watanabe Takashi's central performance is iconic." }]
+        },
+        {
+          "title": "Sanjuro",
+          "year": 1962,
+          "dir": "Akira Kurosawa",
+          "country": "Japan",
+          "runtime": "96 min",
+          "priority": "med",
+          "tags": ["foundational", "intl"],
+          "pitch": "Yojimbo sequel. Lighter, looser. The blood-spurt at the climax has been imitated for 60 years.",
+          "critics": []
+        },
+        {
+          "title": "The Hidden Fortress",
+          "year": 1958,
+          "dir": "Akira Kurosawa",
+          "country": "Japan",
+          "runtime": "139 min",
+          "tags": ["foundational", "intl"],
+          "pitch": "Adventure film told from peasants' perspective. Lucas cited it as a structural model for Star Wars — R2-D2 and C-3PO are direct descendants.",
+          "critics": [{ "who": "Reception", "quote": "Berlin Silver Bear for Best Director." }]
+        },
+        {
+          "title": "High and Low",
+          "year": 1963,
+          "dir": "Akira Kurosawa",
+          "country": "Japan",
+          "runtime": "143 min",
+          "tags": ["foundational", "intl"],
+          "pitch": "A wealthy executive's chauffeur's son is mistakenly kidnapped. Shifts from boardroom thriller to cops procedural.",
+          "critics": [{ "who": "Reception", "quote": "Routinely cited as one of Kurosawa's greatest non-period films." }]
+        },
+        {
+          "title": "La Strada",
+          "year": 1954,
+          "dir": "Federico Fellini",
+          "country": "Italy",
+          "runtime": "108 min",
+          "priority": "high",
+          "tags": ["foundational", "intl"],
+          "whyPriority": "Fellini's most heartbreaking. Giulietta Masina as a simple-minded young woman sold to a brutish strongman. Won Best Foreign Language Film.",
+          "pitch": "Postwar Italy. A traveling strongman buys a young woman from her impoverished mother. Their road life.",
+          "critics": [{ "who": "Academy Awards 1957", "quote": "Won Best Foreign Language Film." }]
+        },
+        {
+          "title": "Nights of Cabiria",
+          "year": 1957,
+          "dir": "Federico Fellini",
+          "country": "Italy/France",
+          "runtime": "117 min",
+          "priority": "high",
+          "tags": ["foundational", "intl"],
+          "pitch": "Masina as a Roman prostitute who keeps believing in love. The final shot is one of cinema's most famous.",
+          "critics": [{ "who": "Academy Awards 1958", "quote": "Won Best Foreign Language Film." }]
+        },
+        {
+          "title": "La Dolce Vita",
+          "year": 1960,
+          "dir": "Federico Fellini",
+          "country": "Italy/France",
+          "runtime": "176 min",
+          "priority": "high",
+          "tags": ["foundational", "intl"],
+          "whyPriority": "Marcello Mastroianni drifting through a week of Roman society. The word 'paparazzi' came from a character's name.",
+          "pitch": "A gossip journalist drifts through seven nights of Roman parties, encounters, and emptiness.",
+          "critics": [{ "who": "Cannes 1960", "quote": "Palme d'Or." }]
+        },
+        {
+          "title": "Amarcord",
+          "year": 1973,
+          "dir": "Federico Fellini",
+          "country": "Italy/France",
+          "runtime": "123 min",
+          "priority": "med",
+          "tags": ["foundational", "intl"],
+          "pitch": "Fellini's most autobiographical. A year in 1930s Rimini under Mussolini. Comic, nostalgic, sad.",
+          "critics": [{ "who": "Academy Awards 1975", "quote": "Won Best Foreign Language Film." }]
+        },
+        {
+          "title": "Andrei Rublev",
+          "year": 1966,
+          "dir": "Andrei Tarkovsky",
+          "country": "USSR",
+          "runtime": "205 min",
+          "priority": "high",
+          "tags": ["foundational", "intl"],
+          "whyPriority": "His masterpiece. Three-and-a-half hours.",
+          "pitch": "The life of the great Russian icon painter across four decades of medieval Russia — invasion, famine, and spiritual doubt. Tarkovsky's most expansive film.",
+          "critics": []
+        },
+        {
+          "title": "Mirror",
+          "year": 1975,
+          "dir": "Andrei Tarkovsky",
+          "country": "USSR",
+          "runtime": "107 min",
+          "priority": "med",
+          "tags": ["foundational", "intl"],
+          "whyPriority": "His most personal and most difficult. Often cited as his greatest film by other directors.",
+          "pitch": "A dying poet's memories of childhood, his mother, war, and Russia.",
+          "critics": [{ "who": "Reception", "quote": "Frequently named the greatest film ever made by other filmmakers." }]
+        },
+        {
+          "title": "Nostalghia",
+          "year": 1983,
+          "dir": "Andrei Tarkovsky",
+          "country": "Italy/USSR",
+          "runtime": "125 min",
+          "tags": ["foundational", "intl"],
+          "pitch": "A Russian poet researches an exile in Italy. His own homesickness becomes the film's spiritual subject.",
+          "critics": [{ "who": "Cannes 1983", "quote": "Tarkovsky shared the Best Director prize." }]
+        },
+        {
+          "title": "The Sacrifice",
+          "year": 1986,
+          "dir": "Andrei Tarkovsky",
+          "country": "Sweden/UK/France",
+          "runtime": "149 min",
+          "tags": ["foundational", "intl"],
+          "pitch": "Tarkovsky's final film. Made while he was dying. A man bargains with God to prevent nuclear war.",
+          "critics": [{ "who": "Cannes 1986", "quote": "Grand Prix and Critics' Prize." }]
+        },
+        {
+          "title": "Incendies",
+          "year": 2010,
+          "dir": "Denis Villeneuve",
+          "country": "Canada/France",
+          "runtime": "131 min",
+          "tags": ["modern", "intl"],
+          "pitch": "Twins travel to the Middle East to investigate their dead mother's past. Brutal, structurally devastating.",
+          "critics": [{ "who": "Academy Awards 2011", "quote": "Best Foreign Language Film nomination." }]
+        }
+      ],
+      "categories": ["foreign", "auteur"]
     }
   ]
 }

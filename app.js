@@ -187,7 +187,7 @@ function resolveContentType(item, sourceTab) {
     }
   }
   // 3. Source tab default (preferred), then activeTab default, then film-narrative
-  const tab = sourceTab || (item && item._watchlist_source_tab) || activeTab;
+  const tab = sourceTab || (item && (item._watchlist_source_tab || item._auteur_source_tab)) || activeTab;
   return TAB_DEFAULT_CONTENT_TYPE[tab] || 'film-narrative';
 }
 
@@ -404,6 +404,7 @@ let catalogs = {};
 let catalogManifest = [];
 let activeTab = 'watchlist';
 let activeFilter = 'all';
+const auteurDirectorSet = new Set();
 // Tag pill filter state (Stage 5d-1) — in-memory only, resets on tab switch.
 // Maps tabId → Set of selected tag strings. Mode: 'and' | 'or' (per tab).
 const activeTagFilters = {};   // { tabId: Set<string> }
@@ -1787,10 +1788,13 @@ async function loadCatalogManifest() {
     const resp = await fetch('data/catalogs.json');
     const data = await resp.json();
     catalogManifest = data.catalogs;
+    auteurDirectorSet.clear();
+    const auteurDef = catalogManifest.find(c => c.id === 'auteur');
+    if (auteurDef && auteurDef.directors) auteurDef.directors.forEach(d => auteurDirectorSet.add(d.name));
   } catch (e) {
     catalogManifest = [
       { id: "watchlist", label: "Watchlist", virtual: true },
-      { id: "auteur", label: "Auteur" },
+      { id: "auteur", label: "Auteur", virtual: true },
       { id: "british-comedy", label: "British Comedy" },
       { id: "pre1960", label: "Classics" },
       { id: "comedy", label: "Comedy" },
@@ -2333,6 +2337,51 @@ function buildWatchlistCatalog() {
   };
 }
 
+// === Auteur (virtual tab) generator ===
+// Scans all genre catalogs for items whose dir matches a director in the auteurDirectors
+// list from catalogs.json. Deduplicates by item ID (handles films in multiple genre tabs).
+function buildAuteurCatalog() {
+  const auteurDef = catalogManifest.find(c => c.id === 'auteur');
+  const directors = (auteurDef && auteurDef.directors) || [];
+  const directorMap = new Map();
+  directors.forEach(d => directorMap.set(d.name, []));
+  const seen = new Set();
+
+  for (const tabId in catalogs) {
+    if (tabId === 'watchlist' || tabId === 'auteur') continue;
+    const cat = catalogs[tabId];
+    cat.items.forEach(item => {
+      if (!directorMap.has(item.dir)) return;
+      if (seen.has(item.id)) return;
+      seen.add(item.id);
+      const proxy = Object.assign({}, item, {
+        _auteur_source_tab: tabId,
+        _auteur_source_label: cat.title || tabId
+      });
+      directorMap.get(item.dir).push(proxy);
+    });
+  }
+
+  let globalOrder = 1;
+  const sections = [];
+  directors.forEach(d => {
+    const items = directorMap.get(d.name) || [];
+    if (items.length === 0) return;
+    items.sort((a, b) => (a.order || 0) - (b.order || 0));
+    items.forEach(it => { it.section = d.label; it.sectionDesc = d.desc; it.order = globalOrder++; });
+    sections.push({ name: d.label, desc: d.desc, items });
+  });
+
+  const allItems = sections.flatMap(s => s.items);
+  return {
+    type: 'auteur',
+    title: 'Auteur',
+    subtitle: `${directors.length} directors · ${allItems.length} films`,
+    sections,
+    items: allItems
+  };
+}
+
 function isVirtualTab(tabId) {
   const def = catalogManifest.find(c => c.id === tabId);
   return def && def.virtual;
@@ -2343,11 +2392,15 @@ function getActiveCatalog() {
     catalogs['watchlist'] = buildWatchlistCatalog();
     return catalogs['watchlist'];
   }
+  if (activeTab === 'auteur') {
+    catalogs['auteur'] = buildAuteurCatalog();
+    return catalogs['auteur'];
+  }
   return catalogs[activeTab];
 }
 
 function render() {
-  if (activeTab !== 'watchlist' && !catalogs[activeTab]) return;
+  if (!isVirtualTab(activeTab) && !catalogs[activeTab]) return;
   const catalog = getActiveCatalog();
   document.getElementById('tab-subtitle').textContent = catalog.subtitle;
 
@@ -2396,7 +2449,7 @@ function render() {
     if (!itemMatchesCategory(item)) return;
 
     // For watchlist virtual tab, items operate on their source tab's state
-    const itemTab = item._watchlist_source_tab || activeTab;
+    const itemTab = item._watchlist_source_tab || item._auteur_source_tab || activeTab;
 
     const status = getStatus(item.id, itemTab);
     const rating = getRating(item.id, itemTab);
@@ -2426,12 +2479,18 @@ function render() {
     const priorityBadge = item.priority ? `<span class="priority-badge ${item.priority}">${priorityLabel(item.priority)}</span>` : '';
     const ratingBadge = rating !== 'none' ? `<span class="rating-badge ${rating}">${ratingLabel(rating)}</span>` : '';
     const commitmentBadge = item.commitment ? `<span class="commitment">${item.commitment}</span>` : '';
-    const sourceBadge = (activeTab === 'watchlist' && item._watchlist_source_label) ? `<span class="source-badge">${item._watchlist_source_label}</span>` : '';
+    const sourceLabel = item._watchlist_source_label || item._auteur_source_label || '';
+    const sourceBadge = (sourceLabel && (activeTab === 'watchlist' || activeTab === 'auteur')) ? `<span class="source-badge">${sourceLabel}</span>` : '';
+    const auteurBadge = auteurDirectorSet.has(item.dir) ? `<span class="auteur-badge">Auteur</span>` : '';
     const plexMatch = isPlexConfigured() ? plexHasItem(item) : null;
     const plexBadge = plexMatch ? `<span class="plex-badge" title="In your Plex library">⊕ Plex</span>` : '';
     const whyHtml = item.whyPriority ? `<div class="why-priority"><strong>Why this priority:</strong> ${item.whyPriority}</div>` : '';
 
     const itemTagSet = getTagSetForItem(item);
+    const tagSetForIndicator = getTagSetForItem(item, itemTab);
+    const posCount = reactionTags.filter(t => tagSetForIndicator.positive.includes(t)).length;
+    const negCount = reactionTags.filter(t => tagSetForIndicator.negative.includes(t)).length;
+    const reactionIndicator = (posCount > 0 || negCount > 0) ? `<span class="reaction-indicator">${posCount > 0 ? `<span class="pos-count">+${posCount}</span>` : ''}${negCount > 0 ? `<span class="neg-count">−${negCount}</span>` : ''}</span>` : '';
     const itemPositive = itemTagSet.positive;
     const itemNegative = itemTagSet.negative;
     const posTagsHtml = itemPositive.map(t => {
@@ -2457,7 +2516,7 @@ function render() {
           <h3 class="item-title">${item.title}</h3>
           <div class="item-meta">${metaLine}</div>
           ${seasonsLine}
-          <div class="badge-row">${sourceBadge}${plexBadge}${commitmentBadge}${priorityBadge}${ratingBadge}</div>
+          <div class="badge-row">${sourceBadge}${auteurBadge}${plexBadge}${commitmentBadge}${priorityBadge}${ratingBadge}${reactionIndicator}</div>
         </div>
         <div class="status-pill ${status === 'none' ? '' : status}">${statusIcon(status)}</div>
       </div>

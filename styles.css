@@ -731,6 +731,19 @@ select:focus, select:focus-visible {
   font-size: 9px; letter-spacing: 0.08em;
   text-transform: uppercase; font-weight: 500;
 }
+.auteur-badge {
+  background: transparent; color: var(--accent);
+  border: 1px solid var(--accent);
+  padding: 2px 7px; border-radius: 3px;
+  font-size: 9px; letter-spacing: 0.08em;
+  text-transform: uppercase; font-weight: 500;
+}
+.reaction-indicator {
+  display: inline-flex; gap: 4px; align-items: center;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.02em;
+}
+.pos-count { color: #4caf6e; }
+.neg-count { color: #e05252; }
 .stats-content {
   font-size: 13px; line-height: 1.6;
   max-height: 60vh; overflow-y: auto;

@@ -934,6 +934,48 @@
       ]
     },
     {
+      "name": "VII. Auteur Filmographies",
+      "desc": "Primary genre home for director-specific sci-fi works appearing in the Auteur tab.",
+      "items": [
+        {
+          "title": "Solaris",
+          "year": 1972,
+          "dir": "Andrei Tarkovsky",
+          "country": "USSR",
+          "runtime": "166 min",
+          "priority": "high",
+          "tags": ["foundational", "intl"],
+          "pitch": "A psychologist is sent to a space station orbiting an ocean planet that materializes the crew's memories and guilt. Tarkovsky's answer to 2001.",
+          "critics": []
+        },
+        {
+          "title": "Arrival",
+          "year": 2016,
+          "dir": "Denis Villeneuve",
+          "country": "USA",
+          "runtime": "116 min",
+          "priority": "high",
+          "tags": ["modern"],
+          "whyPriority": "The film that proved Villeneuve could do thoughtful sci-fi. Adams's career-best.",
+          "pitch": "A linguist is recruited to communicate with newly arrived alien spacecraft.",
+          "critics": [{ "who": "Academy Awards 2017", "quote": "Eight Oscar nominations including Best Picture, Best Director." }]
+        },
+        {
+          "title": "Blade Runner 2049",
+          "year": 2017,
+          "dir": "Denis Villeneuve",
+          "country": "USA",
+          "runtime": "164 min",
+          "priority": "high",
+          "tags": ["modern"],
+          "whyPriority": "Sequel to a film you've watched. Roger Deakins's Oscar-winning cinematography. Slower, more contemplative than the original.",
+          "pitch": "Decades after the original. A blade runner uncovers a secret with implications for the entire society.",
+          "critics": [{ "who": "Academy Awards 2018", "quote": "Won 2 Oscars including Best Cinematography (Deakins). Five total nominations." }]
+        }
+      ],
+      "categories": ["auteur"]
+    },
+    {
       "name": "Z. Plex History (Auto-Promoted)",
       "desc": "Items auto-promoted from Plex viewing history and TMDB recommendations during 2026-05-08 sync. Source attribution is in each item's pitch.",
       "items": [

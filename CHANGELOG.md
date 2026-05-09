@@ -10,6 +10,40 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.28.0 — 2026-05-09
+**Service worker cache:** `scifi-tracker-v68` → `v69`
+
+### Feature — Virtual Auteur tab, auteur badge, reaction indicators on cards
+
+**Virtual Auteur tab**
+
+The Auteur tab is now driven entirely by a director list in `catalogs.json` rather than a static `auteur.json` file. On load, `auteurDirectorSet` is populated from the `directors` array on the auteur catalog entry. `buildAuteurCatalog()` scans every non-virtual genre catalog, collects items whose `dir` matches a listed director, deduplicates by computed item ID, and groups results into per-director sections. Items carry `_auteur_source_tab` and `_auteur_source_label` metadata so state operations route back to the source genre tab — the same aliasing pattern used by the Watchlist virtual tab.
+
+Directors are currently: Ingmar Bergman, Akira Kurosawa, Federico Fellini, Andrei Tarkovsky, Denis Villeneuve, David Lynch, Paul Thomas Anderson, Joel & Ethan Coen, Robert Eggers. Adding or removing a director from the auteur view requires editing only the `directors` array in `catalogs.json`.
+
+**64 auteur films migrated to genre catalogs**
+
+All films formerly in `auteur.json` are now in their primary genre catalog under an "Auteur Filmographies" section, making them available for triage, filtering, and reaction tracking alongside other catalog content:
+
+- `foreign.json` — Bergman (8 films), Kurosawa (5), Fellini (4), Tarkovsky (4), Villeneuve's Incendies
+- `scifi.json` — Tarkovsky's Solaris; Villeneuve's Arrival, Blade Runner 2049
+- `crime.json` — Villeneuve's Sicario; Lynch's Blue Velvet, Lost Highway; Coens' Miller's Crossing, Blood Simple
+- `drama.json` — Villeneuve's Enemy; Lynch's The Elephant Man, Inland Empire; PTA's 6 films; Coens' 4 films
+- `horror.json` — Lynch's Twin Peaks: Fire Walk With Me, Eraserhead
+- `fantasy.json` — Eggers' The Northman
+
+The virtual Auteur tab assembles these 71 films dynamically at render time; `auteur.json` is no longer referenced and has been removed from the service worker ASSETS list.
+
+**Auteur badge on outer cards**
+
+Every item card in every tab whose `dir` matches a listed director in `auteurDirectorSet` now displays a small outlined "AUTEUR" chip in the badge row. The badge is purely visual and requires no tag or status change.
+
+**Reaction indicators on outer cards**
+
+Positive and negative reaction tag counts are now visible on every outer card without expanding it. A green `+N` count appears when the item has positive reaction tags applied; a red `−N` count appears for negative tags. The counts are computed against the source tab's tag set (via `getTagSetForItem`) so films aliased in Auteur or Watchlist report correctly.
+
+---
+
 ## 5.27.1 — 2026-05-09
 **Service worker cache:** `scifi-tracker-v67` → `v68`
 

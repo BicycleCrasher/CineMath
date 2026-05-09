@@ -1,4 +1,4 @@
-const CACHE_NAME = 'scifi-tracker-v68';
+const CACHE_NAME = 'scifi-tracker-v69';
 const inflightRevalidations = new Set();
 const ASSETS = [
   './',
@@ -26,7 +26,6 @@ const ASSETS = [
   './data/drama.json',
   './data/drama-tv.json',
   './data/foreign.json',
-  './data/auteur.json',
   './data/pre1960.json',
   './data/musicals.json',
   './data/heroes-comics.json',

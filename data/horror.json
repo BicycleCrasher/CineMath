@@ -648,6 +648,35 @@
       ]
     },
     {
+      "name": "VII. Auteur Filmographies",
+      "desc": "Primary genre home for director-specific horror works appearing in the Auteur tab.",
+      "items": [
+        {
+          "title": "Twin Peaks: Fire Walk With Me",
+          "year": 1992,
+          "dir": "David Lynch",
+          "country": "USA/France",
+          "runtime": "135 min",
+          "priority": "med",
+          "tags": ["modern"],
+          "whyPriority": "The Twin Peaks prequel film. Booed at Cannes; rehabilitated as one of his masterpieces. Sheryl Lee's central performance is staggering.",
+          "pitch": "The last seven days of Laura Palmer's life.",
+          "critics": [{ "who": "Reappraisal", "quote": "Critically reviled in 1992; now widely cited as one of the greatest works of the 1990s." }]
+        },
+        {
+          "title": "Eraserhead",
+          "year": 1977,
+          "dir": "David Lynch",
+          "country": "USA",
+          "runtime": "89 min",
+          "tags": ["foundational"],
+          "pitch": "His debut. Industrial nightmare, deformed baby, anxiety as form. Watch only when you're ready.",
+          "critics": [{ "who": "Reception", "quote": "Immediate cult phenomenon. Routinely cited as one of cinema's strangest masterpieces." }]
+        }
+      ],
+      "categories": ["auteur"]
+    },
+    {
       "name": "Z. Plex History (Auto-Promoted)",
       "desc": "Items auto-promoted from Plex viewing history and TMDB recommendations during 2026-05-08 sync. Source attribution is in each item's pitch.",
       "items": [

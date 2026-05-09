@@ -610,6 +610,159 @@
       ]
     },
     {
+      "name": "VI. Auteur Filmographies",
+      "desc": "Primary genre home for director-specific dramatic works appearing in the Auteur tab.",
+      "items": [
+        {
+          "title": "Enemy",
+          "year": 2013,
+          "dir": "Denis Villeneuve",
+          "country": "Canada/Spain",
+          "runtime": "91 min",
+          "tags": ["modern"],
+          "pitch": "Adapted from Saramago. Gyllenhaal plays a man who discovers his exact double. Eerie, dream-logic, ends with one of cinema's most disturbing images.",
+          "critics": [{ "who": "Reception", "quote": "Polarizing on release; reputation has grown. Cult standing." }]
+        },
+        {
+          "title": "The Elephant Man",
+          "year": 1980,
+          "dir": "David Lynch",
+          "country": "UK/USA",
+          "runtime": "124 min",
+          "priority": "med",
+          "tags": ["foundational"],
+          "whyPriority": "His most accessible. Hurt's performance under prosthetics is among the great screen performances.",
+          "pitch": "Joseph Merrick in Victorian London. Black and white, sympathetic, beautiful.",
+          "critics": [{ "who": "Academy Awards 1981", "quote": "Eight Oscar nominations including Best Picture, Best Director." }]
+        },
+        {
+          "title": "Inland Empire",
+          "year": 2006,
+          "dir": "David Lynch",
+          "country": "USA/France/Poland",
+          "runtime": "180 min",
+          "tags": ["modern"],
+          "pitch": "Three hours, shot on consumer video. Laura Dern in his most experimental film. For Lynch completists only.",
+          "critics": []
+        },
+        {
+          "title": "The Master",
+          "year": 2012,
+          "dir": "Paul Thomas Anderson",
+          "country": "USA",
+          "runtime": "138 min",
+          "priority": "high",
+          "tags": ["modern"],
+          "whyPriority": "Phoenix and Hoffman. A WWII veteran falls in with a charismatic cult leader. Three Oscar acting nominations from one film.",
+          "pitch": "1950s. A drifting WWII vet joins a self-help movement led by a charismatic founder. The relationship between them is the film.",
+          "critics": [{ "who": "Reception", "quote": "Three Oscar acting nominations." }]
+        },
+        {
+          "title": "Magnolia",
+          "year": 1999,
+          "dir": "Paul Thomas Anderson",
+          "country": "USA",
+          "runtime": "188 min",
+          "priority": "high",
+          "tags": ["foundational"],
+          "whyPriority": "His ensemble masterpiece. Multiple LA stories converge across one day. Cruise's career-best performance. The frogs.",
+          "pitch": "Multiple LA characters across one biblically strange day.",
+          "critics": [{ "who": "Reception", "quote": "Three Oscar nominations including Best Original Screenplay. Berlin Golden Bear." }]
+        },
+        {
+          "title": "Boogie Nights",
+          "year": 1997,
+          "dir": "Paul Thomas Anderson",
+          "country": "USA",
+          "runtime": "155 min",
+          "priority": "high",
+          "tags": ["foundational"],
+          "whyPriority": "His breakthrough. Late-70s/early-80s San Fernando Valley porn industry. Wahlberg, Reynolds, Moore. Tracking shots.",
+          "pitch": "A young busboy is discovered and inducted into the porn industry. He becomes a star. Then the 80s arrive.",
+          "critics": [{ "who": "Academy Awards 1998", "quote": "Three Oscar nominations." }]
+        },
+        {
+          "title": "Phantom Thread",
+          "year": 2017,
+          "dir": "Paul Thomas Anderson",
+          "country": "USA/UK",
+          "runtime": "130 min",
+          "priority": "high",
+          "tags": ["modern"],
+          "whyPriority": "Day-Lewis's final performance. 1950s London couture house. Vicky Krieps is electric.",
+          "pitch": "A renowned dressmaker meets a young waitress. Their relationship is more peculiar than either expects.",
+          "critics": [{ "who": "Academy Awards 2018", "quote": "Six Oscar nominations including Best Picture, Best Director, Best Actor." }]
+        },
+        {
+          "title": "Punch-Drunk Love",
+          "year": 2002,
+          "dir": "Paul Thomas Anderson",
+          "country": "USA",
+          "runtime": "95 min",
+          "priority": "med",
+          "tags": ["modern"],
+          "pitch": "Adam Sandler in his only great dramatic performance. A fragile man falls in love. Strange, brittle, sweet.",
+          "critics": [{ "who": "Cannes 2002", "quote": "Won Best Director." }]
+        },
+        {
+          "title": "Licorice Pizza",
+          "year": 2021,
+          "dir": "Paul Thomas Anderson",
+          "country": "USA",
+          "runtime": "133 min",
+          "tags": ["modern"],
+          "pitch": "70s San Fernando Valley coming-of-age. Looser than his other recent work.",
+          "critics": [{ "who": "Academy Awards 2022", "quote": "Three Oscar nominations including Best Picture, Best Director." }]
+        },
+        {
+          "title": "True Grit",
+          "year": 2010,
+          "dir": "Joel & Ethan Coen",
+          "country": "USA",
+          "runtime": "110 min",
+          "tags": ["modern"],
+          "pitch": "A headstrong 14-year-old hires a hard-drinking U.S. Marshal to track down her father's killer. The Coens' most purely entertaining film.",
+          "critics": [{ "who": "Academy Awards 2011", "quote": "Ten Oscar nominations." }]
+        },
+        {
+          "title": "Inside Llewyn Davis",
+          "year": 2013,
+          "dir": "Joel & Ethan Coen",
+          "country": "USA/UK/France",
+          "runtime": "104 min",
+          "priority": "high",
+          "tags": ["modern"],
+          "whyPriority": "Their most melancholy film. 1961 Greenwich Village folk scene. Oscar Isaac's career-launching performance.",
+          "pitch": "A struggling folk singer in early-1960s New York drifts toward final failure.",
+          "critics": [{ "who": "Cannes 2013", "quote": "Grand Prix." }]
+        },
+        {
+          "title": "A Serious Man",
+          "year": 2009,
+          "dir": "Joel & Ethan Coen",
+          "country": "USA",
+          "runtime": "106 min",
+          "priority": "high",
+          "tags": ["modern"],
+          "whyPriority": "Their most personal and most Jewish. 1967 Minnesota physics professor whose life unravels. Job in suburban America.",
+          "pitch": "Larry Gopnik's life falls apart. He visits three rabbis. None of them help.",
+          "critics": [{ "who": "Academy Awards 2010", "quote": "Two Oscar nominations including Best Picture." }]
+        },
+        {
+          "title": "Barton Fink",
+          "year": 1991,
+          "dir": "Joel & Ethan Coen",
+          "country": "USA/UK",
+          "runtime": "116 min",
+          "priority": "med",
+          "tags": ["foundational"],
+          "pitch": "1941 Hollywood. A New York playwright takes a screenwriting job. Things go strange.",
+          "critics": [{ "who": "Cannes 1991", "quote": "Palme d'Or — the Coens are the only filmmakers to win Cannes's three major prizes in a single year." }]
+        }
+      ],
+      "categories": ["auteur"]
+    },
+    {
       "name": "Z. Plex History (Auto-Promoted)",
       "desc": "Items auto-promoted from Plex viewing history and TMDB recommendations during 2026-05-08 sync. Source attribution is in each item's pitch.",
       "items": [

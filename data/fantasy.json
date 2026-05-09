@@ -432,6 +432,25 @@
         "epic",
         "adventure"
       ]
+    },
+    {
+      "name": "VI. Auteur Filmographies",
+      "desc": "Primary genre home for director-specific works appearing in the Auteur tab.",
+      "items": [
+        {
+          "title": "The Northman",
+          "year": 2022,
+          "dir": "Robert Eggers",
+          "country": "USA",
+          "runtime": "137 min",
+          "priority": "high",
+          "tags": ["modern"],
+          "whyPriority": "Eggers' Viking revenge epic. The Hamlet source story (Amleth) treated with full mythological commitment. Skarsgård, Kidman, Dafoe, Björk.",
+          "pitch": "Tenth-century Iceland. A young prince, exiled, sets out as an adult to avenge his father's murder.",
+          "critics": [{ "who": "Reception", "quote": "Mixed commercial performance; critical reputation has grown. Considered the most committed mainstream Viking film." }]
+        }
+      ],
+      "categories": ["auteur", "epic"]
     }
   ]
 }

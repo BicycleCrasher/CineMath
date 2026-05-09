@@ -570,6 +570,70 @@
       ]
     },
     {
+      "name": "VI. Auteur Filmographies",
+      "desc": "Primary genre home for director-specific crime works appearing in the Auteur tab.",
+      "items": [
+        {
+          "title": "Sicario",
+          "year": 2015,
+          "dir": "Denis Villeneuve",
+          "country": "USA",
+          "runtime": "121 min",
+          "priority": "high",
+          "tags": ["modern"],
+          "whyPriority": "Cartel thriller that's smarter than the genre. Blunt, Del Toro, Brolin. Deakins again. Taylor Sheridan screenplay.",
+          "pitch": "An idealistic FBI agent is recruited into a black-ops task force on the Mexican border.",
+          "critics": [{ "who": "Academy Awards 2016", "quote": "Three Oscar nominations." }]
+        },
+        {
+          "title": "Blue Velvet",
+          "year": 1986,
+          "dir": "David Lynch",
+          "country": "USA",
+          "runtime": "120 min",
+          "priority": "high",
+          "tags": ["foundational"],
+          "whyPriority": "His breakthrough. American suburb's underbelly. Hopper at his most terrifying.",
+          "pitch": "A young man finds a severed ear in a field. The investigation reveals what's underneath his small town.",
+          "critics": [{ "who": "Academy Awards 1987", "quote": "Best Director nomination." }]
+        },
+        {
+          "title": "Lost Highway",
+          "year": 1997,
+          "dir": "David Lynch",
+          "country": "USA/France",
+          "runtime": "134 min",
+          "tags": ["modern"],
+          "pitch": "A jazz musician is accused of murdering his wife. Then becomes someone else. Lynch at his most fragmented.",
+          "critics": []
+        },
+        {
+          "title": "Miller's Crossing",
+          "year": 1990,
+          "dir": "Joel & Ethan Coen",
+          "country": "USA",
+          "runtime": "115 min",
+          "priority": "high",
+          "tags": ["foundational"],
+          "whyPriority": "Their best gangster film. Prohibition-era Irish/Italian war. Gabriel Byrne's career-best.",
+          "pitch": "An advisor to an Irish mob boss navigates a war with the Italians. Loyalty, betrayal, ethics.",
+          "critics": [{ "who": "Reception", "quote": "Initially modest performance; critical reputation has grown enormously." }]
+        },
+        {
+          "title": "Blood Simple",
+          "year": 1984,
+          "dir": "Joel & Ethan Coen",
+          "country": "USA",
+          "runtime": "99 min",
+          "priority": "med",
+          "tags": ["foundational"],
+          "pitch": "Their debut. Texas noir. A husband, his wife's affair, a hired killer who has his own ideas.",
+          "critics": [{ "who": "Reception", "quote": "Sundance Grand Jury Prize. Established their career immediately." }]
+        }
+      ],
+      "categories": ["auteur"]
+    },
+    {
       "name": "Z. Plex History (Auto-Promoted)",
       "desc": "Items auto-promoted from Plex viewing history and TMDB recommendations during 2026-05-08 sync. Source attribution is in each item's pitch.",
       "items": [
