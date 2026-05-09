@@ -385,13 +385,17 @@
     </div>
     <div class="settings-section">
       <h4>Trakt Integration</h4>
-      <p class="settings-help">Sync watch history and ratings with Trakt — both directions. Marking something watched here pushes to Trakt; importing pulls Trakt history into WatchTrack.</p>
+      <p class="settings-help">Sync watch history and ratings with Trakt — both directions. Marking something watched here pushes to Trakt; importing pulls Trakt history into WatchTrack. Get your credentials at trakt.tv/oauth/applications.</p>
       <div class="settings-row">
-        <label>Worker URL</label>
-        <input type="url" class="modal-input" id="trakt-worker-url" placeholder="https://watchtrack-trakt.YOURSUBDOMAIN.workers.dev" autocomplete="off">
+        <label>Client ID</label>
+        <input type="text" class="modal-input" id="trakt-client-id" placeholder="64-character client ID from trakt.tv" autocomplete="off">
       </div>
       <div class="settings-row">
-        <button class="action-btn" id="trakt-worker-save">Save URL</button>
+        <label>Client Secret</label>
+        <input type="password" class="modal-input" id="trakt-client-secret" placeholder="Client secret from trakt.tv" autocomplete="off">
+      </div>
+      <div class="settings-row">
+        <button class="action-btn" id="trakt-client-save">Save</button>
         <button class="action-btn" id="trakt-connect">Connect Trakt</button>
         <button class="action-btn" id="trakt-sync" style="display:none">Sync from Trakt</button>
         <button class="action-btn" id="trakt-disconnect" style="display:none">Disconnect</button>

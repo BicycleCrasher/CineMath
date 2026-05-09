@@ -602,20 +602,24 @@ function setWebhookLastPoll(ts) {
 }
 
 // === Trakt settings ===
-const TRAKT_WORKER_URL_KEY   = 'watchtrack-trakt-worker-url';
-const TRAKT_ACCESS_TOKEN_KEY  = 'watchtrack-trakt-access-token';
-const TRAKT_REFRESH_TOKEN_KEY = 'watchtrack-trakt-refresh-token';
-const TRAKT_USERNAME_KEY      = 'watchtrack-trakt-username';
+const TRAKT_API_BASE           = 'https://api.trakt.tv';
+const TRAKT_CLIENT_ID_KEY      = 'watchtrack-trakt-client-id';
+const TRAKT_CLIENT_SECRET_KEY  = 'watchtrack-trakt-client-secret';
+const TRAKT_ACCESS_TOKEN_KEY   = 'watchtrack-trakt-access-token';
+const TRAKT_REFRESH_TOKEN_KEY  = 'watchtrack-trakt-refresh-token';
+const TRAKT_USERNAME_KEY       = 'watchtrack-trakt-username';
 
-function getTraktWorkerUrl()    { return localStorage.getItem(TRAKT_WORKER_URL_KEY) || ''; }
-function setTraktWorkerUrl(u)   { if (!u) localStorage.removeItem(TRAKT_WORKER_URL_KEY); else localStorage.setItem(TRAKT_WORKER_URL_KEY, u.replace(/\/$/, '')); }
+function getTraktClientId()     { return localStorage.getItem(TRAKT_CLIENT_ID_KEY) || ''; }
+function setTraktClientId(v)    { if (!v) localStorage.removeItem(TRAKT_CLIENT_ID_KEY); else localStorage.setItem(TRAKT_CLIENT_ID_KEY, v.trim()); }
+function getTraktClientSecret() { return localStorage.getItem(TRAKT_CLIENT_SECRET_KEY) || ''; }
+function setTraktClientSecret(v){ if (!v) localStorage.removeItem(TRAKT_CLIENT_SECRET_KEY); else localStorage.setItem(TRAKT_CLIENT_SECRET_KEY, v.trim()); }
 function getTraktAccessToken()  { return localStorage.getItem(TRAKT_ACCESS_TOKEN_KEY) || ''; }
 function setTraktAccessToken(t) { if (!t) localStorage.removeItem(TRAKT_ACCESS_TOKEN_KEY); else localStorage.setItem(TRAKT_ACCESS_TOKEN_KEY, t); }
 function getTraktRefreshToken() { return localStorage.getItem(TRAKT_REFRESH_TOKEN_KEY) || ''; }
 function setTraktRefreshToken(t){ if (!t) localStorage.removeItem(TRAKT_REFRESH_TOKEN_KEY); else localStorage.setItem(TRAKT_REFRESH_TOKEN_KEY, t); }
 function getTraktUsername()     { return localStorage.getItem(TRAKT_USERNAME_KEY) || ''; }
 function setTraktUsername(u)    { if (!u) localStorage.removeItem(TRAKT_USERNAME_KEY); else localStorage.setItem(TRAKT_USERNAME_KEY, u); }
-function isTraktConnected()     { return Boolean(getTraktWorkerUrl() && getTraktAccessToken()); }
+function isTraktConnected()     { return Boolean(getTraktClientId() && getTraktAccessToken()); }
 function isWebhookConfigured() {
   return Boolean(getWebhookUrl() && getWebhookSecret());
 }
@@ -1930,14 +1934,18 @@ function buildTraktMoviePayload(title, year, tab) {
 }
 
 async function traktApiCall(path, method, body, isRetry) {
-  const base = getTraktWorkerUrl();
-  if (!base) return { ok: false, status: 0 };
-  const opts = {
-    method: method || 'GET',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getTraktAccessToken()}` },
+  const clientId = getTraktClientId();
+  if (!clientId) return { ok: false, status: 0 };
+  const headers = {
+    'Content-Type': 'application/json',
+    'trakt-api-version': '2',
+    'trakt-api-key': clientId,
   };
+  const token = getTraktAccessToken();
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const opts = { method: method || 'GET', headers };
   if (body) opts.body = JSON.stringify(body);
-  const resp = await fetch(`${base}${path}`, opts);
+  const resp = await fetch(`${TRAKT_API_BASE}${path}`, opts);
   if (resp.status === 401 && !isRetry) {
     const refreshed = await traktRefreshTokens();
     if (refreshed) return traktApiCall(path, method, body, true);
@@ -1949,14 +1957,21 @@ async function traktApiCall(path, method, body, isRetry) {
 }
 
 async function traktRefreshTokens() {
-  const base = getTraktWorkerUrl();
+  const clientId = getTraktClientId();
+  const clientSecret = getTraktClientSecret();
   const refresh = getTraktRefreshToken();
-  if (!base || !refresh) return false;
+  if (!clientId || !clientSecret || !refresh) return false;
   try {
-    const resp = await fetch(`${base}/auth/refresh`, {
+    const resp = await fetch(`${TRAKT_API_BASE}/oauth/token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refresh_token: refresh }),
+      body: JSON.stringify({
+        refresh_token: refresh,
+        client_id: clientId,
+        client_secret: clientSecret,
+        redirect_uri: 'urn:ietf:wg:oauth:2.0:oob',
+        grant_type: 'refresh_token',
+      }),
     });
     if (!resp.ok) return false;
     const data = await resp.json();
@@ -2001,7 +2016,7 @@ function traktPushStatus(title, year, tab, status) {
   if (status === 'watched') {
     traktApiCall('/sync/history', 'POST', { movies: [{ ...movie, watched_at: new Date().toISOString() }] });
   } else {
-    traktApiCall('/sync/history', 'DELETE', { movies: [movie] });
+    traktApiCall('/sync/history/remove', 'POST', { movies: [movie] });
   }
 }
 
@@ -2013,7 +2028,7 @@ function traktPushRating(title, year, tab, rating) {
   if (score) {
     traktApiCall('/sync/ratings', 'POST', { movies: [{ ...movie, rating: score, rated_at: new Date().toISOString() }] });
   } else {
-    traktApiCall('/sync/ratings', 'DELETE', { movies: [movie] });
+    traktApiCall('/sync/ratings/remove', 'POST', { movies: [movie] });
   }
 }
 
@@ -2022,8 +2037,8 @@ async function traktPullSync() {
   if (status) { status.textContent = 'Fetching from Trakt...'; status.className = 'settings-status'; }
 
   const [histResult, ratResult] = await Promise.all([
-    traktApiCall('/sync/history', 'GET'),
-    traktApiCall('/sync/ratings', 'GET'),
+    traktApiCall('/sync/history/movies?limit=10000', 'GET'),
+    traktApiCall('/sync/ratings/movies', 'GET'),
   ]);
 
   if (!histResult.ok && !ratResult.ok) {
@@ -3054,7 +3069,8 @@ function setupModals() {
     document.getElementById('plex-client-id').value = getPlexClientId();
     document.getElementById('webhook-url').value = getWebhookUrl();
     document.getElementById('webhook-secret').value = getWebhookSecret();
-    document.getElementById('trakt-worker-url').value = getTraktWorkerUrl();
+    document.getElementById('trakt-client-id').value = getTraktClientId();
+    document.getElementById('trakt-client-secret').value = getTraktClientSecret();
     updatePlexStatusLine();
     updateWebhookStatusLine();
     updateTraktStatusLine();
@@ -3071,7 +3087,8 @@ function setupModals() {
     setPlexClientId(document.getElementById('plex-client-id').value.trim());
     setWebhookUrl(document.getElementById('webhook-url').value.trim());
     setWebhookSecret(document.getElementById('webhook-secret').value.trim());
-    setTraktWorkerUrl(document.getElementById('trakt-worker-url').value.trim());
+    setTraktClientId(document.getElementById('trakt-client-id').value.trim());
+    setTraktClientSecret(document.getElementById('trakt-client-secret').value.trim());
     applyDisplayMode();
     settingsModal.classList.remove('active');
     if (isPlexConfigured()) fetchPlexLibrary();
@@ -3294,32 +3311,38 @@ function setupModals() {
   });
 
   // === Trakt integration ===
-  document.getElementById('trakt-worker-save').addEventListener('click', () => {
-    const url = document.getElementById('trakt-worker-url').value.trim();
-    setTraktWorkerUrl(url);
+  document.getElementById('trakt-client-save').addEventListener('click', () => {
+    setTraktClientId(document.getElementById('trakt-client-id').value.trim());
+    setTraktClientSecret(document.getElementById('trakt-client-secret').value.trim());
     const status = document.getElementById('trakt-status');
-    status.textContent = url ? 'Worker URL saved.' : 'Worker URL cleared.';
+    status.textContent = 'Credentials saved.';
     status.className = 'settings-status ok';
   });
 
   document.getElementById('trakt-connect').addEventListener('click', async () => {
-    const base = getTraktWorkerUrl() || document.getElementById('trakt-worker-url').value.trim();
+    const clientId = getTraktClientId() || document.getElementById('trakt-client-id').value.trim();
+    const clientSecret = getTraktClientSecret() || document.getElementById('trakt-client-secret').value.trim();
     const status = document.getElementById('trakt-status');
     const codeBlock = document.getElementById('trakt-device-code-block');
     const codeEl = document.getElementById('trakt-user-code');
     const codeStatus = document.getElementById('trakt-code-status');
-    if (!base) {
-      status.textContent = 'Save the Worker URL first.';
+    if (!clientId || !clientSecret) {
+      status.textContent = 'Enter and save Client ID and Client Secret first.';
       status.className = 'settings-status err';
       return;
     }
-    setTraktWorkerUrl(base);
+    setTraktClientId(clientId);
+    setTraktClientSecret(clientSecret);
     status.textContent = 'Requesting device code...';
     status.className = 'settings-status';
     try {
-      const resp = await fetch(`${base}/auth/device/code`, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
-      if (!resp.ok) { status.textContent = `Worker error: HTTP ${resp.status}`; status.className = 'settings-status err'; return; }
-      const { user_code, verification_url, device_code, interval, expires_in } = await resp.json();
+      const resp = await fetch(`${TRAKT_API_BASE}/oauth/device/code`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ client_id: clientId }),
+      });
+      if (!resp.ok) { status.textContent = `Trakt error: HTTP ${resp.status}`; status.className = 'settings-status err'; return; }
+      const { user_code, device_code, interval, expires_in } = await resp.json();
       codeEl.textContent = user_code;
       codeBlock.style.display = '';
       codeStatus.textContent = 'Waiting for activation…';
@@ -3334,20 +3357,25 @@ function setupModals() {
           status.className = 'settings-status err';
           return;
         }
-        const r = await fetch(`${base}/auth/device/token`, {
+        const r = await fetch(`${TRAKT_API_BASE}/oauth/device/token`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ device_code }),
+          body: JSON.stringify({ code: device_code, client_id: clientId, client_secret: clientSecret }),
         });
-        const d = await r.json();
-        if (d.pending) return;
-        if (d.error === 'expired') { clearInterval(poll); codeBlock.style.display = 'none'; status.textContent = 'Code expired. Try again.'; status.className = 'settings-status err'; return; }
-        if (d.access_token) {
+        if (r.status === 400) return; // still pending
+        if (r.status === 404 || r.status === 410) {
+          clearInterval(poll);
+          codeBlock.style.display = 'none';
+          status.textContent = 'Code expired. Try again.';
+          status.className = 'settings-status err';
+          return;
+        }
+        if (r.ok) {
+          const d = await r.json();
           clearInterval(poll);
           setTraktAccessToken(d.access_token);
           setTraktRefreshToken(d.refresh_token || '');
           codeBlock.style.display = 'none';
-          // Fetch username
           const me = await traktApiCall('/users/me', 'GET');
           if (me.ok && me.data.username) setTraktUsername(me.data.username);
           updateTraktStatusLine();
