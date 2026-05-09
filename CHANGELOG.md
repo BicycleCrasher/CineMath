@@ -10,6 +10,36 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.20.0 — 2026-05-08
+**Service worker cache:** `scifi-tracker-v39` → `v40`
+
+### Feature — Stats modal SVG charts
+
+The Stats modal now renders four inline visualizations alongside the
+existing text counts. All charts are pure SVG/CSS — zero dependencies, no
+CDN fetches, fully offline-capable, and respect the existing dark/gold
+typographic palette via CSS custom properties.
+
+- **Ratings distribution** — donut chart with center total. Slices use
+  `var(--watched)` (Loved), `var(--accent)` (Liked), `var(--watching)`
+  (Mixed), `var(--skip)` (Disliked).
+- **Activity over time** — 12-month line chart with filled area. Uses the
+  per-item `lastUpdated` timestamps already in `state[tab][id]`.
+- **By decade** — vertical bar histogram of catalog items by decade,
+  sorted chronologically.
+- **Per tab (top 10)** — horizontal stacked bars showing each tab's
+  Watched / Watching / Queued / Untouched ratio, normalized to the
+  largest tab so relative size is visible at a glance.
+
+Four small helper functions (`statsDonut`, `statsLineChart`,
+`statsHistogram`, `statsStackedBars`) generate the SVG and a matching
+HTML legend. Total added code: ~120 lines JS, ~50 lines CSS.
+
+In TV mode (`body.tv-mode`) charts and legends scale up: SVG max-width
+240px → 320px, legend font 12px → 14px, stacked-bar height 10px → 14px.
+
+---
+
 ## 5.19.0 — 2026-05-08
 **Service worker cache:** `scifi-tracker-v38` → `v39`
 

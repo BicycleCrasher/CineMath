@@ -3855,11 +3855,93 @@ function doNotesSearch(query) {
 }
 
 // === Stats engine ===
+// === V5.20.0: Stats modal SVG chart helpers (pure SVG/CSS, zero deps) ===
+function statsDonut(segments, centerText, centerSubtext) {
+  const total = segments.reduce((s, x) => s + x.value, 0);
+  if (total === 0) return '<div class="stats-chart-empty">No data yet</div>';
+  const r = 75, cx = 100, cy = 100;
+  let acc = 0;
+  const arcs = segments.map(seg => {
+    if (seg.value === 0) return '';
+    const a0 = (acc / total) * Math.PI * 2 - Math.PI / 2;
+    acc += seg.value;
+    const a1 = (acc / total) * Math.PI * 2 - Math.PI / 2;
+    const x0 = cx + r * Math.cos(a0), y0 = cy + r * Math.sin(a0);
+    const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
+    const large = (a1 - a0) > Math.PI ? 1 : 0;
+    return `<path d="M ${cx} ${cy} L ${x0.toFixed(2)} ${y0.toFixed(2)} A ${r} ${r} 0 ${large} 1 ${x1.toFixed(2)} ${y1.toFixed(2)} Z" fill="${seg.color}"/>`;
+  }).join('');
+  const inner = `<circle cx="${cx}" cy="${cy}" r="46" fill="var(--bg-elev)"/>`;
+  const text = `<text x="${cx}" y="${cy - 2}" text-anchor="middle" fill="var(--ink)" font-size="22" font-family="'Didot', 'Bodoni 72', Georgia, serif">${centerText}</text>`;
+  const sub = centerSubtext ? `<text x="${cx}" y="${cy + 16}" text-anchor="middle" fill="var(--ink-dim)" font-size="10" letter-spacing="0.05em">${centerSubtext}</text>` : '';
+  const legend = segments.map(seg =>
+    `<span class="legend-item"><span class="legend-swatch" style="background:${seg.color}"></span>${escapeHtml(seg.label)} <strong>${seg.value}</strong>${total ? ` <span class="legend-pct">${Math.round(seg.value * 100 / total)}%</span>` : ''}</span>`
+  ).join('');
+  return `<div class="stats-chart"><svg viewBox="0 0 200 200" class="stats-chart-svg" aria-hidden="true">${arcs}${inner}${text}${sub}</svg><div class="stats-chart-legend">${legend}</div></div>`;
+}
+function statsStackedBars(rows, segLabels) {
+  if (rows.length === 0) return '';
+  const max = Math.max(1, ...rows.map(r => r.total));
+  const body = rows.map(r => {
+    const segs = r.segments.map(s => s.value > 0
+      ? `<span class="stacked-seg" style="width:${(s.value / max) * 100}%;background:${s.color}" title="${s.value}"></span>`
+      : ''
+    ).join('');
+    return `<div class="stacked-row"><div class="stacked-label">${escapeHtml(r.label)}</div><div class="stacked-bar">${segs}</div><div class="stacked-total">${r.total}</div></div>`;
+  }).join('');
+  const legend = segLabels.map(l =>
+    `<span class="legend-item"><span class="legend-swatch" style="background:${l.color}"></span>${escapeHtml(l.label)}</span>`
+  ).join('');
+  return `<div class="stats-chart"><div class="stats-chart-legend horizontal">${legend}</div>${body}</div>`;
+}
+function statsHistogram(buckets, color) {
+  if (buckets.length === 0) return '<div class="stats-chart-empty">No data yet</div>';
+  color = color || 'var(--accent)';
+  const max = Math.max(1, ...buckets.map(b => b.value));
+  const w = 400, h = 150, padT = 14, padB = 22;
+  const innerH = h - padT - padB;
+  const slot = w / buckets.length;
+  const barW = slot * 0.7;
+  const bars = buckets.map((b, i) => {
+    const bh = (b.value / max) * innerH;
+    const x = i * slot + (slot - barW) / 2;
+    const y = padT + (innerH - bh);
+    return `<rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${barW.toFixed(2)}" height="${bh.toFixed(2)}" fill="${color}" rx="2"/>` +
+      `<text x="${(x + barW / 2).toFixed(2)}" y="${h - 6}" text-anchor="middle" fill="var(--ink-dim)" font-size="9">${escapeHtml(b.label)}</text>` +
+      (b.value > 0 ? `<text x="${(x + barW / 2).toFixed(2)}" y="${(y - 3).toFixed(2)}" text-anchor="middle" fill="var(--ink)" font-size="10">${b.value}</text>` : '');
+  }).join('');
+  return `<div class="stats-chart"><svg viewBox="0 0 ${w} ${h}" class="stats-chart-svg full-width" aria-hidden="true">${bars}</svg></div>`;
+}
+function statsLineChart(points, color) {
+  if (points.length === 0) return '';
+  color = color || 'var(--accent)';
+  const max = Math.max(1, ...points.map(p => p.value));
+  const w = 400, h = 150, padL = 8, padR = 8, padT = 14, padB = 22;
+  const innerW = w - padL - padR, innerH = h - padT - padB;
+  const stepX = points.length > 1 ? innerW / (points.length - 1) : 0;
+  const coords = points.map((p, i) => [padL + i * stepX, padT + innerH - (p.value / max) * innerH]);
+  const linePath = 'M ' + coords.map(c => `${c[0].toFixed(2)} ${c[1].toFixed(2)}`).join(' L ');
+  const areaPath = linePath + ` L ${coords[coords.length - 1][0].toFixed(2)} ${(padT + innerH).toFixed(2)} L ${coords[0][0].toFixed(2)} ${(padT + innerH).toFixed(2)} Z`;
+  const dots = coords.map((c, i) =>
+    `<circle cx="${c[0].toFixed(2)}" cy="${c[1].toFixed(2)}" r="2.5" fill="${color}"/>` +
+    (points[i].value > 0 ? `<text x="${c[0].toFixed(2)}" y="${(c[1] - 6).toFixed(2)}" text-anchor="middle" fill="var(--ink)" font-size="9">${points[i].value}</text>` : '')
+  ).join('');
+  const labels = points.map((p, i) => i % 2 === 0
+    ? `<text x="${coords[i][0].toFixed(2)}" y="${h - 6}" text-anchor="middle" fill="var(--ink-dim)" font-size="9">${escapeHtml(p.label)}</text>`
+    : ''
+  ).join('');
+  return `<div class="stats-chart"><svg viewBox="0 0 ${w} ${h}" class="stats-chart-svg full-width" aria-hidden="true">` +
+    `<path d="${areaPath}" fill="${color}" opacity="0.18"/>` +
+    `<path d="${linePath}" stroke="${color}" stroke-width="1.5" fill="none"/>` +
+    `${dots}${labels}</svg></div>`;
+}
+
 function renderStats() {
   let totalCatalogItems = 0, watched = 0, watching = 0, queued = 0, skip = 0, rated = 0;
   const ratingCounts = { loved: 0, liked: 0, mixed: 0, disliked: 0 };
   const tagCounts = {};
   const perTab = {};
+  const decadeCounts = {};
   let longestQueue = { tab: '-', count: 0 };
 
   for (const tab in catalogs) {
@@ -3877,9 +3959,30 @@ function renderStats() {
       if (e.reactionTags) {
         e.reactionTags.forEach(t => { tagCounts[t] = (tagCounts[t] || 0) + 1; });
       }
+      if (item.year && typeof item.year === 'number') {
+        const dec = Math.floor(item.year / 10) * 10;
+        decadeCounts[dec] = (decadeCounts[dec] || 0) + 1;
+      }
     });
     perTab[tab] = tabSt;
     if (tabSt.queued > longestQueue.count) longestQueue = { tab: cat.title || tab, count: tabSt.queued };
+  }
+
+  // Monthly activity buckets (last 12 months)
+  const months = [];
+  const dNow = new Date();
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(dNow.getFullYear(), dNow.getMonth() - i, 1);
+    months.push({ label: d.toLocaleString('en', { month: 'short' }), year: d.getFullYear(), month: d.getMonth(), value: 0 });
+  }
+  for (const tab in state) {
+    for (const id in state[tab]) {
+      const lu = (state[tab][id] && state[tab][id].lastUpdated) || 0;
+      if (!lu) continue;
+      const d = new Date(lu);
+      const idx = months.findIndex(m => m.year === d.getFullYear() && m.month === d.getMonth());
+      if (idx !== -1) months[idx].value++;
+    }
   }
 
   const topTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 8);
@@ -3907,25 +4010,57 @@ function renderStats() {
   html += `<div class="stat-line"><span>Skipped</span><strong>${skip}</strong></div>`;
   html += `<div class="stat-line"><span>Rated</span><strong>${rated}</strong></div>`;
   html += '<h4>Ratings distribution</h4>';
-  html += `<div class="stat-line"><span>Loved</span><strong>${ratingCounts.loved}${totalRated ? ` (${Math.round(ratingCounts.loved * 100 / totalRated)}%)` : ''}</strong></div>`;
-  html += `<div class="stat-line"><span>Liked</span><strong>${ratingCounts.liked}${totalRated ? ` (${Math.round(ratingCounts.liked * 100 / totalRated)}%)` : ''}</strong></div>`;
-  html += `<div class="stat-line"><span>Mixed</span><strong>${ratingCounts.mixed}${totalRated ? ` (${Math.round(ratingCounts.mixed * 100 / totalRated)}%)` : ''}</strong></div>`;
-  html += `<div class="stat-line"><span>Disliked</span><strong>${ratingCounts.disliked}${totalRated ? ` (${Math.round(ratingCounts.disliked * 100 / totalRated)}%)` : ''}</strong></div>`;
-  html += '<h4>Activity</h4>';
+  html += statsDonut([
+    { label: 'Loved', value: ratingCounts.loved, color: 'var(--watched)' },
+    { label: 'Liked', value: ratingCounts.liked, color: 'var(--accent)' },
+    { label: 'Mixed', value: ratingCounts.mixed, color: 'var(--watching)' },
+    { label: 'Disliked', value: ratingCounts.disliked, color: 'var(--skip)' }
+  ], totalRated, totalRated === 1 ? 'rated' : 'rated');
+
+  html += '<h4>Activity (last 12 months)</h4>';
+  html += statsLineChart(months);
   html += `<div class="stat-line"><span>Updated last 7 days</span><strong>${updated7}</strong></div>`;
   html += `<div class="stat-line"><span>Updated last 30 days</span><strong>${updated30}</strong></div>`;
   html += `<div class="stat-line"><span>Longest queue</span><strong>${longestQueue.tab} (${longestQueue.count})</strong></div>`;
+
+  const decadeArr = Object.entries(decadeCounts).sort((a, b) => +a[0] - +b[0]).map(([d, n]) => ({ label: `${(d % 100).toString().padStart(2, '0')}s`, value: n }));
+  if (decadeArr.length > 0) {
+    html += '<h4>By decade</h4>';
+    html += statsHistogram(decadeArr);
+  }
+
   if (topTags.length) {
     html += '<h4>Top reaction tags</h4>';
     topTags.forEach(([tag, n]) => {
       html += `<div class="stat-line"><span>${tag}</span><strong>${n}</strong></div>`;
     });
   }
-  html += '<h4>Per tab</h4>';
-  Object.entries(perTab).sort((a, b) => b[1].watched - a[1].watched).slice(0, 10).forEach(([tab, s]) => {
-    const cat = catalogs[tab];
-    html += `<div class="stat-line"><span>${cat ? cat.title : tab}</span><strong>${s.watched}/${s.total} watched</strong></div>`;
-  });
+
+  html += '<h4>Per tab (top 10 by watched)</h4>';
+  const perTabRows = Object.entries(perTab)
+    .sort((a, b) => b[1].watched - a[1].watched)
+    .slice(0, 10)
+    .map(([tab, s]) => {
+      const cat = catalogs[tab];
+      const untouched = Math.max(0, s.total - s.watched - s.watching - s.queued);
+      return {
+        label: cat ? cat.title : tab,
+        total: s.total,
+        segments: [
+          { value: s.watched, color: 'var(--watched)' },
+          { value: s.watching, color: 'var(--watching)' },
+          { value: s.queued, color: 'var(--queued)' },
+          { value: untouched, color: 'var(--ink-faint)' }
+        ]
+      };
+    });
+  html += statsStackedBars(perTabRows, [
+    { label: 'Watched', color: 'var(--watched)' },
+    { label: 'Watching', color: 'var(--watching)' },
+    { label: 'Queued', color: 'var(--queued)' },
+    { label: 'Untouched', color: 'var(--ink-faint)' }
+  ]);
+
   return html;
 }
 
