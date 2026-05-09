@@ -3245,10 +3245,6 @@ function renderHistoryList() {
   });
 }
 
-function escapeHtml(s) {
-  return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
 function openPromoteModal(btn) {
   pendingPromote = {
     type: btn.dataset.type,

@@ -10,6 +10,40 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.26.11 — 2026-05-09
+**Service worker cache:** `scifi-tracker-v65` → `v66`
+
+### Fix — Suggestion triage crashed on heroes-comics items (TypeError in escapeHtml)
+
+Two problems combined to break the triage card for any Heroes & Comics item.
+
+**1. Duplicate `escapeHtml` definition — wrong version won.**
+`app.js` had two `function escapeHtml(s)` declarations. The one at line 1
+used `String(s ?? '')` and handles non-string inputs correctly. The second
+declaration (introduced mid-file in an older refactor) used `(s || '').replace()`
+— which does NOT coerce numbers to strings: `(126 || '')` evaluates to
+`126` (the integer, which is truthy), and `Number.prototype.replace` doesn't
+exist, throwing `TypeError: (intermediate value).replace is not a function`.
+
+In JavaScript, two function declarations with the same name in the same
+scope both get hoisted, and the second wins. The broken mid-file version was
+overriding the correct top-level one.
+
+**Fix:** removed the duplicate. The surviving definition at line 1 correctly
+handles any input type via `String(s ?? '')`.
+
+**2. `heroes-comics.json` had integer runtimes.**
+The catalog added in v5.25.0 stored runtime as bare integers (`126`, `143`,
+etc.) rather than strings (`"126 min"`). All other catalog files use strings.
+This was harmless before v5.26.8 because the old `renderTriage` passed values
+straight to `.join()` (which auto-coerces). The v5.26.8 escapeHtml fix
+introduced `.map(escapeHtml)` on the meta array — exposing the type mismatch.
+
+**Fix:** converted all 34 integer runtime values in `heroes-comics.json` to
+`"N min"` strings, matching the format used by every other catalog.
+
+---
+
 ## 5.26.10 — 2026-05-09
 **Service worker cache:** `scifi-tracker-v64` → `v65`
 
