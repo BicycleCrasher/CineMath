@@ -10,6 +10,29 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.18.1 — 2026-05-08
+**Service worker cache:** `scifi-tracker-v36` → `v37`
+
+### Fix — TV-mode focus halo clipping in tight grids
+
+In TV mode the gold D-pad focus ring (`outline: 3px solid var(--accent)`) was
+rendered with `outline-offset: 2px`, placing the halo 2px outside the focused
+element's bounding box. On screens with closely-spaced focusable items — most
+visibly the wizard "Pick a genre" matrix (8px grid gap) and any scroll-clipped
+modal — the halo's outer edge could extend beyond container boundaries and
+get visibly clipped, or visually overlap adjacent buttons.
+
+`outline-offset` changed from `2px` to `-1px`, so the ring now sits 1px
+*inside* the element edge (replacing the existing 1px neutral border on focus).
+The focus indicator is still a bold 3px gold ring; it just no longer extends
+beyond the element. Zero layout changes, no risk of clipping anywhere.
+
+Also: `icons/tv-banner.png` regenerated from the new film-strip banner design
+(replaces the auto-generated 320×180 banner from 5.17.0). Same filename,
+same dimensions, no manifest or build-script changes required.
+
+---
+
 ## 5.18.0 — 2026-05-08
 **Service worker cache:** `scifi-tracker-v35` → `v36`
 
