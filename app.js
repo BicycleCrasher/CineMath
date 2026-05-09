@@ -3181,16 +3181,10 @@ function setupModals() {
       syncSec.querySelector('#sync-pull-now').addEventListener('click', async () => {
         const remote = await syncFetch();
         if (!remote) { alert('Pull returned nothing or failed.'); updateSyncStatusUI(); return; }
-        // Force-apply by clearing last-push so the timestamp comparison passes
-        localStorage.removeItem(SYNC_LAST_PUSH_KEY);
-        const applied = syncApplyRemote(remote);
-        if (applied) {
-          alert('Pulled and applied. Reloading…');
-          setTimeout(() => location.reload(), 500);
-        } else {
-          alert('Pull succeeded but local state was already newer.');
-          updateSyncStatusUI();
-        }
+        // V5.31.1: per-item merge — applies whatever is newer per item, preserves rest
+        syncApplyRemote(remote);
+        alert('Pull merged. Reloading…');
+        setTimeout(() => location.reload(), 500);
       });
       // Refresh status whenever the section is shown
       const observer = new MutationObserver(() => {
@@ -4992,9 +4986,21 @@ async function syncFetch() {
 
 function syncApplyRemote(remote) {
   if (!remote || !remote.pushedAt) return false;
-  const lastPush = parseInt(localStorage.getItem(SYNC_LAST_PUSH_KEY) || '0');
-  // If our last push is newer than the remote, don't overwrite (we have unpushed changes)
-  if (lastPush && lastPush >= remote.pushedAt) return false;
+  // V5.31.1: Per-item merge instead of blob-level replace.
+  // Old logic compared a single pushedAt timestamp on the whole blob and
+  // either applied the entire remote or applied nothing. That meant a
+  // device with LESS data (but a NEWER pushedAt) would clobber a device
+  // with MORE data — exactly what was happening when the TV pushed its
+  // small state and the phone pulled it, "reverting to old version."
+  //
+  // New logic: settings get blob-replaced (settings don't have per-key
+  // versioning) but only if user explicitly pulls; state gets MERGED
+  // per-item using each entry's `lastUpdated` timestamp (set by
+  // touchEntry on every status/rating/tag/notes change). The newer
+  // version of each individual item wins. Items present only on one
+  // side stay — nothing is destroyed.
+
+  // 1. Settings replace (small blob, no per-key versioning)
   if (remote.settings) {
     const s = remote.settings;
     if (s.plexServerUrl) setPlexServerUrl(s.plexServerUrl);
@@ -5006,9 +5012,34 @@ function syncApplyRemote(remote) {
     if (s.traktClientId && typeof setTraktClientId === 'function') setTraktClientId(s.traktClientId);
     if (s.traktClientSecret && typeof setTraktClientSecret === 'function') setTraktClientSecret(s.traktClientSecret);
   }
+
+  // 2. State merge per-item by lastUpdated
+  let mergedItems = 0;
   if (remote.state && typeof remote.state === 'object') {
-    state = remote.state;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    for (const tab in remote.state) {
+      if (!state[tab]) state[tab] = {};
+      const remoteTab = remote.state[tab];
+      if (!remoteTab || typeof remoteTab !== 'object') continue;
+      for (const id in remoteTab) {
+        const remoteEntry = remoteTab[id];
+        const localEntry = state[tab][id];
+        if (!localEntry) {
+          state[tab][id] = remoteEntry;
+          mergedItems++;
+          continue;
+        }
+        const remoteTs = remoteEntry.lastUpdated || 0;
+        const localTs = localEntry.lastUpdated || 0;
+        if (remoteTs > localTs) {
+          state[tab][id] = remoteEntry;
+          mergedItems++;
+        }
+        // Otherwise local wins — preserve in place
+      }
+    }
+    if (mergedItems > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
   }
   return true;
 }

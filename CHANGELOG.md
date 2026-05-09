@@ -10,6 +10,39 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.31.1 — 2026-05-09
+
+### Fix — Sync was reverting devices to older state ("clobber on pull")
+
+5.31.0's `syncApplyRemote()` did a whole-state-blob replace based on a
+single `pushedAt` timestamp. This meant: if Device A pushed its (small)
+state to the Worker AFTER Device B last pushed, then when Device B
+pulled, it would replace its richer local state with A's smaller state
+— exactly the "revert to old version after syncing" symptom.
+
+**Per-item merge instead of blob replace:**
+
+- Each catalog state entry already carries a `lastUpdated` timestamp
+  (set by `touchEntry()` on every status / rating / tag / notes change).
+- `syncApplyRemote()` now iterates `remote.state[tab][id]` and compares
+  each entry's `lastUpdated` against the local entry's. The newer one
+  wins for that specific item. Items only on remote get added; items
+  only on local stay; no destructive overwrites.
+- Settings (which don't have per-key versioning) still apply as a
+  blob — they're small and a recent settings push is intended to
+  propagate.
+- Removed the previous `lastPush >= remote.pushedAt` short-circuit. The
+  per-item logic is always safe to run; the timestamp comparison
+  happens per-entry, not per-blob.
+- "Pull now" button no longer needs to "force-apply by clearing
+  last-push." The merge logic naturally takes whatever is newer.
+
+Sync is now safe regardless of which direction you push or how
+out-of-sync devices are. Two devices with overlapping but partially
+different state will converge on the union of latest edits per item.
+
+---
+
 ## 5.31.0 — 2026-05-09
 **Requires Worker patch:** see `worker-sync-patch.md` (new KV namespace + two endpoints).
 
