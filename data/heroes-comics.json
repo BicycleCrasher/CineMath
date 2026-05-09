@@ -4,216 +4,112 @@
   "subtitle": "Superhero films and broader comic-book adaptations.",
   "sections": [
     {
-      "name": "I. Marvel \u2014 MCU",
+      "name": "I. Marvel — MCU",
       "desc": "Marvel Studios proper. Iron Man through current.",
-      "categories": [
-        "marvel-mcu"
-      ],
-      "items": []
+      "categories": ["marvel-mcu"],
+      "items": [
+        { "id": "iron-man-2008", "title": "Iron Man", "year": 2008, "dir": "Jon Favreau", "runtime": 126, "pitch": "Tony Stark builds a powered exoskeleton to escape captivity, then rebrands as a high-tech vigilante. Foundational MCU — the moment the modern superhero machine got its tone.", "categories": ["marvel-mcu"], "contentType": "film-narrative" },
+        { "id": "the-avengers-2012", "title": "The Avengers", "year": 2012, "dir": "Joss Whedon", "runtime": 143, "pitch": "First major team-up of Iron Man, Cap, Thor, Hulk, Black Widow, and Hawkeye against Loki and a Chitauri invasion of New York. The crossover that proved the model would scale.", "categories": ["marvel-mcu", "team-up"], "contentType": "film-narrative" },
+        { "id": "guardians-of-the-galaxy-2014", "title": "Guardians of the Galaxy", "year": 2014, "dir": "James Gunn", "runtime": 121, "pitch": "Star-Lord, Gamora, Drax, Rocket, and Groot reluctantly team to save the universe — set to a 70s mixtape that became as iconic as the film.", "categories": ["marvel-mcu", "cosmic"], "contentType": "film-narrative" },
+        { "id": "captain-america-the-winter-soldier-2014", "title": "Captain America: The Winter Soldier", "year": 2014, "dir": "Russo Brothers", "runtime": 136, "pitch": "Steve Rogers vs. a brainwashed Bucky Barnes inside a 70s political-thriller skeleton dressed as superhero film. Series high point for many.", "categories": ["marvel-mcu", "street-level"], "contentType": "film-narrative" },
+        { "id": "doctor-strange-2016", "title": "Doctor Strange", "year": 2016, "dir": "Scott Derrickson", "runtime": 115, "pitch": "Arrogant neurosurgeon loses his hands, finds the Mystic Arts. Inception-style reality-folding visuals are the headline.", "categories": ["marvel-mcu", "cosmic"], "contentType": "film-narrative" },
+        { "id": "black-panther-2018", "title": "Black Panther", "year": 2018, "dir": "Ryan Coogler", "runtime": 134, "pitch": "T'Challa returns home to Wakanda to claim the throne, faces Killmonger — a villain whose grievance is harder to dismiss than usual. Cultural moment, Best Picture nominee.", "categories": ["marvel-mcu", "street-level"], "contentType": "film-narrative" },
+        { "id": "avengers-infinity-war-2018", "title": "Avengers: Infinity War", "year": 2018, "dir": "Russo Brothers", "runtime": 149, "pitch": "Thanos collects the Infinity Stones, the Avengers can't stop him, half of all life is wiped out. The cliffhanger that made the audience gasp.", "categories": ["marvel-mcu", "team-up", "cosmic"], "contentType": "film-narrative" },
+        { "id": "avengers-endgame-2019", "title": "Avengers: Endgame", "year": 2019, "dir": "Russo Brothers", "runtime": 181, "pitch": "Time-heist conclusion to the Infinity Saga. Ten-year payoff for the team-up era.", "categories": ["marvel-mcu", "team-up"], "contentType": "film-narrative" }
+      ]
     },
     {
-      "name": "II. Marvel \u2014 Non-MCU",
+      "name": "II. Marvel — Non-MCU",
       "desc": "Fox X-Men/FF era, Sony Spider-Verse, Sony alt-Marvel, Spider-Man trilogies.",
-      "categories": [
-        "marvel-non-mcu"
-      ],
-      "items": []
+      "categories": ["marvel-non-mcu"],
+      "items": [
+        { "id": "x-men-2000", "title": "X-Men", "year": 2000, "dir": "Bryan Singer", "runtime": 104, "pitch": "Bryan Singer launches the modern superhero film. Mutants vs. Magneto's Brotherhood, Wolverine introduced to mainstream audiences.", "categories": ["marvel-non-mcu", "team-up"], "contentType": "film-narrative" },
+        { "id": "x2-x-men-united-2003", "title": "X2: X-Men United", "year": 2003, "dir": "Bryan Singer", "runtime": 134, "pitch": "Sequel that elevates the X-Men trilogy — Stryker, Nightcrawler's White House attack opening, the Jean Grey sacrifice.", "categories": ["marvel-non-mcu", "team-up"], "contentType": "film-narrative" },
+        { "id": "spider-man-2002", "title": "Spider-Man", "year": 2002, "dir": "Sam Raimi", "runtime": 121, "pitch": "Sam Raimi's earnest, comic-book-coded Peter Parker origin. Defining Spider-Man performance for a generation.", "categories": ["marvel-non-mcu", "street-level"], "contentType": "film-narrative" },
+        { "id": "spider-man-into-the-spider-verse-2018", "title": "Spider-Man: Into the Spider-Verse", "year": 2018, "dir": "Persichetti / Ramsey / Rothman", "runtime": 117, "pitch": "Miles Morales meets every Spider-Person across the multiverse. Animation that broke open what the genre could look like.", "categories": ["marvel-non-mcu", "deconstructive"], "contentType": "film-narrative" },
+        { "id": "spider-man-across-the-spider-verse-2023", "title": "Spider-Man: Across the Spider-Verse", "year": 2023, "dir": "Dos Santos / Powers / Thompson", "runtime": 140, "pitch": "Spider-Verse Part 2. Even more ambitious art-direction — each universe rendered in its own visual language. Cliffhanger ending.", "categories": ["marvel-non-mcu", "deconstructive"], "contentType": "film-narrative" },
+        { "id": "deadpool-2016", "title": "Deadpool", "year": 2016, "dir": "Tim Miller", "runtime": 108, "pitch": "Wade Wilson breaks the fourth wall, the rating, and the genre. The R-rated superhero film that proved there was an audience for it.", "categories": ["marvel-non-mcu", "deconstructive"], "contentType": "film-narrative" },
+        { "id": "logan-2017", "title": "Logan", "year": 2017, "dir": "James Mangold", "runtime": 137, "pitch": "Western-coded Wolverine endgame. Aged Logan, Professor X with seizures, X-23 — the rare superhero film willing to be a real elegy.", "categories": ["marvel-non-mcu", "deconstructive"], "contentType": "film-narrative" }
+      ]
     },
     {
       "name": "III. DC",
       "desc": "DC Extended Universe, Snyderverse, current DCU, prior eras.",
-      "categories": [
-        "dc"
-      ],
+      "categories": ["dc"],
       "items": [
-        {
-          "title": "Joker: Folie \u00e0 Deux",
-          "year": 2024,
-          "pitch": "Todd Phillips's musical sequel to 2019's Joker. Phoenix and Lady Gaga in a folie-\u00e0-deux courtroom-and-Arkham two-hander built on jukebox standards. Polarizing \u2014 read as either a brave deconstruction of fan expectation or a betrayal of the first film, depending on who you ask.",
-          "priority": "low",
-          "whyPriority": "Watched. Cataloged for tracking. Pairs with the original Joker (2019) when added.",
-          "categories": [
-            "dc",
-            "deconstructive"
-          ],
-          "contentType": "film-narrative"
-        }
+        { "id": "the-dark-knight-2008", "title": "The Dark Knight", "year": 2008, "dir": "Christopher Nolan", "runtime": 152, "pitch": "Heath Ledger's Joker vs. Bale's Batman in a post-9/11 crime epic that happens to wear a cowl. Genre-redefining performance.", "categories": ["dc", "street-level"], "contentType": "film-narrative" },
+        { "id": "joker-2019", "title": "Joker", "year": 2019, "dir": "Todd Phillips", "runtime": 122, "pitch": "Phoenix's Arthur Fleck descends into the title character, Scorsese-by-way-of-Gotham. Best Actor win, polarizing reception.", "categories": ["dc", "deconstructive"], "contentType": "film-narrative" },
+        { "id": "wonder-woman-2017", "title": "Wonder Woman", "year": 2017, "dir": "Patty Jenkins", "runtime": 141, "pitch": "Diana of Themyscira enters WWI. The first DCEU film to land critically; Gadot anchors a sincere, optimistic origin.", "categories": ["dc"], "contentType": "film-narrative" },
+        { "id": "the-batman-2022", "title": "The Batman", "year": 2022, "dir": "Matt Reeves", "runtime": 176, "pitch": "Reeves's Year-Two Batman as detective. Pattinson's brooding Bruce, Riddler as Zodiac stand-in, Nirvana on the soundtrack.", "categories": ["dc", "street-level"], "contentType": "film-narrative" },
+        { "id": "aquaman-2018", "title": "Aquaman", "year": 2018, "dir": "James Wan", "runtime": 143, "pitch": "Wan's underwater fantasy, full Saturday-morning operatic energy. Momoa as Arthur Curry, Patrick Wilson chewing scenery.", "categories": ["dc"], "contentType": "film-narrative" },
+        { "id": "the-suicide-squad-2021", "title": "The Suicide Squad", "year": 2021, "dir": "James Gunn", "runtime": 132, "pitch": "Gunn's R-rated reboot. Bloater, Polka-Dot Man, Ratcatcher 2 vs. Starro the Conqueror. The 2016 film disowned and replaced.", "categories": ["dc", "team-up", "deconstructive"], "contentType": "film-narrative" },
+        { "id": "joker-folie-deux-2024", "title": "Joker: Folie à Deux", "year": 2024, "dir": "Todd Phillips", "runtime": 138, "pitch": "Musical sequel to Joker. Phoenix and Lady Gaga in a folie-à-deux courtroom-and-Arkham two-hander built on jukebox standards. Polarizing.", "categories": ["dc", "deconstructive"], "contentType": "film-narrative" }
       ]
     },
     {
       "name": "IV. Indie / Other Publishers",
       "desc": "Hellboy, Dredd, Kick-Ass, Image, Dark Horse, etc.",
-      "categories": [
-        "indie"
-      ],
-      "items": []
+      "categories": ["indie"],
+      "items": [
+        { "id": "watchmen-2009", "title": "Watchmen", "year": 2009, "dir": "Zack Snyder", "runtime": 162, "pitch": "Snyder's faithful-to-a-fault adaptation of Moore/Gibbons. Doctor Manhattan on Mars, Rorschach's journal, the squid replaced by a blue alternate.", "categories": ["indie", "deconstructive"], "contentType": "film-narrative" },
+        { "id": "v-for-vendetta-2005", "title": "V for Vendetta", "year": 2005, "dir": "James McTeigue", "runtime": 132, "pitch": "Wachowski-scripted Alan Moore adaptation. Dystopian future Britain, masked anarchist V, Natalie Portman radicalized into action.", "categories": ["indie", "deconstructive"], "contentType": "film-narrative" },
+        { "id": "kick-ass-2010", "title": "Kick-Ass", "year": 2010, "dir": "Matthew Vaughn", "runtime": 117, "pitch": "Mark Millar adaptation about a normal kid who decides to be a superhero. Hit-Girl's introduction is the cultural memory.", "categories": ["indie", "deconstructive"], "contentType": "film-narrative" },
+        { "id": "hellboy-2004", "title": "Hellboy", "year": 2004, "dir": "Guillermo del Toro", "runtime": 122, "pitch": "Del Toro's Mike Mignola adaptation. Ron Perlman as the demon-with-a-day-job, Lovecraftian texture, hand-built creature work.", "categories": ["indie"], "contentType": "film-narrative" }
+      ]
     },
     {
       "name": "V. Deconstructive",
       "desc": "Watchmen, Joker, the genre interrogating itself.",
-      "categories": [
-        "deconstructive"
-      ],
+      "categories": ["deconstructive"],
       "items": []
     },
     {
       "name": "VI. Cosmic",
       "desc": "Guardians of the Galaxy, Eternals, Captain Marvel, the space-tier of the genre.",
-      "categories": [
-        "cosmic"
-      ],
-      "items": []
+      "categories": ["cosmic"],
+      "items": [
+        { "id": "guardians-of-the-galaxy-vol-3-2023", "title": "Guardians of the Galaxy Vol. 3", "year": 2023, "dir": "James Gunn", "runtime": 150, "pitch": "Gunn's Guardians sendoff. Rocket's origin, the High Evolutionary as a cruel god — darker and more felt than the prior two.", "categories": ["marvel-mcu", "cosmic"], "contentType": "film-narrative" }
+      ]
     },
     {
       "name": "VII. Street-Level",
       "desc": "Daredevil, Punisher, Spider-Man (most), grounded-tier superhero.",
-      "categories": [
-        "street-level"
-      ],
+      "categories": ["street-level"],
       "items": []
     },
     {
       "name": "VIII. Team-Up",
       "desc": "Avengers, Justice League, X-Men ensembles.",
-      "categories": [
-        "team-up"
-      ],
-      "items": []
+      "categories": ["team-up"],
+      "items": [
+        { "id": "deadpool-wolverine-2024", "title": "Deadpool & Wolverine", "year": 2024, "dir": "Shawn Levy", "runtime": 127, "pitch": "Wade and Logan brought into the MCU. Cameo-heavy multiverse romp, leans on audience nostalgia for Fox-era X-Men.", "categories": ["marvel-non-mcu", "team-up"], "contentType": "film-narrative" },
+        { "id": "thunderbolts-2025", "title": "Thunderbolts*", "year": 2025, "dir": "Jake Schreier", "runtime": 127, "pitch": "MCU's anti-team — Yelena, Bucky, US Agent, Ghost, Red Guardian. Quieter, character-driven take after Phase 4 fatigue.", "categories": ["marvel-mcu", "team-up"], "contentType": "film-narrative" }
+      ]
     },
     {
       "name": "IX. Non-Comic Super-Powered",
-      "desc": "Unbreakable, Chronicle, The Incredibles, Brightburn \u2014 superpowers without the comic source.",
-      "categories": [
-        "indie"
-      ],
-      "items": []
+      "desc": "Unbreakable, Chronicle, The Incredibles, Brightburn — superpowers without the comic source.",
+      "categories": ["indie"],
+      "items": [
+        { "id": "the-incredibles-2004", "title": "The Incredibles", "year": 2004, "dir": "Brad Bird", "runtime": 115, "pitch": "Pixar superhero family. Bird's argument about excellence, suburbia, and capes — dressed as a Saturday cartoon.", "categories": ["indie", "team-up"], "contentType": "film-narrative" },
+        { "id": "unbreakable-2000", "title": "Unbreakable", "year": 2000, "dir": "M. Night Shyamalan", "runtime": 106, "pitch": "Shyamalan's quiet superhero origin. David Dunn, Mr. Glass, the comic-book mythology read as elegy. The original of the Eastrail 177 trilogy.", "categories": ["indie", "deconstructive"], "contentType": "film-narrative" },
+        { "id": "chronicle-2012", "title": "Chronicle", "year": 2012, "dir": "Josh Trank", "runtime": 84, "pitch": "Found-footage origin film. Three teens get powers; one of them is Andrew. Concise, mean, and effective.", "categories": ["indie"], "contentType": "film-narrative" },
+        { "id": "brightburn-2019", "title": "Brightburn", "year": 2019, "dir": "David Yarovesky", "runtime": 90, "pitch": "What if Superman were evil? Horror-coded answer. Gunn-produced; brutal in places, deliberate concept.", "categories": ["indie", "deconstructive"], "contentType": "film-narrative" },
+        { "id": "glass-2019", "title": "Glass", "year": 2019, "dir": "M. Night Shyamalan", "runtime": 129, "pitch": "Eastrail 177 trilogy capper. Dunn, Mr. Glass, and Kevin's many personalities all in the same psychiatric hospital.", "categories": ["indie", "deconstructive"], "contentType": "film-narrative" }
+      ]
     },
     {
       "name": "Z. Plex History (Auto-Promoted)",
-      "desc": "Items auto-promoted from Plex viewing history and TMDB recommendations during 2026-05-08 sync. Source attribution is in each item's pitch.",
+      "desc": "Auto-promoted from Plex viewing history. Items also represented in proper sections above.",
+      "categories": [],
       "items": [
-        {
-          "title": "Deadpool & Wolverine",
-          "year": 2024,
-          "pitch": "Promoted from Plex history. 3 play(s) detected.",
-          "priority": "low",
-          "whyPriority": "Auto-added from your Plex viewing history.",
-          "contentType": "film-narrative",
-          "tvCompletionMode": "flexible",
-          "id": "deadpool-wolverine-2024"
-        },
-        {
-          "title": "Guardians of the Galaxy Vol. 3",
-          "year": 2023,
-          "pitch": "Promoted from Plex history. 3 play(s) detected.",
-          "priority": "low",
-          "whyPriority": "Auto-added from your Plex viewing history.",
-          "contentType": "film-narrative",
-          "tvCompletionMode": "flexible",
-          "id": "guardians-of-the-galaxy-vol-3-2023"
-        },
-        {
-          "title": "Joker: Folie \u00e0 Deux",
-          "year": 2024,
-          "pitch": "Promoted from Plex history. 3 play(s) detected.",
-          "priority": "low",
-          "whyPriority": "Auto-added from your Plex viewing history.",
-          "contentType": "film-narrative",
-          "tvCompletionMode": "flexible",
-          "id": "joker-folie-deux-2024"
-        },
-        {
-          "title": "Kingsman: The Golden Circle",
-          "year": 2017,
-          "pitch": "Promoted from Plex history. 3 play(s) detected.",
-          "priority": "low",
-          "whyPriority": "Auto-added from your Plex viewing history.",
-          "contentType": "film-narrative",
-          "tvCompletionMode": "flexible",
-          "id": "kingsman-the-golden-circle-2017"
-        },
-        {
-          "title": "Logan",
-          "year": 2017,
-          "pitch": "Promoted from Plex history. 3 play(s) detected.",
-          "priority": "low",
-          "whyPriority": "Auto-added from your Plex viewing history.",
-          "contentType": "film-narrative",
-          "tvCompletionMode": "flexible",
-          "id": "logan-2017"
-        },
-        {
-          "title": "The League of Extraordinary Gentlemen",
-          "year": 2003,
-          "pitch": "Promoted from Plex history. 3 play(s) detected.",
-          "priority": "low",
-          "whyPriority": "Auto-added from your Plex viewing history.",
-          "contentType": "film-narrative",
-          "tvCompletionMode": "flexible",
-          "id": "the-league-of-extraordinary-gentlemen-2003"
-        },
-        {
-          "title": "The New Mutants",
-          "year": 2020,
-          "pitch": "Promoted from Plex history. 3 play(s) detected.",
-          "priority": "low",
-          "whyPriority": "Auto-added from your Plex viewing history.",
-          "contentType": "film-narrative",
-          "tvCompletionMode": "flexible",
-          "id": "the-new-mutants-2020"
-        },
-        {
-          "title": "Thunderbolts*",
-          "year": 2025,
-          "pitch": "Promoted from Plex history. 3 play(s) detected.",
-          "priority": "low",
-          "whyPriority": "Auto-added from your Plex viewing history.",
-          "contentType": "film-narrative",
-          "tvCompletionMode": "flexible",
-          "id": "thunderbolts-2025"
-        },
-        {
-          "title": "X-Men",
-          "year": 2000,
-          "pitch": "Promoted from Plex history. 3 play(s) detected.",
-          "priority": "low",
-          "whyPriority": "Auto-added from your Plex viewing history.",
-          "contentType": "film-narrative",
-          "tvCompletionMode": "flexible",
-          "id": "x-men-2000"
-        },
-        {
-          "title": "X-Men: Apocalypse",
-          "year": 2016,
-          "pitch": "Promoted from Plex history. 3 play(s) detected.",
-          "priority": "low",
-          "whyPriority": "Auto-added from your Plex viewing history.",
-          "contentType": "film-narrative",
-          "tvCompletionMode": "flexible",
-          "id": "x-men-apocalypse-2016"
-        },
-        {
-          "title": "X-Men: Dark Phoenix",
-          "year": 2019,
-          "pitch": "Promoted from Plex history. 3 play(s) detected.",
-          "priority": "low",
-          "whyPriority": "Auto-added from your Plex viewing history.",
-          "contentType": "film-narrative",
-          "tvCompletionMode": "flexible",
-          "id": "x-men-dark-phoenix-2019"
-        },
-        {
-          "title": "X-Men: First Class",
-          "year": 2011,
-          "pitch": "Promoted from Plex history. 3 play(s) detected.",
-          "priority": "low",
-          "whyPriority": "Auto-added from your Plex viewing history.",
-          "contentType": "film-narrative",
-          "tvCompletionMode": "flexible",
-          "id": "x-men-first-class-2011"
-        }
-      ],
-      "categories": []
+        { "id": "kingsman-the-golden-circle-2017", "title": "Kingsman: The Golden Circle", "year": 2017, "pitch": "Kingsman sequel — Eggsy, Statesman crossover, Julianne Moore's candy-coated villain.", "priority": "low", "contentType": "film-narrative" },
+        { "id": "the-league-of-extraordinary-gentlemen-2003", "title": "The League of Extraordinary Gentlemen", "year": 2003, "pitch": "Alan Moore adaptation universally hated by Moore. Sean Connery's last film.", "priority": "low", "contentType": "film-narrative" },
+        { "id": "the-new-mutants-2020", "title": "The New Mutants", "year": 2020, "pitch": "Fox X-Men spinoff buried by Disney transition. Horror-coded mutant teens.", "priority": "low", "contentType": "film-narrative" },
+        { "id": "x-men-apocalypse-2016", "title": "X-Men: Apocalypse", "year": 2016, "pitch": "Singer's Apocalypse-era X-Men. Generally regarded as the weakest of the modern X-Men trilogy.", "priority": "low", "contentType": "film-narrative" },
+        { "id": "x-men-dark-phoenix-2019", "title": "X-Men: Dark Phoenix", "year": 2019, "pitch": "Disjointed Dark Phoenix adaptation. Final pre-Disney Fox X-Men film.", "priority": "low", "contentType": "film-narrative" },
+        { "id": "x-men-first-class-2011", "title": "X-Men: First Class", "year": 2011, "dir": "Matthew Vaughn", "pitch": "Vaughn-directed 60s-set X-Men prequel. McAvoy/Fassbender as Charles/Erik. Critical reset for the Fox era.", "priority": "low", "contentType": "film-narrative" }
+      ]
     }
   ]
 }

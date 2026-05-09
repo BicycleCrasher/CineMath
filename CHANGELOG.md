@@ -10,6 +10,52 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.25.0 — 2026-05-09
+**Service worker cache:** `scifi-tracker-v53` → `v54`
+
+### Content — Heroes & Comics catalog populated
+
+`data/heroes-comics.json` and `data/heroes-comics-tv.json` were
+essentially empty (1 manual + 12 stub auto-promoted in films, 0 in TV).
+Now populated with focused recommendation lists:
+
+**Films (40 items)** distributed across the existing 9 sections:
+- I. Marvel — MCU (8): Iron Man, Avengers, GotG, Winter Soldier, Doctor
+  Strange, Black Panther, Infinity War, Endgame
+- II. Marvel — Non-MCU (7): X-Men, X2, Spider-Man (2002), Spider-Verse
+  Into & Across, Deadpool, Logan
+- III. DC (7): Dark Knight, Joker (2019), Wonder Woman, The Batman,
+  Aquaman, Suicide Squad (2021), Joker: Folie à Deux
+- IV. Indie / Other Publishers (4): Watchmen (2009), V for Vendetta,
+  Kick-Ass, Hellboy
+- VI. Cosmic (1): GotG Vol. 3
+- VIII. Team-Up (2): Deadpool & Wolverine, Thunderbolts*
+- IX. Non-Comic Super-Powered (5): Incredibles, Unbreakable, Chronicle,
+  Brightburn, Glass
+- Z. Plex History (6): Kingsman 2, League of Extraordinary Gentlemen,
+  New Mutants, X-Men Apocalypse, X-Men Dark Phoenix, X-Men First Class
+
+**TV (8 items)** across 5 sections: WandaVision, Loki, X-Men '97
+(Marvel D+), Daredevil (Marvel Netflix), Batman: TAS (Animated), The
+Boys, Invincible, Watchmen HBO (Deconstructive).
+
+Each item has full metadata: title, year, director (where applicable),
+runtime, pitch, categories, contentType. The new triage modal (5.24.0)
+is the recommended path to capture rating + reaction tags for these
+items in your normal TV viewing flow.
+
+### Companion artifacts
+
+Two state-import JSONs sit alongside this update for paste-into-Import
+in the app:
+- `heroes-comics-state-import-films.json` — 35 items as Watched
+- `heroes-comics-state-import-tv.json` — 4 Watched, 4 Queued
+
+Apply by switching to the relevant tab (Heroes & Comics or Heroes &
+Comics TV), opening Import, and pasting the file's contents.
+
+---
+
 ## 5.24.0 — 2026-05-09
 **Service worker cache:** `scifi-tracker-v52` → `v53`
 
