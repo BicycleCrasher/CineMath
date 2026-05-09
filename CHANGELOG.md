@@ -10,6 +10,39 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.23.3 — 2026-05-08
+**Service worker cache:** `scifi-tracker-v50` → `v51`
+
+### Fix — Wizard top clipped: flex centering + content overflow
+
+5.23.2 reduced the banner size, but the wizard banner kept clipping at
+the top on the (4K — corrected from prior 1080p assumption) Sony Bravia.
+Diagnosed: not actually a banner-size problem. The wizard CSS used
+`display: flex; align-items: center; overflow-y: auto;` — when content
+(banner + subtitle + step matrix + footer) exceeds viewport, flex
+centering distributes the overflow EQUALLY above and below center, and
+`overflow-y: auto` only scrolls forward from the natural content start,
+making the top inaccessible.
+
+**Two changes:**
+
+1. `.wizard`: switched to `flex-direction: column; align-items: center;
+   justify-content: flex-start`.
+2. `.wizard-content`: added `margin: auto 0`. Auto margins on a flex
+   item collapse to 0 when there's no extra space — content starts from
+   the top and scrolls down naturally. When content fits, the auto
+   margins distribute remaining space evenly above and below for the
+   same vertical-centered look.
+
+**Banner sizing on 4K:** TV-mode `max-width: 720px` was overly
+conservative for a 4K viewport. Switched to viewport-relative
+`max-width: 60vw` (with the same `max-height: 28vh` cap, slightly raised
+from 24vh now that overflow is handled). On a 4K TV the banner can grow
+to fill ~1080×608 vs. the previous 720×405; on phone the 480px max
+remains.
+
+---
+
 ## 5.23.2 — 2026-05-08
 **Service worker cache:** `scifi-tracker-v49` → `v50`
 

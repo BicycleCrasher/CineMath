@@ -900,17 +900,26 @@ body.tv-mode #settings-modal .modal-content {
   border-style: solid;
 }
 
-/* Stage 5g: Wizard / guided-flow home screen */
+/* Stage 5g: Wizard / guided-flow home screen
+   V5.23.3: switched from flex `align-items: center` to a column flex with
+   auto margins. Old centering caused the wizard's top (banner) to clip on
+   tall content because flex centering pushes overflow EQUALLY in both
+   directions — but `overflow-y: auto` can only scroll DOWN from the natural
+   content start, not above it. Auto margins give the same visual centering
+   when content fits, and yield to flex-start when it overflows (so the
+   user can scroll down to reach everything from the top). */
 .wizard {
   position: fixed; inset: 0; z-index: 50;
   background: var(--bg);
-  display: flex; align-items: center; justify-content: center;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-start;
   padding: 24px;
   overflow-y: auto;
 }
 .wizard-content {
   max-width: 600px; width: 100%;
   text-align: center;
+  margin: auto 0;  /* auto-centers vertically when content fits viewport */
 }
 .wizard-title {
   font-family: 'Bodoni Moda', serif;
@@ -936,8 +945,8 @@ body.tv-mode #settings-modal .modal-content {
   border-radius: 4px;
 }
 body.tv-mode .wizard-banner {
-  max-width: 720px;
-  max-height: 24vh;
+  max-width: 60vw;
+  max-height: 28vh;
   margin-bottom: 20px;
 }
 .wizard-subtitle {
