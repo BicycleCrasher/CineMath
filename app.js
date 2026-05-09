@@ -1791,6 +1791,8 @@ function loadState() {
 function saveState() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
   catch (e) { console.error('Save failed:', e); }
+  // V5.28.0: mark sync dirty so the debounced push captures this change
+  if (typeof syncMarkDirty === 'function') syncMarkDirty();
 }
 
 function loadActiveTab() {
@@ -3120,7 +3122,13 @@ function setupModals() {
     { id: 'plex', title: 'Plex', desc: 'Media server connection', statusFn: () => isPlexConfigured() ? { label: 'CONFIGURED', cls: 'ok' } : { label: 'EMPTY', cls: 'empty' } },
     { id: 'webhook', title: 'Worker', desc: 'TMDB & scrobble bridge', statusFn: () => isWebhookConfigured() ? { label: 'CONFIGURED', cls: 'ok' } : { label: 'EMPTY', cls: 'empty' } },
     { id: 'trakt', title: 'Trakt', desc: 'Watch history sync', statusFn: () => (typeof getTraktAccessToken === 'function' && getTraktAccessToken()) ? { label: 'CONNECTED', cls: 'ok' } : { label: 'EMPTY', cls: 'empty' } },
-    { id: 'sync', title: 'Cross-Device Sync', desc: 'Auto-sync settings & state via Worker', statusFn: () => ({ label: 'COMING SOON', cls: 'warn' }) },
+    { id: 'sync', title: 'Cross-Device Sync', desc: 'Auto-sync settings & state via Worker', statusFn: () => {
+      if (!isWebhookConfigured() || !getPlexToken()) return { label: 'NEEDS PLEX + WORKER', cls: 'empty' };
+      const lastPush = parseInt(localStorage.getItem(SYNC_LAST_PUSH_KEY) || '0');
+      if (lastPush && (Date.now() - lastPush < 60000)) return { label: 'IN SYNC', cls: 'ok' };
+      if (lastPush) return { label: 'ACTIVE', cls: 'ok' };
+      return { label: 'READY', cls: 'warn' };
+    } },
   ];
   function buildSettingsCardGrid() {
     const modal = document.getElementById('settings-modal');

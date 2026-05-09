@@ -10,6 +10,66 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.31.0 — 2026-05-09
+**Requires Worker patch:** see `worker-sync-patch.md` (new KV namespace + two endpoints).
+
+### Feature — Cross-platform sync (Phase 2 of decision-helper roadmap)
+
+Auto-syncs settings AND catalog state across every device that has Plex
++ Worker configured. Identity is the SHA-256 hash of the user's Plex
+token (computed client-side, never sent to Worker as plaintext).
+
+**What syncs:**
+- Settings: Plex creds, Worker creds, Plex client ID, streaming region,
+  my-subscriptions list, display mode, Trakt creds
+- Entire catalog state: status / rating / reactionTags / notes /
+  lastUpdated for every item across every tab
+
+**Mechanics:**
+- `syncOnLaunch()` runs in the bootstrap IIFE before catalog load.
+  Fetches `/sync/get?user=<hash>&secret=<webhook>` from the Worker. If
+  the remote blob's `pushedAt` timestamp is newer than the local
+  `SYNC_LAST_PUSH_KEY`, the remote settings/state are applied.
+- `syncMarkDirty()` is hooked into `saveState()`. Any state change
+  schedules a 5-second debounced PUT.
+- Manual **Push now** / **Pull now** buttons in the new Sync settings
+  card.
+- Conflict policy: last-write-wins by `pushedAt` timestamp.
+
+**Authentication:**
+- Identity: SHA-256 hash of Plex token via `crypto.subtle.digest`.
+- Authorization: existing `WEBHOOK_SECRET` shared with the Worker. No
+  new credentials needed.
+
+**Sync settings card** shows last-push and last-pull timestamps, last
+error if any, and Push/Pull buttons. Card status badge: NEEDS PLEX +
+WORKER → READY → ACTIVE → IN SYNC.
+
+**Worker side:** documented in `worker-sync-patch.md`. Two new
+endpoints (`GET /sync/get`, `PUT /sync/put`), one new KV binding
+(`SYNC_KV`), 1-year TTL on stored blobs, validates against existing
+`WEBHOOK_SECRET`. ~25 lines of Worker code.
+
+**Failure modes & safeguards:**
+- 2 MB client-side payload cap (vs Cloudflare's 25 MB KV limit)
+- Network errors written to localStorage; visible in the Sync card
+- Stale-write protection: if remote blob is older than local
+  last-push, apply is skipped
+- 404 from /sync/get treated as "no data yet" — not an error
+
+**Roadmap status:**
+
+| Phase | Status |
+|-------|--------|
+| 1. Settings card grid | ✅ 5.27.x |
+| **2. Cross-platform sync** | ✅ **5.31.0 (this release; Worker patch required)** |
+| 3a. Time budget filter | next |
+| 3b. Mood archetype filter | next+1 |
+| 3c. Trailer embed | next+2 |
+| 3d. Streaming-leaving alerts | next+3 |
+
+---
+
 ## 5.30.0 — 2026-05-09
 **Service worker cache:** `scifi-tracker-v70` → `v73`
 
