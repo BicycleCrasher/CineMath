@@ -322,6 +322,51 @@ glitches if any catalog item's pitch or title contains `<`, `>`, or `&`.
 
 ---
 
+## 5.27.0 — 2026-05-09
+**Service worker cache:** `scifi-tracker-v62` → `v63`
+
+### Feature — Settings card grid (Phase 1 of decision-helper roadmap)
+
+Replaced the Settings modal's stacked-sections-with-collapsible-headers
+layout with a card-grid entry point + focused detail panels. Mirrors
+the wizard / triage / watch-modal patterns elsewhere in the app, which
+the user identified as their preferred flow style.
+
+**Card grid (initial view when Settings opens):**
+- Display — phone vs TV layout
+- Plex — media server connection (status: CONFIGURED / EMPTY)
+- Worker — TMDB & scrobble bridge (status: CONFIGURED / EMPTY)
+- Trakt — watch history sync (status: CONNECTED / EMPTY)
+- Cross-Device Sync — placeholder for Phase 2 (status: COMING SOON)
+
+Each card has a title (Didot serif), one-line description, and a
+status badge (green = configured, gold = warn / coming soon, faint =
+empty). 2-column grid on phone, 3-column in TV mode.
+
+**Detail view (when a card is tapped):**
+- Card grid hides, the corresponding section's full form shows
+- "← Settings" back button at the top returns to the grid
+- All existing field handlers (Save, Test, Pair, etc.) work unchanged
+- Status indicators auto-refresh when returning to the grid
+
+**Implementation:**
+- `SETTINGS_CARDS` array defines each card with id / title / desc /
+  statusFn
+- `buildSettingsCardGrid()` injects the grid and back button into the
+  existing `.settings-scroll` container at init time (idempotent —
+  guards against double-build)
+- `setSettingsView(view)` toggles visibility via inline display
+  styles; called on card click and at modal-open with `'grid'`
+- New `data-section="sync"` placeholder section ships with the card so
+  the detail view has something to render until Phase 2 wires up the
+  actual sync logic
+
+**Phase 2 next:** extend the Cloudflare Worker with `/sync/{userHash}`
+endpoints (KV-backed, keyed by hash of Plex token) so settings, state,
+preferences, and viewing history sync automatically across devices.
+
+---
+
 ## 5.26.7 — 2026-05-09
 **Service worker cache:** `scifi-tracker-v61` → `v62`
 

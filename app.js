@@ -3112,8 +3112,119 @@ function setupModals() {
   }
 
   // === Settings modal ===
+  // V5.27.0: Settings card definitions — each maps a card to a section in the
+  // settings-modal. Status function returns 'ok' / 'warn' / 'empty' for the
+  // colored badge on the card. Sync card is a placeholder until Phase 2.
+  const SETTINGS_CARDS = [
+    { id: 'display', title: 'Display', desc: 'Phone vs TV layout', statusFn: () => ({ label: 'AUTO', cls: 'ok' }) },
+    { id: 'plex', title: 'Plex', desc: 'Media server connection', statusFn: () => isPlexConfigured() ? { label: 'CONFIGURED', cls: 'ok' } : { label: 'EMPTY', cls: 'empty' } },
+    { id: 'webhook', title: 'Worker', desc: 'TMDB & scrobble bridge', statusFn: () => isWebhookConfigured() ? { label: 'CONFIGURED', cls: 'ok' } : { label: 'EMPTY', cls: 'empty' } },
+    { id: 'trakt', title: 'Trakt', desc: 'Watch history sync', statusFn: () => (typeof getTraktAccessToken === 'function' && getTraktAccessToken()) ? { label: 'CONNECTED', cls: 'ok' } : { label: 'EMPTY', cls: 'empty' } },
+    { id: 'sync', title: 'Cross-Device Sync', desc: 'Auto-sync settings & state via Worker', statusFn: () => ({ label: 'COMING SOON', cls: 'warn' }) },
+  ];
+  function buildSettingsCardGrid() {
+    const modal = document.getElementById('settings-modal');
+    if (!modal || modal.querySelector('.settings-card-grid')) return;
+    const scroll = modal.querySelector('.settings-scroll');
+    if (!scroll) return;
+    // Inject Back button (visible only in detail view)
+    const back = document.createElement('button');
+    back.type = 'button';
+    back.className = 'settings-detail-back';
+    back.textContent = '← Settings';
+    back.addEventListener('click', () => setSettingsView('grid'));
+    scroll.insertBefore(back, scroll.firstChild);
+    // Inject card grid (visible only in grid view)
+    const grid = document.createElement('div');
+    grid.className = 'settings-card-grid';
+    grid.innerHTML = SETTINGS_CARDS.map(c => `
+      <button type="button" class="settings-card" data-card="${c.id}">
+        <span class="settings-card-title">${c.title}</span>
+        <span class="settings-card-desc">${c.desc}</span>
+        <span class="settings-card-status" data-status="${c.id}"></span>
+      </button>
+    `).join('');
+    scroll.insertBefore(grid, back.nextSibling);
+    grid.querySelectorAll('.settings-card').forEach(card => {
+      card.addEventListener('click', () => setSettingsView(card.dataset.card));
+    });
+    // V5.28.0: Real sync card content (was placeholder in 5.27.0)
+    if (!modal.querySelector('.settings-section[data-section="sync"]')) {
+      const syncSec = document.createElement('div');
+      syncSec.className = 'settings-section';
+      syncSec.dataset.section = 'sync';
+      syncSec.innerHTML = `
+        <h4>Cross-Device Sync</h4>
+        <p class="settings-help">Auto-syncs your settings + viewing state via your Cloudflare Worker, keyed by a SHA-256 hash of your Plex token. Changes push 5 seconds after the last edit; remote state pulls on every app launch.</p>
+        <p class="settings-help" style="font-size:11px;color:var(--ink-faint)"><strong>Requires:</strong> Plex configured (token = identity) AND Worker configured (storage backend) AND a SYNC_KV binding added to the Worker. See <code>worker-sync-patch.md</code> in the repo for the Worker-side patch.</p>
+        <div class="settings-status" id="sync-status-line" style="margin-top:14px"></div>
+        <div class="settings-row" style="margin-top:14px">
+          <button class="action-btn" id="sync-push-now">Push now</button>
+          <button class="action-btn" id="sync-pull-now">Pull now</button>
+        </div>
+      `;
+      scroll.appendChild(syncSec);
+      // Wire the manual push/pull buttons
+      syncSec.querySelector('#sync-push-now').addEventListener('click', async () => {
+        const ok = await syncPush('manual');
+        alert(ok ? 'Pushed.' : 'Push failed — check error in card status.');
+        updateSyncStatusUI();
+      });
+      syncSec.querySelector('#sync-pull-now').addEventListener('click', async () => {
+        const remote = await syncFetch();
+        if (!remote) { alert('Pull returned nothing or failed.'); updateSyncStatusUI(); return; }
+        // Force-apply by clearing last-push so the timestamp comparison passes
+        localStorage.removeItem(SYNC_LAST_PUSH_KEY);
+        const applied = syncApplyRemote(remote);
+        if (applied) {
+          alert('Pulled and applied. Reloading…');
+          setTimeout(() => location.reload(), 500);
+        } else {
+          alert('Pull succeeded but local state was already newer.');
+          updateSyncStatusUI();
+        }
+      });
+      // Refresh status whenever the section is shown
+      const observer = new MutationObserver(() => {
+        if (syncSec.style.display !== 'none') updateSyncStatusUI();
+      });
+      observer.observe(syncSec, { attributes: true, attributeFilter: ['style'] });
+    }
+  }
+  function setSettingsView(view) {
+    const modal = document.getElementById('settings-modal');
+    if (!modal) return;
+    modal.dataset.view = view;
+    const grid = modal.querySelector('.settings-card-grid');
+    const back = modal.querySelector('.settings-detail-back');
+    const sections = modal.querySelectorAll('.settings-section');
+    if (view === 'grid') {
+      // Refresh status indicators on each card
+      SETTINGS_CARDS.forEach(c => {
+        const el = modal.querySelector(`[data-status="${c.id}"]`);
+        if (el) {
+          const s = c.statusFn();
+          el.textContent = s.label;
+          el.className = `settings-card-status ${s.cls}`;
+        }
+      });
+      if (grid) grid.style.display = '';
+      if (back) back.style.display = 'none';
+      sections.forEach(s => s.style.display = 'none');
+    } else {
+      if (grid) grid.style.display = 'none';
+      if (back) back.style.display = '';
+      sections.forEach(s => {
+        s.style.display = (s.dataset.section === view) ? '' : 'none';
+      });
+    }
+  }
   setupSettingsCollapse();
   const settingsModal = document.getElementById('settings-modal');
+  // V5.27.0: Settings card grid + detail panels.
+  // Replaces the long stacked-sections layout with a card grid entry point.
+  // Each card opens its corresponding section as a focused detail panel.
+  buildSettingsCardGrid();
   document.getElementById('settings-btn').addEventListener('click', () => {
     // Populate fields
     const pref = getDisplayModePref();
@@ -3131,6 +3242,7 @@ function setupModals() {
     updateWebhookStatusLine();
     updateTraktStatusLine();
     applySettingsCollapseState();
+    setSettingsView('grid'); // always open at the grid root
     settingsModal.classList.add('active');
   });
   document.getElementById('settings-close').addEventListener('click', () => {
@@ -4777,6 +4889,171 @@ function renderCatalogHealth() {
   return html;
 }
 
+// === V5.28.0: Cross-platform sync via Cloudflare Worker ===
+// Identity: SHA-256 of the user's Plex token, hex-encoded. Stable across devices.
+// Storage: Worker /sync/get and /sync/put endpoints, backed by a new SYNC_KV namespace.
+// Scope: settings (Plex creds, region, subs, display mode) + entire catalog state.
+// Conflict policy: last-write-wins via `pushedAt` timestamp on each blob.
+// Debounce: client batches 5s of changes into a single PUT.
+const SYNC_LAST_PUSH_KEY = 'watchtrack-sync-last-push';
+const SYNC_LAST_PULL_KEY = 'watchtrack-sync-last-pull';
+const SYNC_LAST_ERROR_KEY = 'watchtrack-sync-last-error';
+const SYNC_DEBOUNCE_MS = 5000;
+const SYNC_MAX_BYTES = 1024 * 1024 * 2; // 2 MB safety cap (KV value limit is 25 MB)
+let syncDirty = false;
+let syncDebounceTimer = null;
+let syncBootstrapPromise = null;
+
+async function getUserHash() {
+  const token = getPlexToken();
+  if (!token) return null;
+  if (!('crypto' in window) || !crypto.subtle) return null;
+  const enc = new TextEncoder().encode(token);
+  const hashBuf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function syncSettingsSnapshot() {
+  return {
+    plexServerUrl: getPlexServerUrl(),
+    plexToken: getPlexToken(),
+    plexClientId: getPlexClientId(),
+    streamingRegion: getStreamingRegion(),
+    mySubscriptions: getMySubscriptions(),
+    displayMode: getDisplayModePref(),
+    traktClientId: typeof getTraktClientId === 'function' ? getTraktClientId() : '',
+    traktClientSecret: typeof getTraktClientSecret === 'function' ? getTraktClientSecret() : '',
+  };
+}
+
+async function syncPush(reason) {
+  if (!isWebhookConfigured()) return false;
+  const userHash = await getUserHash();
+  if (!userHash) return false;
+  const payload = {
+    v: 1,
+    settings: syncSettingsSnapshot(),
+    state: state,
+    pushedAt: Date.now(),
+    pushedFrom: navigator.userAgent.slice(0, 100),
+    reason: reason || 'auto',
+  };
+  const body = JSON.stringify(payload);
+  if (body.length > SYNC_MAX_BYTES) {
+    localStorage.setItem(SYNC_LAST_ERROR_KEY, `Payload too large: ${(body.length / 1024 / 1024).toFixed(1)} MB exceeds ${(SYNC_MAX_BYTES / 1024 / 1024)} MB cap`);
+    return false;
+  }
+  try {
+    const url = `${getWebhookUrl()}/sync/put?user=${userHash}&secret=${encodeURIComponent(getWebhookSecret())}`;
+    const resp = await fetch(url, { method: 'PUT', headers: { 'content-type': 'application/json' }, body });
+    if (resp.ok) {
+      localStorage.setItem(SYNC_LAST_PUSH_KEY, String(Date.now()));
+      localStorage.removeItem(SYNC_LAST_ERROR_KEY);
+      updateSyncStatusUI();
+      return true;
+    }
+    localStorage.setItem(SYNC_LAST_ERROR_KEY, `PUT ${resp.status}: ${resp.statusText}`);
+  } catch (e) {
+    localStorage.setItem(SYNC_LAST_ERROR_KEY, `Network error: ${e.message}`);
+  }
+  updateSyncStatusUI();
+  return false;
+}
+
+async function syncFetch() {
+  if (!isWebhookConfigured()) return null;
+  const userHash = await getUserHash();
+  if (!userHash) return null;
+  try {
+    const url = `${getWebhookUrl()}/sync/get?user=${userHash}&secret=${encodeURIComponent(getWebhookSecret())}`;
+    const resp = await fetch(url);
+    if (!resp.ok) {
+      if (resp.status !== 404) localStorage.setItem(SYNC_LAST_ERROR_KEY, `GET ${resp.status}: ${resp.statusText}`);
+      return null;
+    }
+    const data = await resp.json();
+    if (!data) return null;
+    localStorage.setItem(SYNC_LAST_PULL_KEY, String(Date.now()));
+    localStorage.removeItem(SYNC_LAST_ERROR_KEY);
+    return data;
+  } catch (e) {
+    localStorage.setItem(SYNC_LAST_ERROR_KEY, `Network error: ${e.message}`);
+    return null;
+  }
+}
+
+function syncApplyRemote(remote) {
+  if (!remote || !remote.pushedAt) return false;
+  const lastPush = parseInt(localStorage.getItem(SYNC_LAST_PUSH_KEY) || '0');
+  // If our last push is newer than the remote, don't overwrite (we have unpushed changes)
+  if (lastPush && lastPush >= remote.pushedAt) return false;
+  if (remote.settings) {
+    const s = remote.settings;
+    if (s.plexServerUrl) setPlexServerUrl(s.plexServerUrl);
+    if (s.plexToken) setPlexToken(s.plexToken);
+    if (s.plexClientId) setPlexClientId(s.plexClientId);
+    if (s.streamingRegion) setStreamingRegion(s.streamingRegion);
+    if (s.mySubscriptions && Array.isArray(s.mySubscriptions)) setMySubscriptions(s.mySubscriptions);
+    if (s.displayMode) setDisplayModePref(s.displayMode);
+    if (s.traktClientId && typeof setTraktClientId === 'function') setTraktClientId(s.traktClientId);
+    if (s.traktClientSecret && typeof setTraktClientSecret === 'function') setTraktClientSecret(s.traktClientSecret);
+  }
+  if (remote.state && typeof remote.state === 'object') {
+    state = remote.state;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+  return true;
+}
+
+function syncMarkDirty() {
+  syncDirty = true;
+  if (syncDebounceTimer) clearTimeout(syncDebounceTimer);
+  syncDebounceTimer = setTimeout(() => {
+    syncDebounceTimer = null;
+    if (syncDirty) {
+      syncDirty = false;
+      syncPush('debounced');
+    }
+  }, SYNC_DEBOUNCE_MS);
+}
+
+async function syncOnLaunch() {
+  if (!isWebhookConfigured()) return;
+  if (!getPlexToken()) return;
+  syncBootstrapPromise = (async () => {
+    const remote = await syncFetch();
+    if (remote) {
+      const applied = syncApplyRemote(remote);
+      if (applied) {
+        // Re-render with the remote state applied
+        if (typeof render === 'function') render();
+      }
+    }
+  })();
+  await syncBootstrapPromise;
+}
+
+function updateSyncStatusUI() {
+  const el = document.getElementById('sync-status-line');
+  if (!el) return;
+  const lastPush = parseInt(localStorage.getItem(SYNC_LAST_PUSH_KEY) || '0');
+  const lastPull = parseInt(localStorage.getItem(SYNC_LAST_PULL_KEY) || '0');
+  const err = localStorage.getItem(SYNC_LAST_ERROR_KEY);
+  const fmt = (ts) => {
+    if (!ts) return 'never';
+    const ago = Math.floor((Date.now() - ts) / 1000);
+    if (ago < 60) return `${ago}s ago`;
+    if (ago < 3600) return `${Math.floor(ago / 60)}m ago`;
+    if (ago < 86400) return `${Math.floor(ago / 3600)}h ago`;
+    return `${Math.floor(ago / 86400)}d ago`;
+  };
+  el.innerHTML = `
+    <div>Last pushed: <strong>${fmt(lastPush)}</strong></div>
+    <div>Last pulled: <strong>${fmt(lastPull)}</strong></div>
+    ${err ? `<div style="color:var(--skip);margin-top:6px">Error: ${escapeHtml(err)}</div>` : ''}
+  `;
+}
+
 // === V5.22.0: Cross-device config pairing (URL-based credential transfer) ===
 // Lets you set up credentials on a device with a real keyboard, then share/cast
 // the URL to a TV without typing the long Worker URL + secret on a remote.
@@ -5847,6 +6124,10 @@ function triageAction(act) {
   await loadCatalogManifest();
   loadActiveTab();
   loadState();
+  // V5.28.0: pull remote sync state before catalogs load. If remote has newer
+  // settings/state than our last-push timestamp, applies them silently.
+  // syncOnLaunch() short-circuits if Plex/Worker aren't configured.
+  await syncOnLaunch();
   await loadCatalogs();
   catalogEnrichmentIdx = loadCatalogEnrichment();
   // Fetch + merge promotions (cross-device persistence)
