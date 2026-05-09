@@ -10,6 +10,34 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.23.2 — 2026-05-08
+**Service worker cache:** `scifi-tracker-v49` → `v50`
+
+### Fix — Wizard banner overflowed viewport on TV (top clipped)
+
+5.23.0 sized the wizard banner to `max-width: 880px` in TV mode with no
+`max-height` constraint. On a 1080p TV the 16:9 banner rendered at
+880×495px — combined with the subtitle, the wizard step buttons, and
+the footer, total content height exceeded the 1080px viewport. The
+wizard's flex `align-items: center` then centered the overflowing stack,
+pushing the banner's top above the visible area and clipping it.
+
+**Constraints tightened:**
+
+- Phone: `max-width: 480px`, `max-height: 26vh`, `object-fit: contain`
+- TV mode: `max-width: 720px`, `max-height: 24vh`, `object-fit: contain`
+
+The `max-height: Nvh` floor caps the banner at a fraction of the
+viewport regardless of width settings — on a 1080p TV the banner now
+renders at ~480×270 (height-capped), leaving ~76% of viewport for the
+subtitle, action buttons, and footer.
+
+`object-fit: contain` preserves the 16:9 aspect ratio when both
+max-width and max-height fight; the image letterboxes itself rather
+than distorting.
+
+---
+
 ## 5.23.1 — 2026-05-08
 **Service worker cache:** `scifi-tracker-v48` → `v49`
 
