@@ -1,4 +1,4 @@
-// WatchTrack ↔ Plex bridge (v5.3 — DELETE added to CORS Allow-Methods)
+// WatchTrack ↔ Plex bridge (v5.4 — adds /sync endpoints for cross-device state sync)
 //
 // Endpoints:
 //   POST /webhook/{secret}              Plex Pass webhook receiver
@@ -16,6 +16,8 @@
 //   GET  /plex/library?secret=X         Aggregated Plex library (sections + items)
 //   POST /plex/scrobble                 Mark item watched on Plex (server-to-server)
 //   GET  /plex/history?secret=X&start=N&size=N   Paginated Plex viewing history
+//   GET  /sync/get?user=HASH&secret=X   v5.4: fetch user's synced state blob
+//   PUT  /sync/put?user=HASH&secret=X   v5.4: store user's state blob (body = JSON)
 //   GET  /                              health check
 //
 // KV bindings expected (variable names must match exactly):
@@ -24,6 +26,7 @@
 //   VIEWED      — full Plex viewing history
 //   METADATA    — TMDB enrichment cache
 //   PROMOTIONS  — orphan promotions persisted across devices
+//   SYNC_KV     — v5.4: cross-device state sync blobs, keyed by user:HASH
 
 // Library whitelist — only ingest from these Plex library section IDs.
 // Adjust if your library config changes.
@@ -31,10 +34,11 @@ const LIBRARY_WHITELIST = new Set(['1', '2']);
 
 const TMDB_BASE = 'https://api.themoviedb.org/3';
 const METADATA_TTL = 30 * 24 * 60 * 60;  // 30 days
+const SYNC_TTL = 365 * 24 * 60 * 60;     // 1 year — auto-GC dormant users
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
@@ -49,7 +53,7 @@ function normalizeTitle(title) {
   return title.toLowerCase()
     .replace(/\s*\([^)]*\)\s*/g, ' ')
     .replace(/&/g, ' and ')
-    .replace(/[\u2019\u2018'`]/g, '')
+    .replace(/[’‘'`]/g, '')
     .replace(/[^a-z0-9]+/g, '')
     .slice(0, 60);
 }
@@ -146,7 +150,7 @@ export default {
 
     // Health
     if (path === '/' || path === '/health') {
-      return new Response('WatchTrack-Plex bridge online (v5.3 — DELETE in CORS)', { headers: cors });
+      return new Response('WatchTrack-Plex bridge online (v5.4 — sync endpoints)', { headers: cors });
     }
 
     // === Plex webhook receiver ===
@@ -489,6 +493,52 @@ export default {
       } catch (e) {
         return jsonResponse({ error: e.message }, 502);
       }
+    }
+
+    // === v5.4: Cross-device state sync ===
+    // Identity is a SHA-256 hash of the user's Plex token (computed client-side
+    // by WatchTrack), so the same Plex account on multiple devices produces the
+    // same hash and reads/writes the same blob. Authorization uses the existing
+    // shared secret.
+
+    // GET /sync/get?user=HASH&secret=X — fetch the user's stored blob (or 404)
+    if (path === '/sync/get' && method === 'GET') {
+      const userHash = url.searchParams.get('user');
+      const providedSecret = url.searchParams.get('secret');
+      if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
+      if (!userHash || !/^[a-f0-9]{16,64}$/i.test(userHash)) {
+        return new Response('Bad user hash', { status: 400, headers: cors });
+      }
+      const data = await env.SYNC_KV.get(`user:${userHash}`);
+      if (!data) {
+        return new Response('null', {
+          status: 404,
+          headers: { ...cors, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+        });
+      }
+      return new Response(data, {
+        headers: { ...cors, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+      });
+    }
+
+    // PUT /sync/put?user=HASH&secret=X — store the user's blob (body = JSON)
+    if (path === '/sync/put' && method === 'PUT') {
+      const userHash = url.searchParams.get('user');
+      const providedSecret = url.searchParams.get('secret');
+      if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
+      if (!userHash || !/^[a-f0-9]{16,64}$/i.test(userHash)) {
+        return new Response('Bad user hash', { status: 400, headers: cors });
+      }
+      const bodyText = await request.text();
+      // Cloudflare KV per-value cap is 25 MB; reject earlier to avoid wasted compute
+      if (bodyText.length > 25 * 1024 * 1024) {
+        return new Response('Payload too large', { status: 413, headers: cors });
+      }
+      // Validate parses cleanly so we don't store garbage
+      try { JSON.parse(bodyText); }
+      catch { return new Response('Invalid JSON', { status: 400, headers: cors }); }
+      await env.SYNC_KV.put(`user:${userHash}`, bodyText, { expirationTtl: SYNC_TTL });
+      return new Response('ok', { headers: cors });
     }
 
     return new Response('Not found', { status: 404, headers: cors });
