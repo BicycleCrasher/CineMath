@@ -10,6 +10,54 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.22.0 — 2026-05-08
+**Service worker cache:** `scifi-tracker-v44` → `v45`
+
+### Feature — Cross-device config pairing (URL-based credential transfer)
+
+Typing a Cloudflare Worker URL and 32-character shared secret on a TV
+remote is brutal. This release adds a one-shot URL-based pairing flow:
+
+**On a device with a real keyboard** (phone, laptop, tablet):
+- Settings → Plex Webhook Bridge → **Pair Another Device →**
+- Modal opens displaying a URL of the form:
+  `https://bicyclecrasher.github.io/WatchTrack/?config=BASE64ENCODEDJSON`
+- The base64 payload contains: Worker URL, Worker secret, Plex token,
+  Plex server URL, Plex client ID, streaming region, and your "My
+  Subscriptions" list (version-tagged `v: 1`).
+- **Copy** button puts the URL on the clipboard. **Share…** triggers
+  `navigator.share` for Web Share API targets.
+
+**On the receiving device** (TV, second phone, etc.):
+- Open the URL however delivered (Cast Tab from Chrome, emailed link,
+  bookmark sync, etc.).
+- WatchTrack's bootstrap detects `?config=` BEFORE any other init runs,
+  decodes the JSON, writes each field to localStorage via the existing
+  setters (`setWebhookUrl`, `setWebhookSecret`, `setPlexToken`,
+  `setPlexServerUrl`, `setPlexClientId`, `setStreamingRegion`,
+  `setMySubscriptions`), strips the `config` param from the URL via
+  `history.replaceState()`, and reloads.
+- After reload, the receiving device is fully configured — the rest of
+  init runs with `isPlexConfigured()` and `isWebhookConfigured()`
+  returning true, the catalog enrichment sync kicks in, etc.
+
+**Security notes (also surfaced in the pair modal):**
+- The URL contains credentials in plaintext base64 (not encrypted).
+  Anyone with the URL can talk to the user's Worker and Plex server.
+- Mitigations: URL is auto-stripped from receiving device's history on
+  apply. Generated fresh each time the pair button is tapped (no
+  persistent token). Pair modal warns the user to treat the URL like a
+  password.
+- Future hardening: could route through the Worker as a one-time-use
+  pair code (4 digits, 5-min TTL, KV-backed) — that requires Worker
+  changes and is out of scope for this release.
+
+**Plex API limitation context:** Plex's "linked streaming services" are
+not exposed via API, so pairing can transfer the user's manual
+subscription list (set in 5.21.0) but not the actual Plex Discover data.
+
+---
+
 ## 5.21.3 — 2026-05-08
 **Service worker cache:** `scifi-tracker-v43` → `v44`
 

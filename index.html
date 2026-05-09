@@ -173,6 +173,31 @@
   </div>
 </div>
 
+<div class="modal" id="pair-modal">
+  <div class="modal-content">
+    <h3>Pair Another Device</h3>
+    <p class="settings-help">
+      The URL below contains your <strong>Worker URL, secret, and Plex token</strong>.
+      Open it on another device (TV, tablet, etc.) and WatchTrack will configure itself
+      automatically. <strong>Treat this URL like a password</strong> — anyone with it
+      can talk to your Worker and Plex server.
+    </p>
+    <div class="settings-section">
+      <label>Setup URL</label>
+      <textarea class="modal-input" id="pair-url" rows="4" readonly></textarea>
+    </div>
+    <p class="settings-help" style="font-size:11px">
+      Delivery options: tap Copy and paste into a Cast Tab from Chrome, email it to
+      yourself, or use a phone keyboard app that mirrors clipboard to the TV.
+    </p>
+    <div class="modal-actions">
+      <button class="action-btn" id="pair-copy">Copy</button>
+      <button class="action-btn" id="pair-share">Share…</button>
+      <button class="action-btn" id="pair-close">Close</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal" id="watch-modal">
   <div class="modal-content">
     <h3 id="watch-modal-title">Watch</h3>
@@ -344,6 +369,7 @@
       </div>
       <div class="settings-row">
         <button class="action-btn" id="webhook-test">Test poll</button>
+        <button class="action-btn" id="webhook-pair">Pair Another Device →</button>
       </div>
       <p class="settings-status" id="webhook-status">Not configured.</p>
     </div>

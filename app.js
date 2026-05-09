@@ -2635,6 +2635,43 @@ function setupModals() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
+  // === V5.22.0: Pair Another Device modal ===
+  const pairBtn = document.getElementById('webhook-pair');
+  if (pairBtn) {
+    pairBtn.addEventListener('click', () => {
+      if (!isWebhookConfigured() && !isPlexConfigured()) {
+        alert('Nothing to pair yet — configure Worker URL/secret or Plex first.');
+        return;
+      }
+      document.getElementById('pair-url').value = generatePairUrl();
+      document.getElementById('pair-modal').classList.add('active');
+    });
+    document.getElementById('pair-close').addEventListener('click', () => {
+      document.getElementById('pair-modal').classList.remove('active');
+    });
+    document.getElementById('pair-copy').addEventListener('click', async () => {
+      const url = document.getElementById('pair-url').value;
+      const btn = document.getElementById('pair-copy');
+      try {
+        await navigator.clipboard.writeText(url);
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
+      } catch (e) {
+        const ta = document.getElementById('pair-url');
+        ta.focus(); ta.select();
+        alert('Clipboard API not available. The URL is selected — use Ctrl+C / Cmd+C.');
+      }
+    });
+    document.getElementById('pair-share').addEventListener('click', async () => {
+      const url = document.getElementById('pair-url').value;
+      if (navigator.share) {
+        try { await navigator.share({ title: 'WatchTrack Pair', url }); } catch {}
+      } else {
+        alert('Web Share API not available on this device. Use Copy instead.');
+      }
+    });
+  }
+
   // === Search modal ===
   document.getElementById('search-btn').addEventListener('click', () => {
     document.getElementById('search-input').value = '';
@@ -4286,6 +4323,48 @@ function renderCatalogHealth() {
   return html;
 }
 
+// === V5.22.0: Cross-device config pairing (URL-based credential transfer) ===
+// Lets you set up credentials on a device with a real keyboard, then share/cast
+// the URL to a TV without typing the long Worker URL + secret on a remote.
+function generatePairUrl() {
+  const data = {
+    workerUrl: getWebhookUrl(),
+    workerSecret: getWebhookSecret(),
+    plexToken: getPlexToken(),
+    plexServerUrl: getPlexServerUrl(),
+    plexClientId: getPlexClientId(),
+    streamingRegion: getStreamingRegion(),
+    mySubscriptions: getMySubscriptions(),
+    v: 1,
+  };
+  const encoded = btoa(JSON.stringify(data));
+  return `${window.location.origin}${window.location.pathname}?config=${encoded}`;
+}
+function applyConfigFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const cfg = params.get('config');
+  if (!cfg) return false;
+  try {
+    const data = JSON.parse(atob(cfg));
+    if (data.workerUrl) setWebhookUrl(data.workerUrl);
+    if (data.workerSecret) setWebhookSecret(data.workerSecret);
+    if (data.plexToken) setPlexToken(data.plexToken);
+    if (data.plexServerUrl) setPlexServerUrl(data.plexServerUrl);
+    if (data.plexClientId) setPlexClientId(data.plexClientId);
+    if (data.streamingRegion) setStreamingRegion(data.streamingRegion);
+    if (data.mySubscriptions && Array.isArray(data.mySubscriptions)) setMySubscriptions(data.mySubscriptions);
+    // Strip the config param from URL so credentials don't linger in history
+    history.replaceState(null, '', window.location.pathname);
+    // Reload so all isPlexConfigured()/isWebhookConfigured() checks pick up the new config
+    location.reload();
+    return true;
+  } catch (e) {
+    console.error('Invalid pair URL:', e);
+    alert('Invalid pair URL — could not decode. Generate a fresh one.');
+    return false;
+  }
+}
+
 // === V5.21.0: Watch sub-modal (Triage → Start Watching → pick platform) ===
 async function openWatchModal(item, sourceTab) {
   const modal = document.getElementById('watch-modal');
@@ -5112,6 +5191,12 @@ function triageAction(act) {
 }
 
 (async () => {
+  // V5.22.0: Apply ?config=BASE64 URL parameter (cross-device pairing) BEFORE
+  // any other init runs. If a config is found, applyConfigFromUrl() writes it
+  // to localStorage and reloads — we early-return so init doesn't continue
+  // with stale config (the reload will run init fresh).
+  if (applyConfigFromUrl()) return;
+
   await loadCatalogManifest();
   loadActiveTab();
   loadState();
