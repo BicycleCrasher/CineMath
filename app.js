@@ -5136,9 +5136,12 @@ function wizardLaunchTriage(mode) {
     }
   }
 
+  // V5.24.0: Tag the requested mode so the triage modal can render the
+  // appropriate UI (rate+tag vs queue vs suggest). The actual triageState.mode
+  // stays 'wizard' for the existing back-button / close-modal flow.
   // Hide wizard, show app shell, launch triage
   wizardHide();
-  triageState = { mode: 'wizard', queue, idx: 0 };
+  triageState = { mode: 'wizard', requestMode: mode, queue, idx: 0 };
   document.getElementById('triage-title').textContent = title;
   document.getElementById('triage-modal').classList.add('active');
   renderTriage();
@@ -5224,6 +5227,120 @@ function renderTriage() {
     btn.addEventListener('click', () => triageAction(btn.dataset.act));
   });
 }
+// V5.24.0: Progressive rate→tag triage modal for TV remote.
+// Step 1 (no rating yet): four large rating buttons. Tap one → auto-advances to step 2.
+// Step 2 (rating set, tags missing): tag chips for the item's content type.
+//                                     Save & Next commits and moves on. Back returns to rate.
+function renderRateTagTriage(item, sourceTab) {
+  const requestMode = triageState.requestMode;
+  const titleEl = document.getElementById('triage-title');
+  titleEl.textContent = requestMode === 'rate-loved-untagged'
+    ? 'Tag your loved items'
+    : 'Rate & tag watched items';
+  document.getElementById('triage-progress').textContent = `${triageState.idx + 1} / ${triageState.queue.length}`;
+
+  const meta = [item.year, item.dir, item.country, item.runtime].filter(Boolean).join(' · ');
+  const why = item.whyPriority ? `<div class="why">${escapeHtml(item.whyPriority)}</div>` : '';
+  const currentRating = getRating(item.id, sourceTab);
+  const currentTags = getTags(item.id, sourceTab);
+  const hasRating = currentRating && currentRating !== 'none';
+  const step = hasRating ? 'tag' : 'rate';
+
+  let cardHtml = `
+    <span class="source-badge">${escapeHtml(item._watchlist_source_label || '')}</span>
+    ${item.priority ? `<span class="priority-badge ${item.priority}" style="margin-left:6px">${priorityLabel(item.priority)}</span>` : ''}
+    <h4>${escapeHtml(item.title)}</h4>
+    <div class="meta">${escapeHtml(meta)}</div>
+    ${why}
+    ${item.pitch ? `<p class="triage-pitch">${escapeHtml(item.pitch)}</p>` : ''}
+  `;
+
+  if (step === 'rate') {
+    cardHtml += `
+      <div class="triage-rate-step">
+        <h5>How did you like it?</h5>
+        <div class="triage-rate-buttons">
+          <button class="triage-rate-btn rating-loved" data-rate="loved">♥ Loved</button>
+          <button class="triage-rate-btn rating-liked" data-rate="liked">▲ Liked</button>
+          <button class="triage-rate-btn rating-mixed" data-rate="mixed">◐ Mixed</button>
+          <button class="triage-rate-btn rating-disliked" data-rate="disliked">▽ Disliked</button>
+        </div>
+      </div>
+    `;
+  } else {
+    const tagSet = getTagSetForItem(item) || { positive: [], negative: [] };
+    const positive = tagSet.positive || [];
+    const negative = tagSet.negative || [];
+    cardHtml += `
+      <div class="triage-tag-step">
+        <h5>What stood out? <span class="step-meta">Rated ${ratingLabel(currentRating)}</span></h5>
+        ${positive.length ? `
+        <div class="triage-tag-section">
+          <div class="triage-tag-label">Positive</div>
+          <div class="triage-tag-row">
+            ${positive.map(t => `<button class="triage-tag-btn pos${currentTags.includes(t) ? ' active' : ''}" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</button>`).join('')}
+          </div>
+        </div>` : ''}
+        ${negative.length ? `
+        <div class="triage-tag-section">
+          <div class="triage-tag-label">Critical</div>
+          <div class="triage-tag-row">
+            ${negative.map(t => `<button class="triage-tag-btn neg${currentTags.includes(t) ? ' active' : ''}" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</button>`).join('')}
+          </div>
+        </div>` : ''}
+      </div>
+    `;
+  }
+
+  document.getElementById('triage-card').innerHTML = cardHtml;
+
+  if (step === 'rate') {
+    document.getElementById('triage-actions').innerHTML = `
+      <button class="action-btn" data-act="rate-skip">Skip this item</button>
+      <button class="action-btn" data-act="rate-close">Close</button>
+    `;
+    document.querySelectorAll('.triage-rate-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        setRating(item.id, btn.dataset.rate, sourceTab);
+        renderTriage(); // re-render now that rating exists, will show tag step
+      });
+    });
+  } else {
+    document.getElementById('triage-actions').innerHTML = `
+      <button class="action-btn primary" data-act="tag-save">Save &amp; Next</button>
+      <button class="action-btn" data-act="tag-back">Back to rating</button>
+      <button class="action-btn" data-act="rate-close">Close</button>
+    `;
+    document.querySelectorAll('.triage-tag-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        toggleTag(item.id, btn.dataset.tag, sourceTab);
+        renderRateTagTriage(item, sourceTab); // refresh active states
+      });
+    });
+  }
+
+  document.querySelectorAll('#triage-actions .action-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const act = btn.dataset.act;
+      if (act === 'rate-skip' || act === 'tag-save') {
+        triageState.idx++;
+        renderTriage();
+      } else if (act === 'tag-back') {
+        // Clear rating to return to rate step
+        if (state[sourceTab] && state[sourceTab][item.id]) {
+          delete state[sourceTab][item.id].rating;
+          saveState();
+        }
+        renderRateTagTriage(item, sourceTab);
+      } else if (act === 'rate-close') {
+        document.getElementById('triage-modal').classList.remove('active');
+        triageState = null;
+        render();
+      }
+    });
+  });
+}
+
 function triageAction(act) {
   if (!triageState) return;
   const item = triageState.queue[triageState.idx];

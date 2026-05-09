@@ -347,6 +347,79 @@ footer {
 .modal-back:hover { background: var(--bg-card); border-color: var(--accent); color: var(--accent); }
 body.tv-mode .modal-back { width: 56px; height: 56px; font-size: 26px; }
 
+/* === V5.24.0: Progressive rate+tag triage modal === */
+.triage-pitch { color: var(--ink-dim); font-size: 13px; line-height: 1.5; margin: 8px 0 16px; }
+.triage-rate-step h5,
+.triage-tag-step h5 {
+  margin: 16px 0 12px;
+  font-size: 12px;
+  color: var(--ink-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-family: 'Helvetica Neue', sans-serif;
+  font-weight: normal;
+}
+.triage-rate-step h5 .step-meta,
+.triage-tag-step h5 .step-meta {
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--accent);
+  margin-left: 8px;
+}
+.triage-rate-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.triage-rate-btn {
+  padding: 18px 14px;
+  background: var(--bg-card);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  font-size: 16px;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.triage-rate-btn:hover { border-color: var(--accent); background: var(--bg-elev); color: var(--accent); }
+.triage-rate-btn.rating-loved:hover { border-color: var(--watched); background: rgba(107,142,90,0.15); color: var(--watched); }
+.triage-rate-btn.rating-disliked:hover { border-color: var(--skip); background: rgba(110,76,76,0.15); color: var(--skip); }
+.triage-tag-section { margin-bottom: 14px; }
+.triage-tag-label {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  margin-bottom: 8px;
+}
+.triage-tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.triage-tag-btn {
+  padding: 8px 12px;
+  background: var(--bg);
+  color: var(--ink-dim);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.triage-tag-btn:hover { border-color: var(--accent); color: var(--ink); }
+.triage-tag-btn.active.pos { background: rgba(107,142,90,0.18); border-color: var(--watched); color: var(--watched); }
+.triage-tag-btn.active.neg { background: rgba(110,76,76,0.2); border-color: var(--skip); color: var(--skip); }
+body.tv-mode .triage-rate-btn { padding: 24px 18px; font-size: 18px; }
+body.tv-mode .triage-tag-btn { padding: 12px 16px; font-size: 14px; }
+body.tv-mode .triage-tag-label { font-size: 13px; }
+body.tv-mode .triage-rate-step h5,
+body.tv-mode .triage-tag-step h5 { font-size: 14px; }
+
 /* === V5.20.0: Stats modal SVG charts === */
 .stats-chart { margin: 8px 0 18px; }
 .stats-chart-svg {

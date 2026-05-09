@@ -10,6 +10,53 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.24.0 — 2026-05-09
+**Service worker cache:** `scifi-tracker-v52` → `v53`
+
+### Feature — Progressive rate+tag triage flow (TV-friendly)
+
+Renamed the wizard's "Recently watched, unrated" step to **"Watched but
+untagged"** and broadened its filter to catch all watched items missing
+reaction tags, not just unrated ones. Items rated Loved/Liked/Mixed/
+Disliked but never tagged now flow through the same triage path as
+truly-unrated items.
+
+**New filter:** `getStatus(id, tab) === 'watched' && getTags(id, tab).length === 0`
+(was `getStatus === 'watched' && !getRating(id, tab)`)
+
+**New triage modal UX (progressive: rate → tag):**
+
+- **Step 1 (no rating yet):** 4 large rating buttons in a 2×2 grid —
+  Loved (green), Liked, Mixed, Disliked (red). 18px font, 18px padding;
+  in TV mode bumps to 24px padding, 18px font. Clicking a rating saves
+  it and auto-advances to step 2.
+
+- **Step 2 (rating set, tags missing):** displays the tag chips
+  appropriate to the item's content type (`getTagSetForItem(item)`),
+  split into a Positive row (green border on active) and a Critical row
+  (red border on active). Tap to toggle. Active state has tinted
+  background + colored border. **Save & Next** commits and advances to
+  the next item in the queue. **Back to rating** clears the rating so
+  you can re-rate. **Close** exits triage.
+
+- **Both steps:** progress counter (`5 / 18`), source badge, item title,
+  meta (year · director · runtime · country), why-priority, pitch.
+
+**Triage state extended:** `triageState.requestMode` now records the
+wizard's launching mode (`rate-recent` or `rate-loved-untagged`) so
+`renderTriage()` can dispatch to the new `renderRateTagTriage()` UI.
+Other modes (`queue`, `suggest`, generic `wizard`) keep the existing
+status-only triage card.
+
+`rate-loved-untagged` shares the same UI but skips step 1 (rating
+already exists) — opens directly to the tag chips.
+
+**TV-mode upscale:** all interactive elements respect `body.tv-mode`
+sizing rules — rate buttons grow to 24px padding/18px font, tag chips
+to 12px padding/14px font, headings to 14px.
+
+---
+
 ## 5.23.3 — 2026-05-08
 **Service worker cache:** `scifi-tracker-v50` → `v51`
 
