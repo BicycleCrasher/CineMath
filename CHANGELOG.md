@@ -10,6 +10,56 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.26.10 — 2026-05-09
+**Service worker cache:** `scifi-tracker-v64` → `v65`
+
+### Fix — Escape / remote back button exited the app instead of navigating back
+
+**Root causes (two, both fixed):**
+
+**1. Missing key aliases for Android TV back button.**
+Some Android TV WebViews send `key: 'GoBack'` or `key: 'BrowserBack'` for
+the physical back button on the remote — not `'Escape'`. These values
+weren't in the key-alias table, so the keydown handler returned early
+without calling `e.preventDefault()`, leaving the TWA to handle the event
+and finish the activity (exit the app).
+
+Added `'GoBack'` and `'BrowserBack'` to the KEY_ALIASES map, both
+normalising to `'Escape'`.
+
+**2. No popstate interception for TWA physical back.**
+Even when the keydown event fires correctly, some Android TV back-button
+implementations go through the browser's history stack before dispatching
+a key event. A TWA with no browser history to pop back to finishes the
+activity at that layer, bypassing keydown entirely.
+
+Fix: on `setupModals()` call, push a dummy `{ watchtrack: 'back' }` state
+into the browser history. The TWA now pops that entry on back-press,
+firing a `popstate` event instead of exiting. The `popstate` handler runs
+`handleAppBack()` and immediately re-primes the history entry so the next
+back press also fires `popstate`.
+
+**3. Wizard not in the back-navigation hierarchy.**
+The old Escape handler knew about modals and tab focus but not the wizard.
+Pressing Escape on the wizard's root screen did nothing visible (it focused
+a hidden tab button in the background app-shell). Pressing Escape on a
+wizard sub-step also did nothing, forcing the user to find the on-screen
+Back button.
+
+**New hierarchy (`handleAppBack()`, shared by keydown and popstate):**
+1. Modal open → close the topmost active modal
+2. Wizard visible at a sub-step → `wizardGoBack()`
+3. Wizard visible at root → stay (don't exit; the wizard IS the home screen)
+4. Main view → focus the active tab button (D-pad starting point)
+
+**4. Escape in a focused text input.**
+Backspace correctly keeps native delete behaviour inside inputs. Escape
+in an input now blurs the field and runs `handleAppBack()` — on TV the
+remote's back button should never delete characters, it should close or
+navigate back.
+
+---
+
 ## 5.26.9 — 2026-05-09
 **Service worker cache:** `scifi-tracker-v63` → `v64`
 

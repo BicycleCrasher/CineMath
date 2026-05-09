@@ -5521,33 +5521,69 @@ function triageAction(act) {
     modalObs.observe(m, { attributes: true, attributeFilter: ['class'] });
   });
 
+  // === Back-button / Escape handling ===
+  // Shared logic called by both the keydown handler and the popstate listener
+  // (TWA physical back button → browser fires popstate, not always keydown).
+  function handleAppBack() {
+    // 1. Topmost open modal → close it
+    const openModal = Array.from(document.querySelectorAll('.modal.active')).pop() || null;
+    if (openModal) { openModal.classList.remove('active'); return; }
+    // 2. Wizard visible → navigate back within it (or stay at root; never exit)
+    if (document.getElementById('wizard').style.display !== 'none') {
+      if (wizardState.step !== 'root') wizardGoBack();
+      return;
+    }
+    // 3. Main view → focus the tab nav so the user has a D-pad starting point
+    const activeBtn = document.querySelector('.tab-btn.active');
+    if (activeBtn && activeBtn.offsetParent !== null) activeBtn.focus();
+  }
+
+  // Prime the browser history with a dummy entry so the TWA back button fires
+  // popstate instead of finishing the activity (exiting the app). Re-prime on
+  // every popstate so the next back press also fires popstate.
+  history.pushState({ watchtrack: 'back' }, '');
+  window.addEventListener('popstate', (e) => {
+    if (e.state && e.state.watchtrack === 'back') {
+      handleAppBack();
+      history.pushState({ watchtrack: 'back' }, '');
+    }
+  });
+
   // === D-pad / arrow-key navigation ===
   // Mode-agnostic: Escape/Back must close modals on any device (TWA WebViews
   // on Google TV may not match detectTVMode's UA regex). Arrow-key navigation
   // is harmless on phone since the handler early-returns inside text inputs.
   document.addEventListener('keydown', (e) => {
-    // Don't intercept inside text inputs or textareas
     const tag = (e.target.tagName || '').toLowerCase();
-    if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    const isTextInput = tag === 'input' || tag === 'textarea' || tag === 'select';
 
-    // Normalize key names: older WebViews (Android TV) send "Up" not "ArrowUp", etc.
-    const KEY_ALIASES = {'Up':'ArrowUp','Down':'ArrowDown','Left':'ArrowLeft','Right':'ArrowRight','Esc':'Escape'};
+    // Normalize key names: older WebViews (Android TV) send "Up" not "ArrowUp".
+    // GoBack / BrowserBack are what some Android TV WebViews send for the remote
+    // back button — treat them identically to Escape.
+    const KEY_ALIASES = {
+      'Up': 'ArrowUp', 'Down': 'ArrowDown', 'Left': 'ArrowLeft', 'Right': 'ArrowRight',
+      'Esc': 'Escape', 'GoBack': 'Escape', 'BrowserBack': 'Escape',
+    };
     const key = KEY_ALIASES[e.key] || e.key;
-    if (!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Enter','Escape','Backspace'].includes(key)) return;
 
-    if (key === 'Escape' || key === 'Backspace') {
-      // Close any open modal
-      const openModal = Array.from(document.querySelectorAll('.modal.active')).pop() || null;
-      if (openModal) {
-        e.preventDefault();
-        openModal.classList.remove('active');
-        return;
-      }
-      // Otherwise, focus the tab nav
-      const activeBtn = document.querySelector('.tab-btn.active');
-      if (activeBtn) { e.preventDefault(); activeBtn.focus(); }
+    // Escape / back button: always intercept to prevent the TWA from exiting.
+    // If a text input is focused, blur it first so the back action is visible.
+    // Backspace in a text input keeps its native delete behaviour.
+    if (key === 'Escape') {
+      e.preventDefault();
+      if (isTextInput) e.target.blur();
+      handleAppBack();
       return;
     }
+    if (key === 'Backspace' && !isTextInput) {
+      e.preventDefault();
+      handleAppBack();
+      return;
+    }
+
+    // Arrow keys and Enter: skip inside text inputs
+    if (isTextInput) return;
+    if (!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Enter'].includes(key)) return;
 
     if (key === 'Enter') {
       // Default browser behavior handles Enter on focused button. Intercept
