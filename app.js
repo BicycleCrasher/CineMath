@@ -5341,8 +5341,16 @@ function renderRateTagTriage(item, sourceTab) {
   } else {
     document.querySelectorAll('.triage-tag-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        toggleTag(item.id, btn.dataset.tag, sourceTab);
-        renderRateTagTriage(item, sourceTab); // refresh active states, stay on this step
+        // V5.26.5: Capture which tag was clicked so we can refocus it after
+        // re-render. Without this, focus escapes the tag row when innerHTML
+        // is replaced — the focus trap then redirects to the first
+        // .modal-actions button, booting the user out of the tag step.
+        const clickedTag = btn.dataset.tag;
+        toggleTag(item.id, clickedTag, sourceTab);
+        renderRateTagTriage(item, sourceTab); // refresh active states
+        // Re-find the same tag in the freshly-rendered DOM and focus it
+        const refocus = document.querySelector(`.triage-tag-btn[data-tag="${CSS.escape(clickedTag)}"]`);
+        if (refocus) refocus.focus();
       });
     });
   }

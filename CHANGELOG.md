@@ -10,6 +10,30 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.26.5 — 2026-05-09
+**Service worker cache:** `scifi-tracker-v59` → `v60`
+
+### Fix — Tag selection no longer boots focus out of the tag row
+
+When toggling a tag chip in step 2 or 3 of the triage flow, the
+re-render path replaced `.triage-card`'s innerHTML to update active
+states. That destroyed the focused tag-button DOM node. Focus then
+escaped to body, the 5.26.0 focusin listener detected the escape,
+redirected to the first `.modal-actions button` — booting the user
+from the tag row mid-tagging.
+
+**Fix:** capture the clicked tag's `data-tag` value before re-rendering,
+then after `renderRateTagTriage` rebuilds the DOM, re-query for the
+same tag (`.triage-tag-btn[data-tag="…"]` with `CSS.escape`) and
+`.focus()` it.
+
+Result: tap-tap-tap through tags as fast as you want. Focus stays on
+the chip you just toggled. To leave the tag row, press Down from the
+bottom row to land on the first action button (Continue → / Save &
+Next ✓), exactly as you'd expect.
+
+---
+
 ## 5.26.4 — 2026-05-09
 **Service worker cache:** `scifi-tracker-v58` → `v59`
 
