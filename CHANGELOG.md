@@ -10,6 +10,55 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.34.0 — 2026-05-09
+**Requires Worker patch:** worker.js v5.5 — appends `videos` to TMDB lookup, returns `trailerKey`. Existing enrichments will refresh on the 30-day cache TTL automatically; force-refresh by re-running Pre-enrich catalog if you want trailers immediately.
+
+### Feature — Trailer embed (Phase 3c of decision-helper roadmap)
+
+The wizard's recommendations panel now shows a ▶ trailer button beside
+each catalog-matched rec. One tap opens the YouTube trailer in the
+default handler (YouTube app on Android/Google TV, browser tab on
+desktop) — a 30-second commitment that often closes "should I watch
+this?" decisions where the title alone doesn't.
+
+**Worker side (v5.5):**
+- `tmdbLookup` now appends `videos` to its TMDB details fetch
+- After fetch, picks the best YouTube trailer:
+  1. Official Trailer
+  2. Any Trailer (non-official)
+  3. Teaser
+  4. First YouTube video of any type
+- Stores the YouTube key as `trailerKey` on the cached enrichment
+- Old enrichments without trailerKey are valid; they just won't show the
+  button. Refresh on the 30-day TTL or via Pre-enrich.
+
+**Client side:**
+- `getTrailerKey(itemId)` reads from enrichment cache
+- `trailerYouTubeUrl(key)` returns `https://www.youtube.com/watch?v=KEY`
+- Recommended rec items render a separate `.trailer-btn` ▶ link next to
+  the wizard-btn. Click opens YouTube in a new tab via standard `target="_blank"`
+- D-pad-friendly: trailer button is its own focusable element, can be
+  reached via right-arrow from the rec, or enter to open
+- TV-mode upscale: 24px padding, 72px min-width, 20px ▶ glyph
+
+**Why YouTube watch URL instead of embed:** TWA WebViews don't reliably
+play embedded YouTube iframes (autoplay restrictions, container
+sizing). Linking to youtube.com hands off to the OS — the YouTube app
+handles playback natively, which is the better TV experience anyway.
+
+**Roadmap status:**
+
+| Phase | Status |
+|-------|--------|
+| 1. Settings card grid | ✅ 5.27.x |
+| 2. Cross-platform sync | ✅ 5.31.x |
+| 3a. Time budget filter | ✅ 5.32.0 |
+| 3b. Mood archetype filter | ✅ 5.33.0 |
+| **3c. Trailer embed** | ✅ **5.34.0 (this release; Worker patch required)** |
+| 3d. Streaming-leaving alerts | next |
+
+---
+
 ## 5.33.0 — 2026-05-09
 
 ### Feature — Mood archetype filter (Phase 3b of decision-helper roadmap)

@@ -4894,6 +4894,20 @@ function renderCatalogHealth() {
   return html;
 }
 
+// === V5.34.0: Trailer embed (Phase 3c of decision-helper roadmap) ===
+// Worker (v5.5+) populates `enrich.trailerKey` with the YouTube key of the best
+// available trailer for each TMDB-enriched item. Older enrichments without
+// trailerKey just don't show the button. Cache TTL is 30 days, so most items
+// will refresh into having trailers within a month.
+function getTrailerKey(itemId) {
+  const enrich = getEnrichmentForItem(itemId);
+  return enrich && enrich.trailerKey ? enrich.trailerKey : null;
+}
+function trailerYouTubeUrl(key) {
+  // Use the standard watch URL — opens in YouTube app on Android/Google TV via OS handler
+  return `https://www.youtube.com/watch?v=${encodeURIComponent(key)}`;
+}
+
 // === V5.33.0: Mood archetype filter (Phase 3b of decision-helper roadmap) ===
 // Six archetypes, each mapped to a cluster of reaction tags. Items are
 // scored by how many of their applied reactionTags overlap the mood's
@@ -5726,10 +5740,18 @@ function wizardRender() {
         html += recs.recommended.map(r => {
           const yearStr = r.year ? ` (${r.year})` : '';
           const sources = r.sourceTitles.slice(0, 2).join(', ') + (r.sourceTitles.length > 2 ? ' and others' : '');
-          return `<button class="wizard-btn" data-action="recs-goto" data-tab="${escapeHtml(r.catalogTab)}" data-id="${escapeHtml(r.catalogItemId)}">
-            ${escapeHtml(r.title)}${yearStr}
-            <span class="wizard-btn-meta">like ${escapeHtml(sources)}</span>
-          </button>`;
+          // V5.34.0: trailer button beside rec if YouTube key is in enrichment cache
+          const tkey = getTrailerKey(r.catalogItemId);
+          const trailerBtn = tkey
+            ? `<a class="trailer-btn" href="${trailerYouTubeUrl(tkey)}" target="_blank" rel="noopener" aria-label="Watch trailer">▶</a>`
+            : '';
+          return `<div class="wizard-rec-row">
+            <button class="wizard-btn" data-action="recs-goto" data-tab="${escapeHtml(r.catalogTab)}" data-id="${escapeHtml(r.catalogItemId)}">
+              ${escapeHtml(r.title)}${yearStr}
+              <span class="wizard-btn-meta">like ${escapeHtml(sources)}</span>
+            </button>
+            ${trailerBtn}
+          </div>`;
         }).join('');
         html += `</div>`;
       }

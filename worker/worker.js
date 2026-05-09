@@ -1,4 +1,4 @@
-// WatchTrack ↔ Plex bridge (v5.4 — adds /sync endpoints for cross-device state sync)
+// WatchTrack ↔ Plex bridge (v5.5 — adds videos to TMDB lookup for trailer embedding)
 //
 // Endpoints:
 //   POST /webhook/{secret}              Plex Pass webhook receiver
@@ -101,13 +101,24 @@ async function tmdbLookup(env, title, year, type, tmdbId) {
     resolvedId = results[0].id;
   }
 
-  // Fetch details + watch providers + credits
+  // Fetch details + watch providers + credits + videos (v5.5: trailers)
   const detailsPath = type === 'tv' ? `/tv/${resolvedId}` : `/movie/${resolvedId}`;
-  const detailsResp = await fetch(`${TMDB_BASE}${detailsPath}?append_to_response=watch/providers,credits,recommendations,similar`, {
+  const detailsResp = await fetch(`${TMDB_BASE}${detailsPath}?append_to_response=watch/providers,credits,recommendations,similar,videos`, {
     headers: { 'Authorization': `Bearer ${tmdbToken}`, 'Accept': 'application/json' },
   });
   let details = {};
   if (detailsResp.ok) details = await detailsResp.json();
+
+  // v5.5: pick the best trailer YouTube key from videos.results.
+  // Priority: official Trailer > any Trailer > Teaser > first video. YouTube only.
+  let trailerKey = null;
+  const videos = (details.videos && details.videos.results) || [];
+  const ytVideos = videos.filter(v => v.site === 'YouTube' && v.key);
+  const officialTrailer = ytVideos.find(v => v.type === 'Trailer' && v.official);
+  const anyTrailer = !officialTrailer && ytVideos.find(v => v.type === 'Trailer');
+  const teaser = !officialTrailer && !anyTrailer && ytVideos.find(v => v.type === 'Teaser');
+  const fallback = !officialTrailer && !anyTrailer && !teaser && ytVideos[0];
+  trailerKey = (officialTrailer || anyTrailer || teaser || fallback || {}).key || null;
 
   const result = {
     found: true,
@@ -127,6 +138,7 @@ async function tmdbLookup(env, title, year, type, tmdbId) {
     networks: (details.networks || []).map(n => n.name),
     watchProviders: (details['watch/providers'] && details['watch/providers'].results) || {},
     cast: ((details.credits && details.credits.cast) || []).slice(0, 5).map(c => c.name),
+    trailerKey,  // v5.5: YouTube key of best trailer, or null
     // For Stage 5e (recommendation engine) — keep the IDs only, slim
     recommendations: ((details.recommendations && details.recommendations.results) || []).slice(0, 10).map(r => ({
       id: r.id, title: r.title || r.name, year: (r.release_date || r.first_air_date || '').slice(0, 4) || null,
@@ -150,7 +162,7 @@ export default {
 
     // Health
     if (path === '/' || path === '/health') {
-      return new Response('WatchTrack-Plex bridge online (v5.4 — sync endpoints)', { headers: cors });
+      return new Response('WatchTrack-Plex bridge online (v5.5 — videos for trailer embedding)', { headers: cors });
     }
 
     // === Plex webhook receiver ===
