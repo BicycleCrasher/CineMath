@@ -8,18 +8,6 @@
       "desc": "Films you've already loved that fit this lane. Listed for completeness.",
       "items": [
         {
-          "title": "Witness for the Prosecution",
-          "year": 1957,
-          "dir": "Billy Wilder",
-          "country": "USA",
-          "runtime": "116 min",
-          "tags": [
-            "foundational"
-          ],
-          "pitch": "Cross-listed in Classics. Marked Loved + 'all-time favorite' per your record. The structural template for everything in this tab.",
-          "critics": []
-        },
-        {
           "title": "Catch Me If You Can",
           "year": 2002,
           "dir": "Steven Spielberg",
@@ -75,7 +63,7 @@
       ]
     },
     {
-      "name": "II. High Priority \u2014 Sorkin Films",
+      "name": "II. High Priority — Sorkin Films",
       "desc": "Sorkin is now a confirmed pillar. These are his major film credits, all in this lane.",
       "items": [
         {
@@ -178,7 +166,7 @@
       ]
     },
     {
-      "name": "III. High Priority \u2014 Twist Architecture",
+      "name": "III. High Priority — Twist Architecture",
       "desc": "Films where the structural payoff is the point. Direct fits for what's worked already.",
       "items": [
         {
@@ -211,7 +199,7 @@
             "foundational"
           ],
           "whyPriority": "The reveal-driven thriller template for the modern era. Spacey won Supporting Actor; Christopher McQuarrie won Original Screenplay. Direct fit.",
-          "pitch": "A small-time con man tells a prosecutor about a heist gone wrong. The 'Keyser S\u00f6ze' reveal is one of cinema's most famous.",
+          "pitch": "A small-time con man tells a prosecutor about a heist gone wrong. The 'Keyser Söze' reveal is one of cinema's most famous.",
           "critics": [
             {
               "who": "Reception",
@@ -242,7 +230,7 @@
           "tags": [
             "foundational"
           ],
-          "whyPriority": "Nolan's structural breakthrough. Two parallel narratives \u2014 one running forward, one running backward \u2014 meet in the middle. Direct fit for your Smart Structure pillar.",
+          "whyPriority": "Nolan's structural breakthrough. Two parallel narratives — one running forward, one running backward — meet in the middle. Direct fit for your Smart Structure pillar.",
           "pitch": "A man with no short-term memory hunts the person who killed his wife. Tattoos and Polaroids are his memory.",
           "critics": [
             {
@@ -295,7 +283,7 @@
       ]
     },
     {
-      "name": "IV. High Priority \u2014 Courtroom",
+      "name": "IV. High Priority — Courtroom",
       "desc": "Direct heir to Witness for the Prosecution.",
       "items": [
         {
@@ -328,7 +316,7 @@
             "modern",
             "intl"
           ],
-          "whyPriority": "Won Palme d'Or 2023. French. Sandra H\u00fcller as a writer accused of murdering her husband. The trial is the film. Direct fit.",
+          "whyPriority": "Won Palme d'Or 2023. French. Sandra Hüller as a writer accused of murdering her husband. The trial is the film. Direct fit.",
           "pitch": "A man falls from a chalet window in the French Alps. Was it suicide? An accident? Or did his wife push him? The trial unpacks their marriage.",
           "critics": [
             {
@@ -347,7 +335,7 @@
           "tags": [
             "foundational"
           ],
-          "whyPriority": "Pakula again \u2014 same director as All The President's Men. Harrison Ford as a prosecutor accused of murdering his colleague-and-lover. Twist ending.",
+          "whyPriority": "Pakula again — same director as All The President's Men. Harrison Ford as a prosecutor accused of murdering his colleague-and-lover. Twist ending.",
           "pitch": "A married prosecutor is assigned to investigate the murder of his former lover. He becomes the prime suspect.",
           "critics": [
             {
@@ -400,7 +388,7 @@
       ]
     },
     {
-      "name": "V. Medium Priority \u2014 More Twists & Cons",
+      "name": "V. Medium Priority — More Twists & Cons",
       "desc": "Strong probable fits.",
       "items": [
         {
@@ -452,7 +440,7 @@
           "tags": [
             "foundational"
           ],
-          "whyPriority": "Cross-listed in Auteur (Lynch). Most accessible Lynch despite being his most famously confusing. The structural reveal \u2014 the dreaming protagonist \u2014 is genuinely puzzle-shaped.",
+          "whyPriority": "Cross-listed in Auteur (Lynch). Most accessible Lynch despite being his most famously confusing. The structural reveal — the dreaming protagonist — is genuinely puzzle-shaped.",
           "pitch": "An aspiring actress arrives in LA and meets a woman with amnesia. The film is more than it appears.",
           "critics": [
             {
@@ -542,7 +530,7 @@
           "tags": [
             "foundational"
           ],
-          "whyPriority": "Mamet adapting his own play. Closest film cousin to a courtroom film without being one \u2014 every scene is structured argument. Pacino, Lemmon, Baldwin, Spacey, Harris, Arkin.",
+          "whyPriority": "Mamet adapting his own play. Closest film cousin to a courtroom film without being one — every scene is structured argument. Pacino, Lemmon, Baldwin, Spacey, Harris, Arkin.",
           "pitch": "Real estate salesmen at a Chicago office in two impossible nights. Always be closing.",
           "critics": [
             {
