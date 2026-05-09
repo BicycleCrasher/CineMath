@@ -4894,6 +4894,41 @@ function renderCatalogHealth() {
   return html;
 }
 
+// === V5.33.0: Mood archetype filter (Phase 3b of decision-helper roadmap) ===
+// Six archetypes, each mapped to a cluster of reaction tags. Items are
+// scored by how many of their applied reactionTags overlap the mood's
+// cluster. Higher overlap = surfaced higher in the recs panel.
+// Soft filter: items with zero overlap don't get dropped, just ranked
+// lower. Items with no reactionTags applied yet score 0 (neutral).
+const MOOD_ARCHETYPES = {
+  smart:     { label: 'Smart & demanding', sub: 'Structure, performance, intent',
+               tags: ['Smart structure','Performance-driven','Stayed with me','Mind-bending','Director\'s voice unmistakable','Tight structure','Subversive or knowing'] },
+  comfort:   { label: 'Comfort',           sub: 'Rewatchable, easy company',
+               tags: ['Rewatchable','Endlessly rewatchable','Ensemble warmth','Comfort watch','Quotable','Format works','Host chemistry'] },
+  visceral:  { label: 'Visceral',          sub: 'Look, sound, feel',
+               tags: ['Visually stunning','Genuinely unsettling','Great atmosphere','Bravura staging','Visually inventive','World-building sells it','Cult magnetism'] },
+  cathartic: { label: 'Cathartic',         sub: 'Hits you in the chest',
+               tags: ['Emotionally resonant','Earned emotion','Stayed with me','Mythic weight'] },
+  light:     { label: 'Light',             sub: 'Laughs over weight',
+               tags: ['Laugh-out-loud funny','Joke density','Quotable','Powerhouse vocals','Triple-threat','Comfort watch'] },
+  any:       { label: 'Any mood',          sub: 'No filter',
+               tags: [] },
+};
+
+function moodScore(item, sourceTab, mood) {
+  if (!mood || mood === 'any') return 0;
+  const cfg = MOOD_ARCHETYPES[mood];
+  if (!cfg || !cfg.tags.length) return 0;
+  const itemTags = getTags(item.id, sourceTab) || [];
+  if (itemTags.length === 0) return 0;
+  const moodTagSet = new Set(cfg.tags);
+  let score = 0;
+  for (const t of itemTags) {
+    if (moodTagSet.has(t)) score++;
+  }
+  return score;
+}
+
 // === V5.32.0: Time budget filter (Phase 3a of decision-helper roadmap) ===
 // Five buckets, escalating. parseRuntimeMin handles the various string
 // formats stored across catalogs ("126 min", "1h 47m", "47", "5 series + 14
@@ -5359,10 +5394,10 @@ let triageState = null;  // { mode, queue, idx }
 // or TMDB-orphan (Discover), and returns the top of each.
 function computeRecsForTab(tabIds, opts) {
   // V5.32.0: optional `opts.timeBudget` filters recommended results by item runtime.
-  // Discover (TMDB-orphan) candidates pass through — their runtime isn't always known
-  // until enrichment caches it; filtering them out would over-prune.
+  // V5.33.0: optional `opts.mood` sorts recommended by reaction-tag overlap with the mood.
   opts = opts || {};
   const budget = opts.timeBudget || null;
+  const mood = opts.mood || null;
   const tabSet = new Set(tabIds);
 
   // Sources: loved/liked items in the requested tabs that have enrichment.
@@ -5449,6 +5484,17 @@ function computeRecsForTab(tabIds, opts) {
     }
   });
 
+  // V5.33.0: blend mood overlap into the score so mood-aligned recs surface first.
+  // Mood scoring uses the matched catalog item's user-applied reactionTags.
+  const moodWeight = mood && mood !== 'any' ? 5 : 0; // mood overlap counts ~5x a single rec match
+  if (moodWeight > 0) {
+    recommended.forEach(r => {
+      // Find the matched catalog item to read its tags
+      const matches = tmdbToCatalog.get(r.tmdbId) || [];
+      const m = matches.find(mm => mm.tabId === r.catalogTab && mm.item.id === r.catalogItemId);
+      if (m) r.score += moodWeight * moodScore(m.item, m.tabId, mood);
+    });
+  }
   const byScore = (a, b) => b.score - a.score || (a.title || '').localeCompare(b.title || '');
   recommended.sort(byScore);
   discover.sort(byScore);
@@ -5467,11 +5513,12 @@ function computeRecsForTab(tabIds, opts) {
 
 // Always start fresh on app open. State is in-memory only, never persisted.
 const wizardState = {
-  step: 'root',         // 'root' | 'rate' | 'film-tv' | 'session' | 'time' | 'genre' | 'recs' | 'continue-list'
+  step: 'root',         // 'root' | 'rate' | 'film-tv' | 'session' | 'time' | 'genre' | 'mood' | 'recs' | 'continue-list'
   rateContext: null,    // 'specific-tab' | 'recent-watched' | 'queued' | 'unrated-loved'
   contentType: null,    // 'film' | 'tv'
   session: null,        // 'continue' | 'new' | 'rewatch'
   timeBudget: null,     // 'quick' | 'short' | 'standard' | 'long' | 'any' (V5.32.0)
+  mood: null,           // 'smart' | 'comfort' | 'visceral' | 'cathartic' | 'light' | 'any' (V5.33.0)
   genre: null,          // tab id, or 'not-sure'
 };
 
@@ -5486,6 +5533,7 @@ function wizardShow() {
   wizardState.contentType = null;
   wizardState.session = null;
   wizardState.timeBudget = null;
+  wizardState.mood = null;
   wizardState.genre = null;
   wizardRender();
 }
@@ -5543,6 +5591,15 @@ function wizardRender() {
         <span class="wizard-btn-meta">Browse one tab and rate from there</span>
       </button>
     `;
+  }
+  else if (wizardState.step === 'mood') {
+    // V5.33.0: mood archetype step — 6 buckets, matrix-grid layout
+    subtitle.textContent = 'What are you in the mood for?';
+    backBtn.style.display = '';
+    stepEl.className = 'wizard-step matrix';
+    stepEl.innerHTML = Object.entries(MOOD_ARCHETYPES).map(([key, cfg]) =>
+      `<button class="wizard-btn" data-action="mood-${key}">${cfg.label}<span class="wizard-btn-meta">${cfg.sub}</span></button>`
+    ).join('');
   }
   else if (wizardState.step === 'time') {
     // V5.32.0: time budget step — 5 buckets, matrix-grid layout
@@ -5649,7 +5706,7 @@ function wizardRender() {
     const tabLabel = (genre === 'not-sure' || !genre)
       ? (isTV ? 'TV' : 'Film')
       : ((catalogs[genre] && catalogs[genre].title) || genre);
-    const recs = computeRecsForTab(tabIds, { timeBudget: wizardState.timeBudget });
+    const recs = computeRecsForTab(tabIds, { timeBudget: wizardState.timeBudget, mood: wizardState.mood });
 
     let html = '';
     if (recs.sourceCount === 0) {
@@ -5709,7 +5766,8 @@ function wizardGoBack() {
   else if (wizardState.step === 'continue-list') wizardState.step = 'session';
   else if (wizardState.step === 'time') wizardState.step = 'session';
   else if (wizardState.step === 'genre') wizardState.step = 'time';
-  else if (wizardState.step === 'recs') wizardState.step = 'genre';
+  else if (wizardState.step === 'mood') wizardState.step = 'genre';
+  else if (wizardState.step === 'recs') wizardState.step = 'mood';
   wizardRender();
 }
 
@@ -5760,14 +5818,24 @@ function wizardHandleAction(btn) {
     }, 100);
     return;
   }
-  // Genre pick → for "new" sessions go to recs panel; for rewatch keep direct triage
+  // Genre pick → V5.33.0: route through mood step before recs/triage
   if (action === 'genre-pick') {
     wizardState.genre = btn.dataset.tab;
-    if (wizardState.session === 'new') {
-      wizardState.step = 'recs';
-      wizardRender();
-    } else {
-      wizardLaunchTriage('watch');
+    wizardState.step = 'mood';
+    wizardRender();
+    return;
+  }
+  // Mood pick → for "new" go to recs panel; for rewatch go to triage
+  if (action && action.startsWith('mood-')) {
+    const mood = action.slice('mood-'.length);
+    if (MOOD_ARCHETYPES[mood]) {
+      wizardState.mood = mood;
+      if (wizardState.session === 'new') {
+        wizardState.step = 'recs';
+        wizardRender();
+      } else {
+        wizardLaunchTriage('watch');
+      }
     }
     return;
   }
@@ -5903,8 +5971,9 @@ function wizardLaunchTriage(mode) {
     if (session === 'new') title = 'Find something new to watch';
     else if (session === 'rewatch') title = 'Pick something to rewatch';
 
-    // V5.32.0: filter by time budget if set (wizard 'time' step → 'genre')
+    // V5.32.0: filter by time budget; V5.33.0: filter and sort by mood overlap
     const budget = wizardState.timeBudget;
+    const mood = wizardState.mood;
     tabsToInclude.forEach(tabId => {
       const cat = catalogs[tabId];
       if (!cat) return;
@@ -5921,10 +5990,16 @@ function wizardLaunchTriage(mode) {
         if (include && !fitsTimeBudget(item, budget)) include = false;
         if (include) {
           const enriched = { ...item, _watchlist_source_tab: tabId, _watchlist_source_label: cat.title || tabId };
+          enriched._moodScore = moodScore(item, tabId, mood);
           queue.push(enriched);
         }
       });
     });
+    // V5.33.0: sort the queue by mood overlap (descending) when mood is set.
+    // Items with zero overlap stay in the queue but rank below mood-matched items.
+    if (mood && mood !== 'any') {
+      queue.sort((a, b) => (b._moodScore || 0) - (a._moodScore || 0));
+    }
 
     // For rewatch: sort items with rewatchable-style tags first
     if (session === 'rewatch') {

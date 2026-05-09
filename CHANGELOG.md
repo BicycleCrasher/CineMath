@@ -10,6 +10,67 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.33.0 — 2026-05-09
+
+### Feature — Mood archetype filter (Phase 3b of decision-helper roadmap)
+
+The wizard's "Find something new" / "Pick something to rewatch" flows
+now ask "What are you in the mood for?" between the genre pick and the
+recommendations panel. Items are scored by reaction-tag overlap with
+the chosen mood and surfaced accordingly.
+
+**Six archetypes, each mapped to a tag cluster:**
+- **Smart & demanding** — Smart structure, Performance-driven, Stayed
+  with me, Mind-bending, Director's voice unmistakable, Tight
+  structure, Subversive or knowing
+- **Comfort** — Rewatchable, Endlessly rewatchable, Ensemble warmth,
+  Comfort watch, Quotable, Format works, Host chemistry
+- **Visceral** — Visually stunning, Genuinely unsettling, Great
+  atmosphere, Bravura staging, Visually inventive, World-building
+  sells it, Cult magnetism
+- **Cathartic** — Emotionally resonant, Earned emotion, Stayed with
+  me, Mythic weight
+- **Light** — Laugh-out-loud funny, Joke density, Quotable, Powerhouse
+  vocals, Triple-threat, Comfort watch
+- **Any mood** — no filter
+
+**Mechanics:**
+- `MOOD_ARCHETYPES` constant maps each archetype to label + sub-label +
+  tag cluster
+- `moodScore(item, sourceTab, mood)` returns the count of overlapping
+  tags between the item's applied `reactionTags` and the mood's
+  cluster. Items with no tags score 0 (neutral, not penalized).
+- Wizard flow: `genre-pick` → step `mood` → recs (new) or triage
+  (rewatch)
+- `computeRecsForTab(tabIds, { timeBudget, mood })` blends mood overlap
+  into the rec score with weight 5 (each overlapping tag counts ~5×
+  what a single TMDB rec match contributes). Soft filter — items with
+  zero overlap aren't dropped, just ranked lower.
+- `wizardLaunchTriage('watch')` sorts the queue by `_moodScore`
+  descending so mood-aligned items appear first in triage too.
+- Back nav: `mood` → `genre`, `recs` → `mood`. Users can adjust
+  without restarting.
+
+**Why soft filter (sort) rather than hard filter (drop):** items
+without applied reactionTags score 0 but might still be a great
+match — the user just hasn't tagged them yet. Hard filtering would
+penalize untagged items, creating a chicken-and-egg where new items
+never surface in mood searches. Sort-by-overlap surfaces tagged matches
+first while keeping untagged items reachable.
+
+**Roadmap status:**
+
+| Phase | Status |
+|-------|--------|
+| 1. Settings card grid | ✅ 5.27.x |
+| 2. Cross-platform sync | ✅ 5.31.x |
+| 3a. Time budget filter | ✅ 5.32.0 |
+| **3b. Mood archetype filter** | ✅ **5.33.0 (this release)** |
+| 3c. Trailer embed | next |
+| 3d. Streaming-leaving alerts | next+1 |
+
+---
+
 ## 5.32.0 — 2026-05-09
 
 ### Feature — Time budget filter (Phase 3a of decision-helper roadmap)
