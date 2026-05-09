@@ -1,4 +1,4 @@
-const CACHE_NAME = 'scifi-tracker-v46';
+const CACHE_NAME = 'scifi-tracker-v48';
 const ASSETS = [
   './',
   './index.html',
@@ -32,7 +32,8 @@ const ASSETS = [
   './data/heroes-comics-tv.json',
   './icons/icon-192.png',
   './icons/icon-512.png',
-  './icons/header-logo.svg'
+  './icons/header-logo.svg',
+  './icons/wizard-banner.png'
 ];
 
 self.addEventListener('install', (event) => {

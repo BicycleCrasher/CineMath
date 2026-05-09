@@ -906,6 +906,16 @@ body.tv-mode #settings-modal .modal-content {
   margin: 0 0 12px;
   color: var(--ink);
 }
+/* V5.23.0: Wizard banner image (replaces the text title on the home screen) */
+.wizard-banner {
+  display: block;
+  width: 100%;
+  max-width: 600px;
+  height: auto;
+  margin: 0 auto 16px;
+  border-radius: 4px;
+}
+body.tv-mode .wizard-banner { max-width: 880px; margin-bottom: 24px; }
 .wizard-subtitle {
   font-size: 14px;
   color: var(--ink-dim);

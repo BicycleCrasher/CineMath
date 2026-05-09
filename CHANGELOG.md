@@ -10,6 +10,50 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.23.0 — 2026-05-08
+**Service worker cache:** `scifi-tracker-v47` → `v48`
+
+### Feature — Wizard home screen uses hi-res banner instead of text title
+
+The wizard home screen's `<h1 class="wizard-title">WatchTrack</h1>` is
+replaced with the 1280×720 film-strip banner image
+(`icons/wizard-banner.png`, 73 KB). Same banner aesthetic as the
+`tv-banner.png` Leanback launcher artwork, scaled to a hero treatment on
+the home screen.
+
+- Banner is responsive: `max-width: 600px` on phone, `max-width: 880px`
+  in `body.tv-mode` for the bigger viewport. `height: auto` preserves
+  the 16:9 aspect ratio.
+- The `<h1>` becomes an `<img class="wizard-banner">` with `alt` text
+  preserving the screen-reader semantics ("WatchTrack — Film & TV
+  Library").
+- Added to the service-worker precache list, so the banner is available
+  offline and on first launch after the cache rotation.
+- The pre-existing `.wizard-title` CSS rule is kept (currently unused
+  but available if any other surface needs the typographic title).
+
+---
+
+## 5.22.2 — 2026-05-08
+**Service worker cache:** `scifi-tracker-v46` → `v47`
+
+### Fix — D-pad navigation skipped textarea/select fields
+
+The keydown handler's focusables selector listed `button, a, input` but
+omitted `textarea`, `select`, and `[tabindex]`. So the new
+`#pair-receive-input` textarea (added in 5.22.1) was unreachable by
+D-pad — pressing arrow keys jumped right past it.
+
+Both selectors (the directional-scoring focusables list AND the
+first-focusable fallback) now include `textarea, select,
+[tabindex]:not([tabindex="-1"])`. The Receive-setup paste field becomes
+reachable on TV without a mouse.
+
+This also benefits any other textarea or select in the app (notes
+fields, period-review type/year/month dropdowns, etc.).
+
+---
+
 ## 5.22.1 — 2026-05-08
 **Service worker cache:** `scifi-tracker-v45` → `v46`
 

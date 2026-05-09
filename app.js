@@ -5364,15 +5364,18 @@ function triageAction(act) {
         return;
       }
       const candidates = Array.from(searchRoot.querySelectorAll(
-        '.wizard-btn, .item, .tab-btn, .header-btn, button:not(.modal-back), a, input'
+        '.wizard-btn, .item, .tab-btn, .header-btn, button:not(.modal-back), a, input, textarea, select, [tabindex]:not([tabindex="-1"])'
       )).filter(el => el.offsetParent !== null && !el.disabled);
       if (candidates.length > 0) candidates[0].focus();
       return;
     }
 
     // D-pad logic: simple "find nearest focusable in direction"
+    // V5.22.2: Added textarea, select, and [tabindex] so paste fields and
+    // dropdowns are reachable via D-pad (the new pair-receive-input was a
+    // <textarea> and was being skipped entirely).
     const focusables = Array.from(searchRoot.querySelectorAll(
-      '.modal-back, .wizard-btn, .tab-btn, .filter-btn, .category-btn, .header-btn, .item, .action-btn, .rating-btn, .tag-btn, .plex-play-btn, .sort-select, button, a, input'
+      '.modal-back, .wizard-btn, .tab-btn, .filter-btn, .category-btn, .header-btn, .item, .action-btn, .rating-btn, .tag-btn, .plex-play-btn, .sort-select, button, a, input, textarea, select, [tabindex]:not([tabindex="-1"])'
     )).filter(el => el.offsetParent !== null && !el.disabled);
     if (focusables.length === 0) return;
 
