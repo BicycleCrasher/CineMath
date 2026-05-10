@@ -1,0 +1,55 @@
+# Wrangler config for watchtrack-plex.
+#
+# Used by the deploy-worker.yml GitHub Action. The CLI's `wrangler deploy`
+# reads this file, packages worker.js, and replaces both the deployed code
+# and the bindings on Cloudflare. Means: bindings declared here OVERWRITE
+# whatever you've configured in the dashboard. Keep this file in sync with
+# the actual KV namespaces Cloudflare assigned.
+#
+# To find the IDs: Cloudflare dashboard → Workers & Pages → KV → click the
+# namespace name → the page header shows "Namespace ID: <32-char-hex>".
+
+name = "watchtrack-plex"
+main = "worker.js"
+compatibility_date = "2024-09-01"
+
+# Daily cron trigger that fires runAlertsCheck (see worker.js scheduled handler).
+# 13:00 UTC == 8:00 AM Central in winter / 7:00 AM Central in summer.
+[triggers]
+crons = ["0 13 * * *"]
+
+# === KV bindings ===
+# Variable name on the left (what the Worker code references via env.X);
+# the `id` is the Cloudflare-assigned namespace ID. PASTE YOUR IDS BELOW
+# before the first deploy or the live bindings get blown away.
+
+[[kv_namespaces]]
+binding = "EVENTS"
+id = "61b4b2fd72424c17aa257129af9c717e"
+
+[[kv_namespaces]]
+binding = "CONFIG"
+id = "6d66838d49764c44a94d397e1118a96c"
+
+[[kv_namespaces]]
+binding = "VIEWED"
+id = "1b18c52425a14b0a8125e70f75428937"
+
+[[kv_namespaces]]
+binding = "METADATA"
+id = "52e68496c4c34e0a8bfb1a874f9a2a60"
+
+[[kv_namespaces]]
+binding = "PROMOTIONS"
+id = "68d1209669964e898213867ff8ad7de0"
+
+# The Cloudflare namespace is named WATCHTRACK_SYNC; the Worker code
+# references it as env.SYNC_KV (the binding name). Those don't need
+# to match — only the binding name has to match the code.
+[[kv_namespaces]]
+binding = "SYNC_KV"
+id = "7f03e78c6a90403c9330474190bf2abd"
+
+[[kv_namespaces]]
+binding = "ALERTS"
+id = "7fc3279a95e247398db43fa3bd65733b"

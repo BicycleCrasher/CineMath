@@ -10,6 +10,37 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 6.1.4 — 2026-05-09
+**Service worker cache:** unchanged (tooling change)
+
+### Tooling — Auto-deploy Cloudflare Worker on push
+
+Closes the last manual paste in the release loop. New
+`.github/workflows/deploy-worker.yml` runs on push to main when
+`worker/worker.js`, `worker/wrangler.toml`, or the workflow itself
+changes. It uses `cloudflare/wrangler-action@v3` to package the Worker
+per `worker/wrangler.toml` and `wrangler deploy` it directly.
+
+`worker/wrangler.toml` is the canonical declaration of the Worker:
+name, entry, compatibility date, all 7 KV bindings (EVENTS, CONFIG,
+VIEWED, METADATA, PROMOTIONS, SYNC_KV, ALERTS) with their Cloudflare
+namespace IDs, and the daily cron trigger (`0 13 * * *`). Bindings
+declared here OVERWRITE the dashboard-configured ones at deploy time —
+which is the right behavior; it keeps the toml as the source of truth.
+
+**Required GitHub secrets** (Settings → Secrets and variables → Actions):
+- `CLOUDFLARE_API_TOKEN` — Custom token with scope `Account → Workers Scripts: Edit`. Recommend ~1-year TTL, no IP filter (GitHub Actions runs from rotating Azure ranges).
+- `CLOUDFLARE_ACCOUNT_ID` — 32-char hex from any Worker's right sidebar in the Cloudflare dashboard.
+
+After this commit, the release loop becomes: edit `worker/worker.js`,
+push to main, walk away. The auto-bump-cache workflow handles the
+client-side `app.min.js` rebuild and SW cache version. The deploy
+workflow handles the Worker. Manual Cloudflare dashboard interaction
+is now reserved for KV value writes (e.g. configuring VAPID keys),
+not code.
+
+---
+
 ## 6.1.3 — 2026-05-09
 **Service worker cache:** unchanged (Worker-only release)
 **Requires Worker patch:** worker.js v5.9 — adds `/alerts/test-fire?secret=X&user=HASH` debug endpoint that sends a fake test notification through the user's stored push subscription. Useful for verifying end-to-end Web Push delivery without waiting on an organic TMDB provider drop. Returns the same `{ok, status, error}` shape as `sendWebPush`.

@@ -1,0 +1,51 @@
+name: Deploy Worker
+
+# Auto-deploys the Cloudflare Worker on every push to main that touches
+# anything under worker/. The wrangler-action handles auth (via repo
+# secrets), packages worker.js per worker/wrangler.toml, and runs
+# `wrangler deploy`. After this lands, no more manual paste in the
+# Cloudflare dashboard for code changes — bindings, cron triggers, and
+# Worker source all roll out from the same commit.
+#
+# Required repo secrets (Settings → Secrets and variables → Actions):
+#   CLOUDFLARE_API_TOKEN   — token with scope "Account → Workers Scripts: Edit"
+#   CLOUDFLARE_ACCOUNT_ID  — 32-char hex from any Worker page in the dashboard
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'worker/worker.js'
+      - 'worker/wrangler.toml'
+      - '.github/workflows/deploy-worker.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-worker
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy via Wrangler
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: worker
+
+      - name: Verify health endpoint
+        run: |
+          set -eu
+          # Give Cloudflare a few seconds for the new version to propagate
+          sleep 5
+          out=$(curl -fsS https://watchtrack-plex.lincoln-e-crowder.workers.dev/health || true)
+          echo "Health: $out"
+          if [ -z "$out" ]; then
+            echo "::warning::Health endpoint returned empty — deploy may still be propagating."
+          fi
