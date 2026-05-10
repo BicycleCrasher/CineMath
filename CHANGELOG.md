@@ -88,7 +88,7 @@ Also: every wizard step now auto-focuses its first button after render
 (via `requestAnimationFrame` so layout has settled), so D-pad nav stays
 alive across step transitions instead of falling back to body.
 
-**Roadmap status:**
+**Roadmap status (decision-helper roadmap from 5.27.0 onward):**
 
 | Phase | Status |
 |-------|--------|
@@ -97,8 +97,8 @@ alive across step transitions instead of falling back to body.
 | 3a. Time budget filter | ✅ 5.32.0 |
 | 3b. Mood archetype filter | ✅ 5.33.0 |
 | 3c. Trailer embed | ✅ 5.34.0 |
-| **4. Wizard redesign + nav defenses** | ✅ **6.1.0 (this release)** |
-| 3d. Streaming-leaving alerts | next |
+| 3d. Streaming-leaving alerts | ✅ 5.39.0 (parallel work) |
+| **4. Wizard redesign + nav defenses** | ✅ **6.1.0 (this release — completes the roadmap)** |
 
 ---
 
