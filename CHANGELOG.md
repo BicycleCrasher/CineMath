@@ -1,12 +1,62 @@
 # Changelog
 
-All notable changes to WatchTrack are tracked here. Versions follow `major.moderate.minor`:
+All notable changes to CinéMath are tracked here. Versions follow `major.moderate.minor`:
 
 - **Major** — architectural shift or fundamentally new core capability
 - **Moderate** — significant feature addition (new tabs, new systems)
 - **Minor** — bug fix, content correction, or non-architectural refinement
 
-The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rather than semantic versions, and is bumped any time cached assets change. The mapping is noted per release.
+The `service-worker.js` cache name tracks deployments rather than semantic versions, and is bumped any time cached assets change. As of v7.0.0 the cache is namespaced `cinemath-vN`; prior releases used `scifi-tracker-vN`. The mapping is noted per release.
+
+---
+
+## 7.0.0 — 2026-05-10
+**Service worker cache:** `scifi-tracker-v105` → `cinemath-v1` (namespace rename)
+
+### Brand rename: WatchTrack → CinéMath
+
+The app is now **CinéMath** — "your palate, computed." Same product,
+sharper identity. The recommender does the math; you bring the palate.
+
+**Wordmark.** Calligraphic *Ciné* set in Great Vibes (bundled OFL web
+font, ~35 KB precached) paired with geometric *Math* in a Futura/Avenir
+fallback chain. Same wordmark renders in three places: the wizard
+banner (live SVG), the header on every screen, and the install icon.
+Drops the old WT monogram.
+
+**Wizard banner.** PNG → live-rendered SVG. The wordmark and double
+filmstrip are vector + text, so the banner is crisp at any size and
+edits are text edits, not Photoshop. Removed `icons/wizard-banner.png`
+from the precache list.
+
+**Strings.** Every user-visible "WatchTrack" string in `app.js`,
+`worker/worker.js`, `index.html`, and `manifest.json` swapped to
+CinéMath. This includes: PWA name + short_name, page title, settings
+help text, pair-modal copy, period review markdown, promotions export
+header, bulk-sync confirm, AI chat system prompt, and the Worker's
+`/` health check response.
+
+**Cache namespace.** `scifi-tracker-vN` → `cinemath-v1`. Every client
+gets a clean SW reinstall on first load post-deploy — same behavior as
+any normal cache bump, just a clean break with the old namespace.
+
+**Internal IDs preserved.** Android TWA package ID (`com.watchtrack.tv`),
+Cloudflare Worker name (`watchtrack-plex`), GitHub Pages slug, and the
+localStorage keys are unchanged. Renaming any of those would force
+device reinstalls or break existing pair URLs. The user-visible brand
+swap doesn't require touching them.
+
+**Domain.** Slated for `cinemath.ai` once registered. No code currently
+depends on the canonical domain — this is a future DNS pointer change,
+not a code change.
+
+**Font asset.** `fonts/great-vibes.woff2` is referenced by `@font-face`
+and the SW precache list, but the binary is not committed (license
+hygiene). See `fonts/README.md` for the one-time install step. Until
+the file is dropped in, the wordmark falls back through Snell Roundhand
+→ Edwardian Script ITC → cursive system fonts. Looks acceptable on
+macOS; varies on Android TV WebView, which is exactly why the bundled
+font matters.
 
 ---
 

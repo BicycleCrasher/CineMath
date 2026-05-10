@@ -1,4 +1,4 @@
-const CACHE_NAME = 'scifi-tracker-v105';
+const CACHE_NAME = 'cinemath-v1';
 const inflightRevalidations = new Set();
 const ASSETS = [
   './',
@@ -34,7 +34,7 @@ const ASSETS = [
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/header-logo.svg',
-  './icons/wizard-banner.png'
+  './fonts/great-vibes.woff2'
 ];
 
 self.addEventListener('install', (event) => {
@@ -61,7 +61,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('push', (event) => {
   let data = {};
   try { data = event.data ? event.data.json() : {}; } catch {}
-  const title = data.title || 'WatchTrack';
+  const title = data.title || 'CinéMath';
   const body = data.body || '';
   event.waitUntil(self.registration.showNotification(title, {
     body,

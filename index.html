@@ -16,7 +16,9 @@
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="stylesheet" href="styles.css">
-<title>WatchTrack</title>
+<title>CinéMath — your palate, computed</title>
+<meta name="description" content="CinéMath — your palate, computed. Personal recommender for film and TV.">
+<meta name="apple-mobile-web-app-title" content="CinéMath">
 </head>
 <body>
 <div class="grain"></div>
@@ -24,7 +26,46 @@
 <!-- Wizard / guided-flow home screen (Stage 5g) -->
 <div id="wizard" class="wizard">
   <div class="wizard-content">
-    <img class="wizard-banner" src="icons/wizard-banner.png" alt="WatchTrack — Film &amp; TV Library" width="1280" height="720">
+    <div class="wizard-banner" role="img" aria-label="CinéMath — your palate, computed">
+      <svg class="wizard-banner-svg" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <linearGradient id="wb-bg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#1a1816"/>
+            <stop offset="100%" stop-color="#0e0d0b"/>
+          </linearGradient>
+        </defs>
+        <rect width="1280" height="720" fill="url(#wb-bg)"/>
+        <!-- top filmstrip -->
+        <rect x="0" y="60" width="1280" height="60" fill="#0a0908"/>
+        <g fill="#1a1816">
+          <rect x="20" y="78" width="40" height="24" rx="3"/><rect x="100" y="78" width="40" height="24" rx="3"/>
+          <rect x="180" y="78" width="40" height="24" rx="3"/><rect x="260" y="78" width="40" height="24" rx="3"/>
+          <rect x="340" y="78" width="40" height="24" rx="3"/><rect x="420" y="78" width="40" height="24" rx="3"/>
+          <rect x="500" y="78" width="40" height="24" rx="3"/><rect x="580" y="78" width="40" height="24" rx="3"/>
+          <rect x="660" y="78" width="40" height="24" rx="3"/><rect x="740" y="78" width="40" height="24" rx="3"/>
+          <rect x="820" y="78" width="40" height="24" rx="3"/><rect x="900" y="78" width="40" height="24" rx="3"/>
+          <rect x="980" y="78" width="40" height="24" rx="3"/><rect x="1060" y="78" width="40" height="24" rx="3"/>
+          <rect x="1140" y="78" width="40" height="24" rx="3"/><rect x="1220" y="78" width="40" height="24" rx="3"/>
+        </g>
+        <!-- bottom filmstrip -->
+        <rect x="0" y="600" width="1280" height="60" fill="#0a0908"/>
+        <g fill="#1a1816">
+          <rect x="20" y="618" width="40" height="24" rx="3"/><rect x="100" y="618" width="40" height="24" rx="3"/>
+          <rect x="180" y="618" width="40" height="24" rx="3"/><rect x="260" y="618" width="40" height="24" rx="3"/>
+          <rect x="340" y="618" width="40" height="24" rx="3"/><rect x="420" y="618" width="40" height="24" rx="3"/>
+          <rect x="500" y="618" width="40" height="24" rx="3"/><rect x="580" y="618" width="40" height="24" rx="3"/>
+          <rect x="660" y="618" width="40" height="24" rx="3"/><rect x="740" y="618" width="40" height="24" rx="3"/>
+          <rect x="820" y="618" width="40" height="24" rx="3"/><rect x="900" y="618" width="40" height="24" rx="3"/>
+          <rect x="980" y="618" width="40" height="24" rx="3"/><rect x="1060" y="618" width="40" height="24" rx="3"/>
+          <rect x="1140" y="618" width="40" height="24" rx="3"/><rect x="1220" y="618" width="40" height="24" rx="3"/>
+        </g>
+        <!-- wordmark: calligraphic 'Ciné' + geometric 'math' -->
+        <text x="640" y="380" text-anchor="middle" font-family="'Cine Script', 'Great Vibes', 'Snell Roundhand', 'Edwardian Script ITC', cursive" font-size="240" fill="#d4a843" font-style="italic">Ciné</text>
+        <text x="640" y="380" dx="160" text-anchor="start" font-family="'Futura', 'Avenir Next', 'Avenir', 'Century Gothic', 'Helvetica Neue', sans-serif" font-size="170" fill="#f5f1e8" font-weight="300" letter-spacing="6">Math</text>
+        <!-- tagline -->
+        <text x="640" y="490" text-anchor="middle" font-family="'Futura', 'Avenir Next', 'Avenir', 'Helvetica Neue', sans-serif" font-size="34" fill="#a89878" font-weight="300" letter-spacing="14">YOUR  PALATE,  COMPUTED</text>
+      </svg>
+    </div>
     <p class="wizard-subtitle" id="wizard-subtitle">What are you doing?</p>
     <div class="wizard-step" id="wizard-step"></div>
     <div class="wizard-footer">
@@ -36,11 +77,13 @@
 
 <div id="app-shell" style="display:none">
 <header id="app-header">
-  <button class="app-logo" id="app-logo-btn" type="button" aria-label="Return to Watchlist">
-    <img src="icons/header-logo.svg" alt="" class="app-logo-img">
+  <button class="app-logo" id="app-logo-btn" type="button" aria-label="CinéMath — Return to Watchlist">
+    <span class="app-wordmark" aria-hidden="true">
+      <span class="app-wordmark-cine">Ciné</span><span class="app-wordmark-math">Math</span>
+    </span>
     <span class="app-logo-text">
       <span class="eyebrow" id="tab-eyebrow">Curated for Lincoln</span>
-      <span class="app-logo-title" id="tab-title">WatchTrack</span>
+      <span class="app-logo-title" id="tab-title">your palate, computed</span>
       <span class="subtitle" id="tab-subtitle">Loading...</span>
     </span>
   </button>
@@ -171,7 +214,7 @@
     <h3>Pair Another Device</h3>
     <p class="settings-help">
       The URL below contains your <strong>Worker URL, secret, and Plex token</strong>.
-      Open it on another device (TV, tablet, etc.) and WatchTrack will configure itself
+      Open it on another device (TV, tablet, etc.) and CinéMath will configure itself
       automatically. <strong>Treat this URL like a password</strong> — anyone with it
       can talk to your Worker and Plex server.
     </p>
@@ -181,7 +224,7 @@
     </div>
     <p class="settings-help" style="font-size:11px">
       <strong>Recommended path:</strong> Copy this URL, then on the TV — pair a Bluetooth
-      keyboard temporarily, open WatchTrack → Settings → Plex Webhook Bridge → paste it
+      keyboard temporarily, open CinéMath → Settings → Plex Webhook Bridge → paste it
       into the "Receive setup from another device" field, tap Apply. Avoids URL-routing
       issues on Google TV (where browser-app and TWA have separate localStorage).
     </p>
@@ -373,7 +416,7 @@
     </div>
     <div class="settings-section" data-section="webhook">
       <h4>Plex Webhook Bridge</h4>
-      <p class="settings-help">When you watch something on Plex, it tells WatchTrack to mark it watched. Requires a Cloudflare Worker (free tier — see deployment instructions in the repo). Works with any Plex Pass account.</p>
+      <p class="settings-help">When you watch something on Plex, it tells CinéMath to mark it watched. Requires a Cloudflare Worker (free tier — see deployment instructions in the repo). Works with any Plex Pass account.</p>
       <div class="settings-row">
         <label>Worker URL</label>
         <input type="url" class="modal-input" id="webhook-url" placeholder="https://watchtrack-plex.YOURSUBDOMAIN.workers.dev" autocomplete="off">
@@ -398,7 +441,7 @@
     </div>
     <div class="settings-section" data-section="trakt">
       <h4>Trakt Integration</h4>
-      <p class="settings-help">Sync watch history and ratings with Trakt — both directions. Marking something watched here pushes to Trakt; importing pulls Trakt history into WatchTrack. Get your credentials at trakt.tv/oauth/applications.</p>
+      <p class="settings-help">Sync watch history and ratings with Trakt — both directions. Marking something watched here pushes to Trakt; importing pulls Trakt history into CinéMath. Get your credentials at trakt.tv/oauth/applications.</p>
       <div class="settings-row">
         <label>Client ID</label>
         <input type="text" class="modal-input" id="trakt-client-id" placeholder="64-character client ID from trakt.tv" autocomplete="off">

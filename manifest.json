@@ -1,7 +1,7 @@
 {
-  "name": "WatchTrack",
-  "short_name": "WatchTrack",
-  "description": "Personal tracker for films and TV across genres, with status, ratings, reaction tags, and category filters.",
+  "name": "CinéMath",
+  "short_name": "CinéMath",
+  "description": "CinéMath — your palate, computed. Personal recommender for film and TV that learns your taste from ratings, reaction tags, and watch history.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

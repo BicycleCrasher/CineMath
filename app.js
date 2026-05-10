@@ -648,7 +648,7 @@ function isWebhookConfigured() {
   return Boolean(getWebhookUrl() && getWebhookSecret());
 }
 
-// Poll the Worker for new events. Apply each one to WatchTrack state.
+// Poll the Worker for new events. Apply each one to CinéMath state.
 // Then ack so the Worker deletes them.
 async function pollPlexWebhookEvents() {
   if (!isWebhookConfigured()) return { applied: 0, errors: 0 };
@@ -688,7 +688,7 @@ async function pollPlexWebhookEvents() {
   }
 }
 
-// Apply a single webhook event to WatchTrack state.
+// Apply a single webhook event to CinéMath state.
 function applyPlexEvent(evt) {
   if (evt.event !== 'media.scrobble') return false;
   if (evt.type !== 'movie' && evt.type !== 'episode' && evt.type !== 'show') return false;
@@ -807,7 +807,7 @@ async function postViewedIngest(entries) {
   return { stored: totalStored, filtered: totalFiltered };
 }
 
-// Apply bulk-sync rules to WatchTrack state given the full filtered history.
+// Apply bulk-sync rules to CinéMath state given the full filtered history.
 // Returns a structured report.
 function applyBulkSyncRules(entries, episodeCounts) {
   // Filter to whitelisted libraries first
@@ -988,7 +988,7 @@ async function runBulkSync(progressCb) {
     });
   }
 
-  progressCb('Applying rules to WatchTrack...', 80);
+  progressCb('Applying rules to CinéMath...', 80);
   const report = applyBulkSyncRules(all, episodeCounts);
   report.totalEntries = all.length;
   report.workerStored = ingestResult.stored;
@@ -2247,7 +2247,7 @@ async function traktPullSync() {
   // (mark-as-watched fans out to all aired episodes); pull was the only
   // half missing. Trakt returns one entry per series in /sync/history/shows
   // when any episode has been watched, which is exactly what we want for
-  // marking a WatchTrack show as watched.
+  // marking a CinéMath show as watched.
   const [histResult, ratResult, showHistResult, showRatResult] = await Promise.all([
     traktApiCall('/sync/history/movies?limit=10000', 'GET'),
     traktApiCall('/sync/ratings/movies', 'GET'),
@@ -2260,7 +2260,7 @@ async function traktPullSync() {
     return;
   }
 
-  // Build lookup maps keyed by WatchTrack item ID
+  // Build lookup maps keyed by CinéMath item ID
   const historyMap = new Map();
   for (const entry of (histResult.data || [])) {
     const m = entry.movie;
@@ -3368,7 +3368,7 @@ function setupModals() {
     document.getElementById('pair-share').addEventListener('click', async () => {
       const url = document.getElementById('pair-url').value;
       if (navigator.share) {
-        try { await navigator.share({ title: 'WatchTrack Pair', url }); } catch {}
+        try { await navigator.share({ title: 'CinéMath Pair', url }); } catch {}
       } else {
         alert('Web Share API not available on this device. Use Copy instead.');
       }
@@ -3800,7 +3800,7 @@ function setupModals() {
       alert('Configure both Plex Integration and Plex Webhook Bridge before bulk sync.');
       return;
     }
-    if (!confirm('Bulk-sync your full Plex history into WatchTrack? This will:\n\n• Fetch every item you\'ve watched on Plex\n• Mark matched movies as Watched\n• Mark TV shows as Watching, with Loved if you\'ve watched 5+ distinct episodes\n• Log all viewing to durable cloud storage\n\nSafe to run multiple times.')) return;
+    if (!confirm('Bulk-sync your full Plex history into CinéMath? This will:\n\n• Fetch every item you\'ve watched on Plex\n• Mark matched movies as Watched\n• Mark TV shows as Watching, with Loved if you\'ve watched 5+ distinct episodes\n• Log all viewing to durable cloud storage\n\nSafe to run multiple times.')) return;
 
     const progressModal = document.getElementById('bulk-sync-progress-modal');
     const statusEl = document.getElementById('bulk-sync-status');
@@ -4271,7 +4271,7 @@ function openPromoteModal(btn) {
     distinct: parseInt(btn.dataset.distinct) || 1,
   };
   document.getElementById('promote-info').textContent =
-    `Promote "${pendingPromote.title}" (${pendingPromote.year || '?'}) to a WatchTrack catalog tab. ${pendingPromote.plays} plays detected.`;
+    `Promote "${pendingPromote.title}" (${pendingPromote.year || '?'}) to a CinéMath catalog tab. ${pendingPromote.plays} plays detected.`;
   // Populate tab dropdown
   const tvTabs = new Set(['comedy-tv','crime-tv','spy-tv','drama-tv','horror-tv','fantasy-tv','scifi-tv','cons-courtroom-tv','british-comedy','heroes-comics-tv']);
   const select = document.getElementById('promote-tab');
@@ -4448,7 +4448,7 @@ function renderPromotionsManager() {
       if (!row) return;
       const tab = row.dataset.tab;
       const itemId = row.dataset.itemid;
-      if (!confirm(`Delete this promotion from KV?\n\nUse this after you've added the item to the catalog source files in the GitHub repo. The item stays in WatchTrack via the canonical catalog; the KV entry is just cleanup.`)) return;
+      if (!confirm(`Delete this promotion from KV?\n\nUse this after you've added the item to the catalog source files in the GitHub repo. The item stays in CinéMath via the canonical catalog; the KV entry is just cleanup.`)) return;
       btn.disabled = true;
       try {
         await deletePromotion(tab, itemId);
@@ -4476,12 +4476,12 @@ function exportPromotionsAsJsonPatch() {
 
   // Build a single combined patch document
   const lines = [];
-  lines.push('# WatchTrack — Promotions Export');
+  lines.push('# CinéMath — Promotions Export');
   lines.push('# Generated: ' + new Date().toISOString());
   lines.push(`# Total promotions: ${promotionsCache.length} across ${Object.keys(byTab).length} tab(s)`);
   lines.push('#');
   lines.push('# Instructions:');
-  lines.push('# Each section below corresponds to one catalog file in the WatchTrack repo:');
+  lines.push('# Each section below corresponds to one catalog file in the CinéMath repo:');
   lines.push('#   data/{tab-id}.json');
   lines.push('# For each tab, copy the items array into the appropriate section of that catalog file.');
   lines.push('# Most natural fit is a section named "Plex History" or "Already Watched" — or create');
@@ -4622,7 +4622,7 @@ async function sharePeriodReview() {
   const safeLabel = range.label.replace(/[^a-zA-Z0-9-]/g, '_');
   const filename = `watchtrack-review-${safeLabel}.md`;
   const file = new File([md], filename, { type: 'text/markdown' });
-  const titleStr = `WatchTrack — ${range.label}`;
+  const titleStr = `CinéMath — ${range.label}`;
   try {
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       await navigator.share({ title: titleStr, files: [file] });
@@ -4732,7 +4732,7 @@ function buildPeriodReviewMarkdown(range) {
   }
 
   // Build markdown
-  let md = `# WatchTrack — ${label} in Review\n\n`;
+  let md = `# CinéMath — ${label} in Review\n\n`;
   md += `*Generated ${new Date().toISOString().slice(0, 10)}*\n\n`;
   md += `---\n\n## Headline Stats\n\n`;
   md += `- **Items watched**: ${watched.length}`;
@@ -4814,7 +4814,7 @@ function buildPeriodReviewMarkdown(range) {
     md += `\n`;
   }
 
-  md += `\n---\n*WatchTrack period review — ${label}*\n`;
+  md += `\n---\n*CinéMath period review — ${label}*\n`;
   return md;
 }
 
@@ -4870,12 +4870,12 @@ function renderBulkSyncReport(r) {
   html += `<div class="stat-line"><span>Filtered (excluded library)</span><strong>${r.workerFiltered}</strong></div>`;
   html += '<h4>Movies</h4>';
   html += `<div class="stat-line"><span>Distinct movies seen on Plex</span><strong>${r.moviesProcessed}</strong></div>`;
-  html += `<div class="stat-line"><span>Matched to WatchTrack catalog</span><strong>${r.moviesMatchedToCatalog}</strong></div>`;
+  html += `<div class="stat-line"><span>Matched to CinéMath catalog</span><strong>${r.moviesMatchedToCatalog}</strong></div>`;
   html += `<div class="stat-line"><span>Newly marked Watched</span><strong>${r.moviesMarkedWatched}</strong></div>`;
   html += `<div class="stat-line"><span>Orphans (not in catalog, logged to history)</span><strong>${r.moviesOrphan}</strong></div>`;
   html += '<h4>TV shows</h4>';
   html += `<div class="stat-line"><span>Distinct shows seen on Plex</span><strong>${r.showsProcessed}</strong></div>`;
-  html += `<div class="stat-line"><span>Matched to WatchTrack catalog</span><strong>${r.showsMatchedToCatalog}</strong></div>`;
+  html += `<div class="stat-line"><span>Matched to CinéMath catalog</span><strong>${r.showsMatchedToCatalog}</strong></div>`;
   html += `<div class="stat-line"><span>Marked Watching</span><strong>${r.showsMarkedWatching}</strong></div>`;
   html += `<div class="stat-line"><span>Marked Loved (5+ distinct episodes)</span><strong>${r.showsMarkedLoved}</strong></div>`;
   html += `<div class="stat-line"><span>Orphans (not in catalog, logged to history)</span><strong>${r.showsOrphan}</strong></div>`;
@@ -6632,7 +6632,7 @@ function renderFindGaps() {
           tmdbId: cand.tmdbId,
         };
         document.getElementById('promote-info').textContent =
-          `Promote "${pendingPromote.title}" (${pendingPromote.year || '?'}) to a WatchTrack catalog tab. Suggested via Find Gaps from ${cand.sourceCount} item${cand.sourceCount === 1 ? '' : 's'} you've rated, including ${pendingPromote.sourceTitle}.`;
+          `Promote "${pendingPromote.title}" (${pendingPromote.year || '?'}) to a CinéMath catalog tab. Suggested via Find Gaps from ${cand.sourceCount} item${cand.sourceCount === 1 ? '' : 's'} you've rated, including ${pendingPromote.sourceTitle}.`;
         const tvTabs = new Set(['comedy-tv','crime-tv','spy-tv','drama-tv','horror-tv','fantasy-tv','scifi-tv','cons-courtroom-tv','british-comedy','heroes-comics-tv']);
         const select = document.getElementById('promote-tab');
         select.innerHTML = catalogManifest
@@ -7016,7 +7016,7 @@ function wizardHandleAction(btn) {
       tmdbId: btn.dataset.tmdbId || null,
     };
     document.getElementById('promote-info').textContent =
-      `Promote "${pendingPromote.title}" (${pendingPromote.year || '?'}) into a WatchTrack catalog tab. Recommended by your rating of "${pendingPromote.sourceTitle}".`;
+      `Promote "${pendingPromote.title}" (${pendingPromote.year || '?'}) into a CinéMath catalog tab. Recommended by your rating of "${pendingPromote.sourceTitle}".`;
     const tvTabs = new Set(['comedy-tv','crime-tv','spy-tv','drama-tv','horror-tv','fantasy-tv','scifi-tv','cons-courtroom-tv','british-comedy','heroes-comics-tv']);
     const select = document.getElementById('promote-tab');
     select.innerHTML = catalogManifest

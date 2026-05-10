@@ -1,6 +1,10 @@
-# WatchTrack — Deployment Guide
+# CinéMath — Deployment Guide
 
-A Progressive Web App (PWA) that installs to your Android home screen as a real-feeling app. Tracks films and television across 21 genre-aware tabs with status, ratings, reaction tags, and category filtering.
+*Your palate, computed.*
+
+A Progressive Web App (PWA) that installs to your Android home screen as a real-feeling app. Personal recommender for film and television: 21 genre-aware tabs, status / ratings / reaction tags, time and mood filters, and a side-by-side film + TV recs panel that learns your taste over time.
+
+> **History note:** CinéMath was previously named WatchTrack (releases up to v6.6.0). The brand changed in v7.0.0; the underlying app is the same. Internal identifiers (Android TWA package `com.watchtrack.tv`, Cloudflare Worker name `watchtrack-plex`, localStorage keys) are unchanged. If you've installed the old name, an update over the air picks up the new identity without a reinstall.
 
 ## What's in this folder
 
@@ -51,7 +55,7 @@ If you don't have one: go to **github.com**, click "Sign up", pick a username (t
 ### 2. Create a new repository
 
 - Click the **+** in the top-right → **New repository**
-- Name it: `WatchTrack` (or anything else; this becomes part of the URL)
+- Name it: `cinemath` (or anything else; this becomes part of the URL — non-ASCII chars like `é` aren't valid in GitHub repo names, so use the ASCII form here)
 - Set to **Public** (required for free GitHub Pages)
 - Don't initialize with README, .gitignore, or license — leave checkboxes empty
 - Click **Create repository**
@@ -74,7 +78,7 @@ You'll see a page with several options. Click **"uploading an existing file"** i
   - **Branch:** `main`, folder `/ (root)`
   - Click **Save**
 - Wait 1-2 minutes
-- A green banner will appear with your URL: `https://YOUR-USERNAME.github.io/WatchTrack/`
+- A green banner will appear with your URL: `https://YOUR-USERNAME.github.io/cinemath/` (or whatever repo slug you chose above)
 
 ### 5. Install on your Android phone
 
@@ -126,7 +130,7 @@ State durability is now handled automatically: cross-device sync mirrors state a
 
 ### TV mode
 
-WatchTrack auto-detects TV displays (Sony Bravia, Google TV, Chromecast) and switches to a TV-optimized layout with larger fonts, focus rings, and D-pad navigation. Use the arrow keys (or TV remote D-pad) to move between items, Enter to select, Backspace/Escape to close modals. Notes editing is hidden in TV mode since D-pad typing is impractical — edit notes from the phone.
+CinéMath auto-detects TV displays (Sony Bravia, Google TV, Chromecast) and switches to a TV-optimized layout with larger fonts, focus rings, and D-pad navigation. Use the arrow keys (or TV remote D-pad) to move between items, Enter to select, Backspace/Escape to close modals. Notes editing is hidden in TV mode since D-pad typing is impractical — edit notes from the phone.
 
 You can override auto-detection in Settings → Display. Choose Auto, Phone, or TV.
 

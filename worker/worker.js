@@ -1,9 +1,9 @@
-// WatchTrack ↔ Plex bridge (v5.12 — adds /chat endpoint backed by Workers AI)
+// CinéMath ↔ Plex bridge (v5.12 — adds /chat endpoint backed by Workers AI)
 //
 // Endpoints:
 //   POST /webhook/{secret}              Plex Pass webhook receiver
-//   GET  /events?secret=X&since=TS      WatchTrack polls for new scrobble events
-//   POST /events/ack                    WatchTrack acks events processed
+//   GET  /events?secret=X&since=TS      CinéMath polls for new scrobble events
+//   POST /events/ack                    CinéMath acks events processed
 //   GET  /metadata/lookup?secret=X&title=T&year=Y&type=movie|tv[&tmdbId=N]   TMDB enrichment
 //   POST /metadata/bulk                 Batch TMDB lookups (≤50 per call)
 //   POST /viewed/ingest                 Bulk ingest Plex history (used once for backfill)
@@ -31,7 +31,7 @@
 //   GET  /                              health check
 //
 // KV bindings expected (variable names must match exactly):
-//   EVENTS      — webhook scrobble events queued for WatchTrack to pull
+//   EVENTS      — webhook scrobble events queued for CinéMath to pull
 //   CONFIG      — { "secret": "...", "tmdb_token": "...", "plex_url": "...", "plex_token": "..." }
 //   VIEWED      — full Plex viewing history
 //   METADATA    — TMDB enrichment cache
@@ -391,7 +391,7 @@ export default {
 
     // Health (no rate limit, no auth)
     if (path === '/' || path === '/health') {
-      return new Response('WatchTrack-Plex bridge online (v5.12 — /chat endpoint via Workers AI)', { headers: cors });
+      return new Response('CinéMath-Plex bridge online (v5.12 — /chat endpoint via Workers AI)', { headers: cors });
     }
 
     // v5.7: per-IP rate limit. Applies to every other route. Returns 429
@@ -458,7 +458,7 @@ export default {
       }
     }
 
-    // === WatchTrack polls for new events ===
+    // === CinéMath polls for new events ===
     if (path === '/events' && method === 'GET') {
       const providedSecret = url.searchParams.get('secret');
       if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
@@ -481,7 +481,7 @@ export default {
       return jsonResponse({ events });
     }
 
-    // === WatchTrack confirms events processed ===
+    // === CinéMath confirms events processed ===
     if (path === '/events/ack' && method === 'POST') {
       try {
         const body = await request.json();
@@ -777,7 +777,7 @@ export default {
 
     // === v5.4: Cross-device state sync ===
     // Identity is a SHA-256 hash of the user's Plex token (computed client-side
-    // by WatchTrack), so the same Plex account on multiple devices produces the
+    // by CinéMath), so the same Plex account on multiple devices produces the
     // same hash and reads/writes the same blob. Authorization uses the existing
     // shared secret.
 
@@ -967,7 +967,7 @@ export default {
         return jsonResponse({ error: 'Subscription has no push data — re-enable alerts on the device after VAPID is configured' }, 400);
       }
       const result = await sendWebPush(sub.push, {
-        title: 'WatchTrack test notification',
+        title: 'CinéMath test notification',
         body: 'If you see this, Web Push is working end-to-end.',
         itemRef: 'test',
         tabId: '',
@@ -1050,7 +1050,7 @@ export default {
         }).join('\n') || '(no candidates passed — ask the user to narrow their request)';
 
         const systemPrompt = [
-          "You are WatchTrack's watch concierge — terse, opinionated, grounded in the user's actual taste.",
+          "You are CinéMath's watch concierge — terse, opinionated, grounded in the user's actual taste.",
           "Your job each turn: pick exactly ONE candidate that fits the user's stated intent right now.",
           "Use their RECENT VIEWING to spot patterns (genre runs, director streaks, rewatch tendencies) and reference them in your reasoning.",
           "Output ONLY valid JSON, exactly this shape, nothing else:",

@@ -1,3 +1,15 @@
+/* v7.0.0: Bundled OFL-licensed calligraphic font for the 'Ciné' half of
+   the CinéMath wordmark. Drop great-vibes.woff2 into /fonts (see
+   fonts/README.md) — fallback chain renders cursive system fonts if the
+   asset is missing, so the app stays usable until the file is in place. */
+@font-face {
+  font-family: 'Cine Script';
+  src: url('fonts/great-vibes.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
 :root {
   --bg: #0e0d0b; --bg-elev: #181714; --bg-card: #1c1b18;
   --ink: #e8e4d8; --ink-dim: #9a9588; --ink-faint: #5a564d;
@@ -1557,27 +1569,30 @@ body.tv-mode #settings-modal .modal-content {
   margin: 0 0 12px;
   color: var(--ink);
 }
-/* V5.23.0: Wizard banner image (replaces the text title on the home screen)
-   V5.23.2: Added max-height + object-fit so the banner caps at a fraction of
-   viewport height. Without this, on a 1080p TV the 16:9 banner at 880px wide
-   was 495px tall — combined with subtitle, action buttons, and footer the
-   total content exceeded viewport, and flex `align-items: center` clipped
-   the banner's top off the top of the screen. */
+/* v7.0.0: Wizard banner is now a live-rendered SVG (CinéMath wordmark +
+   filmstrip) instead of a baked PNG, so it always matches the bundled
+   web font and stays crisp at any size. */
 .wizard-banner {
   display: block;
   width: 100%;
   max-width: 480px;
   max-height: 26vh;
-  height: auto;
-  object-fit: contain;
   margin: 0 auto 14px;
   border-radius: 4px;
+  overflow: hidden;
+}
+.wizard-banner-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: 26vh;
 }
 body.tv-mode .wizard-banner {
   max-width: 60vw;
   max-height: 28vh;
   margin-bottom: 20px;
 }
+body.tv-mode .wizard-banner-svg { max-height: 28vh; }
 .wizard-subtitle {
   font-size: 14px;
   color: var(--ink-dim);
@@ -1701,11 +1716,32 @@ body.tv-mode .wizard-banner {
   outline-offset: 4px;
   border-radius: 4px;
 }
-.app-logo-img {
-  width: 56px;
-  height: 34px;
+/* v7.0.0: CinéMath wordmark replaces the SVG logo image. Calligraphic
+   'Ciné' (Great Vibes / system cursive fallback) + geometric 'Math'
+   (Futura / Avenir Next fallback) — same wordmark used on wizard banner
+   and header so brand reads consistently everywhere. */
+.app-wordmark {
+  display: inline-flex;
+  align-items: baseline;
   flex-shrink: 0;
-  display: block;
+  line-height: 1;
+  white-space: nowrap;
+}
+.app-wordmark-cine {
+  font-family: 'Cine Script', 'Great Vibes', 'Snell Roundhand', 'Edwardian Script ITC', 'Apple Chancery', 'Brush Script MT', cursive;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 44px;
+  color: var(--accent);
+  letter-spacing: -0.01em;
+  margin-right: 4px;
+}
+.app-wordmark-math {
+  font-family: 'Futura', 'Avenir Next', 'Avenir', 'Century Gothic', 'Helvetica Neue', sans-serif;
+  font-weight: 300;
+  font-size: 30px;
+  color: var(--ink);
+  letter-spacing: 0.04em;
 }
 .app-logo-text {
   display: flex;
@@ -1716,16 +1752,17 @@ body.tv-mode .wizard-banner {
 }
 .app-logo-text .eyebrow { margin-bottom: 0; }
 .app-logo-title {
-  font-family: 'Didot', 'Bodoni 72', 'Playfair Display', Georgia, serif;
+  font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+  font-style: italic;
   font-weight: 400;
-  font-size: 28px;
-  line-height: 1.05;
-  letter-spacing: -0.01em;
-  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  color: var(--ink-dim);
   display: block;
 }
-.app-logo-title em { font-style: italic; color: var(--accent); }
 
 /* TV-mode upscale to match the rest of TV layout */
-body.tv-mode .app-logo-img { width: 72px; height: 44px; }
-body.tv-mode .app-logo-title { font-size: 32px; }
+body.tv-mode .app-wordmark-cine { font-size: 56px; }
+body.tv-mode .app-wordmark-math { font-size: 38px; }
+body.tv-mode .app-logo-title { font-size: 17px; }
