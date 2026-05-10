@@ -1,9 +1,13 @@
-name: Auto-bump SW cache
+name: Auto-rebuild app.min.js + bump SW cache
 
-# Watches the asset list cached by service-worker.js. When any of those
-# assets changes in a push to main and service-worker.js itself wasn't
-# updated in the same push, the cache name (scifi-tracker-vN) is
-# auto-incremented and committed back. Removes the manual bump step.
+# When app.js (or any other cached asset) changes on a push to main, the
+# minified bundle is rebuilt and the service-worker cache name is bumped
+# in a single bot commit. Removes both the "rebuild app.min.js" step and
+# the "bump SW cache" step from the manual release flow.
+#
+# Loop prevention: github-actions[bot]'s own commits skip this workflow
+# via the actor check, and app.min.js itself is not in the trigger paths
+# so the bot's commit doesn't re-fire the workflow.
 
 on:
   push:
@@ -33,17 +37,43 @@ jobs:
           fetch-depth: 2
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Skip if SW was changed in this push
-        id: check
+      - name: Detect what changed in this push
+        id: changed
         run: |
-          if git diff --name-only HEAD~1 HEAD | grep -q '^service-worker.js$'; then
-            echo "sw_changed=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "sw_changed=false" >> "$GITHUB_OUTPUT"
-          fi
+          set -eu
+          diff=$(git diff --name-only HEAD~1 HEAD || true)
+          echo "$diff" | grep -q '^app\.js$'           && echo "app_js=true"  >> "$GITHUB_OUTPUT" || echo "app_js=false" >> "$GITHUB_OUTPUT"
+          echo "$diff" | grep -q '^service-worker\.js$' && echo "sw=true"     >> "$GITHUB_OUTPUT" || echo "sw=false"     >> "$GITHUB_OUTPUT"
 
-      - name: Bump cache version
-        if: steps.check.outputs.sw_changed == 'false'
+      - name: Set up Node
+        if: steps.changed.outputs.app_js == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install esbuild
+        if: steps.changed.outputs.app_js == 'true'
+        run: npm install --silent --no-audit --no-fund
+
+      - name: Rebuild app.min.js
+        if: steps.changed.outputs.app_js == 'true'
+        run: |
+          set -eu
+          npx esbuild app.js --minify --target=es2020 --outfile=app.min.js --legal-comments=none
+          # Capture whether the rebuild actually produced a different file —
+          # rebuilds are deterministic, so if the user rebuilt locally before
+          # pushing the output would be byte-identical and we have nothing
+          # to commit for app.min.js.
+          if git diff --quiet app.min.js; then
+            echo "min_changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "min_changed=true" >> "$GITHUB_OUTPUT"
+          fi
+        id: rebuild
+
+      - name: Bump SW cache version
+        if: steps.changed.outputs.sw == 'false'
+        id: bump
         run: |
           set -eu
           current=$(grep -oE "scifi-tracker-v[0-9]+" service-worker.js | head -1)
@@ -51,8 +81,33 @@ jobs:
           next=$((n + 1))
           sed -i "s/scifi-tracker-v${n}/scifi-tracker-v${next}/" service-worker.js
           echo "Bumped scifi-tracker-v${n} -> scifi-tracker-v${next}"
+          echo "next=${next}" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and push
+        run: |
+          set -eu
+          # Stage whichever files actually changed
+          if [ "${{ steps.rebuild.outputs.min_changed }}" = "true" ]; then
+            git add app.min.js
+          fi
+          if [ "${{ steps.changed.outputs.sw }}" = "false" ]; then
+            git add service-worker.js
+          fi
+          # If nothing was staged, exit cleanly
+          if git diff --cached --quiet; then
+            echo "Nothing to commit — minified bundle and SW cache already in sync."
+            exit 0
+          fi
+          # Compose a commit message that names what actually changed
+          msg="chore(sw):"
+          if [ "${{ steps.rebuild.outputs.min_changed }}" = "true" ] && [ "${{ steps.changed.outputs.sw }}" = "false" ]; then
+            msg="$msg rebuild app.min.js + auto-bump cache to v${{ steps.bump.outputs.next }}"
+          elif [ "${{ steps.rebuild.outputs.min_changed }}" = "true" ]; then
+            msg="$msg rebuild app.min.js (SW cache untouched)"
+          else
+            msg="$msg auto-bump cache to v${{ steps.bump.outputs.next }}"
+          fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add service-worker.js
-          git commit -m "chore(sw): auto-bump cache to v${next}"
+          git commit -m "$msg"
           git push

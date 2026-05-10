@@ -10,6 +10,35 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 6.1.2 — 2026-05-09
+**Service worker cache:** unchanged (workflow change only)
+
+### Tooling — Auto-rebuild app.min.js in the SW cache-bump workflow
+
+Closes the recurring trap that caused 6.1.0's wizard not to ship.
+`.github/workflows/sw-cache-bump.yml` now also runs esbuild to rebuild
+`app.min.js` when `app.js` changed in the push, and folds both the
+rebuild and the cache bump into a single bot commit. Push `app.js`
+direct to main and the rest happens automatically — no need to
+remember `npm run build:min`.
+
+The workflow detects which files actually changed and composes the
+commit message accordingly:
+
+- `chore(sw): rebuild app.min.js + auto-bump cache to vN` — both ran
+- `chore(sw): rebuild app.min.js (SW cache untouched)` — user already
+  bumped the SW cache themselves; only the rebuild was needed
+- `chore(sw): auto-bump cache to vN` — `app.min.js` was already up to
+  date (deterministic rebuild produced identical output)
+
+If neither needed work, the workflow exits cleanly without a commit.
+
+Loop prevention is unchanged — `if: github.actor != 'github-actions[bot]'`
+guards against the bot triggering itself, and `app.min.js` is not in
+the workflow trigger paths so the bot's own commit doesn't re-fire.
+
+---
+
 ## 6.1.1 — 2026-05-09
 **Service worker cache:** `scifi-tracker-v101` → `v102`
 
