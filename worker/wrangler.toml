@@ -71,3 +71,9 @@ bucket_name = "watchtrack-backups"
 binding = "D1_VIEWED"
 database_name = "watchtrack-viewed"
 database_id = "2d67ee44-2896-4d32-8734-b1e6fc4f8021"
+
+# === Workers AI (v5.12) ===
+# Inference binding for the natural-language chat. No ID required —
+# the platform-managed AI gateway is just attached by name.
+[ai]
+binding = "AI"

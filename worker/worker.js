@@ -1,4 +1,4 @@
-// WatchTrack ↔ Plex bridge (v5.11 — VIEWED migrated to D1; dual-write retained)
+// WatchTrack ↔ Plex bridge (v5.12 — adds /chat endpoint backed by Workers AI)
 //
 // Endpoints:
 //   POST /webhook/{secret}              Plex Pass webhook receiver
@@ -27,6 +27,7 @@
 //   GET  /cron/backup-state?secret=X    v5.10: manual trigger of the daily R2 backup walk
 //   GET  /cron/migrate-viewed-to-d1?secret=X    v5.11: one-time backfill of VIEWED KV into D1
 //   GET  /alerts/test-fire?secret=X&user=HASH   v5.9: send a test push to verify delivery
+//   POST /chat                                  v5.12: natural-language watch concierge
 //   GET  /                              health check
 //
 // KV bindings expected (variable names must match exactly):
@@ -39,6 +40,7 @@
 //   ALERTS      — v5.6: per-user alert subscription, snapshot, and notification queue
 //   BACKUPS     — v5.10: R2 bucket for daily compressed state snapshots
 //   D1_VIEWED   — v5.11: D1 database holding Plex viewing history (migrated from VIEWED KV)
+//   AI          — v5.12: Workers AI binding for the natural-language chat endpoint
 
 // Library whitelist — only ingest from these Plex library section IDs.
 // Adjust if your library config changes.
@@ -389,7 +391,7 @@ export default {
 
     // Health (no rate limit, no auth)
     if (path === '/' || path === '/health') {
-      return new Response('WatchTrack-Plex bridge online (v5.11 — VIEWED migrated to D1)', { headers: cors });
+      return new Response('WatchTrack-Plex bridge online (v5.12 — /chat endpoint via Workers AI)', { headers: cors });
     }
 
     // v5.7: per-IP rate limit. Applies to every other route. Returns 429
@@ -1000,6 +1002,97 @@ export default {
       } catch (e) {
         console.log('[d1-migrate] uncaught', e.stack || e.message);
         return jsonResponse({ error: e.message || String(e), stack: (e.stack || '').slice(0, 500) }, 500);
+      }
+    }
+
+    // POST /chat — natural-language watch concierge.
+    // v5.12. Body: { secret, userHash, message, history?, candidates? }
+    //   userHash:     identifies the user for D1 viewing-history lookup.
+    //   message:      the user's freeform query for this turn.
+    //   history:      optional array of prior {role, content} turns (last 10 used).
+    //   candidates:   optional pre-filtered catalog items the bot picks from.
+    //                 Each: { tabId, itemId, title, year, type, dir, pitch, tags?, runtime? }.
+    //                 If absent or empty, the bot can only ask clarifying questions.
+    // Returns { reply, pick: { tabId, itemId, why } | null }.
+    if (path === '/chat' && method === 'POST') {
+      try {
+        const body = await request.json();
+        if (!(await checkSecret(env, body.secret))) return new Response('Forbidden', { status: 403, headers: cors });
+        if (!body.userHash || !body.message) return new Response('Missing userHash or message', { status: 400, headers: cors });
+        if (!env.AI) return jsonResponse({ error: 'AI binding missing' }, 500);
+
+        const candidates = Array.isArray(body.candidates) ? body.candidates.slice(0, 50) : [];
+        const history = Array.isArray(body.history) ? body.history.slice(-10) : [];
+
+        // Pull last 30 viewing-history rows from D1 to ground recommendations.
+        // Failure is non-fatal — bot still works without history, just less personalized.
+        let recentViews = [];
+        if (env.D1_VIEWED) {
+          try {
+            const r = await env.D1_VIEWED.prepare(
+              `SELECT title, year, type, grandparent_title AS show, ts FROM views ORDER BY ts DESC LIMIT 30`
+            ).all();
+            recentViews = r.results || [];
+          } catch (e) { console.log('[chat] D1 read failed', e.message); }
+        }
+
+        const recentLines = recentViews.map(v => {
+          if (v.type === 'episode' && v.show) return `- ${v.show}: "${v.title}" (${v.year || '?'})`;
+          return `- ${v.title} (${v.year || '?'}, ${v.type || '?'})`;
+        }).join('\n') || '(no recent viewing data)';
+
+        const candidateLines = candidates.map(c => {
+          const tagsBit = (c.tags && c.tags.length) ? ` — tags: ${c.tags.slice(0, 5).join(', ')}` : '';
+          const dirBit = c.dir ? ` — dir: ${c.dir}` : '';
+          const runtimeBit = c.runtime ? ` — ${c.runtime}` : '';
+          const pitchBit = c.pitch ? ` — pitch: ${String(c.pitch).slice(0, 200)}` : '';
+          return `- {tabId:"${c.tabId}", itemId:"${c.itemId}"} ${c.title} (${c.year || '?'}, ${c.type || '?'})${dirBit}${runtimeBit}${tagsBit}${pitchBit}`;
+        }).join('\n') || '(no candidates passed — ask the user to narrow their request)';
+
+        const systemPrompt = [
+          "You are WatchTrack's watch concierge — terse, opinionated, grounded in the user's actual taste.",
+          "Your job each turn: pick exactly ONE candidate that fits the user's stated intent right now.",
+          "Use their RECENT VIEWING to spot patterns (genre runs, director streaks, rewatch tendencies) and reference them in your reasoning.",
+          "Output ONLY valid JSON, exactly this shape, nothing else:",
+          '{ "reply": "<1-2 sentence conversational message naming the pick and the hook>", "pick": { "tabId": "<from candidates>", "itemId": "<from candidates>", "why": "<1-2 sentences grounded in their tags / director affinity / recent viewing>" } }',
+          "If the candidates aren't a good match, set pick to null and use reply to ask ONE clarifying question.",
+          "Do not invent items not in the candidate list. Do not output prose outside the JSON.",
+        ].join('\n');
+
+        const userContext = `RECENT VIEWING (most recent first, last 30):\n${recentLines}\n\nCANDIDATES (pick exactly one):\n${candidateLines}\n\nUSER ASKS: ${body.message}`;
+
+        const messages = [
+          { role: 'system', content: systemPrompt },
+          ...history.map(h => ({ role: h.role === 'assistant' ? 'assistant' : 'user', content: String(h.content || '').slice(0, 2000) })),
+          { role: 'user', content: userContext },
+        ];
+
+        const t0 = Date.now();
+        const aiResp = await env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
+          messages,
+          max_tokens: 400,
+          temperature: 0.7,
+        });
+        console.log('[chat] AI completed in', Date.now() - t0, 'ms; output bytes:', (aiResp.response || '').length);
+
+        // Llama doesn't always honor "JSON only." Extract the first {...} block.
+        let parsed = { reply: '', pick: null };
+        const text = aiResp.response || aiResp.result || '';
+        const m = text.match(/\{[\s\S]*\}/);
+        if (m) {
+          try {
+            parsed = JSON.parse(m[0]);
+          } catch (e) {
+            console.log('[chat] JSON parse failed, returning raw text');
+            parsed = { reply: text.slice(0, 500), pick: null, parse_error: true };
+          }
+        } else {
+          parsed = { reply: text.slice(0, 500) || '(no response)', pick: null };
+        }
+        return jsonResponse(parsed);
+      } catch (e) {
+        console.log('[chat] uncaught', e.stack || e.message);
+        return jsonResponse({ error: e.message || String(e) }, 500);
       }
     }
 

@@ -3516,6 +3516,30 @@ function setupModals() {
   });
   document.getElementById('find-gaps-refresh').addEventListener('click', () => renderFindGaps());
 
+  // === v6.5.0 R9: chat modal wiring ===
+  const chatSendBtn = document.getElementById('chat-send');
+  if (chatSendBtn) chatSendBtn.addEventListener('click', sendChatMessage);
+  const chatCloseBtn = document.getElementById('chat-close');
+  if (chatCloseBtn) chatCloseBtn.addEventListener('click', () => document.getElementById('chat-modal').close());
+  const chatInput = document.getElementById('chat-input');
+  if (chatInput) {
+    chatInput.addEventListener('keydown', (e) => {
+      // Cmd/Ctrl+Enter sends; bare Enter inserts a newline (textarea default).
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        sendChatMessage();
+      }
+    });
+  }
+  const chatVoiceBtn = document.getElementById('chat-voice-btn');
+  if (chatVoiceBtn) {
+    if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+      chatVoiceBtn.style.display = 'none';
+    } else {
+      chatVoiceBtn.addEventListener('click', () => voiceSearchInto('chat-input', chatVoiceBtn));
+    }
+  }
+
   // === Settings modal ===
   // (Per-section collapsibles removed in 5.35.0 — the card grid handles
   // navigation, which made the header toggles redundant and broken when
@@ -6325,6 +6349,169 @@ function findGaps(limit) {
   };
 }
 
+// =====================================================================
+// v6.5.0 R9: AI chat — natural-language watch concierge.
+// Wizard-root entry "Tell me what to watch" opens the chat modal. The
+// client sends candidate items + the user's message to /chat on the
+// Worker, which calls Workers AI (Llama 3.3 70B) and returns a JSON
+// pick. The client renders the assistant's reply as a chat bubble and
+// the pick as a Watch Card with trailer + providers + actions.
+// =====================================================================
+
+let _chatHistory = [];
+let _chatPending = false;
+
+function openChatModal() {
+  _chatHistory = [];
+  _chatPending = false;
+  const history = document.getElementById('chat-history');
+  if (history) history.innerHTML = '';
+  const input = document.getElementById('chat-input');
+  if (input) input.value = '';
+  document.getElementById('chat-modal').showModal();
+  setTimeout(() => input && input.focus(), 80);
+}
+
+function appendChatMessage(role, content, opts) {
+  opts = opts || {};
+  const history = document.getElementById('chat-history');
+  if (!history) return null;
+  const div = document.createElement('div');
+  div.className = `chat-message ${role}${opts.placeholder ? ' placeholder' : ''}`;
+  div.textContent = content;
+  history.appendChild(div);
+  history.scrollTop = history.scrollHeight;
+  return div;
+}
+
+function appendWatchCard(pick) {
+  const history = document.getElementById('chat-history');
+  if (!history || !pick || !pick.tabId || !pick.itemId) return;
+  const cat = catalogs[pick.tabId];
+  const item = cat && cat.items && cat.items.find(it => it.id === pick.itemId);
+  if (!item) {
+    appendChatMessage('assistant', `(couldn't find ${pick.tabId}/${pick.itemId} in your catalog)`);
+    return;
+  }
+  const trailerKey = (typeof getTrailerKey === 'function') ? getTrailerKey(item.id) : null;
+  const enrich = (typeof getEnrichmentForItem === 'function') ? getEnrichmentForItem(item.id) : null;
+  const region = (typeof getStreamingRegion === 'function') ? getStreamingRegion() : 'US';
+  const providers = enrich && enrich.watchProviders && enrich.watchProviders[region];
+  const flatrate = (providers && providers.flatrate) || [];
+
+  const card = document.createElement('div');
+  card.className = 'watch-card';
+  const metaParts = [item.year, item.dir, item.runtime, item.country].filter(Boolean);
+  card.innerHTML = `
+    <div class="watch-card-title">${escapeHtml(item.title)} <span class="watch-card-year">(${item.year || '?'})</span></div>
+    <div class="watch-card-meta">${escapeHtml(metaParts.join(' · '))}</div>
+    ${item.pitch ? `<p class="watch-card-pitch">${escapeHtml(item.pitch)}</p>` : ''}
+    <div class="watch-card-why"><strong>Why:</strong> ${escapeHtml(pick.why || '')}</div>
+    ${flatrate.length ? `<div class="watch-card-providers"><strong>Streaming in ${region}:</strong> ${flatrate.map(p => escapeHtml(p.provider_name)).join(', ')}</div>` : ''}
+    <div class="watch-card-actions">
+      ${trailerKey ? `<a class="action-btn trailer-btn" href="https://www.youtube.com/watch?v=${trailerKey}" target="_blank" rel="noopener">▶ Trailer</a>` : ''}
+      <button class="action-btn" data-card-action="watching">Mark watching</button>
+      <button class="action-btn" data-card-action="queued">Queue it</button>
+      <button class="action-btn" data-card-action="skip">Pass</button>
+    </div>
+  `;
+  history.appendChild(card);
+  history.scrollTop = history.scrollHeight;
+
+  card.querySelectorAll('button[data-card-action]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      setStatus(item.id, btn.dataset.cardAction, pick.tabId);
+      card.querySelectorAll('button[data-card-action]').forEach(b => { b.disabled = true; b.style.opacity = '0.5'; });
+      btn.style.opacity = '1';
+      btn.textContent = '✓ ' + btn.textContent;
+    });
+  });
+}
+
+// Build candidate set the bot picks from. Prioritizes queued + watching
+// (the user already signalled interest), falls back to unrated catalog
+// items if nothing's queued. Caps at 50 to stay inside the AI prompt
+// budget — beyond ~50 the model starts forgetting earlier candidates.
+function buildChatCandidates() {
+  const cands = [];
+  for (const tabId in catalogs) {
+    if (tabId === 'watchlist' || tabId === 'auteur') continue;
+    const cat = catalogs[tabId];
+    if (!cat || !cat.items) continue;
+    const isTV = tabId.endsWith('-tv') || tabId === 'british-comedy';
+    cat.items.forEach(item => {
+      const status = getStatus(item.id, tabId);
+      const rating = getRating(item.id, tabId);
+      if (status === 'watched' || status === 'skip') return;
+      const tags = getTags(item.id, tabId);
+      cands.push({
+        tabId, itemId: item.id,
+        title: item.title, year: item.year,
+        type: isTV ? 'tv' : 'movie',
+        dir: item.dir || null,
+        pitch: (item.pitch || '').slice(0, 220),
+        tags: tags || [],
+        runtime: item.runtime || null,
+        // priority weights for sort below
+        _weight: status === 'queued' ? 3 : status === 'watching' ? 2 : (rating ? 0 : 1),
+      });
+    });
+  }
+  cands.sort((a, b) => b._weight - a._weight);
+  return cands.slice(0, 50).map(c => { delete c._weight; return c; });
+}
+
+async function sendChatMessage() {
+  if (_chatPending) return;
+  const input = document.getElementById('chat-input');
+  const message = input ? input.value.trim() : '';
+  if (!message) return;
+  if (!isWebhookConfigured()) {
+    appendChatMessage('assistant', 'The Worker URL + secret aren\'t configured yet. Open Settings → Plex Webhook Bridge first.');
+    return;
+  }
+  input.value = '';
+  appendChatMessage('user', message);
+  _chatHistory.push({ role: 'user', content: message });
+  const placeholder = appendChatMessage('assistant', 'Thinking…', { placeholder: true });
+  _chatPending = true;
+  try {
+    const userHash = await getUserHash();
+    if (!userHash) {
+      if (placeholder) { placeholder.textContent = 'Need a Plex token to identify you (Settings → Plex Integration).'; placeholder.classList.remove('placeholder'); }
+      return;
+    }
+    const candidates = buildChatCandidates();
+    const resp = await fetch(`${getWebhookUrl()}/chat`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        secret: getWebhookSecret(),
+        userHash,
+        message,
+        history: _chatHistory.slice(-8),
+        candidates,
+      }),
+    });
+    if (!resp.ok) {
+      const errText = await resp.text();
+      if (placeholder) { placeholder.textContent = `Error ${resp.status}: ${errText.slice(0, 200)}`; placeholder.classList.remove('placeholder'); }
+      return;
+    }
+    const data = await resp.json();
+    const reply = data.reply || '(empty response)';
+    if (placeholder) { placeholder.textContent = reply; placeholder.classList.remove('placeholder'); }
+    _chatHistory.push({ role: 'assistant', content: reply });
+    if (data.pick && data.pick.tabId && data.pick.itemId) {
+      appendWatchCard(data.pick);
+    }
+  } catch (e) {
+    if (placeholder) { placeholder.textContent = `Network error: ${e.message}`; placeholder.classList.remove('placeholder'); }
+  } finally {
+    _chatPending = false;
+  }
+}
+
 function openFindGapsModal() {
   document.getElementById('find-gaps-modal').showModal();
   renderFindGaps();
@@ -6449,6 +6636,10 @@ function wizardRender() {
     subtitle.textContent = 'What are you doing?';
     backBtn.style.display = 'none';
     stepEl.innerHTML = `
+      <button class="wizard-btn" data-action="watch-chat">
+        Tell me what to watch
+        <span class="wizard-btn-meta">Talk to the bot — it picks one for you</span>
+      </button>
       <button class="wizard-btn" data-action="watch-new">
         Looking for something to watch
         <span class="wizard-btn-meta">Time → mood → genre → picks</span>
@@ -6683,6 +6874,7 @@ function wizardHandleAction(btn) {
   // legacy callers but aren't reachable from the new root.
   if (action === 'watch-new') { wizardState.session = 'new'; wizardState.step = 'time'; wizardRender(); return; }
   if (action === 'watch-continue') { wizardState.session = 'continue'; wizardState.step = 'continue-list'; wizardRender(); return; }
+  if (action === 'watch-chat') { wizardHide(); openChatModal(); return; }
   // Legacy compat (old buttons, internal links)
   if (action === 'film') { wizardState.contentType = 'film'; wizardState.step = 'session'; wizardRender(); return; }
   if (action === 'tv') { wizardState.contentType = 'tv'; wizardState.step = 'session'; wizardRender(); return; }
