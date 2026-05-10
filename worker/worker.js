@@ -1073,37 +1073,54 @@ export default {
           max_tokens: 400,
           temperature: 0.7,
         });
-        console.log('[chat] AI completed in', Date.now() - t0, 'ms; resp typeof:', typeof aiResp,
-          'isArray:', Array.isArray(aiResp),
-          'keys:', aiResp && typeof aiResp === 'object' ? Object.keys(aiResp).slice(0, 10).join(',') : 'n/a',
-          'preview:', JSON.stringify(aiResp).slice(0, 500));
+        console.log('[chat] AI completed in', Date.now() - t0, 'ms');
 
-        // Llama doesn't always honor "JSON only," and the wrapper shape
-        // varies by model and Workers AI runtime version. Coerce to a
-        // string defensively before regex-matching the JSON block.
-        let text = '';
-        if (typeof aiResp === 'string') text = aiResp;
-        else if (aiResp && typeof aiResp.response === 'string') text = aiResp.response;
-        else if (aiResp && aiResp.response && typeof aiResp.response.text === 'string') text = aiResp.response.text;
-        else if (aiResp && typeof aiResp.result === 'string') text = aiResp.result;
-        else if (aiResp && aiResp.result && typeof aiResp.result.response === 'string') text = aiResp.result.response;
-        else if (aiResp && Array.isArray(aiResp.choices) && aiResp.choices[0] && aiResp.choices[0].message) {
-          text = aiResp.choices[0].message.content || '';
-        }
-        else { text = JSON.stringify(aiResp).slice(0, 2000); }
-        console.log('[chat] extracted text length:', text.length, 'first 200:', text.slice(0, 200));
+        // Workers AI runtime returns one of:
+        //   1. aiResp.response is already the parsed object { reply, pick } —
+        //      happens when the model produces clean JSON and the runtime
+        //      auto-parses it before handing it back. This is the common case
+        //      for Llama 3.3 70b in late-2024/2025 runtimes.
+        //   2. aiResp.response is a string — older runtime, or model emitted
+        //      prose around the JSON. Need to regex-extract + JSON.parse.
+        //   3. Other wrapper shapes (string, choices[], result).
+        let parsed = null;
 
-        let parsed = { reply: '', pick: null };
-        const m = text.match(/\{[\s\S]*\}/);
-        if (m) {
-          try {
-            parsed = JSON.parse(m[0]);
-          } catch (e) {
-            console.log('[chat] JSON parse failed, returning raw text');
-            parsed = { reply: text.slice(0, 500), pick: null, parse_error: true };
+        // Case 1: structured-output already parsed
+        if (aiResp && typeof aiResp.response === 'object' && aiResp.response !== null && !Array.isArray(aiResp.response)) {
+          if (typeof aiResp.response.reply === 'string' || aiResp.response.pick !== undefined) {
+            parsed = {
+              reply: aiResp.response.reply || '',
+              pick: aiResp.response.pick || null,
+            };
+            console.log('[chat] using pre-parsed structured response');
           }
-        } else {
-          parsed = { reply: text.slice(0, 500) || '(no response)', pick: null };
+        }
+
+        // Case 2/3: extract a string from whatever shape we got, then regex+parse
+        if (!parsed) {
+          let text = '';
+          if (typeof aiResp === 'string') text = aiResp;
+          else if (aiResp && typeof aiResp.response === 'string') text = aiResp.response;
+          else if (aiResp && aiResp.response && typeof aiResp.response.text === 'string') text = aiResp.response.text;
+          else if (aiResp && typeof aiResp.result === 'string') text = aiResp.result;
+          else if (aiResp && aiResp.result && typeof aiResp.result.response === 'string') text = aiResp.result.response;
+          else if (aiResp && Array.isArray(aiResp.choices) && aiResp.choices[0] && aiResp.choices[0].message) {
+            text = aiResp.choices[0].message.content || '';
+          }
+          else { text = JSON.stringify(aiResp).slice(0, 2000); }
+          console.log('[chat] extracted text length:', text.length);
+
+          const m = text.match(/\{[\s\S]*\}/);
+          if (m) {
+            try {
+              parsed = JSON.parse(m[0]);
+            } catch (e) {
+              console.log('[chat] JSON parse failed:', e.message);
+              parsed = { reply: text.slice(0, 500), pick: null, parse_error: true };
+            }
+          } else {
+            parsed = { reply: text.slice(0, 500) || '(no response)', pick: null };
+          }
         }
         return jsonResponse(parsed);
       } catch (e) {
