@@ -5490,6 +5490,35 @@ function renderCatalogHealth() {
   return html;
 }
 
+// === V5.35.0: Wizard redesign — genre families & unified film+TV recs ===
+// Family groups bridge film and TV tabs so the user picks a genre once and
+// sees both kinds in the recs panel. "Heist" and "Foreign" etc. are
+// film-only families with no TV tab. "British Comedy" rolls into Comedy.
+const GENRE_FAMILIES = [
+  { id: 'scifi',          label: 'Sci-Fi',           tabs: ['scifi', 'scifi-tv'] },
+  { id: 'crime',          label: 'Crime',            tabs: ['crime', 'crime-tv'] },
+  { id: 'spy',            label: 'Spy',              tabs: ['espionage', 'spy-tv'] },
+  { id: 'drama',          label: 'Drama',            tabs: ['drama', 'drama-tv'] },
+  { id: 'horror',         label: 'Horror',           tabs: ['horror', 'horror-tv'] },
+  { id: 'fantasy',        label: 'Fantasy',          tabs: ['fantasy', 'fantasy-tv'] },
+  { id: 'cons',           label: 'Cons & Courtroom', tabs: ['cons-courtroom', 'cons-courtroom-tv'] },
+  { id: 'comedy',         label: 'Comedy',           tabs: ['comedy', 'comedy-tv', 'british-comedy'] },
+  { id: 'heroes',         label: 'Heroes & Comics',  tabs: ['heroes-comics', 'heroes-comics-tv'] },
+  { id: 'heist',          label: 'Heist',            tabs: ['heist'] },
+  { id: 'foreign',        label: 'Foreign',          tabs: ['foreign'] },
+  { id: 'auteur',         label: 'Auteur',           tabs: ['auteur'] },
+  { id: 'pre1960',        label: 'Pre-1960',         tabs: ['pre1960'] },
+  { id: 'musicals',       label: 'Musicals',         tabs: ['musicals'] },
+];
+function familyFilmTabs(family) {
+  if (!family) return [];
+  return family.tabs.filter(t => !WIZARD_TV_TABS.has(t));
+}
+function familyTvTabs(family) {
+  if (!family) return [];
+  return family.tabs.filter(t => WIZARD_TV_TABS.has(t));
+}
+
 // === V5.34.0: Trailer embed (Phase 3c of decision-helper roadmap) ===
 // Worker (v5.5+) populates `enrich.trailerKey` with the YouTube key of the best
 // available trailer for each TMDB-enriched item. Older enrichments without
@@ -6514,16 +6543,23 @@ function wizardRender() {
   stepEl.className = 'wizard-step';   // reset matrix class
 
   if (wizardState.step === 'root') {
+    // V5.35.0: 3-option root. "Looking for something to watch" goes to the
+    // new flow (time → mood → genre → side-by-side recs); "Continue" goes
+    // straight to the in-progress list; "Rating" is unchanged.
     subtitle.textContent = 'What are you doing?';
     backBtn.style.display = 'none';
     stepEl.innerHTML = `
+      <button class="wizard-btn" data-action="watch-new">
+        Looking for something to watch
+        <span class="wizard-btn-meta">Time → mood → genre → picks</span>
+      </button>
+      <button class="wizard-btn" data-action="watch-continue">
+        Continue something I'm watching
+        <span class="wizard-btn-meta">Resume an item already in progress</span>
+      </button>
       <button class="wizard-btn" data-action="rate">
         Rating
         <span class="wizard-btn-meta">Mark watched, apply ratings, add tags</span>
-      </button>
-      <button class="wizard-btn" data-action="watch">
-        Looking for something to watch
-        <span class="wizard-btn-meta">Find your next pick</span>
       </button>
     `;
   }
@@ -6615,75 +6651,49 @@ function wizardRender() {
     }
   }
   else if (wizardState.step === 'genre') {
+    // V5.35.0: show genre families that bridge film + TV, not individual tabs.
+    // Picking "Sci-Fi" includes both `scifi` and `scifi-tv` in the recs panel.
     subtitle.textContent = 'Pick a genre';
     backBtn.style.display = '';
     stepEl.className = 'wizard-step matrix';
-    // Show only tabs of the chosen content type that have unwatched/queued items
-    const isTV = wizardState.contentType === 'tv';
-    const candidates = catalogManifest.filter(c => {
-      if (c.virtual) return false;
-      const isTvTab = WIZARD_TV_TABS.has(c.id);
-      if (isTV && !isTvTab) return false;
-      if (!isTV && isTvTab) return false;
-      // Only include tabs with at least one unwatched/queued item (for new) or relevant (for rewatch)
-      const cat = catalogs[c.id];
-      if (!cat || !cat.items || cat.items.length === 0) return false;
-      if (wizardState.session === 'new') {
-        return cat.items.some(it => {
-          const s = getStatus(it.id, c.id);
-          return s === 'none' || s === 'queued';
-        });
-      } else if (wizardState.session === 'rewatch') {
-        return cat.items.some(it => {
-          const s = getStatus(it.id, c.id);
-          const r = getRating(it.id, c.id);
-          return s === 'watched' && (r === 'loved' || r === 'liked');
-        });
-      }
-      return true;
-    });
-    if (candidates.length === 0) {
-      stepEl.innerHTML = `<div class="wizard-empty">No matching tabs. Go back and try a different session type.</div>`;
-    } else {
-      let html = candidates.map(c =>
-        `<button class="wizard-btn" data-action="genre-pick" data-tab="${c.id}">${c.label}</button>`
-      ).join('');
-      html += `<button class="wizard-btn" data-action="genre-pick" data-tab="not-sure">Not Sure</button>`;
-      stepEl.innerHTML = html;
-    }
+    let html = GENRE_FAMILIES.map(f =>
+      `<button class="wizard-btn" data-action="genre-pick" data-family="${f.id}">${escapeHtml(f.label)}</button>`
+    ).join('');
+    html += `<button class="wizard-btn" data-action="genre-pick" data-family="not-sure">Not Sure</button>`;
+    stepEl.innerHTML = html;
   }
   else if (wizardState.step === 'recs') {
-    subtitle.textContent = 'Recommendations';
+    // V5.35.0: side-by-side recs panel — Films left column, TV right column.
+    // Both are filtered by time + mood, then computed via the genre family's
+    // film tabs and TV tabs separately.
+    subtitle.textContent = 'What looks good?';
     backBtn.style.display = '';
-    const isTV = wizardState.contentType === 'tv';
-    const genre = wizardState.genre;
-    const tabIds = (genre === 'not-sure' || !genre)
-      ? Object.keys(catalogs).filter(t => t !== 'watchlist' && WIZARD_TV_TABS.has(t) === isTV)
-      : [genre];
-    const tabLabel = (genre === 'not-sure' || !genre)
-      ? (isTV ? 'TV' : 'Film')
-      : ((catalogs[genre] && catalogs[genre].title) || genre);
-    const recs = computeRecsForTab(tabIds, { timeBudget: wizardState.timeBudget, mood: wizardState.mood });
-
-    let html = '';
-    if (recs.sourceCount === 0) {
-      html += `<div class="wizard-empty">No Loved or Liked items in ${escapeHtml(tabLabel)} yet. Rate a few first, then come back.</div>`;
-      html += `<button class="wizard-btn" data-action="recs-fallback">Browse all unrated items in ${escapeHtml(tabLabel)}</button>`;
-    } else if (!recs.anyEnriched) {
-      html += `<div class="wizard-empty">No TMDB recommendations cached yet. Open Settings → Plex Integration → Pre-enrich catalog, then return.</div>`;
-      html += `<button class="wizard-btn" data-action="recs-fallback">Browse all unrated items in ${escapeHtml(tabLabel)}</button>`;
-    } else if (recs.recommended.length === 0 && recs.discover.length === 0) {
-      html += `<div class="wizard-empty">No recommendations could be generated from your ${recs.sourceCount} rated item${recs.sourceCount === 1 ? '' : 's'} in ${escapeHtml(tabLabel)}.</div>`;
-      html += `<button class="wizard-btn" data-action="recs-fallback">Browse all unrated items in ${escapeHtml(tabLabel)}</button>`;
+    stepEl.className = 'wizard-step';
+    const opts = { timeBudget: wizardState.timeBudget, mood: wizardState.mood };
+    let filmTabs, tvTabs, label;
+    if (!wizardState.genre || wizardState.genre === 'not-sure') {
+      filmTabs = Object.keys(catalogs).filter(t => t !== 'watchlist' && !WIZARD_TV_TABS.has(t));
+      tvTabs = Object.keys(catalogs).filter(t => t !== 'watchlist' && WIZARD_TV_TABS.has(t));
+      label = 'all genres';
     } else {
+      const family = GENRE_FAMILIES.find(f => f.id === wizardState.genre);
+      filmTabs = family ? familyFilmTabs(family) : [];
+      tvTabs = family ? familyTvTabs(family) : [];
+      label = family ? family.label : wizardState.genre;
+    }
+    const filmRecs = filmTabs.length > 0 ? computeRecsForTab(filmTabs, opts) : null;
+    const tvRecs   = tvTabs.length   > 0 ? computeRecsForTab(tvTabs,   opts) : null;
+    const renderRecsCol = (recs, kindLabel) => {
+      if (!recs) return `<div class="wizard-recs-empty">No ${kindLabel} catalogs in this family.</div>`;
+      if (recs.sourceCount === 0) return `<div class="wizard-recs-empty">No Loved/Liked ${kindLabel} yet — rate some first.</div>`;
+      if (!recs.anyEnriched) return `<div class="wizard-recs-empty">${kindLabel}: no TMDB enrichment yet. Run Pre-enrich.</div>`;
+      if (recs.recommended.length === 0 && recs.discover.length === 0) return `<div class="wizard-recs-empty">No ${kindLabel} matched time + mood.</div>`;
+      let h = '';
       if (recs.recommended.length > 0) {
-        html += `<div class="wizard-recs-section">`;
-        html += `<div class="wizard-recs-heading">Recommended for you · ${recs.recommended.length}</div>`;
-        html += `<div class="wizard-recs-help">Already in your catalog. Tap to jump to the item.</div>`;
-        html += recs.recommended.map(r => {
+        h += `<div class="wizard-recs-heading">Recommended · ${recs.recommended.length}</div>`;
+        h += recs.recommended.map(r => {
           const yearStr = r.year ? ` (${r.year})` : '';
-          const sources = r.sourceTitles.slice(0, 2).join(', ') + (r.sourceTitles.length > 2 ? ' and others' : '');
-          // V5.34.0: trailer button beside rec if YouTube key is in enrichment cache
+          const sources = r.sourceTitles.slice(0, 2).join(', ');
           const tkey = getTrailerKey(r.catalogItemId);
           const trailerBtn = tkey
             ? `<a class="trailer-btn" href="${trailerYouTubeUrl(tkey)}" target="_blank" rel="noopener" aria-label="Watch trailer">▶</a>`
@@ -6696,24 +6706,33 @@ function wizardRender() {
             ${trailerBtn}
           </div>`;
         }).join('');
-        html += `</div>`;
       }
       if (recs.discover.length > 0) {
-        html += `<div class="wizard-recs-section">`;
-        html += `<div class="wizard-recs-heading">Discover · ${recs.discover.length}</div>`;
-        html += `<div class="wizard-recs-help">Not in your catalog yet. Tap to promote.</div>`;
-        html += recs.discover.map(r => {
+        h += `<div class="wizard-recs-heading">Discover · ${recs.discover.length}</div>`;
+        h += recs.discover.map(r => {
           const yearStr = r.year ? ` (${r.year})` : '';
-          const sources = r.sourceTitles.slice(0, 2).join(', ') + (r.sourceTitles.length > 2 ? ' and others' : '');
+          const sources = r.sourceTitles.slice(0, 2).join(', ');
           return `<button class="wizard-btn" data-action="recs-promote" data-tmdb-id="${r.tmdbId}" data-type="${escapeHtml(r.type || 'movie')}" data-title="${escapeHtml(r.title || '')}" data-year="${r.year || ''}" data-source="${escapeHtml(r.sourceTitles[0] || '')}">
             ${escapeHtml(r.title || 'Unknown')}${yearStr}
             <span class="wizard-btn-meta">like ${escapeHtml(sources)}</span>
           </button>`;
         }).join('');
-        html += `</div>`;
       }
-      html += `<button class="wizard-btn" data-action="recs-fallback">Browse all unrated items in ${escapeHtml(tabLabel)}</button>`;
-    }
+      return h;
+    };
+    let html = `
+      <div class="wizard-recs-context">${escapeHtml(label)} · ${escapeHtml(TIME_BUDGETS[wizardState.timeBudget]?.label || 'any time')} · ${escapeHtml(MOOD_ARCHETYPES[wizardState.mood]?.label || 'any mood')}</div>
+      <div class="wizard-recs-split">
+        <div class="wizard-recs-col">
+          <div class="wizard-recs-coltitle">Films</div>
+          ${renderRecsCol(filmRecs, 'films')}
+        </div>
+        <div class="wizard-recs-col">
+          <div class="wizard-recs-coltitle">TV</div>
+          ${renderRecsCol(tvRecs, 'TV')}
+        </div>
+      </div>
+    `;
     stepEl.innerHTML = html;
   }
 
@@ -6736,10 +6755,11 @@ function wizardGoBack() {
   else if (wizardState.step === 'film-tv') wizardState.step = 'root';
   else if (wizardState.step === 'session') wizardState.step = 'film-tv';
   else if (wizardState.step === 'continue-list') wizardState.step = 'session';
-  else if (wizardState.step === 'time') wizardState.step = 'session';
-  else if (wizardState.step === 'genre') wizardState.step = 'time';
-  else if (wizardState.step === 'mood') wizardState.step = 'genre';
-  else if (wizardState.step === 'recs') wizardState.step = 'mood';
+  // V5.35.0: new path goes time → mood → genre → recs (was time → genre → mood → recs)
+  else if (wizardState.step === 'time') wizardState.step = 'root';
+  else if (wizardState.step === 'mood') wizardState.step = 'time';
+  else if (wizardState.step === 'genre') wizardState.step = 'mood';
+  else if (wizardState.step === 'recs') wizardState.step = 'genre';
   wizardRender();
 }
 
@@ -6757,20 +6777,24 @@ function wizardHandleAction(btn) {
     wizardHide();
     return;
   }
-  // Film/TV step
+  // V5.35.0: New top-level paths. 'watch' → time → mood → genre → side-by-side
+  // recs (no film/TV pick — recs panel shows both). 'continue' goes straight
+  // to the in-progress list. Old film-tv / session steps are kept for any
+  // legacy callers but aren't reachable from the new root.
+  if (action === 'watch-new') { wizardState.session = 'new'; wizardState.step = 'time'; wizardRender(); return; }
+  if (action === 'watch-continue') { wizardState.session = 'continue'; wizardState.step = 'continue-list'; wizardRender(); return; }
+  // Legacy compat (old buttons, internal links)
   if (action === 'film') { wizardState.contentType = 'film'; wizardState.step = 'session'; wizardRender(); return; }
   if (action === 'tv') { wizardState.contentType = 'tv'; wizardState.step = 'session'; wizardRender(); return; }
-  // Session step
   if (action === 'continue') { wizardState.session = 'continue'; wizardState.step = 'continue-list'; wizardRender(); return; }
-  // V5.32.0: 'new' and 'rewatch' route through the time step before genre
   if (action === 'new') { wizardState.session = 'new'; wizardState.step = 'time'; wizardRender(); return; }
   if (action === 'rewatch') { wizardState.session = 'rewatch'; wizardState.step = 'time'; wizardRender(); return; }
-  // Time budget step
+  // Time budget step → mood (V5.35.0: was → genre, now mood is between)
   if (action && action.startsWith('time-')) {
     const budget = action.slice('time-'.length);
     if (TIME_BUDGETS[budget]) {
       wizardState.timeBudget = budget;
-      wizardState.step = 'genre';
+      wizardState.step = 'mood';
       wizardRender();
     }
     return;
@@ -6790,25 +6814,21 @@ function wizardHandleAction(btn) {
     }, 100);
     return;
   }
-  // Genre pick → V5.33.0: route through mood step before recs/triage
-  if (action === 'genre-pick') {
-    wizardState.genre = btn.dataset.tab;
-    wizardState.step = 'mood';
-    wizardRender();
-    return;
-  }
-  // Mood pick → for "new" go to recs panel; for rewatch go to triage
+  // V5.35.0: Mood pick → genre (was → recs/triage)
   if (action && action.startsWith('mood-')) {
     const mood = action.slice('mood-'.length);
     if (MOOD_ARCHETYPES[mood]) {
       wizardState.mood = mood;
-      if (wizardState.session === 'new') {
-        wizardState.step = 'recs';
-        wizardRender();
-      } else {
-        wizardLaunchTriage('watch');
-      }
+      wizardState.step = 'genre';
+      wizardRender();
     }
+    return;
+  }
+  // V5.35.0: Genre pick → recs (side-by-side films + TV)
+  if (action === 'genre-pick') {
+    wizardState.genre = btn.dataset.family || btn.dataset.tab;
+    wizardState.step = 'recs';
+    wizardRender();
     return;
   }
   // Recs step → jump to a catalog item the user already has

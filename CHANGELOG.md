@@ -10,6 +10,100 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 6.1.0 — 2026-05-09
+
+### Feature/Refactor — Wizard redesign: time → mood → genre → side-by-side recs
+
+The "What are you doing?" wizard's "Looking for something to watch" path
+is rebuilt around the user's actual mental model: time first, mood
+second, genre third, then a side-by-side film/TV recommendation panel
+that respects all three filters.
+
+**Old flow (5.34.x and earlier):**
+```
+What doing? → Find new → Film or TV? → Time → Genre (per-tab) → Mood → Recs
+```
+
+**New flow (6.1.0):**
+```
+What doing? → Looking for something to watch → Time → Mood → Genre (family) → Side-by-side recs
+```
+
+**Root reorganized to 3 buttons:**
+1. **Looking for something to watch** — the new flow
+2. **Continue something I'm watching** — straight to the in-progress list
+3. **Rating** — unchanged
+
+The separate "Rewatch a favorite" path is dropped. Rewatch-able items
+naturally surface in the new flow because the recs engine considers
+loved/liked items in the genre family.
+
+**Genre families** — picking "Sci-Fi" now means both films AND TV. The
+`GENRE_FAMILIES` constant defines 14 families:
+- Sci-Fi (scifi + scifi-tv)
+- Crime (crime + crime-tv)
+- Spy (espionage + spy-tv)
+- Drama, Horror, Fantasy, Cons & Courtroom (each: film tab + tv tab)
+- Comedy (comedy + comedy-tv + british-comedy)
+- Heroes & Comics (heroes-comics + heroes-comics-tv)
+- Heist, Foreign, Auteur, Pre-1960, Musicals (film-only families)
+
+`familyFilmTabs(family)` and `familyTvTabs(family)` partition each
+family's tabs by content kind for the recs panel.
+
+**Side-by-side recommendations:**
+- Header strip: "[genre] · [time budget] · [mood]" — context recap
+- Two-column CSS grid: Films left, TV right
+- Each column independently runs `computeRecsForTab(tabs, { timeBudget,
+  mood })`
+- Within each column: Recommended section + Discover section
+- Trailer ▶ buttons remain on rec items where enrichment has the key
+- Mobile (< 600px) collapses to single column
+
+**Empty states are per-column** — if there are no Loved/Liked films
+yet but plenty of TV, the films column shows "rate some films first"
+without blocking the TV column.
+
+### Fix — D-pad navigation feels off in matrix grids ("text position not button position")
+
+Defensive CSS rule ensures all matrix-grid buttons fill their cells:
+
+```css
+.wizard-step.matrix .wizard-btn,
+.settings-card-grid .settings-card {
+  width: 100%;
+  box-sizing: border-box;
+}
+```
+
+Without this, button widths can shrink to content (especially on
+flex/grid layouts that don't auto-stretch in some WebView versions),
+making the D-pad's `getBoundingClientRect()` based scoring jump to
+neighbors that look "near the text" rather than "next in the visual
+grid." With explicit width:100%, every button has a predictable cell-
+sized rect and the existing 2× perpendicular-distance penalty in the
+keydown algorithm picks the right neighbor.
+
+Also: every wizard step now auto-focuses its first button after render
+(via `requestAnimationFrame` so layout has settled), so D-pad nav stays
+alive across step transitions instead of falling back to body.
+
+**Roadmap status:**
+
+| Phase | Status |
+|-------|--------|
+| 1. Settings card grid | ✅ 5.27.x |
+| 2. Cross-platform sync | ✅ 5.31.x |
+| 3a. Time budget filter | ✅ 5.32.0 |
+| 3b. Mood archetype filter | ✅ 5.33.0 |
+| 3c. Trailer embed | ✅ 5.34.0 |
+| **4. Wizard redesign + nav defenses** | ✅ **6.1.0 (this release)** |
+| 3d. Streaming-leaving alerts | next |
+
+---
+
+---
+
 ## 6.0.0 — 2026-05-09
 **Service worker cache:** `scifi-tracker-v84` → `v100` (major reset)
 
