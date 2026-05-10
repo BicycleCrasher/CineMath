@@ -10,6 +10,193 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.46.0 — 2026-05-09
+**Service worker cache:** `scifi-tracker-v83` → `v84`
+
+### Round 2 / R5 — Fuzzy search ranking
+
+`doSearch()` adds a typo-tolerant tier behind every exact-match tier.
+Type "tinkr tailr" — Tinker Tailor Soldier Spy still surfaces.
+
+**Algorithm.** Standard two-row Levenshtein DP, capped at distance 2.
+Once any row exceeds the cap, the function bails early and returns
+`cap+1` — saves a chunk of work on long-string vs short-query
+comparisons. The fuzzy match walks each whitespace-token in the
+title and reports a hit if any token is within Levenshtein ≤ 2 of
+the full query.
+
+**Ranking.** New tier 6, behind the existing 0–5 (startsWith,
+includes, director, country, section, pitch). Exact matches always
+win; fuzzy hits show below them. Tier 6 only runs when the query
+is at least 4 characters, because Levenshtein-2 on a 3-char query
+would match too much noise.
+
+**Scope.** Title only in this release. Director/country could
+follow if you find typo-tolerant search on those fields useful.
+
+---
+
+## 5.45.0 — 2026-05-09
+**Service worker cache:** `scifi-tracker-v82` → `v83`
+
+### Round 2 / R4 — Trakt TV pull-sync
+
+`traktPullSync()` now also pulls `/sync/history/shows` and
+`/sync/ratings/shows` alongside the movie endpoints it already
+queried. Trakt returns one entry per series when any of its episodes
+have been watched, which maps cleanly to WatchTrack's
+mark-the-show-as-watched behavior.
+
+Series are matched against catalog items by title+year (the same
+`traktItemId` normalization film pull already used). Matches in any
+TV-tab catalog (`*-tv` plus `british-comedy`) flip the show to
+`watched` if it isn't already, and apply ratings (8+ → loved, 5–7
+→ liked) if the local item has no rating yet.
+
+Sync-complete summary now reports both halves:
+> "Sync complete — N film watched, M rated; X show watched, Y rated."
+
+This closes the bidirectional Trakt loop for TV. Push for shows
+already worked since v5.29.0; v5.45.0 adds the missing pull half.
+
+---
+
+## 5.44.0 — 2026-05-09
+**Service worker cache:** `scifi-tracker-v81` → `v82`
+**Requires Worker patch:** worker.js v5.8 — adds Web Push delivery for streaming-leaving alerts. Three new CONFIG KV keys (`vapid_public`, `vapid_private`, `vapid_subject`) — one-time VAPID keypair generation snippet in `worker/DEPLOY.md` v5.8 section.
+
+### Round 2 / R3 — Web Push for alerts
+
+The polling model from v5.39.0 stays in place; this layers real Web
+Push on top so notifications fire while WatchTrack is closed, not
+just when you next open it.
+
+**Worker side (v5.8).** ~150 lines of pure WebCrypto, no
+dependencies. VAPID JWT via ECDSA P-256 (RFC 8292), payload
+encryption via aes128gcm (RFC 8291) — ephemeral ECDH against the
+subscriber's `p256dh`, HKDF-derived content key + nonce, AES-GCM
+encrypt with single padding byte, header concat `salt(16) || rs(4) ||
+idlen(1) || as_public(65)`. New `GET /alerts/vapid-public` endpoint
+returns the application-server key for client subscription.
+`POST /alerts/subscribe` now accepts a `push` field carrying
+`{ endpoint, keys: { p256dh, auth } }`. The cron handler, after
+queueing a polling notification, also calls `sendWebPush` when the
+subscriber has push data. A 410 Gone response from the push service
+clears the `push` field so subsequent runs skip stale subscriptions.
+
+**Service worker.** New `push` event handler that calls
+`self.registration.showNotification(...)` with the payload's title,
+body, icon, and tag. Click handling unchanged from v5.39.0. SW cache
+bumped to `v82`.
+
+**Client.** `alertsSubscribe()` now best-effort acquires a push
+subscription from `navigator.serviceWorker.ready.pushManager`, fetches
+the VAPID public key from the Worker, calls `pushManager.subscribe`
+with `userVisibleOnly: true`, and includes the resulting
+`endpoint`+`keys` in the subscribe POST. If push acquisition fails
+(no SW ready, no PushManager, browser blocked, etc.) the subscribe
+still succeeds and the polling model takes over — both paths coexist.
+
+**Polling fallback retained on purpose.** If push delivery fails
+silently (subscription expired before the cron's 410 cleanup catches
+it, OS-level notification suppression, etc.) the next visibility
+change still pulls the queued notification and surfaces it via
+`new Notification(...)`.
+
+**Setup steps** (per `worker/DEPLOY.md` v5.8 section):
+1. Generate VAPID keypair via the browser-console snippet.
+2. Paste `vapid_public`, `vapid_private`, `vapid_subject` into
+   `WATCHTRACK_CONFIG` KV.
+3. Paste new `worker.js` into the Cloudflare dashboard. `/health`
+   should report v5.8.
+4. Toggle streaming alerts off and back on once to refresh the
+   subscription with push data attached.
+
+---
+
+## 5.43.0 — 2026-05-09
+**Service worker cache:** unchanged (Worker-only release)
+**Requires Worker patch:** worker.js v5.7 — adds per-IP rate limiting via a `CF-Connecting-IP`-keyed bucket in `CONFIG` KV with 60s TTL.
+
+### Round 2 / R2 — Worker rate limiting
+
+Defensive layer against secret leakage. Every authenticated route is
+now guarded by a per-IP token bucket: 60 requests per minute by
+default, configurable via a new `rate_limit_per_minute` key in
+`CONFIG` KV (set to `0` to disable). `/` and `/health` are exempt
+along with CORS preflights.
+
+When the cap is hit, the Worker returns `429 Rate limit exceeded`
+with `Retry-After: 60`. The client doesn't currently retry — that's
+the right behavior, because hitting the limit during normal usage
+would mean something's wrong (a runaway client loop, or the secret
+has actually leaked).
+
+**Storage cost.** One `CONFIG.put('rate:{ip}', count, ttl=60)` per
+request that passes the limit. With three devices active and normal
+usage, daily KV writes are well under the free-tier 1000/day cap.
+
+**Why per-IP, not per-secret.** A leaked secret can be used from any
+IP. Per-IP throttling caps a flood from one source while leaving your
+own devices unaffected. The helper is parameterized to also support
+a per-secret bucket later if needed.
+
+See `worker/DEPLOY.md` v5.7 section for the deployment step (paste
+new `worker.js` into the Cloudflare dashboard, no new bindings or
+KV namespaces needed).
+
+---
+
+## 5.42.0 — 2026-05-09
+**Service worker cache:** `scifi-tracker-v80` → `v81`
+
+### Round 2 / R1 — Voice search, minified bundle, CSP, manifest categories
+
+Four small improvements bundled as one polish release.
+
+**Voice search.** A 🎤 button now sits beside the search input and the
+notes-search input. Tap to dictate; the transcript is written into the
+field and dispatches an `input` event so the existing debounced
+`doSearch` / `doNotesSearch` runs unchanged. Reuses the `_voiceActive`
+lock from v5.37.0's voice notes — only one mic is live at a time.
+Feature-detected: the button hides on devices without
+`SpeechRecognition`. Especially useful on Bravia where typing is
+brutal; works on phone too.
+
+**Minified production bundle.** `app.min.js` is now built via
+`npm run build:min` (esbuild, target es2020). `index.html` loads
+`app.min.js` instead of `app.js`. The source `app.js` stays in the
+repo as the readable artifact you edit. Result: 328 KB → 201 KB on
+disk, roughly 60 KB gzipped on the wire — measurably faster cold
+start, especially on Bravia where the JS parse cost dominates first
+paint.
+
+**Content-Security-Policy.** New `<meta http-equiv="Content-Security-Policy">`
+in `<head>` with strict directives:
+```
+default-src 'self';
+script-src 'self';
+style-src 'self' 'unsafe-inline';
+img-src 'self' data: https://image.tmdb.org;
+connect-src 'self' https://*.workers.dev https://api.trakt.tv;
+font-src 'self';
+base-uri 'self';
+form-action 'none';
+frame-ancestors 'none';
+```
+`script-src 'self'` (no `'unsafe-inline'`) — the SW registration block
+that used to live as an inline script in `index.html` is now appended
+to the end of `app.js`, so no inline scripts remain. `style-src` keeps
+`'unsafe-inline'` because runtime-applied `style="..."` attributes are
+scattered through the codebase and refactoring them all isn't worth
+the churn for this layer of defense.
+
+**Manifest categories.** Two-line addition declaring `entertainment`
+and `lifestyle` for richer install prompts on Android. Skipped iOS
+splash images per your call.
+
+---
+
 ## 5.41.0 — 2026-05-09
 **Service worker cache:** `scifi-tracker-v79` → `v80`
 

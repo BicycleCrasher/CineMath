@@ -1148,6 +1148,35 @@ body.tv-mode .voice-dictate-btn.recording {
   color: #1a1612;
 }
 
+/* v5.42.0: voice-search button (visible on every device, not just TV) */
+.search-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+.search-input-row .modal-input {
+  flex: 1 1 auto;
+}
+.voice-search-btn {
+  flex: 0 0 auto;
+  padding: 0 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--accent-dim);
+  color: var(--accent);
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 18px;
+  cursor: pointer;
+  touch-action: manipulation;
+  min-width: 44px;
+}
+.voice-search-btn.recording {
+  background: var(--love);
+  border-color: var(--love);
+  color: #1a1612;
+}
+body.tv-mode .voice-search-btn { font-size: 22px; min-width: 56px; padding: 0 18px; }
+
 /* === Focus rings (D-pad / keyboard navigation) — mode-agnostic ===
    No body.tv-mode / phone-mode prefix because TV-mode detection in a TWA
    WebView is unreliable (Google TV's Chromium WebView UA often doesn't

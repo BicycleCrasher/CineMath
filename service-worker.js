@@ -1,10 +1,11 @@
-const CACHE_NAME = 'scifi-tracker-v80';
+const CACHE_NAME = 'scifi-tracker-v84';
 const inflightRevalidations = new Set();
 const ASSETS = [
   './',
   './index.html',
   './styles.css',
   './app.js',
+  './app.min.js',
   './manifest.json',
   './data/catalogs.json',
   './data/scifi.json',
@@ -55,12 +56,27 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+// v5.44.0: receive Web Push from the Worker's /cron/check-alerts run.
+// Payload is JSON with { title, body, itemRef, tabId, itemId, ts }.
+self.addEventListener('push', (event) => {
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; } catch {}
+  const title = data.title || 'WatchTrack';
+  const body = data.body || '';
+  event.waitUntil(self.registration.showNotification(title, {
+    body,
+    icon: 'icons/icon-192.png',
+    tag: data.itemRef || undefined,
+    data: { tabId: data.tabId, itemId: data.itemId },
+  }));
+});
+
 // v5.39.0: streaming-leaving notification click handler. The polling
 // path in app.js calls Notifications API directly when the page is
 // visible; clicks dispatched against those notifications navigate via
-// the page's own handler. This SW handler covers the rarer case where
-// a notification fires while the page is closed (e.g. via future Web
-// Push integration) — focus the existing client or open a new one.
+// the page's own handler. This SW handler covers the case where a
+// notification fires from a Web Push while the page is closed — focus
+// the existing client or open a new one.
 self.addEventListener('notificationclick', (event) => {
   const data = event.notification.data || {};
   const tabId = data.tabId;

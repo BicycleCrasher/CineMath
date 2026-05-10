@@ -2176,12 +2176,19 @@ async function traktPullSync() {
   const status = document.getElementById('trakt-status');
   if (status) { status.textContent = 'Fetching from Trakt...'; status.className = 'settings-status'; }
 
-  const [histResult, ratResult] = await Promise.all([
+  // v5.45.0: pull TV shows alongside films. Push for shows already worked
+  // (mark-as-watched fans out to all aired episodes); pull was the only
+  // half missing. Trakt returns one entry per series in /sync/history/shows
+  // when any episode has been watched, which is exactly what we want for
+  // marking a WatchTrack show as watched.
+  const [histResult, ratResult, showHistResult, showRatResult] = await Promise.all([
     traktApiCall('/sync/history/movies?limit=10000', 'GET'),
     traktApiCall('/sync/ratings/movies', 'GET'),
+    traktApiCall('/sync/history/shows?limit=10000', 'GET'),
+    traktApiCall('/sync/ratings/shows', 'GET'),
   ]);
 
-  if (!histResult.ok && !ratResult.ok) {
+  if (!histResult.ok && !ratResult.ok && !showHistResult.ok && !showRatResult.ok) {
     if (status) { status.textContent = 'Sync failed — check connection.'; status.className = 'settings-status err'; }
     return;
   }
@@ -2194,6 +2201,12 @@ async function traktPullSync() {
     const id = traktItemId(m.title, m.year);
     if (!historyMap.has(id)) historyMap.set(id, { title: m.title, year: m.year, ids: m.ids });
   }
+  for (const entry of (showHistResult.data || [])) {
+    const s = entry.show;
+    if (!s) continue;
+    const id = traktItemId(s.title, s.year);
+    if (!historyMap.has(id)) historyMap.set(id, { title: s.title, year: s.year, ids: s.ids });
+  }
 
   const ratingMap = new Map();
   for (const entry of (ratResult.data || [])) {
@@ -2202,13 +2215,21 @@ async function traktPullSync() {
     const id = traktItemId(m.title, m.year);
     ratingMap.set(id, entry.rating);
   }
+  for (const entry of (showRatResult.data || [])) {
+    const s = entry.show;
+    if (!s) continue;
+    const id = traktItemId(s.title, s.year);
+    ratingMap.set(id, entry.rating);
+  }
 
-  let matched = 0, rated = 0;
+  let matched = 0, rated = 0, showsMatched = 0, showsRated = 0;
+  const TV_TABS = new Set(['comedy-tv','crime-tv','spy-tv','drama-tv','horror-tv','fantasy-tv','scifi-tv','cons-courtroom-tv','british-comedy','heroes-comics-tv']);
 
   for (const tabId in catalogs) {
     if (tabId === 'watchlist' || tabId === 'auteur') continue;
     const cat = catalogs[tabId];
     if (!cat || !cat.items) continue;
+    const isTvTab = TV_TABS.has(tabId);
     for (const item of cat.items) {
       const inHistory = historyMap.has(item.id);
       const traktRating = ratingMap.get(item.id);
@@ -2220,11 +2241,14 @@ async function traktPullSync() {
         state[tabId][item.id].status = 'watched';
         if (traktIds.tmdb) state[tabId][item.id].traktTmdbId = traktIds.tmdb;
         state[tabId][item.id].lastUpdated = Date.now();
-        matched++;
+        if (isTvTab) showsMatched++; else matched++;
       }
       if (traktRating && !state[tabId][item.id].rating) {
         const wtRating = traktRating >= 8 ? 'loved' : traktRating >= 5 ? 'liked' : null;
-        if (wtRating) { state[tabId][item.id].rating = wtRating; rated++; }
+        if (wtRating) {
+          state[tabId][item.id].rating = wtRating;
+          if (isTvTab) showsRated++; else rated++;
+        }
       }
     }
   }
@@ -2232,7 +2256,9 @@ async function traktPullSync() {
   saveState();
   render();
   if (status) {
-    status.textContent = `Sync complete — ${matched} watched, ${rated} rated.`;
+    const filmPart = `${matched} film watched, ${rated} rated`;
+    const showPart = `${showsMatched} show watched, ${showsRated} rated`;
+    status.textContent = `Sync complete — ${filmPart}; ${showPart}.`;
     status.className = 'settings-status ok';
   }
 }
@@ -3058,6 +3084,50 @@ function _renderImpl() {
 // transcription into the same setNotes path so the saved note is the
 // only source of truth (Trakt/sync layers see no difference).
 let _voiceActive = null;
+
+// v5.42.0: voice-to-input for the search and notes-search modals.
+// Shares the _voiceActive lock with voiceDictate so only one mic is
+// live at a time. Final transcript replaces the input value (vs the
+// dictate flow which appends), then dispatches an input event so the
+// debounced doSearch / doNotesSearch path runs unchanged.
+function voiceSearchInto(inputId, btn) {
+  const Recog = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!Recog) return;
+  if (_voiceActive) { _voiceActive.stop(); return; }
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const r = new Recog();
+  r.continuous = false;
+  r.interimResults = false;
+  r.lang = navigator.language || 'en-US';
+  let buffer = '';
+  r.onresult = (e) => {
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) buffer += e.results[i][0].transcript + ' ';
+    }
+  };
+  r.onend = () => {
+    _voiceActive = null;
+    if (btn) { btn.classList.remove('recording'); btn.textContent = '🎤'; }
+    const transcript = buffer.trim();
+    if (!transcript) return;
+    input.value = transcript;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.focus();
+  };
+  r.onerror = () => {
+    _voiceActive = null;
+    if (btn) { btn.classList.remove('recording'); btn.textContent = '🎤'; }
+  };
+  try {
+    r.start();
+    _voiceActive = r;
+    if (btn) { btn.classList.add('recording'); btn.textContent = '◼'; }
+  } catch (e) {
+    _voiceActive = null;
+  }
+}
+
 function voiceDictate(id, tab, btn) {
   const Recog = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!Recog) {
@@ -3335,6 +3405,19 @@ function setupModals() {
       (window.requestIdleCallback || ((cb) => setTimeout(cb, 0)))(run);
     }, 100);
   });
+  // v5.42.0: voice search button — same Web Speech API pipeline as the
+  // notes voiceDictate flow. On TV (or anywhere typing's a chore) the
+  // user dictates the query; the result is written into the input and
+  // an `input` event fires so the existing debounced doSearch path runs
+  // unchanged.
+  const searchVoiceBtn = document.getElementById('search-voice-btn');
+  if (searchVoiceBtn) {
+    if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+      searchVoiceBtn.style.display = 'none';
+    } else {
+      searchVoiceBtn.addEventListener('click', () => voiceSearchInto('search-input', searchVoiceBtn));
+    }
+  }
 
   // === Notes search modal ===
   document.getElementById('notes-search-btn').addEventListener('click', () => {
@@ -3355,6 +3438,14 @@ function setupModals() {
       (window.requestIdleCallback || ((cb) => setTimeout(cb, 0)))(run);
     }, 100);
   });
+  const notesVoiceBtn = document.getElementById('notes-search-voice-btn');
+  if (notesVoiceBtn) {
+    if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+      notesVoiceBtn.style.display = 'none';
+    } else {
+      notesVoiceBtn.addEventListener('click', () => voiceSearchInto('notes-search-input', notesVoiceBtn));
+    }
+  }
 
   // === Stats modal ===
   document.getElementById('stats-btn').addEventListener('click', () => {
@@ -4818,6 +4909,44 @@ function renderBulkSyncReport(r) {
   return html;
 }
 
+// v5.46.0: Levenshtein-1 distance for typo-tolerant search. Returns the
+// edit distance between two strings, capped at `cap` for speed (anything
+// over the cap returns cap+1 — we don't care about the exact value past
+// the threshold, just that it exceeded). Standard two-row DP. ~25 lines.
+function _levenshteinCapped(a, b, cap) {
+  const la = a.length, lb = b.length;
+  if (Math.abs(la - lb) > cap) return cap + 1;
+  let prev = new Array(lb + 1);
+  let curr = new Array(lb + 1);
+  for (let j = 0; j <= lb; j++) prev[j] = j;
+  for (let i = 1; i <= la; i++) {
+    curr[0] = i;
+    let rowMin = i;
+    for (let j = 1; j <= lb; j++) {
+      const cost = a.charCodeAt(i - 1) === b.charCodeAt(j - 1) ? 0 : 1;
+      curr[j] = Math.min(prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + cost);
+      if (curr[j] < rowMin) rowMin = curr[j];
+    }
+    if (rowMin > cap) return cap + 1;
+    [prev, curr] = [curr, prev];
+  }
+  return prev[lb];
+}
+
+// Fuzzy-match a query against a title by walking each whitespace-split
+// token in the title and checking if any token's Levenshtein distance to
+// the query is ≤ cap. Returns true on the first hit. Skips if the query
+// is too short — fuzziness on short strings produces too many matches.
+function _fuzzyTitleMatch(query, title, cap) {
+  if (query.length < 4) return false;
+  const tokens = title.split(/\s+/);
+  for (const tok of tokens) {
+    if (tok.length < 3) continue;
+    if (_levenshteinCapped(query, tok.toLowerCase(), cap) <= cap) return true;
+  }
+  return false;
+}
+
 // === Title/director/country/section/pitch search ===
 function doSearch(query) {
   const q = (query || '').trim().toLowerCase();
@@ -4840,6 +4969,10 @@ function doSearch(query) {
       else if (c.includes(q)) score = 3;
       else if (s.includes(q)) score = 4;
       else if (p.includes(q)) score = 5;
+      // v5.46.0: tier 6 = fuzzy title match. Tries Levenshtein ≤ 2 against
+      // each whitespace-token in the title. Ranked behind every exact-match
+      // tier so typos don't outrank precise hits.
+      else if (_fuzzyTitleMatch(q, t, 2)) score = 6;
       if (score >= 0) matches.push({ item, tabId, tabLabel: cat.title || tabId, score });
     });
   }
@@ -5433,6 +5566,53 @@ function alertsBuildItemsManifest() {
   return items;
 }
 
+// v5.44.0: convert a urlsafe-base64 VAPID public key string into the
+// raw Uint8Array that pushManager.subscribe expects.
+function _vapidB64ToBytes(b64u) {
+  const pad = (4 - (b64u.length % 4)) % 4;
+  const s = (b64u + '='.repeat(pad)).replace(/-/g, '+').replace(/_/g, '/');
+  const bin = atob(s);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+// Subscribe (or refresh) the Web Push subscription via the active
+// service-worker registration. Returns { endpoint, keys: {p256dh, auth} }
+// in a shape ready to POST to /alerts/subscribe, or null if push is
+// unavailable for any reason.
+async function _alertsAcquirePushSubscription() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null;
+  if (!isWebhookConfigured()) return null;
+  let reg;
+  try { reg = await navigator.serviceWorker.ready; } catch { return null; }
+  if (!reg) return null;
+  // Reuse the existing subscription if it's already there, otherwise create one.
+  let sub = await reg.pushManager.getSubscription();
+  if (!sub) {
+    let vapidPublic;
+    try {
+      const resp = await fetch(`${getWebhookUrl()}/alerts/vapid-public`);
+      if (!resp.ok) return null;
+      const data = await resp.json();
+      vapidPublic = data.vapidPublicKey;
+    } catch { return null; }
+    if (!vapidPublic) return null;
+    try {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: _vapidB64ToBytes(vapidPublic),
+      });
+    } catch {
+      return null;
+    }
+  }
+  // Convert the subscription into our wire shape
+  const json = sub.toJSON();
+  if (!json || !json.endpoint || !json.keys) return null;
+  return { endpoint: json.endpoint, keys: { p256dh: json.keys.p256dh, auth: json.keys.auth } };
+}
+
 async function alertsSubscribe() {
   if (!isWebhookConfigured()) return { ok: false, reason: 'webhook-not-configured' };
   if (!('Notification' in window)) return { ok: false, reason: 'no-notification-api' };
@@ -5445,15 +5625,19 @@ async function alertsSubscribe() {
   if (!userHash) return { ok: false, reason: 'no-user-hash' };
   const items = alertsBuildItemsManifest();
   const region = getStreamingRegion();
+  // v5.44.0: best-effort Web Push subscription. If it succeeds, the
+  // Worker stores the push endpoint+keys and the cron sends real Web
+  // Pushes. If push acquisition fails, the polling path still works.
+  const push = await _alertsAcquirePushSubscription();
   try {
     const resp = await fetch(`${getWebhookUrl()}/alerts/subscribe`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ secret: getWebhookSecret(), userHash, region, items }),
+      body: JSON.stringify({ secret: getWebhookSecret(), userHash, region, items, push }),
     });
     if (!resp.ok) return { ok: false, reason: `${resp.status}` };
     localStorage.setItem(ALERTS_ENABLED_KEY, '1');
-    return { ok: true, itemCount: items.length, region };
+    return { ok: true, itemCount: items.length, region, hasPush: !!push };
   } catch (e) {
     return { ok: false, reason: e.message };
   }
@@ -7364,5 +7548,45 @@ function triageAction(act) {
         appHiddenClearTimer = null;
       }
     }
+  });
+})();
+
+// v5.42.0: Service-worker registration. Moved out of an inline <script>
+// in index.html so the CSP can drop 'unsafe-inline' from script-src.
+// Behaviour is unchanged: register on window load, surface the SW
+// update banner when a new worker is installed, reload on
+// controllerchange after the user taps Reload.
+(function () {
+  if (!('serviceWorker' in navigator)) return;
+  function showSwUpdateBanner(sw) {
+    const banner = document.getElementById('sw-update-banner');
+    const btn = document.getElementById('sw-update-reload');
+    if (!banner || !btn) return;
+    banner.classList.add('visible');
+    btn.addEventListener('click', () => {
+      btn.disabled = true;
+      btn.textContent = 'Reloading…';
+      sw.postMessage({ type: 'SKIP_WAITING' });
+    }, { once: true });
+  }
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').then(reg => {
+      if (reg.waiting) showSwUpdateBanner(reg.waiting);
+      reg.addEventListener('updatefound', () => {
+        const sw = reg.installing;
+        if (!sw) return;
+        sw.addEventListener('statechange', () => {
+          if (sw.state === 'installed' && navigator.serviceWorker.controller) {
+            showSwUpdateBanner(sw);
+          }
+        });
+      });
+    }).catch(e => console.log('SW failed:', e));
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (refreshing) return;
+      refreshing = true;
+      location.reload();
+    });
   });
 })();

@@ -8,6 +8,7 @@
   "orientation": "any",
   "background_color": "#0e0d0b",
   "theme_color": "#0e0d0b",
+  "categories": ["entertainment", "lifestyle"],
   "icons": [
     {
       "src": "icons/icon-192.png",

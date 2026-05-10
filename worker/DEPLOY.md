@@ -150,6 +150,99 @@ Settings → Plex Webhook Bridge:
 - `POST /plex/scrobble` — Body `{ secret, ratingKey }`. Marks the item watched on Plex.
 - `GET /plex/history?secret=X&start=N&size=N` — Returns Plex's raw paginated `MediaContainer` for `/status/sessions/history/all`.
 
+## v5.8 — Web Push for streaming-leaving alerts
+
+Layered on top of the v5.6 alerts polling model. When the cron detects a
+provider drop, it now both queues a polling notification (existing
+behavior) and sends a real Web Push to any subscriber that supplied
+push subscription data. The polling fallback stays — if push delivery
+fails for any reason (subscription expired, push service blocked, etc.)
+the next-app-open polling still surfaces the alert.
+
+### One-time setup
+
+1. **Generate a VAPID keypair.** In any browser console, run:
+   ```javascript
+   (async () => {
+     const k = await crypto.subtle.generateKey({name:'ECDSA', namedCurve:'P-256'}, true, ['sign','verify']);
+     const jwk = await crypto.subtle.exportKey('jwk', k.privateKey);
+     const raw = new Uint8Array(await crypto.subtle.exportKey('raw', k.publicKey));
+     const b64u = (s) => btoa(String.fromCharCode(...s)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+     console.log('vapid_public:', b64u(raw));
+     console.log('vapid_private:', jwk.d);
+   })();
+   ```
+   You'll see `vapid_public` (87 chars) and `vapid_private` (43 chars).
+
+2. **Paste into Cloudflare CONFIG KV**, three new keys:
+   | Key | Value |
+   |---|---|
+   | `vapid_public` | the 87-char base64url string |
+   | `vapid_private` | the 43-char base64url string |
+   | `vapid_subject` | `mailto:your-email@example.com` (any contact URL) |
+
+3. **Re-deploy the Worker** (Cloudflare dashboard → Edit code → paste new
+   `worker.js` → Save and deploy). `/health` should report v5.8.
+
+4. On the WatchTrack client, toggle Streaming alerts off and back on
+   in Settings to refresh the subscription with push data attached.
+   The "ON — region X" status now also reports whether push delivery
+   is active.
+
+### Endpoints reference (v5.8 additions)
+
+- `GET /alerts/vapid-public` — returns `{ vapidPublicKey }`. No secret
+  required because a VAPID public key is, by design, public.
+- `POST /alerts/subscribe` — body now optionally includes
+  `push: { endpoint, keys: { p256dh, auth } }`. When present, cron
+  sends Web Push for each new notification.
+
+### Where the crypto lives
+
+All Web Push code is inline in `worker.js` (~150 lines): `b64uEncode`,
+`b64uDecode`, `concatBytes`, `hkdf` (using WebCrypto's HKDF deriveBits),
+`vapidJwt` (ECDSA P-256 / ES256), `encryptAes128Gcm` (RFC 8291 §3.3),
+and `sendWebPush`. No third-party dependencies.
+
+### What happens on a 410 Gone response
+
+Push services return 410 when a subscription has been revoked or
+expired (user uninstalled the PWA, cleared site data, etc.). The
+cron handler detects this and clears the `push` field from the user's
+subscription record so subsequent runs don't keep retrying. The user
+re-subscribes by toggling alerts off+on.
+
+## v5.7 — per-IP rate limit
+
+Defensive layer in case the shared secret leaks. Every authenticated
+request consumes a token from a 60-request-per-minute bucket keyed by
+`CF-Connecting-IP`. Bucket entries live in `CONFIG` KV with a 60s TTL,
+so the cap resets continuously. `/health` and CORS preflights are
+exempt.
+
+### Tuning
+
+To change the cap, add a `rate_limit_per_minute` key to `CONFIG` KV
+with an integer value (default 60). Set to `0` to disable rate
+limiting entirely.
+
+### Behavior under burst
+
+- KV writes once per request that's allowed through (consumes a token).
+- 1000-writes/day free-tier limit accommodates ~700 requests/day at
+  steady state — well above normal personal usage.
+- Returns `429 Rate limit exceeded` with `Retry-After: 60` when the
+  bucket is full. Client app does not currently retry — it surfaces
+  the error to the user via the existing settings-status field.
+
+### Why per-IP and not per-secret
+
+A leaked secret can be used from any IP. Per-IP throttling means a
+flood from one source is capped while legitimate traffic from your
+phone/Bravia/laptop continues unimpeded. If you want to additionally
+cap per-secret (e.g. across all IPs), the same helper can be extended
+with a `bySecret:{secret-hash}` bucket — not implemented in v5.7.
+
 ## v5.6 — streaming-leaving alerts
 
 The Worker can now monitor TMDB watch/providers for the user's queued

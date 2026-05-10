@@ -1,4 +1,4 @@
-// WatchTrack ↔ Plex bridge (v5.6 — adds streaming-leaving alerts)
+// WatchTrack ↔ Plex bridge (v5.8 — adds Web Push delivery for alerts)
 //
 // Endpoints:
 //   POST /webhook/{secret}              Plex Pass webhook receiver
@@ -68,6 +68,221 @@ function normalizeTitle(title) {
 async function checkSecret(env, providedSecret) {
   const real = await env.CONFIG.get('secret');
   return real && providedSecret === real;
+}
+
+// === v5.8: Web Push (RFC 8030 + RFC 8291 + RFC 8292) ===
+//
+// All-WebCrypto, no third-party deps. The flow:
+//   1. Sign a VAPID JWT (ES256 / P-256) with `aud` = origin of subscription
+//      endpoint, `exp` ≤ 24h, `sub` = mailto: contact.
+//   2. Encrypt the payload with aes128gcm: ephemeral ECDH against the
+//      subscriber's p256dh public key, HKDF-derive content key + nonce
+//      using auth_secret as initial salt and a fresh random salt as the
+//      record salt, AES-GCM encrypt with a single padding byte (0x02).
+//   3. POST to subscription.endpoint with:
+//        Authorization: vapid t=<jwt>, k=<base64url(vapid_pub_raw)>
+//        Content-Encoding: aes128gcm
+//        TTL: 86400
+//        body: salt(16) || rs(4) || idlen(1) || as_pub(65) || ciphertext
+
+function b64uEncode(bytes) {
+  let s = '';
+  for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+  return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+function b64uDecode(str) {
+  const pad = (4 - (str.length % 4)) % 4;
+  const s = (str + '='.repeat(pad)).replace(/-/g, '+').replace(/_/g, '/');
+  const bin = atob(s);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+function concatBytes(...arrs) {
+  let total = 0;
+  for (const a of arrs) total += a.length;
+  const out = new Uint8Array(total);
+  let off = 0;
+  for (const a of arrs) { out.set(a, off); off += a.length; }
+  return out;
+}
+
+// HKDF using HMAC-SHA-256: extract(salt, ikm) then expand(prk, info, length).
+// WebCrypto provides HKDF as a deriveBits algorithm directly.
+async function hkdf(salt, ikm, info, length) {
+  const ikmKey = await crypto.subtle.importKey('raw', ikm, { name: 'HKDF' }, false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits(
+    { name: 'HKDF', hash: 'SHA-256', salt, info },
+    ikmKey,
+    length * 8
+  );
+  return new Uint8Array(bits);
+}
+
+// VAPID JWT signer. vapidPrivateRaw is the d component (32 bytes, base64url),
+// vapidPublicRaw is the uncompressed P-256 point (65 bytes, base64url).
+async function vapidJwt(audience, subject, vapidPublicRaw, vapidPrivateRaw) {
+  const header = { typ: 'JWT', alg: 'ES256' };
+  const payload = {
+    aud: audience,
+    exp: Math.floor(Date.now() / 1000) + 12 * 3600,
+    sub: subject,
+  };
+  const headerB64 = b64uEncode(new TextEncoder().encode(JSON.stringify(header)));
+  const payloadB64 = b64uEncode(new TextEncoder().encode(JSON.stringify(payload)));
+  const signingInput = `${headerB64}.${payloadB64}`;
+
+  // Import the EC private key as JWK so we can sign. P-256 public is the
+  // first byte (0x04) + x(32) + y(32) for uncompressed, so x and y come
+  // from vapidPublicRaw[1..33] and [33..65].
+  const pub = b64uDecode(vapidPublicRaw);
+  if (pub.length !== 65 || pub[0] !== 4) throw new Error('VAPID public key must be 65-byte uncompressed P-256');
+  const priv = b64uDecode(vapidPrivateRaw);
+  if (priv.length !== 32) throw new Error('VAPID private key must be 32 bytes');
+  const jwk = {
+    kty: 'EC', crv: 'P-256',
+    x: b64uEncode(pub.slice(1, 33)),
+    y: b64uEncode(pub.slice(33, 65)),
+    d: b64uEncode(priv),
+  };
+  const key = await crypto.subtle.importKey(
+    'jwk', jwk, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']
+  );
+  const sig = await crypto.subtle.sign(
+    { name: 'ECDSA', hash: 'SHA-256' },
+    key,
+    new TextEncoder().encode(signingInput)
+  );
+  return `${signingInput}.${b64uEncode(new Uint8Array(sig))}`;
+}
+
+// Encrypt a payload for one Web Push subscriber. Returns the body bytes
+// to POST (header + ciphertext) plus the as_public to include in the
+// Crypto-Key header.
+async function encryptAes128Gcm(payload, p256dhB64u, authB64u) {
+  const ua_public = b64uDecode(p256dhB64u);
+  const auth = b64uDecode(authB64u);
+  if (ua_public.length !== 65 || ua_public[0] !== 4) throw new Error('Bad p256dh');
+  if (auth.length !== 16) throw new Error('Bad auth_secret');
+
+  // Ephemeral local keypair
+  const localPair = await crypto.subtle.generateKey(
+    { name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveBits']
+  );
+  const as_public = new Uint8Array(await crypto.subtle.exportKey('raw', localPair.publicKey));
+
+  // Import the subscriber's public key
+  const remote = await crypto.subtle.importKey(
+    'raw', ua_public, { name: 'ECDH', namedCurve: 'P-256' }, false, []
+  );
+  const ecdhSecret = new Uint8Array(await crypto.subtle.deriveBits(
+    { name: 'ECDH', public: remote }, localPair.privateKey, 256
+  ));
+
+  // RFC 8291 §3.3: derive the input keying material (IKM) used for the
+  // record-level HKDF. info = "WebPush: info" || 0x00 || ua_public || as_public.
+  const keyInfo = concatBytes(
+    new TextEncoder().encode('WebPush: info'),
+    new Uint8Array([0]),
+    ua_public,
+    as_public
+  );
+  const ikm = await hkdf(auth, ecdhSecret, keyInfo, 32);
+
+  // Record salt
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+
+  // Content key + nonce
+  const cek = await hkdf(salt, ikm, concatBytes(new TextEncoder().encode('Content-Encoding: aes128gcm'), new Uint8Array([0])), 16);
+  const nonce = await hkdf(salt, ikm, concatBytes(new TextEncoder().encode('Content-Encoding: nonce'), new Uint8Array([0])), 12);
+
+  // Pad payload: payload || 0x02 (single-record marker; no zero padding).
+  const plaintext = concatBytes(payload, new Uint8Array([2]));
+
+  // AES-GCM encrypt
+  const aesKey = await crypto.subtle.importKey('raw', cek, { name: 'AES-GCM' }, false, ['encrypt']);
+  const ciphertext = new Uint8Array(await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv: nonce, tagLength: 128 },
+    aesKey,
+    plaintext
+  ));
+
+  // Header: salt(16) || record-size(4 BE) || idlen(1) || as_public(65)
+  // record-size is the maximum record size; we use 4096 (the recommended default)
+  // which must be ≥ ciphertext.length + 16 (for the GCM tag).
+  const recordSize = Math.max(4096, ciphertext.length + 1);
+  const header = new Uint8Array(16 + 4 + 1 + 65);
+  header.set(salt, 0);
+  header[16] = (recordSize >>> 24) & 0xff;
+  header[17] = (recordSize >>> 16) & 0xff;
+  header[18] = (recordSize >>> 8) & 0xff;
+  header[19] = recordSize & 0xff;
+  header[20] = 65; // idlen — length of as_public that follows
+  header.set(as_public, 21);
+
+  return { body: concatBytes(header, ciphertext), as_public };
+}
+
+// Send one Web Push. Returns { ok, status, error? }.
+async function sendWebPush(subscription, payloadObj, env) {
+  const vapidPublic = await env.CONFIG.get('vapid_public');
+  const vapidPrivate = await env.CONFIG.get('vapid_private');
+  const vapidSubject = (await env.CONFIG.get('vapid_subject')) || 'mailto:noreply@example.com';
+  if (!vapidPublic || !vapidPrivate) return { ok: false, error: 'vapid not configured' };
+
+  const audience = new URL(subscription.endpoint).origin;
+  let jwt;
+  try {
+    jwt = await vapidJwt(audience, vapidSubject, vapidPublic, vapidPrivate);
+  } catch (e) {
+    return { ok: false, error: 'vapid sign failed: ' + e.message };
+  }
+
+  const payloadBytes = new TextEncoder().encode(JSON.stringify(payloadObj));
+  let encrypted;
+  try {
+    encrypted = await encryptAes128Gcm(payloadBytes, subscription.keys.p256dh, subscription.keys.auth);
+  } catch (e) {
+    return { ok: false, error: 'encrypt failed: ' + e.message };
+  }
+
+  try {
+    const resp = await fetch(subscription.endpoint, {
+      method: 'POST',
+      headers: {
+        'Authorization': `vapid t=${jwt}, k=${vapidPublic}`,
+        'Content-Encoding': 'aes128gcm',
+        'Content-Type': 'application/octet-stream',
+        'TTL': '86400',
+      },
+      body: encrypted.body,
+    });
+    if (resp.status >= 200 && resp.status < 300) return { ok: true, status: resp.status };
+    const text = await resp.text().catch(() => '');
+    return { ok: false, status: resp.status, error: text.slice(0, 200) };
+  } catch (e) {
+    return { ok: false, error: 'fetch failed: ' + e.message };
+  }
+}
+
+// v5.7: per-IP rate limit. Defends against an exposed shared secret being
+// abused to flood Plex via the proxy or burn TMDB cache writes. The bucket
+// resets every 60s via KV TTL — slight under-counting under racing
+// reads-then-writes is acceptable for a defense layer (the leak case the
+// limit defends against is one spammer, not a coordinated attack).
+//
+// Tunable: set CONFIG `rate_limit_per_minute` to override the default 60.
+// Set to 0 (or any non-positive integer) to disable rate-limiting.
+async function checkRateLimit(env, ip) {
+  if (!ip) return { ok: true, count: 0 };
+  const limitRaw = await env.CONFIG.get('rate_limit_per_minute');
+  const limit = parseInt(limitRaw || '60', 10);
+  if (!limit || limit <= 0) return { ok: true, count: 0 };
+  const key = `rate:${ip}`;
+  const cur = parseInt((await env.CONFIG.get(key)) || '0', 10);
+  if (cur >= limit) return { ok: false, count: cur, limit };
+  await env.CONFIG.put(key, String(cur + 1), { expirationTtl: 60 });
+  return { ok: true, count: cur + 1, limit };
 }
 
 async function tmdbLookup(env, title, year, type, tmdbId) {
@@ -167,9 +382,20 @@ export default {
 
     if (method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
 
-    // Health
+    // Health (no rate limit, no auth)
     if (path === '/' || path === '/health') {
-      return new Response('WatchTrack-Plex bridge online (v5.6 — streaming-leaving alerts)', { headers: cors });
+      return new Response('WatchTrack-Plex bridge online (v5.8 — Web Push for alerts)', { headers: cors });
+    }
+
+    // v5.7: per-IP rate limit. Applies to every other route. Returns 429
+    // with a Retry-After header when the bucket is full.
+    const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || '';
+    const rl = await checkRateLimit(env, ip);
+    if (!rl.ok) {
+      return new Response(`Rate limit exceeded: ${rl.count}/${rl.limit} per minute`, {
+        status: 429,
+        headers: { ...cors, 'Retry-After': '60', 'Content-Type': 'text/plain' },
+      });
     }
 
     // === Plex webhook receiver ===
@@ -575,9 +801,13 @@ export default {
     //   snap:{userHash}           JSON map: tmdbKey -> [provider names]
     //   notif:{userHash}:{ts}     JSON { title, body, itemRef, ts }
 
-    // POST /alerts/subscribe — body { secret, userHash, region, items? }
+    // POST /alerts/subscribe — body { secret, userHash, region, items?, push? }
     // `items` is the per-device list of catalog entries the user wants
     // monitored — each one is { tabId, itemId, title, year, type, tmdbId? }.
+    // `push` (v5.8) is optional Web Push subscription data:
+    //   { endpoint, keys: { p256dh, auth } }. When present, runAlertsCheck
+    //   sends a real Web Push for each new notification. When absent, the
+    //   client polls /alerts/notifications on visibility-change instead.
     // The client refreshes the subscription whenever its queued/watching set
     // changes; the Worker simply replaces the stored manifest.
     if (path === '/alerts/subscribe' && method === 'POST') {
@@ -589,16 +819,30 @@ export default {
         }
         const region = (body.region || 'US').slice(0, 4).toUpperCase();
         const items = Array.isArray(body.items) ? body.items.slice(0, 500) : [];
+        const push = body.push && body.push.endpoint && body.push.keys ? {
+          endpoint: String(body.push.endpoint),
+          keys: { p256dh: String(body.push.keys.p256dh || ''), auth: String(body.push.keys.auth || '') },
+        } : null;
         await env.ALERTS.put(`sub:${body.userHash}`, JSON.stringify({
           region,
           enabled: true,
           subscribedAt: Date.now(),
           items,
+          push,
         }));
-        return jsonResponse({ ok: true, region, itemCount: items.length });
+        return jsonResponse({ ok: true, region, itemCount: items.length, hasPush: !!push });
       } catch (e) {
         return new Response('Bad request: ' + e.message, { status: 400, headers: cors });
       }
+    }
+
+    // GET /alerts/vapid-public — return the VAPID application server key
+    // so the client can pass it to pushManager.subscribe(). No secret
+    // required because the public key is, by design, public.
+    if (path === '/alerts/vapid-public' && method === 'GET') {
+      const pub = await env.CONFIG.get('vapid_public');
+      if (!pub) return jsonResponse({ error: 'VAPID not configured' }, 400);
+      return jsonResponse({ vapidPublicKey: pub });
     }
 
     // POST /alerts/unsubscribe — body { secret, userHash }
@@ -757,15 +1001,29 @@ async function runAlertsCheck(env) {
           const ts = Date.now();
           const notifKey = `notif:${userHash}:${ts}_${Math.random().toString(36).slice(2, 8)}`;
           const dropList = dropped.join(', ');
-          await env.ALERTS.put(notifKey, JSON.stringify({
+          const notif = {
             ts,
             title: `${it.title} leaving ${dropList}`,
             body: `${it.title} (${it.year}) is no longer streaming on ${dropList} in ${region}. Catch it before it's gone.`,
             itemRef: ref,
             tabId: it.tabId,
             itemId: it.itemId,
-          }), { expirationTtl: 30 * 24 * 60 * 60 });
+          };
+          // Always queue for the polling-fallback path
+          await env.ALERTS.put(notifKey, JSON.stringify(notif), { expirationTtl: 30 * 24 * 60 * 60 });
           notificationsQueued++;
+          // v5.8: also send a Web Push if the subscriber has a push
+          // subscription stored. Best-effort — failures don't fail the cron;
+          // the polling queue catches up next time the app opens.
+          if (sub.push && sub.push.endpoint && sub.push.keys && sub.push.keys.p256dh && sub.push.keys.auth) {
+            const pushResult = await sendWebPush(sub.push, notif, env);
+            if (!pushResult.ok && pushResult.status === 410) {
+              // 410 Gone — subscription expired or unsubscribed at the push
+              // service. Drop our copy so the next cron run skips it.
+              const cleaned = { ...sub, push: null };
+              await env.ALERTS.put(`sub:${userHash}`, JSON.stringify(cleaned));
+            }
+          }
         }
       }
     }
