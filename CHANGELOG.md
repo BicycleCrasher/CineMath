@@ -10,6 +10,10 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 6.1.3 — 2026-05-09
+**Service worker cache:** unchanged (Worker-only release)
+**Requires Worker patch:** worker.js v5.9 — adds `/alerts/test-fire?secret=X&user=HASH` debug endpoint that sends a fake test notification through the user's stored push subscription. Useful for verifying end-to-end Web Push delivery without waiting on an organic TMDB provider drop. Returns the same `{ok, status, error}` shape as `sendWebPush`.
+
 ## 6.1.2 — 2026-05-09
 **Service worker cache:** unchanged (workflow change only)
 

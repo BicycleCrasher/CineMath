@@ -150,6 +150,30 @@ Settings → Plex Webhook Bridge:
 - `POST /plex/scrobble` — Body `{ secret, ratingKey }`. Marks the item watched on Plex.
 - `GET /plex/history?secret=X&start=N&size=N` — Returns Plex's raw paginated `MediaContainer` for `/status/sessions/history/all`.
 
+## v5.9 — /alerts/test-fire debug endpoint
+
+Sends a fake "test notification" through the user's stored push
+subscription so you can verify end-to-end Web Push delivery without
+waiting for an organic TMDB provider drop.
+
+```
+GET /alerts/test-fire?secret=YOUR_SHARED_SECRET&user=YOUR_USER_HASH
+```
+
+Get your `userHash` in DevTools console while WatchTrack is loaded:
+```javascript
+await getUserHash()
+```
+
+Visit the URL — your phone (or wherever the PWA is installed and
+notifications are granted) should show "WatchTrack test
+notification — If you see this, Web Push is working end-to-end."
+within a couple of seconds. The endpoint returns
+`{"ok":true,"status":201}` (or similar 2xx) on successful delivery,
+`{"ok":false,"status":410,...}` if the subscription has expired
+(in which case the cron handler will clean it up automatically), or
+`{"error": "..."}` for misconfiguration.
+
 ## v5.8 — Web Push for streaming-leaving alerts
 
 Layered on top of the v5.6 alerts polling model. When the cron detects a

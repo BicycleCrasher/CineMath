@@ -1,4 +1,4 @@
-// WatchTrack ↔ Plex bridge (v5.8 — adds Web Push delivery for alerts)
+// WatchTrack ↔ Plex bridge (v5.9 — adds /alerts/test-fire debug endpoint)
 //
 // Endpoints:
 //   POST /webhook/{secret}              Plex Pass webhook receiver
@@ -24,6 +24,7 @@
 //   GET  /alerts/notifications?secret=X&user=HASH&since=TS  v5.6: poll pending alerts
 //   POST /alerts/notifications/seen     v5.6: mark notifications as delivered (clear queue)
 //   GET  /cron/check-alerts             v5.6: internal — fired by Cloudflare Cron Trigger
+//   GET  /alerts/test-fire?secret=X&user=HASH   v5.9: send a test push to verify delivery
 //   GET  /                              health check
 //
 // KV bindings expected (variable names must match exactly):
@@ -384,7 +385,7 @@ export default {
 
     // Health (no rate limit, no auth)
     if (path === '/' || path === '/health') {
-      return new Response('WatchTrack-Plex bridge online (v5.8 — Web Push for alerts)', { headers: cors });
+      return new Response('WatchTrack-Plex bridge online (v5.9 — /alerts/test-fire debug endpoint)', { headers: cors });
     }
 
     // v5.7: per-IP rate limit. Applies to every other route. Returns 429
@@ -911,6 +912,35 @@ export default {
       } catch (e) {
         return new Response('Bad request: ' + e.message, { status: 400, headers: cors });
       }
+    }
+
+    // GET /alerts/test-fire?secret=X&user=HASH (v5.9)
+    //
+    // Sends a fake "test notification" through the user's stored push
+    // subscription. Useful for end-to-end verification without waiting
+    // for an organic TMDB provider drop. Returns the same shape sendWebPush
+    // returns: { ok: bool, status?: number, error?: string }.
+    if (path === '/alerts/test-fire' && method === 'GET') {
+      const providedSecret = url.searchParams.get('secret');
+      if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
+      const userHash = url.searchParams.get('user');
+      if (!userHash) return new Response('Missing user', { status: 400, headers: cors });
+      const subRaw = await env.ALERTS.get(`sub:${userHash}`);
+      if (!subRaw) return jsonResponse({ error: 'No subscription for that user' }, 404);
+      let sub;
+      try { sub = JSON.parse(subRaw); } catch { return jsonResponse({ error: 'Subscription corrupt' }, 500); }
+      if (!sub.push || !sub.push.endpoint || !sub.push.keys) {
+        return jsonResponse({ error: 'Subscription has no push data — re-enable alerts on the device after VAPID is configured' }, 400);
+      }
+      const result = await sendWebPush(sub.push, {
+        title: 'WatchTrack test notification',
+        body: 'If you see this, Web Push is working end-to-end.',
+        itemRef: 'test',
+        tabId: '',
+        itemId: '',
+        ts: Date.now(),
+      }, env);
+      return jsonResponse(result);
     }
 
     // GET /cron/check-alerts — fired by Cloudflare Cron Trigger.
