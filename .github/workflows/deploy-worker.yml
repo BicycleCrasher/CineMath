@@ -42,6 +42,11 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: worker
+          # Pin to a recent wrangler 4.x. The action's hardcoded 3.90.0
+          # fallback has a stale R2 binding lookup that returns
+          # "bucket not found" against current Cloudflare API responses
+          # even when the bucket exists.
+          wranglerVersion: '4'
 
       - name: Verify health endpoint
         run: |
