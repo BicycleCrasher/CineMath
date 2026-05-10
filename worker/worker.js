@@ -1,4 +1,4 @@
-// WatchTrack ↔ Plex bridge (v5.10 — adds R2 daily state backups + observability)
+// WatchTrack ↔ Plex bridge (v5.11 — VIEWED migrated to D1; dual-write retained)
 //
 // Endpoints:
 //   POST /webhook/{secret}              Plex Pass webhook receiver
@@ -25,6 +25,7 @@
 //   POST /alerts/notifications/seen     v5.6: mark notifications as delivered (clear queue)
 //   GET  /cron/check-alerts             v5.6: internal — fired by Cloudflare Cron Trigger
 //   GET  /cron/backup-state?secret=X    v5.10: manual trigger of the daily R2 backup walk
+//   GET  /cron/migrate-viewed-to-d1?secret=X    v5.11: one-time backfill of VIEWED KV into D1
 //   GET  /alerts/test-fire?secret=X&user=HASH   v5.9: send a test push to verify delivery
 //   GET  /                              health check
 //
@@ -37,6 +38,7 @@
 //   SYNC_KV     — v5.4: cross-device state sync blobs, keyed by user:HASH
 //   ALERTS      — v5.6: per-user alert subscription, snapshot, and notification queue
 //   BACKUPS     — v5.10: R2 bucket for daily compressed state snapshots
+//   D1_VIEWED   — v5.11: D1 database holding Plex viewing history (migrated from VIEWED KV)
 
 // Library whitelist — only ingest from these Plex library section IDs.
 // Adjust if your library config changes.
@@ -387,7 +389,7 @@ export default {
 
     // Health (no rate limit, no auth)
     if (path === '/' || path === '/health') {
-      return new Response('WatchTrack-Plex bridge online (v5.10 — R2 daily backups + observability)', { headers: cors });
+      return new Response('WatchTrack-Plex bridge online (v5.11 — VIEWED migrated to D1)', { headers: cors });
     }
 
     // v5.7: per-IP rate limit. Applies to every other route. Returns 429
@@ -436,9 +438,13 @@ export default {
           rating: payload.rating || null,
         };
 
-        // Always log to VIEWED (durable history, no TTL — keeps every play)
+        // Always log to VIEWED (durable history, no TTL — keeps every play).
+        // v5.11: dual-write to D1 alongside KV. KV write is the safety net
+        // during the transition; once D1 has soaked we'll drop the KV write
+        // in a future release.
         const viewedKey = `view:${record.ts}_${eventId}`;
         await env.VIEWED.put(viewedKey, JSON.stringify(record));
+        await insertViewToD1(env, record).catch(e => console.log('[d1] webhook insert failed', e.message));
 
         // Only forward scrobble + rate events to EVENTS queue (with TTL — pulled by WT, then deleted)
         if (record.event === 'media.scrobble' || record.event === 'media.rate') {
@@ -548,6 +554,7 @@ export default {
             source: 'bulk_history_import',
           };
           await env.VIEWED.put(`view:${ts}_${id}`, JSON.stringify(record));
+          await insertViewToD1(env, record).catch(e => console.log('[d1] ingest insert failed', e.message));
           stored++;
         }
         return jsonResponse({ stored, filtered });
@@ -557,13 +564,34 @@ export default {
     }
 
     // === List all logged views (for History modal in WT) ===
+    // v5.11: reads come from D1 now. The VIEWED KV is still being
+    // written to (dual-write) during the transition; if D1 returns
+    // empty (e.g. before the one-time migration runs), fall through
+    // to the KV path so the history modal isn't blank.
     if (path === '/viewed/list' && method === 'GET') {
       const providedSecret = url.searchParams.get('secret');
       if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
+      const limit = Math.min(parseInt(url.searchParams.get('limit') || '5000'), 10000);
+      const offset = parseInt(url.searchParams.get('offset') || '0');
+      // Try D1 first
+      if (env.D1_VIEWED) {
+        try {
+          const r = await env.D1_VIEWED.prepare(
+            'SELECT id, event, ts, rating_key AS ratingKey, guid, title, year, type, library_section_id AS librarySectionID, grandparent_title AS grandparentTitle, parent_index AS parentIndex, ep_index AS "index", rating, source FROM views ORDER BY ts DESC LIMIT ? OFFSET ?'
+          ).bind(limit, offset).all();
+          const records = r.results || [];
+          if (records.length > 0 || offset > 0) {
+            return jsonResponse({ records, source: 'd1', cursor: records.length === limit ? `offset=${offset + limit}` : null });
+          }
+          // Fall through to KV when D1 is empty AND offset is 0 — pre-migration state
+          console.log('[viewed/list] D1 empty, falling back to KV (pre-migration)');
+        } catch (e) {
+          console.log('[viewed/list] D1 read failed, falling back to KV:', e.message);
+        }
+      }
+      // KV fallback (also keeps `/viewed/list` working during the migration window)
       const cursor = url.searchParams.get('cursor') || undefined;
-      // KV list is paginated; lower limit to keep response time reasonable
       const list = await env.VIEWED.list({ cursor, limit: 500 });
-      // Parallel reads with concurrency control — sequential await on 500 keys would blow past Worker timeout
       const records = [];
       const CONCURRENCY = 50;
       for (let i = 0; i < list.keys.length; i += CONCURRENCY) {
@@ -576,6 +604,7 @@ export default {
       }
       return jsonResponse({
         records,
+        source: 'kv',
         cursor: list.list_complete ? null : list.cursor,
       });
     }
@@ -955,6 +984,17 @@ export default {
       return jsonResponse(summary);
     }
 
+    // GET /cron/migrate-viewed-to-d1 — one-time backfill of the VIEWED
+    // KV namespace into the D1 `views` table. Idempotent — INSERT OR
+    // IGNORE keeps re-runs safe. Should be called once after deploying
+    // v5.11 to seed D1 with all historical views.
+    if (path === '/cron/migrate-viewed-to-d1' && method === 'GET') {
+      const providedSecret = url.searchParams.get('secret');
+      if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
+      const summary = await migrateViewedToD1(env);
+      return jsonResponse(summary);
+    }
+
     // GET /cron/check-alerts — fired by Cloudflare Cron Trigger.
     // Walks every subscribed user, fetches their state from SYNC_KV,
     // checks queued/watching items against TMDB watch/providers, and
@@ -1163,4 +1203,68 @@ async function gzipString(s) {
   const stream = new Response(s).body.pipeThrough(new CompressionStream('gzip'));
   const buf = await new Response(stream).arrayBuffer();
   return new Uint8Array(buf);
+}
+
+// === v5.11: D1 viewing-history helpers ===
+//
+// `insertViewToD1` is called from the dual-write path on /webhook and
+// /viewed/ingest. INSERT OR IGNORE on the primary key (id) is what
+// keeps the migration backfill idempotent — re-running migrate doesn't
+// double-insert events that already landed via the dual-write path
+// since the original deploy.
+async function insertViewToD1(env, record) {
+  if (!env.D1_VIEWED) return false;
+  await env.D1_VIEWED.prepare(
+    `INSERT OR IGNORE INTO views
+     (id, event, ts, rating_key, guid, title, year, type, library_section_id,
+      grandparent_title, parent_index, ep_index, rating, source)
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+  ).bind(
+    record.id, record.event, record.ts,
+    record.ratingKey || null, record.guid || null,
+    record.title || null, record.year || null, record.type || null,
+    record.librarySectionID || null,
+    record.grandparentTitle || null,
+    record.parentIndex || null,
+    record.index || null,
+    record.rating || null,
+    record.source || null
+  ).run();
+  return true;
+}
+
+// One-shot migration: walk the entire VIEWED KV namespace and INSERT
+// every record into D1. Re-run safely — INSERT OR IGNORE skips rows
+// that already exist (matched by primary key `id`).
+async function migrateViewedToD1(env) {
+  if (!env.D1_VIEWED || !env.VIEWED) {
+    return { error: 'D1_VIEWED or VIEWED binding missing' };
+  }
+  console.log('[d1-migrate] starting');
+  let cursor;
+  let scanned = 0, inserted = 0, errors = 0, batches = 0;
+  do {
+    const list = await env.VIEWED.list({ cursor, limit: 1000 });
+    cursor = list.list_complete ? null : list.cursor;
+    const CONCURRENCY = 25;
+    for (let i = 0; i < list.keys.length; i += CONCURRENCY) {
+      const batch = list.keys.slice(i, i + CONCURRENCY);
+      const values = await Promise.all(batch.map(k => env.VIEWED.get(k.name).catch(() => null)));
+      for (const v of values) {
+        if (!v) continue;
+        scanned++;
+        try {
+          const rec = JSON.parse(v);
+          await insertViewToD1(env, rec);
+          inserted++;
+        } catch (e) {
+          errors++;
+        }
+      }
+      batches++;
+    }
+  } while (cursor);
+  const summary = { scanned, inserted, errors, batches, ranAt: Date.now() };
+  console.log('[d1-migrate] done', JSON.stringify(summary));
+  return summary;
 }

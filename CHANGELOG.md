@@ -10,6 +10,40 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 6.4.0 — 2026-05-10
+**Service worker cache:** unchanged (Worker-only release)
+**Requires Worker patch:** worker.js v5.11. New D1 database (`watchtrack-viewed`) and `D1_VIEWED` binding in `wrangler.toml`. Token needs additional scope `Account → D1: Edit`. After deploy, hit `/cron/migrate-viewed-to-d1?secret=…` once to seed the database. See `worker/DEPLOY.md` v5.11 section.
+
+### Round 2 / R8 — Plex viewing history migrated to D1
+
+VIEWED KV (one record per key, full-scan to aggregate) replaced by a
+D1 SQL database with proper indexes on ts, title, type+ts, and
+grandparent_title+ts. Period in Review and historical analytics
+queries are now O(index lookup) instead of O(full KV scan).
+
+**Schema:**
+```sql
+CREATE TABLE views (
+  id TEXT PRIMARY KEY, event TEXT, ts INTEGER, rating_key TEXT,
+  guid TEXT, title TEXT, year INTEGER, type TEXT, library_section_id TEXT,
+  grandparent_title TEXT, parent_index INTEGER, ep_index INTEGER,
+  rating REAL, source TEXT
+);
+```
+Plus four covering indexes for the query patterns the app uses.
+
+**Dual-write transition.** `/webhook` and `/viewed/ingest` write to
+**both** VIEWED KV and D1 during the v5.11 window. `/viewed/list`
+reads from D1, falls back to KV if D1 is empty (pre-migration). One
+future release will drop the KV write once D1 has soaked; the KV
+namespace itself stays as a read-only archive.
+
+**`INSERT OR IGNORE`** on the primary key (event id) keeps the
+migration backfill idempotent — running
+`/cron/migrate-viewed-to-d1?secret=…` multiple times is safe.
+
+---
+
 ## 6.3.0 — 2026-05-10
 **Service worker cache:** unchanged (Worker-only release)
 **Requires Worker patch:** worker.js v5.10. New R2 bucket (`watchtrack-backups`) and `BACKUPS` binding in `wrangler.toml`. Token needs additional scope `Account → Workers R2 Storage: Edit`. See `worker/DEPLOY.md` v5.10 section for the one-time R2 enable + bucket creation + token scope.

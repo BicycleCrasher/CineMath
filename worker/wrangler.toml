@@ -60,3 +60,14 @@ id = "7fc3279a95e247398db43fa3bd65733b"
 [[r2_buckets]]
 binding = "BACKUPS"
 bucket_name = "watchtrack-backups"
+
+# === D1 databases (v5.11) ===
+# Plex viewing history, migrated from the VIEWED KV namespace. SQL
+# unlocks fast Period in Review queries, time-windowed aggregations,
+# and "most rewatched" / "longest streak" analytics that KV can't do.
+# During the transition, /webhook and /viewed/ingest dual-write to
+# both VIEWED KV and D1; reads come from D1.
+[[d1_databases]]
+binding = "D1_VIEWED"
+database_name = "watchtrack-viewed"
+database_id = "2d67ee44-2896-4d32-8734-b1e6fc4f8021"

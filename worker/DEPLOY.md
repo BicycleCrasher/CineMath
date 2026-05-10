@@ -150,6 +150,82 @@ Settings → Plex Webhook Bridge:
 - `POST /plex/scrobble` — Body `{ secret, ratingKey }`. Marks the item watched on Plex.
 - `GET /plex/history?secret=X&start=N&size=N` — Returns Plex's raw paginated `MediaContainer` for `/status/sessions/history/all`.
 
+## v5.11 — VIEWED migrated to D1
+
+Plex viewing history moves from the VIEWED KV namespace (one key per
+event, full-scan to query) to a D1 SQL database. Unlocks fast
+historical queries: time-windowed aggregations, "longest streak,"
+"most-rewatched," all the analytics that Period in Review wants but
+KV can't deliver.
+
+**Transition design.** During the v5.11 release window, `/webhook`
+and `/viewed/ingest` dual-write to BOTH the VIEWED KV namespace AND
+the D1 `views` table. `/viewed/list` reads from D1, falls back to
+KV if D1 is empty (pre-migration state). After D1 has soaked, a
+future release will drop the KV write — but VIEWED KV stays as a
+read-only archive forever; nothing is destroyed.
+
+### One-time setup
+
+1. **Add D1 scope to the API token.** My Profile → API Tokens → edit
+   the WatchTrack token → add **Account → D1: Edit**. Token value
+   stays the same; GitHub secret unchanged.
+2. **Push the v6.4.0 commit.** `deploy-worker.yml` runs and binds the
+   D1 database alongside the existing 7 KV namespaces and the R2
+   bucket.
+3. **Run the migration once:**
+   ```
+   GET /cron/migrate-viewed-to-d1?secret=YOUR_SHARED_SECRET
+   ```
+   Returns `{ scanned, inserted, errors, batches, ranAt }`. Idempotent —
+   re-running uses `INSERT OR IGNORE` on the primary key (event id).
+
+### What's in the views table
+
+```sql
+CREATE TABLE views (
+  id TEXT PRIMARY KEY,
+  event TEXT NOT NULL,        -- 'media.scrobble' | 'media.rate'
+  ts INTEGER NOT NULL,        -- ms since epoch
+  rating_key TEXT,            -- Plex internal id
+  guid TEXT,
+  title TEXT,
+  year INTEGER,
+  type TEXT,                  -- 'movie' | 'episode' | 'show'
+  library_section_id TEXT,
+  grandparent_title TEXT,     -- show name for episode events
+  parent_index INTEGER,       -- season number
+  ep_index INTEGER,           -- episode number ('index' is a SQL keyword)
+  rating REAL,                -- for media.rate events
+  source TEXT                 -- 'bulk_history_import' for backfilled rows
+);
+CREATE INDEX views_by_ts ON views (ts DESC);
+CREATE INDEX views_by_title ON views (title);
+CREATE INDEX views_by_type_ts ON views (type, ts DESC);
+CREATE INDEX views_by_grandparent ON views (grandparent_title, ts DESC);
+```
+
+### Direct SQL access
+
+The Cloudflare MCP gives Claude direct read/write on the database
+without going through the Worker. Useful for ad-hoc queries:
+
+```sql
+-- Most-watched shows by episode count
+SELECT grandparent_title, COUNT(*) AS plays
+FROM views
+WHERE type = 'episode'
+GROUP BY grandparent_title
+ORDER BY plays DESC
+LIMIT 20;
+
+-- Watching activity by month
+SELECT strftime('%Y-%m', ts/1000, 'unixepoch') AS month, COUNT(*) AS views
+FROM views
+GROUP BY month
+ORDER BY month DESC;
+```
+
 ## v5.10 — Daily R2 state backups + observability
 
 The cron handler now runs two tasks in parallel: the existing
