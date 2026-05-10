@@ -10,6 +10,49 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 6.6.0 — 2026-05-10
+**Service worker cache:** `scifi-tracker-v104` → `v105`
+
+### Watch Card refinement + chat-pass tracking
+
+Two follow-ups to v6.5's chat: actionable buttons that match the
+"talk to bot, click watch" loop, and learning from rejection.
+
+**Watch Card buttons.** The previous "Mark watching / Queue it / Pass"
+trio replaced with **Watch Trailer**, **Play Now**, and **Pass**.
+
+- **Watch Trailer** — same YouTube link as before, just renamed for
+  consistency with the action vocabulary.
+- **Play Now** — tries Plex deep link first if the item is in your
+  library; falls back to JustWatch via the TMDB watchProviders region
+  link if not. Hidden if neither's available. Clicking the Plex
+  variant also flips status to `watching` so the rest of the app
+  reflects the action, matching the existing item-card Play on Plex
+  behavior.
+- **Pass** — kept, now drives the new pass-tracking system.
+
+**Chat-pass tracking.** New localStorage map `watchtrack-chat-passes`
+keyed by `tabId:itemId` records every Pass click in the chat. The
+chat candidate builder now:
+
+- Drops anything with **2 or more passes** entirely (and the second
+  pass also calls `setStatus('skip', ...)` so it's filtered everywhere
+  in the app).
+- **Deprioritizes** items with one pass — they sink in the candidate
+  ranking but stay reachable in case the user changes their mind.
+
+The bot was getting smart enough at picking from your taste data
+that letting it re-suggest something you'd already passed on felt
+sticky. Two strikes is the right balance for "I'm not interested" —
+one accidental click doesn't permanently kill an item, two does.
+
+The pass map syncs across devices through the existing IndexedDB →
+SYNC_KV cross-device sync (it's a regular localStorage key under
+the `watchtrack-` prefix), so passing on the phone applies on the TV
+too.
+
+---
+
 ## 6.5.0 — 2026-05-10
 **Service worker cache:** `scifi-tracker-v103` → `v104`
 **Requires Worker patch:** worker.js v5.12. New `[ai]` binding in `wrangler.toml` (Workers AI). Token already has `Workers AI: Read` from the most recent edit, no further setup.

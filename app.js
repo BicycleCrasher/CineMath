@@ -6399,6 +6399,24 @@ function appendWatchCard(pick) {
   const providers = enrich && enrich.watchProviders && enrich.watchProviders[region];
   const flatrate = (providers && providers.flatrate) || [];
 
+  // v6.6.0: "Play Now" target. Priority order:
+  //   1. Item is in user's Plex library — Plex deep link (best, opens
+  //      directly into native client on Bravia / Android TV).
+  //   2. Item has streaming providers in the user's region — JustWatch
+  //      redirect via TMDB's region.link.
+  //   3. Neither — button is hidden.
+  const plexMatch = (typeof isPlexConfigured === 'function' && isPlexConfigured() && typeof plexHasItem === 'function')
+    ? plexHasItem(item) : null;
+  let playUrl = null;
+  let playLabel = '';
+  if (plexMatch && typeof plexDeepLinkUrl === 'function') {
+    playUrl = plexDeepLinkUrl(plexMatch.ratingKey);
+    playLabel = '▶ Play on Plex';
+  } else if (providers && providers.link) {
+    playUrl = providers.link;
+    playLabel = `▶ Play Now${flatrate[0] ? ' on ' + flatrate[0].provider_name : ''}`;
+  }
+
   const card = document.createElement('div');
   card.className = 'watch-card';
   const metaParts = [item.year, item.dir, item.runtime, item.country].filter(Boolean);
@@ -6409,23 +6427,61 @@ function appendWatchCard(pick) {
     <div class="watch-card-why"><strong>Why:</strong> ${escapeHtml(pick.why || '')}</div>
     ${flatrate.length ? `<div class="watch-card-providers"><strong>Streaming in ${region}:</strong> ${flatrate.map(p => escapeHtml(p.provider_name)).join(', ')}</div>` : ''}
     <div class="watch-card-actions">
-      ${trailerKey ? `<a class="action-btn trailer-btn" href="https://www.youtube.com/watch?v=${trailerKey}" target="_blank" rel="noopener">▶ Trailer</a>` : ''}
-      <button class="action-btn" data-card-action="watching">Mark watching</button>
-      <button class="action-btn" data-card-action="queued">Queue it</button>
-      <button class="action-btn" data-card-action="skip">Pass</button>
+      ${trailerKey ? `<a class="action-btn trailer-btn" href="https://www.youtube.com/watch?v=${trailerKey}" target="_blank" rel="noopener">▶ Watch Trailer</a>` : ''}
+      ${playUrl ? `<a class="action-btn watch-card-play" href="${playUrl}" target="_blank" rel="noopener">${escapeHtml(playLabel)}</a>` : ''}
+      <button class="action-btn" data-card-action="pass">Pass</button>
     </div>
   `;
   history.appendChild(card);
   history.scrollTop = history.scrollHeight;
 
-  card.querySelectorAll('button[data-card-action]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      setStatus(item.id, btn.dataset.cardAction, pick.tabId);
-      card.querySelectorAll('button[data-card-action]').forEach(b => { b.disabled = true; b.style.opacity = '0.5'; });
-      btn.style.opacity = '1';
-      btn.textContent = '✓ ' + btn.textContent;
+  // v6.6.0: Plex deep-link side effect — when the user clicks Play on
+  // Plex, also flip status to 'watching' so the rest of the app reflects
+  // the action. Same as the existing Plex play button on item cards.
+  const playEl = card.querySelector('.watch-card-play');
+  if (playEl && plexMatch) {
+    playEl.addEventListener('click', () => setStatus(item.id, 'watching', pick.tabId));
+  }
+
+  // Pass: increment per-item pass count. Two passes promotes to status=skip
+  // so the item is filtered everywhere, not just chat. The pass-count map
+  // also feeds buildChatCandidates() so we don't keep suggesting it
+  // even before reaching threshold.
+  const passBtn = card.querySelector('button[data-card-action="pass"]');
+  if (passBtn) {
+    passBtn.addEventListener('click', () => {
+      const newCount = incrementPassCount(pick.tabId, pick.itemId);
+      if (newCount >= 2) {
+        setStatus(item.id, 'skip', pick.tabId);
+        passBtn.textContent = `✓ Skipped (passed ${newCount}×)`;
+      } else {
+        passBtn.textContent = `✓ Passed (${newCount}×)`;
+      }
+      card.querySelectorAll('a, button').forEach(b => { b.style.opacity = '0.5'; });
+      passBtn.style.opacity = '1';
+      passBtn.disabled = true;
     });
-  });
+  }
+}
+
+// v6.6.0: per-item pass tracking for chat suggestions. Threshold of 2 —
+// after the second pass the item is also marked status=skip so the
+// rest of the app respects the dismissal. Map shape: { "tabId:itemId": n }.
+const CHAT_PASSES_KEY = 'watchtrack-chat-passes';
+function getPassesMap() {
+  try { return JSON.parse(lsGet(CHAT_PASSES_KEY) || '{}') || {}; }
+  catch { return {}; }
+}
+function getPassCount(tabId, itemId) {
+  const m = getPassesMap();
+  return m[`${tabId}:${itemId}`] || 0;
+}
+function incrementPassCount(tabId, itemId) {
+  const m = getPassesMap();
+  const key = `${tabId}:${itemId}`;
+  m[key] = (m[key] || 0) + 1;
+  lsSet(CHAT_PASSES_KEY, JSON.stringify(m));
+  return m[key];
 }
 
 // Build candidate set the bot picks from. Prioritizes queued + watching
@@ -6433,6 +6489,12 @@ function appendWatchCard(pick) {
 // items if nothing's queued. Caps at 50 to stay inside the AI prompt
 // budget — beyond ~50 the model starts forgetting earlier candidates.
 function buildChatCandidates() {
+  // v6.6.0: also filter out items the user has passed on twice or more
+  // in the chat (they were promoted to status=skip when the second pass
+  // landed, so the existing skip filter catches them, but we also drop
+  // anything with passes >= 1 so a single pass at least de-prioritizes
+  // it from the top 50 cap).
+  const passes = getPassesMap();
   const cands = [];
   for (const tabId in catalogs) {
     if (tabId === 'watchlist' || tabId === 'auteur') continue;
@@ -6443,6 +6505,8 @@ function buildChatCandidates() {
       const status = getStatus(item.id, tabId);
       const rating = getRating(item.id, tabId);
       if (status === 'watched' || status === 'skip') return;
+      const passCount = passes[`${tabId}:${item.id}`] || 0;
+      if (passCount >= 2) return; // belt-and-suspenders; setStatus skip should already exclude
       const tags = getTags(item.id, tabId);
       cands.push({
         tabId, itemId: item.id,
@@ -6452,8 +6516,9 @@ function buildChatCandidates() {
         pitch: (item.pitch || '').slice(0, 220),
         tags: tags || [],
         runtime: item.runtime || null,
-        // priority weights for sort below
-        _weight: status === 'queued' ? 3 : status === 'watching' ? 2 : (rating ? 0 : 1),
+        // priority weights for sort. One pass deprioritizes; queued/watching
+        // floats up; rated items drop to the bottom but stay reachable.
+        _weight: (status === 'queued' ? 3 : status === 'watching' ? 2 : (rating ? 0 : 1)) - passCount,
       });
     });
   }
