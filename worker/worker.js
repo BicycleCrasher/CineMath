@@ -1073,11 +1073,23 @@ export default {
           max_tokens: 400,
           temperature: 0.7,
         });
-        console.log('[chat] AI completed in', Date.now() - t0, 'ms; output bytes:', (aiResp.response || '').length);
+        console.log('[chat] AI completed in', Date.now() - t0, 'ms; resp typeof:', typeof aiResp);
 
-        // Llama doesn't always honor "JSON only." Extract the first {...} block.
+        // Llama doesn't always honor "JSON only," and the wrapper shape
+        // varies by model and Workers AI runtime version. Coerce to a
+        // string defensively before regex-matching the JSON block.
+        let text = '';
+        if (typeof aiResp === 'string') text = aiResp;
+        else if (aiResp && typeof aiResp.response === 'string') text = aiResp.response;
+        else if (aiResp && aiResp.response && typeof aiResp.response.text === 'string') text = aiResp.response.text;
+        else if (aiResp && typeof aiResp.result === 'string') text = aiResp.result;
+        else if (aiResp && aiResp.result && typeof aiResp.result.response === 'string') text = aiResp.result.response;
+        else if (aiResp && Array.isArray(aiResp.choices) && aiResp.choices[0] && aiResp.choices[0].message) {
+          text = aiResp.choices[0].message.content || '';
+        }
+        else { text = JSON.stringify(aiResp).slice(0, 2000); }
+
         let parsed = { reply: '', pick: null };
-        const text = aiResp.response || aiResp.result || '';
         const m = text.match(/\{[\s\S]*\}/);
         if (m) {
           try {
