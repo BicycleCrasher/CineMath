@@ -10,6 +10,31 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 6.1.1 — 2026-05-09
+**Service worker cache:** `scifi-tracker-v101` → `v102`
+
+### Fix — Ship 6.1.0's wizard (rebuild minified bundle, invalidate SW cache)
+
+6.1.0's wizard rewrite was committed in `app.js` but the production
+`app.min.js` wasn't rebuilt — so the deployed app served v6.0's
+2-button wizard root despite the source having v6.1's 3-button root.
+The auto-bump-cache workflow correctly bumped the SW cache to v101
+when assets changed, but it ran against the *unbuilt* `app.min.js`,
+so the cached bundle was the stale one.
+
+This release rebuilds `app.min.js` from the v6.1.0 source and bumps
+the SW cache to v102 so installed clients re-download the new bundle
+on next load.
+
+**Workflow gap to address.** Pushing app.js without rebuilding
+app.min.js will recur. Two ways to close it: either fold the rebuild
+into a single pre-commit step locally, or add a GitHub Action that
+runs esbuild and commits app.min.js when app.js changes. Existing
+build-min.yml only runs on PRs and posts a size comment; it doesn't
+commit. A small auto-commit-min.yml would be the cleanest fix.
+
+---
+
 ## 6.1.0 — 2026-05-09
 
 ### Feature/Refactor — Wizard redesign: time → mood → genre → side-by-side recs
