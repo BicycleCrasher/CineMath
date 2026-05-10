@@ -150,6 +150,60 @@ Settings → Plex Webhook Bridge:
 - `POST /plex/scrobble` — Body `{ secret, ratingKey }`. Marks the item watched on Plex.
 - `GET /plex/history?secret=X&start=N&size=N` — Returns Plex's raw paginated `MediaContainer` for `/status/sessions/history/all`.
 
+## v5.10 — Daily R2 state backups + observability
+
+The cron handler now runs two tasks in parallel: the existing
+streaming-leaving alert check, and a new state-backup walk that gzips
+every `SYNC_KV:user:HASH` blob and writes it to R2 under
+`state/{YYYY-MM-DD}/{userHash}.json.gz`. Plus `console.log`
+instrumentation at every meaningful junction in the Worker so you can
+actually see what's happening in Workers Logs.
+
+### One-time R2 setup
+
+1. **Enable R2** in the Cloudflare dashboard. Sidebar → **R2 Object
+   Storage** → click "Get Started" / "Enable R2". Free tier (10 GB
+   storage + 1M Class A operations / month) needs no payment method.
+2. **Create the bucket.** R2 → **Create bucket** → name it exactly
+   `watchtrack-backups` (matches `bucket_name` in `wrangler.toml`).
+3. **Add R2 scope to the API token.** My Profile → API Tokens → edit
+   the WatchTrack token → add **Account → Workers R2 Storage: Edit**.
+   Token value stays the same; the GitHub secret doesn't need
+   updating.
+4. **Push the new commit** — `deploy-worker.yml` runs and now binds
+   the bucket alongside the 7 KV namespaces.
+
+### Observability
+
+Every Worker invocation emits structured `console.log` lines visible
+under the Worker → Logs tab in the Cloudflare dashboard. Notable
+prefixes:
+
+- `[cron] start ...` / `[cron] done in Nms` — each scheduled run
+- `[alerts] checking N subscribers` / `[alerts] done {summary}` —
+  alert check progress
+- `[push] sent 201 for X` / `[push] 410 Gone — dropping ...` /
+  `[push] failed N` — Web Push delivery results
+- `[backup] backing up N users` / `[backup] done {summary}` —
+  daily R2 backup progress
+- `[rate-limit] 429 for ip ...` — every rate-limit rejection
+
+### Manual backup test
+
+```
+GET /cron/backup-state?secret=YOUR_SHARED_SECRET
+```
+
+Returns `{ date, written, errors, bytesIn, bytesOut, compressionRatio, ranAt }`.
+Visit R2 → watchtrack-backups in the dashboard to see the file land
+under `state/{today}/{your-userHash}.json.gz`.
+
+### Storage usage at typical scale
+
+For a single user with ~60 KB state blob, daily backups consume
+~22 KB/day after gzip (state JSON compresses ~60-70%). Annualized:
+~8 MB/year/user. Free tier (10 GB) holds ~1,250 user-years.
+
 ## v5.9 — /alerts/test-fire debug endpoint
 
 Sends a fake "test notification" through the user's stored push

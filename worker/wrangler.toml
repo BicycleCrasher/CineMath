@@ -53,3 +53,10 @@ id = "7f03e78c6a90403c9330474190bf2abd"
 [[kv_namespaces]]
 binding = "ALERTS"
 id = "7fc3279a95e247398db43fa3bd65733b"
+
+# === R2 buckets (v5.10) ===
+# Daily compressed state snapshots. Free tier: 10 GB storage + 1M
+# Class A operations / month — wildly over-provisioned for one user.
+[[r2_buckets]]
+binding = "BACKUPS"
+bucket_name = "watchtrack-backups"

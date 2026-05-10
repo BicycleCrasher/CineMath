@@ -10,6 +10,51 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 6.3.0 — 2026-05-10
+**Service worker cache:** unchanged (Worker-only release)
+**Requires Worker patch:** worker.js v5.10. New R2 bucket (`watchtrack-backups`) and `BACKUPS` binding in `wrangler.toml`. Token needs additional scope `Account → Workers R2 Storage: Edit`. See `worker/DEPLOY.md` v5.10 section for the one-time R2 enable + bucket creation + token scope.
+
+### Round 2 / R7 — Daily R2 state backups + Workers observability
+
+The first piece of the durability + observability foundation laid
+out in the Round 2 follow-up plan.
+
+**Daily R2 backups.** The cron handler now runs two tasks in
+parallel: the existing alerts check and a new `runStateBackup` walk.
+Backup gzips every `SYNC_KV:user:HASH` blob via the native
+`CompressionStream` API (no pako, no other deps) and writes to R2
+under `state/{YYYY-MM-DD}/{userHash}.json.gz` with `httpMetadata`
+declaring `Content-Encoding: gzip` so curl-with-`--compressed` works
+end-to-end. State JSON typically compresses ~60-70% — annualized
+storage for one user is ~8 MB. Free tier holds ~1,250 user-years.
+
+**Recovery path.** To restore a specific date's snapshot:
+```bash
+curl --compressed "https://<r2-public-url>/state/2026-05-10/<userHash>.json.gz"
+```
+…then PUT the result to `/sync/put?user=<userHash>&secret=<...>`. R2
+buckets aren't publicly readable by default; for restore convenience
+you can either configure a custom domain or temporarily generate a
+signed URL via the dashboard. Out of scope for this release; the
+data lands durably regardless.
+
+**Manual trigger.** New `/cron/backup-state?secret=X` endpoint hits
+the same code path the scheduled handler runs. Useful for verifying
+setup before the daily run fires.
+
+**Workers observability.** `console.log` lines at every meaningful
+junction:
+- `[cron] start ... / done in Nms` per scheduled run
+- `[alerts] checking N subscribers / done {summary}` per check
+- `[push] sent / 410 Gone / failed` per Web Push attempt
+- `[backup] backing up N users / done {summary}` per backup walk
+- `[rate-limit] 429 for ip ...` on every rate-limit hit
+
+Visible in Workers → Logs in the Cloudflare dashboard. Free tier
+covers personal usage easily.
+
+---
+
 ## 6.2.0 — 2026-05-10
 **Service worker cache:** `scifi-tracker-v102` → `v103`
 

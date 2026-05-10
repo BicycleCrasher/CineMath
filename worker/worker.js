@@ -1,4 +1,4 @@
-// WatchTrack ↔ Plex bridge (v5.9 — adds /alerts/test-fire debug endpoint)
+// WatchTrack ↔ Plex bridge (v5.10 — adds R2 daily state backups + observability)
 //
 // Endpoints:
 //   POST /webhook/{secret}              Plex Pass webhook receiver
@@ -24,6 +24,7 @@
 //   GET  /alerts/notifications?secret=X&user=HASH&since=TS  v5.6: poll pending alerts
 //   POST /alerts/notifications/seen     v5.6: mark notifications as delivered (clear queue)
 //   GET  /cron/check-alerts             v5.6: internal — fired by Cloudflare Cron Trigger
+//   GET  /cron/backup-state?secret=X    v5.10: manual trigger of the daily R2 backup walk
 //   GET  /alerts/test-fire?secret=X&user=HASH   v5.9: send a test push to verify delivery
 //   GET  /                              health check
 //
@@ -35,6 +36,7 @@
 //   PROMOTIONS  — orphan promotions persisted across devices
 //   SYNC_KV     — v5.4: cross-device state sync blobs, keyed by user:HASH
 //   ALERTS      — v5.6: per-user alert subscription, snapshot, and notification queue
+//   BACKUPS     — v5.10: R2 bucket for daily compressed state snapshots
 
 // Library whitelist — only ingest from these Plex library section IDs.
 // Adjust if your library config changes.
@@ -385,7 +387,7 @@ export default {
 
     // Health (no rate limit, no auth)
     if (path === '/' || path === '/health') {
-      return new Response('WatchTrack-Plex bridge online (v5.9 — /alerts/test-fire debug endpoint)', { headers: cors });
+      return new Response('WatchTrack-Plex bridge online (v5.10 — R2 daily backups + observability)', { headers: cors });
     }
 
     // v5.7: per-IP rate limit. Applies to every other route. Returns 429
@@ -393,6 +395,7 @@ export default {
     const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || '';
     const rl = await checkRateLimit(env, ip);
     if (!rl.ok) {
+      console.log('[rate-limit] 429 for ip', ip, 'on', method, path, '—', rl.count, '/', rl.limit);
       return new Response(`Rate limit exceeded: ${rl.count}/${rl.limit} per minute`, {
         status: 429,
         headers: { ...cors, 'Retry-After': '60', 'Content-Type': 'text/plain' },
@@ -943,6 +946,15 @@ export default {
       return jsonResponse(result);
     }
 
+    // GET /cron/backup-state — manual trigger of the daily R2 state
+    // backup walk. Same code path the scheduled handler runs.
+    if (path === '/cron/backup-state' && method === 'GET') {
+      const providedSecret = url.searchParams.get('secret');
+      if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
+      const summary = await runStateBackup(env);
+      return jsonResponse(summary);
+    }
+
     // GET /cron/check-alerts — fired by Cloudflare Cron Trigger.
     // Walks every subscribed user, fetches their state from SYNC_KV,
     // checks queued/watching items against TMDB watch/providers, and
@@ -961,18 +973,32 @@ export default {
     return new Response('Not found', { status: 404, headers: cors });
   },
 
-  // Cloudflare Cron Trigger handler. The trigger is configured in the
-  // dashboard (Settings → Triggers → Cron Triggers); cron expression
-  // recommended in DEPLOY.md is `0 13 * * *` (daily 13:00 UTC, 8 AM Central).
+  // Cloudflare Cron Trigger handler. Schedule is declared in
+  // worker/wrangler.toml — currently `0 13 * * *` (daily 13:00 UTC,
+  // 8 AM Central). Two cron tasks chained via Promise.all so neither
+  // blocks the other and the entire run shows up under one event.
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(runAlertsCheck(env));
+    ctx.waitUntil((async () => {
+      const t0 = Date.now();
+      console.log('[cron] start', new Date().toISOString());
+      const [alerts, backup] = await Promise.all([
+        runAlertsCheck(env).catch(e => ({ error: e.message })),
+        runStateBackup(env).catch(e => ({ error: e.message })),
+      ]);
+      console.log('[cron] done in', Date.now() - t0, 'ms', JSON.stringify({ alerts, backup }));
+    })());
   },
 };
 
 // === v5.6: Alerts cron worker ===
 async function runAlertsCheck(env) {
+  if (!env.ALERTS) {
+    console.log('[alerts] ALERTS binding missing — skipping');
+    return { skipped: 'no-alerts-binding' };
+  }
   const subList = await env.ALERTS.list({ prefix: 'sub:' });
-  let usersChecked = 0, notificationsQueued = 0, lookupsRun = 0;
+  console.log('[alerts] checking', subList.keys.length, 'subscribers');
+  let usersChecked = 0, notificationsQueued = 0, lookupsRun = 0, pushesSent = 0, pushesGone = 0;
 
   for (const k of subList.keys) {
     const userHash = k.name.slice('sub:'.length);
@@ -1047,11 +1073,18 @@ async function runAlertsCheck(env) {
           // the polling queue catches up next time the app opens.
           if (sub.push && sub.push.endpoint && sub.push.keys && sub.push.keys.p256dh && sub.push.keys.auth) {
             const pushResult = await sendWebPush(sub.push, notif, env);
-            if (!pushResult.ok && pushResult.status === 410) {
+            if (pushResult.ok) {
+              pushesSent++;
+              console.log('[push] sent', pushResult.status, 'for', it.title);
+            } else if (pushResult.status === 410) {
               // 410 Gone — subscription expired or unsubscribed at the push
               // service. Drop our copy so the next cron run skips it.
+              pushesGone++;
+              console.log('[push] 410 Gone — dropping subscription for user', userHash.slice(0, 8));
               const cleaned = { ...sub, push: null };
               await env.ALERTS.put(`sub:${userHash}`, JSON.stringify(cleaned));
+            } else {
+              console.log('[push] failed', pushResult.status || 'no-status', pushResult.error || 'no-error');
             }
           }
         }
@@ -1060,5 +1093,74 @@ async function runAlertsCheck(env) {
     await env.ALERTS.put(`snap:${userHash}`, JSON.stringify(newSnapshot));
     usersChecked++;
   }
-  return { usersChecked, notificationsQueued, lookupsRun, ranAt: Date.now() };
+  const summary = { usersChecked, notificationsQueued, lookupsRun, pushesSent, pushesGone, ranAt: Date.now() };
+  console.log('[alerts] done', JSON.stringify(summary));
+  return summary;
+}
+
+// === v5.10: Daily R2 state backups ===
+//
+// Walks every SYNC_KV `user:HASH` blob, gzips it via the native
+// CompressionStream API, writes to R2 under
+// `state/{YYYY-MM-DD}/{userHash}.json.gz`. Free-tier R2 (10 GB + 1M
+// Class A ops/month) is wildly over-provisioned for a single-user
+// PWA — even at 60 KB/blob × 365 days × 10 users that's ~220 MB/year.
+// No retention policy in code; configure via R2 lifecycle rules in
+// the dashboard if needed.
+//
+// Independence from the alerts cron: gzipping + R2 write per user is
+// fast (sub-100ms typical), runs in parallel with runAlertsCheck so
+// the wall-clock cost of the daily run is whichever is slower, not
+// the sum.
+async function runStateBackup(env) {
+  if (!env.BACKUPS) {
+    console.log('[backup] BACKUPS binding missing — skipping');
+    return { skipped: 'no-r2-binding' };
+  }
+  if (!env.SYNC_KV) {
+    console.log('[backup] SYNC_KV binding missing — skipping');
+    return { skipped: 'no-sync-kv' };
+  }
+  const userList = await env.SYNC_KV.list({ prefix: 'user:' });
+  console.log('[backup] backing up', userList.keys.length, 'users');
+  const date = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  let written = 0, bytesIn = 0, bytesOut = 0, errors = 0;
+
+  for (const k of userList.keys) {
+    const userHash = k.name.slice('user:'.length);
+    try {
+      const raw = await env.SYNC_KV.get(k.name);
+      if (!raw) continue;
+      bytesIn += raw.length;
+      const gz = await gzipString(raw);
+      bytesOut += gz.byteLength;
+      await env.BACKUPS.put(`state/${date}/${userHash}.json.gz`, gz, {
+        httpMetadata: {
+          contentType: 'application/json',
+          contentEncoding: 'gzip',
+        },
+        customMetadata: {
+          userHash,
+          rawBytes: String(raw.length),
+          ts: String(Date.now()),
+        },
+      });
+      written++;
+    } catch (e) {
+      errors++;
+      console.log('[backup] failed for', userHash.slice(0, 8), e.message);
+    }
+  }
+  const summary = { date, written, errors, bytesIn, bytesOut, compressionRatio: bytesIn ? Math.round((1 - bytesOut / bytesIn) * 100) : 0, ranAt: Date.now() };
+  console.log('[backup] done', JSON.stringify(summary));
+  return summary;
+}
+
+// Gzip a string via the native CompressionStream API and return the
+// compressed bytes as a Uint8Array. Cloudflare Workers support
+// CompressionStream natively — no pako or other library needed.
+async function gzipString(s) {
+  const stream = new Response(s).body.pipeThrough(new CompressionStream('gzip'));
+  const buf = await new Response(stream).arrayBuffer();
+  return new Uint8Array(buf);
 }
