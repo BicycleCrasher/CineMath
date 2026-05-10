@@ -1073,7 +1073,10 @@ export default {
           max_tokens: 400,
           temperature: 0.7,
         });
-        console.log('[chat] AI completed in', Date.now() - t0, 'ms; resp typeof:', typeof aiResp);
+        console.log('[chat] AI completed in', Date.now() - t0, 'ms; resp typeof:', typeof aiResp,
+          'isArray:', Array.isArray(aiResp),
+          'keys:', aiResp && typeof aiResp === 'object' ? Object.keys(aiResp).slice(0, 10).join(',') : 'n/a',
+          'preview:', JSON.stringify(aiResp).slice(0, 500));
 
         // Llama doesn't always honor "JSON only," and the wrapper shape
         // varies by model and Workers AI runtime version. Coerce to a
@@ -1088,6 +1091,7 @@ export default {
           text = aiResp.choices[0].message.content || '';
         }
         else { text = JSON.stringify(aiResp).slice(0, 2000); }
+        console.log('[chat] extracted text length:', text.length, 'first 200:', text.slice(0, 200));
 
         let parsed = { reply: '', pick: null };
         const m = text.match(/\{[\s\S]*\}/);
