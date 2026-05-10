@@ -27,5 +27,35 @@
       "type": "image/svg+xml",
       "purpose": "any"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Triage Queue",
+      "short_name": "Queue",
+      "description": "Run focused single-item review of your queued items.",
+      "url": "./?action=triage-queue",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Triage Suggested",
+      "short_name": "Suggested",
+      "description": "Run focused single-item review of system suggestions.",
+      "url": "./?action=triage-suggest",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Search",
+      "short_name": "Search",
+      "description": "Search title, director, country, section, or pitch across all tabs.",
+      "url": "./?action=search",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Stats",
+      "short_name": "Stats",
+      "description": "Open the stats dashboard.",
+      "url": "./?action=stats",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
   ]
 }

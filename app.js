@@ -1815,8 +1815,108 @@ function loadState() {
 function saveState() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
   catch (e) { console.error('Save failed:', e); }
+  // v5.41.0: mirror to IndexedDB for durability against localStorage clears
+  // (e.g. browser site-data reset, private mode promotion). Debounced 1s so
+  // a burst of state changes only writes once. Best-effort — never blocks.
+  if (typeof idbMirrorState === 'function') idbMirrorState();
   // V5.28.0: mark sync dirty so the debounced push captures this change
   if (typeof syncMarkDirty === 'function') syncMarkDirty();
+}
+
+// === v5.41.0 R6: IndexedDB durability layer ===
+//
+// Goal: protect against accidental loss of state when localStorage is
+// cleared (browser site-data reset, private-mode upgrade, sync wipe).
+// localStorage stays the synchronous source of truth — every callsite
+// keeps working unchanged. IndexedDB is a write-through mirror plus a
+// bootstrap fallback: if localStorage is missing the state key but
+// IndexedDB has a snapshot, we restore from IndexedDB before showing
+// the seed defaults.
+//
+// Not a full async migration of the 118 localStorage callsites; that's
+// a separate refactor with significant cascade and was deferred in
+// favour of this lower-risk additive layer.
+
+const IDB_NAME = 'watchtrack';
+const IDB_VERSION = 1;
+const IDB_STORE = 'kv';
+const IDB_STATE_KEY = 'state-snapshot';
+const IDB_BACKUP_PREFIX = 'localstorage-backup:';
+const IDB_MIGRATED_KEY = 'migrated-v5.41';
+let _idbConn = null;
+let _idbMirrorTimer = null;
+
+function idbOpen() {
+  if (_idbConn) return Promise.resolve(_idbConn);
+  return new Promise((resolve, reject) => {
+    if (!('indexedDB' in window)) return reject(new Error('IndexedDB unavailable'));
+    const req = indexedDB.open(IDB_NAME, IDB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE);
+    };
+    req.onsuccess = () => { _idbConn = req.result; resolve(_idbConn); };
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function idbGet(key) {
+  return idbOpen().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_STORE, 'readonly');
+    const req = tx.objectStore(IDB_STORE).get(key);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  })).catch(() => null);
+}
+
+function idbSet(key, value) {
+  return idbOpen().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_STORE, 'readwrite');
+    const req = tx.objectStore(IDB_STORE).put(value, key);
+    req.onsuccess = () => resolve(true);
+    req.onerror = () => reject(req.error);
+  })).catch(() => false);
+}
+
+function idbMirrorState() {
+  if (_idbMirrorTimer) clearTimeout(_idbMirrorTimer);
+  _idbMirrorTimer = setTimeout(() => {
+    idbSet(IDB_STATE_KEY, { state, savedAt: Date.now(), via: 'mirror' });
+  }, 1000);
+}
+
+// One-time migration: copy every watchtrack-* / scifi-tracker-* key from
+// localStorage into IndexedDB. Runs once on the first boot of v5.41.0
+// (gated by IDB_MIGRATED_KEY). Idempotent if it ever re-runs — keys are
+// just re-written.
+async function idbMigrateOnce() {
+  try {
+    const already = await idbGet(IDB_MIGRATED_KEY);
+    if (already) return;
+    const backup = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k) continue;
+      if (k.startsWith('watchtrack-') || k.startsWith('scifi-tracker-')) {
+        backup[k] = localStorage.getItem(k);
+      }
+    }
+    await idbSet(IDB_BACKUP_PREFIX + 'v5.41-bootstrap', { backup, ts: Date.now() });
+    await idbSet(IDB_MIGRATED_KEY, true);
+  } catch {}
+}
+
+// Bootstrap fallback: if localStorage doesn't have STORAGE_KEY but
+// IndexedDB has a state snapshot, restore from there. Returns true if
+// state was restored from IndexedDB.
+async function idbRestoreIfNeeded() {
+  if (localStorage.getItem(STORAGE_KEY)) return false;
+  const snap = await idbGet(IDB_STATE_KEY);
+  if (snap && snap.state) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(snap.state)); return true; }
+    catch { return false; }
+  }
+  return false;
 }
 
 function loadActiveTab() {
@@ -1915,6 +2015,7 @@ function setStatus(id, status, tab) {
   tab = tab || activeTab;
   if (!state[tab]) state[tab] = {};
   if (!state[tab][id]) state[tab][id] = {};
+  const prevStatus = state[tab][id].status;
   state[tab][id].status = status;
   if (status !== 'watched' && status !== 'watching') {
     delete state[tab][id].rating;
@@ -1927,6 +2028,13 @@ function setStatus(id, status, tab) {
     const isShow = !!catItem.seasons;
     if (status === 'watched') traktPushStatus(catItem.title, catItem.year, tab, 'watched', isShow);
     else if (status === 'none') traktPushStatus(catItem.title, catItem.year, tab, 'none', isShow);
+  }
+  // v5.39.0: refresh alerts subscription when an item enters/leaves the
+  // queued/watching set, so the cron has the right list to monitor.
+  const wasMonitored = prevStatus === 'queued' || prevStatus === 'watching';
+  const isMonitored = status === 'queued' || status === 'watching';
+  if (wasMonitored !== isMonitored && typeof alertsRefreshSubscription === 'function') {
+    alertsRefreshSubscription();
   }
   saveState(); render();
 }
@@ -2730,6 +2838,12 @@ function _attachItemDelegation() {
       toggleTag(id, tagBtn.dataset.tag, itemTab);
       return;
     }
+    const voiceBtn = e.target.closest('.voice-dictate-btn');
+    if (voiceBtn) {
+      e.stopPropagation();
+      voiceDictate(id, itemTab, voiceBtn);
+      return;
+    }
     if (e.target.closest('.item-head')) {
       if (expandedIds.has(id)) {
         expandedIds.delete(id);
@@ -2928,6 +3042,8 @@ function _renderImpl() {
           <div class="tag-cloud">${negTagsHtml}</div>
         </div>
         <textarea class="notes-input" placeholder="Notes after viewing..." data-id="${item.id}">${escapeHtml(notes)}</textarea>
+        <div class="notes-tv-display">${escapeHtml(notes)}</div>
+        <button class="voice-dictate-btn" type="button">🎤 Dictate notes</button>
       </div>
     `;
 
@@ -2937,27 +3053,84 @@ function _renderImpl() {
   updateStats();
 }
 
+// v5.37.0 B1: Voice dictation for TV mode. The notes textarea is hidden
+// in TV mode because D-pad typing is impractical; this routes audio
+// transcription into the same setNotes path so the saved note is the
+// only source of truth (Trakt/sync layers see no difference).
+let _voiceActive = null;
+function voiceDictate(id, tab, btn) {
+  const Recog = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!Recog) {
+    alert('Voice dictation is not supported on this device.');
+    return;
+  }
+  if (_voiceActive) {
+    _voiceActive.stop();
+    return;
+  }
+  const r = new Recog();
+  r.continuous = true;
+  r.interimResults = false;
+  r.lang = navigator.language || 'en-US';
+  let buffer = '';
+  r.onresult = (e) => {
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) buffer += e.results[i][0].transcript + ' ';
+    }
+  };
+  r.onend = () => {
+    _voiceActive = null;
+    if (btn) { btn.classList.remove('recording'); btn.textContent = '🎤 Dictate notes'; }
+    const transcript = buffer.trim();
+    if (!transcript) return;
+    const existing = getNotes(id, tab);
+    const merged = existing ? `${existing.trim()}\n${transcript}`.trim() : transcript;
+    setNotes(id, merged, tab);
+  };
+  r.onerror = () => {
+    _voiceActive = null;
+    if (btn) { btn.classList.remove('recording'); btn.textContent = '🎤 Dictate notes'; }
+  };
+  try {
+    r.start();
+    _voiceActive = r;
+    if (btn) { btn.classList.add('recording'); btn.textContent = '◼ Stop & save'; }
+  } catch (e) {
+    _voiceActive = null;
+  }
+}
+
 function switchTab(tab) {
   const def = catalogManifest.find(c => c.id === tab);
   if (!def) return;
   if (!def.virtual && !catalogs[tab]) return;
-  const previousTab = activeTab;
-  activeTab = tab;
-  activeFilter = 'all';
-  expandedIds.clear();
-  saveActiveTab();
-  // Category-filter memory management:
-  // When leaving a tab with a non-default category set, start a 30s clear timer.
-  // When entering a tab, cancel any pending clear timer for it (we're back).
-  if (previousTab && previousTab !== tab && getActiveCategory(previousTab) !== 'all') {
-    scheduleTabCategoryClear(previousTab);
+  // v5.37.0 B3: View Transitions for tab switches. Native crossfade on
+  // Chromium 111+ (covers Bravia Google TV, Android Chrome). Older
+  // engines fall through to the synchronous body — no degradation.
+  const body = () => {
+    const previousTab = activeTab;
+    activeTab = tab;
+    activeFilter = 'all';
+    expandedIds.clear();
+    saveActiveTab();
+    // Category-filter memory management:
+    // When leaving a tab with a non-default category set, start a 30s clear timer.
+    // When entering a tab, cancel any pending clear timer for it (we're back).
+    if (previousTab && previousTab !== tab && getActiveCategory(previousTab) !== 'all') {
+      scheduleTabCategoryClear(previousTab);
+    }
+    cancelTabCategoryClear(tab);
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    buildCategoryFilters();
+    buildFilters();
+    buildTagPills();
+    render();
+  };
+  if (document.startViewTransition) {
+    document.startViewTransition(body);
+  } else {
+    body();
   }
-  cancelTabCategoryClear(tab);
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
-  buildCategoryFilters();
-  buildFilters();
-  buildTagPills();
-  render();
   // Scroll active tab into view
   const activeBtn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
   if (activeBtn && activeBtn.scrollIntoView) {
@@ -2995,22 +3168,22 @@ function setupModals() {
         `item${itemCount === 1 ? '' : 's'} in this tab on this device will be ` +
         `replaced with the starter data shipped with the app. Other tabs are not affected.`;
     }
-    document.getElementById('reset-confirm-modal').classList.add('active');
+    document.getElementById('reset-confirm-modal').showModal();
   });
   document.getElementById('reset-confirm-go').addEventListener('click', () => {
-    document.getElementById('reset-confirm-modal').classList.remove('active');
+    document.getElementById('reset-confirm-modal').close();
     state[activeTab] = JSON.parse(JSON.stringify(SEED_STATE[activeTab] || {}));
     saveState(); render();
   });
   document.getElementById('reset-confirm-cancel').addEventListener('click', () => {
-    document.getElementById('reset-confirm-modal').classList.remove('active');
+    document.getElementById('reset-confirm-modal').close();
   });
   document.getElementById('export-btn').addEventListener('click', () => {
     document.getElementById('export-text').value = JSON.stringify(state, null, 2);
-    document.getElementById('export-modal').classList.add('active');
+    document.getElementById('export-modal').showModal();
   });
   document.getElementById('export-close').addEventListener('click', () => {
-    document.getElementById('export-modal').classList.remove('active');
+    document.getElementById('export-modal').close();
   });
   document.getElementById('export-copy').addEventListener('click', () => {
     const ta = document.getElementById('export-text');
@@ -3026,10 +3199,10 @@ function setupModals() {
   });
   document.getElementById('import-btn').addEventListener('click', () => {
     document.getElementById('import-text').value = '';
-    document.getElementById('import-modal').classList.add('active');
+    document.getElementById('import-modal').showModal();
   });
   document.getElementById('import-close').addEventListener('click', () => {
-    document.getElementById('import-modal').classList.remove('active');
+    document.getElementById('import-modal').close();
   });
   document.getElementById('import-confirm').addEventListener('click', () => {
     const input = document.getElementById('import-text').value;
@@ -3050,15 +3223,15 @@ function setupModals() {
 
       state = newState;
       saveState(); render();
-      document.getElementById('import-modal').classList.remove('active');
+      document.getElementById('import-modal').close();
 
       // Show import summary modal instead of generic alert
       document.getElementById('import-summary-content').innerHTML = renderImportDiagnostic(diagnostic);
-      document.getElementById('import-summary-modal').classList.add('active');
+      document.getElementById('import-summary-modal').showModal();
     } catch (e) { alert('Invalid format: ' + e.message); }
   });
   document.getElementById('import-summary-close').addEventListener('click', () => {
-    document.getElementById('import-summary-modal').classList.remove('active');
+    document.getElementById('import-summary-modal').close();
   });
 
   // === App logo (top-left): reset to Watchlist with cleared filter/search state ===
@@ -3069,7 +3242,7 @@ function setupModals() {
     const searchResults = document.getElementById('search-results');
     if (searchResults) searchResults.innerHTML = '';
     // Close any open modal
-    document.querySelectorAll('.modal.active').forEach(m => m.classList.remove('active'));
+    document.querySelectorAll('.modal[open]').forEach(m => m.close());
     // Clear all in-memory filter/category/sort state for every tab
     Object.keys(activeCategoryByTab).forEach(k => delete activeCategoryByTab[k]);
     Object.keys(activeSortByTab).forEach(k => delete activeSortByTab[k]);
@@ -3093,10 +3266,10 @@ function setupModals() {
         return;
       }
       document.getElementById('pair-url').value = generatePairUrl();
-      document.getElementById('pair-modal').classList.add('active');
+      document.getElementById('pair-modal').showModal();
     });
     document.getElementById('pair-close').addEventListener('click', () => {
-      document.getElementById('pair-modal').classList.remove('active');
+      document.getElementById('pair-modal').close();
     });
     document.getElementById('pair-copy').addEventListener('click', async () => {
       const url = document.getElementById('pair-url').value;
@@ -3145,11 +3318,11 @@ function setupModals() {
   document.getElementById('search-btn').addEventListener('click', () => {
     document.getElementById('search-input').value = '';
     document.getElementById('search-results').innerHTML = '';
-    document.getElementById('search-modal').classList.add('active');
+    document.getElementById('search-modal').showModal();
     setTimeout(() => document.getElementById('search-input').focus(), 50);
   });
   document.getElementById('search-close').addEventListener('click', () => {
-    document.getElementById('search-modal').classList.remove('active');
+    document.getElementById('search-modal').close();
   });
   let searchDebounce = null;
   document.getElementById('search-input').addEventListener('input', (e) => {
@@ -3167,11 +3340,11 @@ function setupModals() {
   document.getElementById('notes-search-btn').addEventListener('click', () => {
     document.getElementById('notes-search-input').value = '';
     document.getElementById('notes-search-results').innerHTML = '';
-    document.getElementById('notes-search-modal').classList.add('active');
+    document.getElementById('notes-search-modal').showModal();
     setTimeout(() => document.getElementById('notes-search-input').focus(), 50);
   });
   document.getElementById('notes-search-close').addEventListener('click', () => {
-    document.getElementById('notes-search-modal').classList.remove('active');
+    document.getElementById('notes-search-modal').close();
   });
   let notesDebounce = null;
   document.getElementById('notes-search-input').addEventListener('input', (e) => {
@@ -3186,13 +3359,13 @@ function setupModals() {
   // === Stats modal ===
   document.getElementById('stats-btn').addEventListener('click', () => {
     document.getElementById('stats-content').innerHTML = renderStats();
-    document.getElementById('stats-modal').classList.add('active');
+    document.getElementById('stats-modal').showModal();
   });
   document.getElementById('stats-close').addEventListener('click', () => {
-    document.getElementById('stats-modal').classList.remove('active');
+    document.getElementById('stats-modal').close();
   });
   document.getElementById('stats-period-review').addEventListener('click', () => {
-    document.getElementById('stats-modal').classList.remove('active');
+    document.getElementById('stats-modal').close();
     openPeriodReviewModal();
   });
   document.getElementById('stats-catalog-health').addEventListener('click', () => {
@@ -3210,7 +3383,7 @@ function setupModals() {
     });
   });
   document.getElementById('period-review-cancel').addEventListener('click', () => {
-    document.getElementById('period-review-modal').classList.remove('active');
+    document.getElementById('period-review-modal').close();
   });
   document.getElementById('period-review-type').addEventListener('change', (e) => {
     const t = e.target.value;
@@ -3219,10 +3392,27 @@ function setupModals() {
     document.getElementById('period-review-custom-section').style.display = (t === 'custom') ? '' : 'none';
   });
   document.getElementById('period-review-generate').addEventListener('click', generatePeriodReview);
+  // v5.37.0 B6: Web Share button — only show where the API exists.
+  const shareBtn = document.getElementById('period-review-share');
+  if (shareBtn) {
+    if (navigator.share) {
+      shareBtn.addEventListener('click', sharePeriodReview);
+    } else {
+      shareBtn.style.display = 'none';
+    }
+  }
 
   // === Triage modals ===
   document.getElementById('triage-queue-btn').addEventListener('click', () => startTriage('queue'));
   document.getElementById('triage-suggest-btn').addEventListener('click', () => startTriage('suggest'));
+
+  // === v5.40.0 R5 / C3: Find Gaps modal ===
+  const findGapsBtn = document.getElementById('find-gaps-btn');
+  if (findGapsBtn) findGapsBtn.addEventListener('click', () => openFindGapsModal());
+  document.getElementById('find-gaps-close').addEventListener('click', () => {
+    document.getElementById('find-gaps-modal').close();
+  });
+  document.getElementById('find-gaps-refresh').addEventListener('click', () => renderFindGaps());
 
   // === Settings modal ===
   // (Per-section collapsibles removed in 5.35.0 — the card grid handles
@@ -3245,6 +3435,7 @@ function setupModals() {
       if (lastPush) return { label: 'ACTIVE', cls: 'ok' };
       return { label: 'READY', cls: 'warn' };
     } },
+    { id: 'alerts', title: 'Streaming alerts', desc: 'Notify when titles leave streaming', statusFn: () => isAlertsEnabled() ? { label: 'ON', cls: 'ok' } : { label: 'OFF', cls: 'empty' } },
   ];
   function buildSettingsCardGrid() {
     const modal = document.getElementById('settings-modal');
@@ -3363,10 +3554,10 @@ function setupModals() {
     updateTraktStatusLine();
     updateDisplayModePicker();
     setSettingsView('grid'); // always open at the grid root
-    settingsModal.classList.add('active');
+    settingsModal.showModal();
   });
   document.getElementById('settings-close').addEventListener('click', () => {
-    settingsModal.classList.remove('active');
+    settingsModal.close();
   });
   document.getElementById('settings-save').addEventListener('click', () => {
     const mode = document.querySelector('input[name="display-mode"]:checked')?.value || 'auto';
@@ -3379,7 +3570,7 @@ function setupModals() {
     setTraktClientId(document.getElementById('trakt-client-id').value.trim());
     setTraktClientSecret(document.getElementById('trakt-client-secret').value.trim());
     applyDisplayMode();
-    settingsModal.classList.remove('active');
+    settingsModal.close();
     if (isPlexConfigured()) fetchPlexLibrary();
     if (isWebhookConfigured()) pollPlexWebhookEvents();
     render();
@@ -3488,26 +3679,26 @@ function setupModals() {
     const progressModal = document.getElementById('bulk-sync-progress-modal');
     const statusEl = document.getElementById('bulk-sync-status');
     const barEl = document.getElementById('bulk-sync-bar');
-    progressModal.classList.add('active');
-    document.getElementById('settings-modal').classList.remove('active');
+    progressModal.showModal();
+    document.getElementById('settings-modal').close();
 
     try {
       const report = await runBulkSync((msg, pct) => {
         statusEl.textContent = msg;
         barEl.style.width = `${pct}%`;
       });
-      progressModal.classList.remove('active');
+      progressModal.close();
       // Show result
       document.getElementById('bulk-sync-result-content').innerHTML = renderBulkSyncReport(report);
-      document.getElementById('bulk-sync-result-modal').classList.add('active');
+      document.getElementById('bulk-sync-result-modal').showModal();
       render();  // Refresh the visible UI to reflect new statuses
     } catch (e) {
-      progressModal.classList.remove('active');
+      progressModal.close();
       alert('Bulk sync failed: ' + e.message);
     }
   });
   document.getElementById('bulk-sync-result-close').addEventListener('click', () => {
-    document.getElementById('bulk-sync-result-modal').classList.remove('active');
+    document.getElementById('bulk-sync-result-modal').close();
   });
 
   document.getElementById('catalog-enrich').addEventListener('click', async () => {
@@ -3520,14 +3711,14 @@ function setupModals() {
     const progressModal = document.getElementById('enrichment-progress-modal');
     const statusEl = document.getElementById('enrichment-status');
     const barEl = document.getElementById('enrichment-bar');
-    progressModal.classList.add('active');
-    document.getElementById('settings-modal').classList.remove('active');
+    progressModal.showModal();
+    document.getElementById('settings-modal').close();
     try {
       const report = await enrichEntireCatalog((n, total) => {
         statusEl.textContent = `Looking up TMDB metadata... ${n} / ${total}`;
         barEl.style.width = `${total ? Math.round((n / total) * 100) : 0}%`;
       });
-      progressModal.classList.remove('active');
+      progressModal.close();
       const html = `
         <div class="stat-line"><span>Total catalog items</span><strong>${report.total}</strong></div>
         <div class="stat-line"><span>Processed this run</span><strong>${report.processed}</strong></div>
@@ -3536,23 +3727,23 @@ function setupModals() {
         <p class="settings-help" style="margin-top:12px">Catalog enrichment cached locally. Streaming-provider badges will now load instantly on item expand. Re-run after 30 days or when adding new catalog items to refresh.</p>
       `;
       document.getElementById('enrichment-result-content').innerHTML = html;
-      document.getElementById('enrichment-result-modal').classList.add('active');
+      document.getElementById('enrichment-result-modal').showModal();
     } catch (e) {
-      progressModal.classList.remove('active');
+      progressModal.close();
       alert('Enrichment failed: ' + e.message);
     }
   });
   document.getElementById('enrichment-result-close').addEventListener('click', () => {
-    document.getElementById('enrichment-result-modal').classList.remove('active');
+    document.getElementById('enrichment-result-modal').close();
   });
 
   // === Promotions Manager ===
   document.getElementById('promotions-manage').addEventListener('click', () => {
-    document.getElementById('settings-modal').classList.remove('active');
+    document.getElementById('settings-modal').close();
     openPromotionsManager();
   });
   document.getElementById('promotions-mgr-close').addEventListener('click', () => {
-    document.getElementById('promotions-mgr-modal').classList.remove('active');
+    document.getElementById('promotions-mgr-modal').close();
   });
   document.getElementById('promotions-mgr-refresh').addEventListener('click', async () => {
     await fetchPromotions();
@@ -3684,12 +3875,58 @@ function setupModals() {
     traktDisconnect();
   });
 
+  // === v5.39.0: Streaming-leaving alerts ===
+  function refreshAlertsStatusUI() {
+    const enabled = isAlertsEnabled();
+    const enableBtn = document.getElementById('alerts-enable');
+    const disableBtn = document.getElementById('alerts-disable');
+    const status = document.getElementById('alerts-status');
+    if (enableBtn) enableBtn.style.display = enabled ? 'none' : '';
+    if (disableBtn) disableBtn.style.display = enabled ? '' : 'none';
+    if (status) {
+      if (!isWebhookConfigured()) status.textContent = 'Configure the Worker first.';
+      else if (!getPlexToken()) status.textContent = 'Set your Plex token first (used as the user identifier).';
+      else if (!('Notification' in window)) status.textContent = 'Notifications API not available on this device.';
+      else if (Notification.permission === 'denied') status.textContent = 'Notification permission was denied. Re-enable it in your browser site settings.';
+      else if (enabled) status.textContent = `On — region ${getStreamingRegion()}.`;
+      else status.textContent = 'Off.';
+    }
+  }
+  refreshAlertsStatusUI();
+
+  const alertsEnableBtn = document.getElementById('alerts-enable');
+  if (alertsEnableBtn) alertsEnableBtn.addEventListener('click', async () => {
+    const status = document.getElementById('alerts-status');
+    status.textContent = 'Subscribing…';
+    const r = await alertsSubscribe();
+    if (r.ok) status.textContent = `Subscribed — monitoring ${r.itemCount} item${r.itemCount === 1 ? '' : 's'} in region ${r.region}.`;
+    else status.textContent = `Could not subscribe: ${r.reason}.`;
+    refreshAlertsStatusUI();
+  });
+
+  const alertsDisableBtn = document.getElementById('alerts-disable');
+  if (alertsDisableBtn) alertsDisableBtn.addEventListener('click', async () => {
+    const status = document.getElementById('alerts-status');
+    status.textContent = 'Unsubscribing…';
+    await alertsUnsubscribe();
+    status.textContent = 'Off.';
+    refreshAlertsStatusUI();
+  });
+
+  const alertsTestBtn = document.getElementById('alerts-test');
+  if (alertsTestBtn) alertsTestBtn.addEventListener('click', async () => {
+    const status = document.getElementById('alerts-status');
+    status.textContent = 'Checking for notifications…';
+    await alertsCheckNotifications();
+    status.textContent = isAlertsEnabled() ? `Checked. On — region ${getStreamingRegion()}.` : 'Off.';
+  });
+
   // === Plex History modal ===
   document.getElementById('history-btn').addEventListener('click', () => {
     openHistoryModal();
   });
   document.getElementById('history-close').addEventListener('click', () => {
-    document.getElementById('history-modal').classList.remove('active');
+    document.getElementById('history-modal').close();
   });
   document.getElementById('history-refresh').addEventListener('click', () => {
     plexHistoryCache = null;
@@ -3701,7 +3938,7 @@ function setupModals() {
 
   // Promote modal
   document.getElementById('promote-cancel').addEventListener('click', () => {
-    document.getElementById('promote-modal').classList.remove('active');
+    document.getElementById('promote-modal').close();
   });
   document.getElementById('promote-confirm').addEventListener('click', confirmPromote);
 }
@@ -3717,7 +3954,7 @@ async function openHistoryModal() {
   const modal = document.getElementById('history-modal');
   const status = document.getElementById('history-status');
   const list = document.getElementById('history-list');
-  modal.classList.add('active');
+  modal.showModal();
   if (!isWebhookConfigured()) {
     status.textContent = 'Configure Plex Webhook Bridge in Settings first.';
     list.innerHTML = '';
@@ -3883,7 +4120,7 @@ function renderHistoryList() {
       const title = titleEl ? titleEl.textContent : '';
       const item = plexHistoryCache.items.find(i => i.title === title);
       if (item && item.inCatalog) {
-        document.getElementById('history-modal').classList.remove('active');
+        document.getElementById('history-modal').close();
         switchTab(item.inCatalog.tabId);
         setTimeout(() => {
           const target = document.querySelector(`.item[data-id="${item.inCatalog.itemId}"]`);
@@ -3916,7 +4153,7 @@ function openPromoteModal(btn) {
     .filter(c => !c.virtual)
     .filter(c => pendingPromote.type === 'movie' ? !tvTabs.has(c.id) : tvTabs.has(c.id))
     .map(c => `<option value="${c.id}">${c.label}</option>`).join('');
-  document.getElementById('promote-modal').classList.add('active');
+  document.getElementById('promote-modal').showModal();
 }
 
 async function confirmPromote() {
@@ -4012,7 +4249,7 @@ async function confirmPromote() {
 
   // Refresh state
   plexHistoryCache = null;
-  document.getElementById('promote-modal').classList.remove('active');
+  document.getElementById('promote-modal').close();
   const wasRecSourced = isRecSource;
   pendingPromote = null;
   if (wasRecSourced) {
@@ -4031,7 +4268,7 @@ async function confirmPromote() {
 async function openPromotionsManager() {
   const modal = document.getElementById('promotions-mgr-modal');
   const status = document.getElementById('promotions-mgr-status');
-  modal.classList.add('active');
+  modal.showModal();
   if (!isWebhookConfigured()) {
     status.textContent = 'Configure Plex Webhook Bridge in Settings first.';
     document.getElementById('promotions-mgr-list').innerHTML = '';
@@ -4185,7 +4422,7 @@ function openPeriodReviewModal() {
   document.getElementById('period-review-custom-section').style.display = 'none';
   document.getElementById('period-review-status').textContent = '';
 
-  document.getElementById('period-review-modal').classList.add('active');
+  document.getElementById('period-review-modal').showModal();
 }
 
 function getPeriodRange() {
@@ -4238,6 +4475,42 @@ function generatePeriodReview() {
   a.click();
   URL.revokeObjectURL(url);
   status.textContent = 'Downloaded.';
+}
+
+// v5.37.0 B6: Share via Web Share API. Prefers file-share so the recipient
+// gets a real .md (Notes, Drive, Slack, etc.); falls back to text-share
+// where files aren't supported.
+async function sharePeriodReview() {
+  const range = getPeriodRange();
+  const status = document.getElementById('period-review-status');
+  if (!range) {
+    status.textContent = 'Pick a valid date range.';
+    return;
+  }
+  if (!navigator.share) {
+    status.textContent = 'Sharing is not supported on this device. Use Generate & download instead.';
+    return;
+  }
+  status.textContent = 'Generating report...';
+  const md = buildPeriodReviewMarkdown(range);
+  const safeLabel = range.label.replace(/[^a-zA-Z0-9-]/g, '_');
+  const filename = `watchtrack-review-${safeLabel}.md`;
+  const file = new File([md], filename, { type: 'text/markdown' });
+  const titleStr = `WatchTrack — ${range.label}`;
+  try {
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ title: titleStr, files: [file] });
+    } else {
+      await navigator.share({ title: titleStr, text: md });
+    }
+    status.textContent = 'Shared.';
+  } catch (e) {
+    if (e && e.name === 'AbortError') {
+      status.textContent = 'Share cancelled.';
+    } else {
+      status.textContent = 'Share failed: ' + (e && e.message || 'unknown error');
+    }
+  }
 }
 
 function buildPeriodReviewMarkdown(range) {
@@ -4585,7 +4858,7 @@ function doSearch(query) {
     el.addEventListener('click', () => {
       const targetTab = el.dataset.tab;
       const targetId = el.dataset.id;
-      document.getElementById('search-modal').classList.remove('active');
+      document.getElementById('search-modal').close();
       switchTab(targetTab);
       setTimeout(() => {
         const target = document.querySelector(`.item[data-id="${targetId}"]`);
@@ -4640,7 +4913,7 @@ function doNotesSearch(query) {
     el.addEventListener('click', () => {
       const targetTab = el.dataset.tab;
       const targetId = el.dataset.id;
-      document.getElementById('notes-search-modal').classList.remove('active');
+      document.getElementById('notes-search-modal').close();
       switchTab(targetTab);
       setTimeout(() => {
         const target = document.querySelector(`.item[data-id="${targetId}"]`);
@@ -5127,6 +5400,131 @@ async function getUserHash() {
   return Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+// === v5.39.0: Streaming-leaving alerts (C1) ===
+const ALERTS_ENABLED_KEY = 'watchtrack-alerts-enabled';
+const ALERTS_LAST_POLL_KEY = 'watchtrack-alerts-last-poll';
+let _alertsRefreshTimer = null;
+
+function isAlertsEnabled() { return localStorage.getItem(ALERTS_ENABLED_KEY) === '1'; }
+
+function alertsBuildItemsManifest() {
+  const items = [];
+  Object.keys(state).forEach(tabId => {
+    if (tabId === 'watchlist' || tabId === 'auteur') return;
+    const tabState = state[tabId];
+    const cat = catalogs[tabId];
+    if (!tabState || !cat) return;
+    Object.keys(tabState).forEach(itemId => {
+      const e = tabState[itemId];
+      if (!e || (e.status !== 'queued' && e.status !== 'watching')) return;
+      const item = cat.items.find(it => it.id === itemId);
+      if (!item) return;
+      const isTV = tabId.endsWith('-tv') || tabId === 'british-comedy';
+      const enriched = (typeof getEnrichmentForItem === 'function') ? getEnrichmentForItem(item) : null;
+      items.push({
+        tabId, itemId,
+        title: item.title,
+        year: item.year,
+        type: isTV ? 'tv' : 'movie',
+        tmdbId: enriched ? enriched.tmdbId : null,
+      });
+    });
+  });
+  return items;
+}
+
+async function alertsSubscribe() {
+  if (!isWebhookConfigured()) return { ok: false, reason: 'webhook-not-configured' };
+  if (!('Notification' in window)) return { ok: false, reason: 'no-notification-api' };
+  let perm = Notification.permission;
+  if (perm === 'default') {
+    try { perm = await Notification.requestPermission(); } catch { perm = 'denied'; }
+  }
+  if (perm !== 'granted') return { ok: false, reason: 'permission-denied' };
+  const userHash = await getUserHash();
+  if (!userHash) return { ok: false, reason: 'no-user-hash' };
+  const items = alertsBuildItemsManifest();
+  const region = getStreamingRegion();
+  try {
+    const resp = await fetch(`${getWebhookUrl()}/alerts/subscribe`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ secret: getWebhookSecret(), userHash, region, items }),
+    });
+    if (!resp.ok) return { ok: false, reason: `${resp.status}` };
+    localStorage.setItem(ALERTS_ENABLED_KEY, '1');
+    return { ok: true, itemCount: items.length, region };
+  } catch (e) {
+    return { ok: false, reason: e.message };
+  }
+}
+
+async function alertsUnsubscribe() {
+  if (!isWebhookConfigured()) {
+    localStorage.removeItem(ALERTS_ENABLED_KEY);
+    return { ok: true };
+  }
+  const userHash = await getUserHash();
+  if (!userHash) {
+    localStorage.removeItem(ALERTS_ENABLED_KEY);
+    return { ok: true };
+  }
+  try {
+    await fetch(`${getWebhookUrl()}/alerts/unsubscribe`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ secret: getWebhookSecret(), userHash }),
+    });
+  } catch {}
+  localStorage.removeItem(ALERTS_ENABLED_KEY);
+  return { ok: true };
+}
+
+function alertsRefreshSubscription() {
+  if (!isAlertsEnabled()) return;
+  // Coalesce rapid status changes — re-subscribe at most once per 5s
+  if (_alertsRefreshTimer) clearTimeout(_alertsRefreshTimer);
+  _alertsRefreshTimer = setTimeout(() => alertsSubscribe(), 5000);
+}
+
+async function alertsCheckNotifications() {
+  if (!isAlertsEnabled()) return;
+  if (!isWebhookConfigured()) return;
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const userHash = await getUserHash();
+  if (!userHash) return;
+  const since = parseInt(localStorage.getItem(ALERTS_LAST_POLL_KEY) || '0');
+  try {
+    const resp = await fetch(
+      `${getWebhookUrl()}/alerts/notifications?secret=${encodeURIComponent(getWebhookSecret())}&user=${userHash}&since=${since}`
+    );
+    if (!resp.ok) return;
+    const data = await resp.json();
+    const notifications = data.notifications || [];
+    if (notifications.length === 0) return;
+    const seenKeys = [];
+    for (const n of notifications) {
+      try {
+        new Notification(n.title, {
+          body: n.body,
+          icon: 'icons/icon-192.png',
+          tag: n.itemRef,
+          data: { tabId: n.tabId, itemId: n.itemId },
+        });
+        seenKeys.push(n.key);
+      } catch {}
+    }
+    localStorage.setItem(ALERTS_LAST_POLL_KEY, String(Date.now()));
+    if (seenKeys.length > 0) {
+      await fetch(`${getWebhookUrl()}/alerts/notifications/seen`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ secret: getWebhookSecret(), userHash, keys: seenKeys }),
+      });
+    }
+  } catch {}
+}
+
 function syncSettingsSnapshot() {
   return {
     plexServerUrl: getPlexServerUrl(),
@@ -5369,7 +5767,7 @@ async function openWatchModal(item, sourceTab) {
   document.getElementById('watch-modal-title').textContent = `Watch · ${item.title}${item.year ? ' (' + item.year + ')' : ''}`;
   const body = document.getElementById('watch-modal-body');
   body.innerHTML = '<div class="streaming-loading">Looking up where to watch…</div>';
-  modal.classList.add('active');
+  modal.showModal();
 
   // Stash the item so the action buttons can find it (they're outside body and survive innerHTML changes)
   modal.dataset.itemId = item.id;
@@ -5487,7 +5885,7 @@ function wireWatchModalActions(item, sourceTab) {
   const modal = document.getElementById('watch-modal');
   const advance = () => {
     setStatus(item.id, 'watching', sourceTab);
-    modal.classList.remove('active');
+    modal.close();
     if (triageState && triageState.queue && triageState.queue[triageState.idx] === item) {
       triageState.idx++;
       renderTriage();
@@ -5507,7 +5905,7 @@ function wireWatchModalActions(item, sourceTab) {
   // Cancel — close without changes
   document.getElementById('watch-cancel').onclick = (e) => {
     e.preventDefault();
-    modal.classList.remove('active');
+    modal.close();
   };
 }
 
@@ -5634,6 +6032,177 @@ function computeRecsForTab(tabIds, opts) {
     sourceCount: sources.length,
     anyEnriched,
   };
+}
+
+// =====================================================================
+// v5.40.0 R5 / C3: Find Gaps
+// =====================================================================
+//
+// Aggregates TMDB recommendations + similar across every watched/rated
+// item the user has across all tabs, frequency-ranks the union, and
+// subtracts anything already in any catalog or already actioned. The
+// result is a list of titles that the corpus suggests the user would
+// enjoy but that aren't yet in any catalog tab — gaps in coverage.
+//
+// Skips are stored in localStorage by tmdbId so the same gap doesn't
+// keep coming back after the user has dismissed it.
+
+const GAP_SKIPS_KEY = 'watchtrack-gap-skips';
+
+function getGapSkips() {
+  try { return new Set(JSON.parse(localStorage.getItem(GAP_SKIPS_KEY) || '[]')); }
+  catch { return new Set(); }
+}
+function addGapSkip(tmdbId) {
+  const skips = getGapSkips();
+  skips.add(tmdbId);
+  localStorage.setItem(GAP_SKIPS_KEY, JSON.stringify([...skips]));
+}
+
+function findGaps(limit) {
+  limit = limit || 50;
+  const skips = getGapSkips();
+
+  // Sources: every watched OR loved/liked item in any catalog tab with
+  // enrichment. Watched items contribute weight 1; loved doubles, liked
+  // matches loved-as-double-loved logic from computeRecsForTab. The
+  // intent: surface the long-tail TMDB rec graph across all genres,
+  // not just the active tab.
+  const sources = [];
+  Object.keys(catalogs).forEach(tabId => {
+    if (tabId === 'watchlist' || tabId === 'auteur') return;
+    const cat = catalogs[tabId];
+    if (!cat) return;
+    cat.items.forEach(item => {
+      const status = getStatus(item.id, tabId);
+      const rating = getRating(item.id, tabId);
+      const watched = status === 'watched';
+      if (!watched && rating !== 'loved' && rating !== 'liked') return;
+      const enrich = getEnrichmentForItem(item.id);
+      if (!enrich) return;
+      const weight = rating === 'loved' ? 3 : (rating === 'liked' ? 2 : 1);
+      sources.push({ srcTitle: item.title, srcTab: tabId, weight, enrich });
+    });
+  });
+
+  // Map every catalog item by tmdbId so we can subtract anything already
+  // in any catalog. Includes promotions because they're part of catalogs.
+  const catalogTmdbIds = new Set();
+  Object.keys(catalogs).forEach(tabId => {
+    if (tabId === 'watchlist') return;
+    const cat = catalogs[tabId];
+    if (!cat) return;
+    cat.items.forEach(item => {
+      const e = getEnrichmentForItem(item.id);
+      if (e && e.tmdbId) catalogTmdbIds.add(e.tmdbId);
+    });
+  });
+
+  // Aggregate candidates
+  const candidates = new Map();
+  sources.forEach(src => {
+    const recs = src.enrich.recommendations || [];
+    const sims = src.enrich.similar || [];
+    const seen = new Set();
+    [...recs, ...sims].forEach(rec => {
+      if (!rec || !rec.id) return;
+      if (seen.has(rec.id)) return;
+      seen.add(rec.id);
+      if (catalogTmdbIds.has(rec.id)) return;     // already in some catalog
+      if (skips.has(rec.id)) return;              // user dismissed
+      if (src.enrich.tmdbId === rec.id) return;   // self-reference
+      const ex = candidates.get(rec.id) || {
+        tmdbId: rec.id,
+        title: rec.title,
+        year: rec.year,
+        type: src.enrich.type,
+        score: 0,
+        sourceCount: 0,
+        sourceTitles: [],
+      };
+      ex.score += src.weight;
+      ex.sourceCount += 1;
+      if (ex.sourceTitles.length < 4) ex.sourceTitles.push(src.srcTitle);
+      candidates.set(rec.id, ex);
+    });
+  });
+
+  const ranked = [...candidates.values()].sort(
+    (a, b) => b.score - a.score || (a.title || '').localeCompare(b.title || '')
+  );
+  return {
+    candidates: ranked.slice(0, limit),
+    sourceCount: sources.length,
+    totalCandidates: ranked.length,
+  };
+}
+
+function openFindGapsModal() {
+  document.getElementById('find-gaps-modal').showModal();
+  renderFindGaps();
+}
+
+function renderFindGaps() {
+  const summary = document.getElementById('find-gaps-summary');
+  const list = document.getElementById('find-gaps-list');
+  const result = findGaps(50);
+  if (result.sourceCount === 0) {
+    summary.textContent = 'No enriched sources yet. Pre-enrich your catalog first (Settings → Plex → Pre-enrich catalog), or watch and rate a few items so the engine has something to extrapolate from.';
+    list.innerHTML = '';
+    return;
+  }
+  if (result.candidates.length === 0) {
+    summary.textContent = `Walked ${result.sourceCount} watched/rated items — no untapped recommendations remain. Either every TMDB suggestion is already in a catalog tab, or the cache hasn't been warmed for these items yet.`;
+    list.innerHTML = '';
+    return;
+  }
+  summary.textContent = `${result.candidates.length} of ${result.totalCandidates} gap candidate${result.totalCandidates === 1 ? '' : 's'} from ${result.sourceCount} watched/rated source${result.sourceCount === 1 ? '' : 's'}. Promote to add to a catalog tab; Skip removes from this list permanently.`;
+  list.innerHTML = result.candidates.map(c => {
+    const sources = c.sourceTitles.join(', ');
+    const meta = `${c.year || '?'} · ${c.type === 'tv' ? 'TV' : 'Film'} · score ${c.score} · sources: ${sources}`;
+    return `<div class="search-result" data-tmdb-id="${c.tmdbId}">
+      <div class="search-result-title">${escapeHtml(c.title || '?')}</div>
+      <div class="search-result-meta">${escapeHtml(meta)}</div>
+      <div style="display:flex;gap:6px;margin-top:6px">
+        <button class="action-btn" data-gap-action="promote" data-tmdb-id="${c.tmdbId}">Promote</button>
+        <button class="action-btn" data-gap-action="skip" data-tmdb-id="${c.tmdbId}">Skip</button>
+      </div>
+    </div>`;
+  }).join('');
+  list.querySelectorAll('button[data-gap-action]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const tmdbId = parseInt(btn.dataset.tmdbId);
+      const cand = result.candidates.find(x => x.tmdbId === tmdbId);
+      if (!cand) return;
+      if (btn.dataset.gapAction === 'skip') {
+        addGapSkip(tmdbId);
+        renderFindGaps();
+      } else if (btn.dataset.gapAction === 'promote') {
+        // Reuse the existing promote-modal/confirmPromote pipeline. Source
+        // 'recommendation' triggers the "TMDB Recommendations (Promoted)"
+        // section + pitch text in confirmPromote.
+        pendingPromote = {
+          type: cand.type === 'tv' ? 'tv' : 'movie',
+          title: cand.title || '',
+          year: cand.year || null,
+          plays: 0,
+          source: 'recommendation',
+          sourceTitle: (cand.sourceTitles && cand.sourceTitles[0]) || 'an item you rated',
+          tmdbId: cand.tmdbId,
+        };
+        document.getElementById('promote-info').textContent =
+          `Promote "${pendingPromote.title}" (${pendingPromote.year || '?'}) to a WatchTrack catalog tab. Suggested via Find Gaps from ${cand.sourceCount} item${cand.sourceCount === 1 ? '' : 's'} you've rated, including ${pendingPromote.sourceTitle}.`;
+        const tvTabs = new Set(['comedy-tv','crime-tv','spy-tv','drama-tv','horror-tv','fantasy-tv','scifi-tv','cons-courtroom-tv','british-comedy','heroes-comics-tv']);
+        const select = document.getElementById('promote-tab');
+        select.innerHTML = catalogManifest
+          .filter(c => c.id !== 'watchlist' && c.id !== 'auteur')
+          .filter(c => pendingPromote.type === 'movie' ? !tvTabs.has(c.id) : tvTabs.has(c.id))
+          .map(c => `<option value="${c.id}">${c.label}</option>`).join('');
+        document.getElementById('promote-modal').showModal();
+      }
+    });
+  });
 }
 
 // =====================================================================
@@ -6021,7 +6590,7 @@ function wizardHandleAction(btn) {
     if (wizardState.genre && wizardState.genre !== 'not-sure' && catalogs[wizardState.genre]) {
       select.value = wizardState.genre;
     }
-    document.getElementById('promote-modal').classList.add('active');
+    document.getElementById('promote-modal').showModal();
     return;
   }
   // Recs step → "Browse all unrated items" fallback to existing triage flow
@@ -6182,7 +6751,7 @@ function wizardLaunchTriage(mode) {
   wizardHide();
   triageState = { mode: 'wizard', requestMode: mode, queue, idx: 0 };
   document.getElementById('triage-title').textContent = title;
-  document.getElementById('triage-modal').classList.add('active');
+  document.getElementById('triage-modal').showModal();
   renderTriage();
 }
 
@@ -6197,7 +6766,7 @@ function startTriage(mode) {
     return;
   }
   triageState = { mode, queue: sectionItems.slice(), idx: 0 };
-  document.getElementById('triage-modal').classList.add('active');
+  document.getElementById('triage-modal').showModal();
   renderTriage();
 }
 function renderTriage() {
@@ -6209,7 +6778,7 @@ function renderTriage() {
     document.getElementById('triage-progress').textContent = `${queue.length} reviewed`;
     document.getElementById('triage-actions').innerHTML = `<button class="action-btn" id="triage-done">Close</button>`;
     document.getElementById('triage-done').addEventListener('click', () => {
-      document.getElementById('triage-modal').classList.remove('active');
+      document.getElementById('triage-modal').close();
       const wasWizard = triageState && triageState.mode === 'wizard';
       triageState = null;
       if (wasWizard) {
@@ -6422,7 +6991,7 @@ function renderRateTagTriage(item, sourceTab) {
         triageState.step = 2;
         renderRateTagTriage(item, sourceTab);
       } else if (act === 'rate-close') {
-        document.getElementById('triage-modal').classList.remove('active');
+        document.getElementById('triage-modal').close();
         triageState = null;
         render();
       }
@@ -6463,7 +7032,15 @@ function triageAction(act) {
 
   await loadCatalogManifest();
   loadActiveTab();
+  // v5.41.0 R6: if localStorage has been cleared but IndexedDB has a
+  // snapshot, restore it before loadState() runs so the user doesn't see
+  // a fresh seed-data init. No-op when localStorage already has state.
+  await idbRestoreIfNeeded();
   loadState();
+  // After load, mirror current state to IndexedDB and run the one-shot
+  // backup of all watchtrack-* localStorage keys (the "seatbelt" archive).
+  if (typeof idbMirrorState === 'function') idbMirrorState();
+  if (typeof idbMigrateOnce === 'function') idbMigrateOnce();
   // V5.28.0: pull remote sync state before catalogs load. If remote has newer
   // settings/state than our last-push timestamp, applies them silently.
   // syncOnLaunch() short-circuits if Plex/Worker aren't configured.
@@ -6490,6 +7067,19 @@ function triageAction(act) {
   // Show wizard always at app start (per "always start fresh")
   wizardShow();
 
+  // v5.37.0 B2: manifest shortcuts route via ?action=. Long-pressing the
+  // home-screen icon on Android lands here with the action pre-set.
+  const params = new URLSearchParams(window.location.search);
+  const action = params.get('action');
+  if (action) {
+    setTimeout(() => {
+      if (action === 'triage-queue') startTriage('queue');
+      else if (action === 'triage-suggest') startTriage('suggest');
+      else if (action === 'search') document.getElementById('search-btn').click();
+      else if (action === 'stats') document.getElementById('stats-btn').click();
+    }, 80);
+  }
+
   // If Plex is already configured, fetch the library in the background
   if (isPlexConfigured()) {
     fetchPlexLibrary();
@@ -6497,6 +7087,48 @@ function triageAction(act) {
   // If webhook bridge is configured, poll for events on startup
   if (isWebhookConfigured()) {
     pollPlexWebhookEvents();
+    // v5.39.0: bootstrap alerts check
+    if (isAlertsEnabled()) {
+      setTimeout(() => alertsCheckNotifications(), 1500);
+    }
+  }
+
+  // v5.37.0 B5: Page Visibility — when the app comes back from being
+  // hidden (tab switch on phone, app-switch on Bravia), trigger a
+  // catch-up Plex poll so any scrobbles that landed while we were away
+  // surface immediately. Plex polling is one-shot (called on startup +
+  // on settings save), so this is the natural moment for a refresh.
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && isWebhookConfigured()) {
+      pollPlexWebhookEvents();
+      // v5.39.0: catch-up alert poll on visibility — surfaces any
+      // streaming-leaving notifications that the cron has queued while
+      // the app was backgrounded.
+      if (typeof alertsCheckNotifications === 'function') alertsCheckNotifications();
+    }
+  });
+
+  // v5.37.0 B7: Wake Lock during triage. Triage is a focused review flow
+  // that can run several minutes on the Bravia; without a wake lock the
+  // screen dims mid-session. Acquired when triage-modal becomes active,
+  // released when it closes. MutationObserver on the class attribute is
+  // mode-agnostic and catches every entry/exit path — wizard triage,
+  // direct triage, completion close, all use the same .active toggle.
+  let _triageWakeLock = null;
+  const triageModalEl = document.getElementById('triage-modal');
+  if (triageModalEl && 'wakeLock' in navigator) {
+    new MutationObserver(async () => {
+      const isActive = triageModalEl.hasAttribute('open');
+      if (isActive && !_triageWakeLock) {
+        try {
+          _triageWakeLock = await navigator.wakeLock.request('screen');
+          _triageWakeLock.addEventListener('release', () => { _triageWakeLock = null; });
+        } catch (e) { /* permission denied or unsupported — silent no-op */ }
+      } else if (!isActive && _triageWakeLock) {
+        try { await _triageWakeLock.release(); } catch (e) { /* already released */ }
+        _triageWakeLock = null;
+      }
+    }).observe(triageModalEl, { attributes: true, attributeFilter: ['open'] });
   }
 
   // === Modal back-button injection + auto-focus + focus-trap ===
@@ -6515,14 +7147,14 @@ function triageAction(act) {
     const back = e.target.closest('.modal-back');
     if (!back) return;
     const modal = back.closest('.modal');
-    if (modal) modal.classList.remove('active');
+    if (modal) modal.close();
   });
   // V5.26.0: Hardened focus trap. focusin fires whenever ANY element gains
   // focus — if focus escapes the open modal (via Tab, programmatic .focus(),
   // or browser defaults), this listener immediately redirects it back into
   // the modal. Complements the keydown D-pad scoping for full coverage.
   document.addEventListener('focusin', (e) => {
-    const openModal = Array.from(document.querySelectorAll('.modal.active')).pop() || null;
+    const openModal = Array.from(document.querySelectorAll('.modal[open]')).pop() || null;
     if (!openModal) return;
     if (openModal.contains(e.target)) return;
     const first =
@@ -6555,7 +7187,7 @@ function triageAction(act) {
     });
   });
   document.querySelectorAll('.modal').forEach((m) => {
-    modalObs.observe(m, { attributes: true, attributeFilter: ['class'] });
+    modalObs.observe(m, { attributes: true, attributeFilter: ['open'] });
   });
 
   // === Back-button / Escape handling ===
@@ -6563,8 +7195,8 @@ function triageAction(act) {
   // (TWA physical back button → browser fires popstate, not always keydown).
   function handleAppBack() {
     // 1. Topmost open modal → close it
-    const openModal = Array.from(document.querySelectorAll('.modal.active')).pop() || null;
-    if (openModal) { openModal.classList.remove('active'); return; }
+    const openModal = Array.from(document.querySelectorAll('.modal[open]')).pop() || null;
+    if (openModal) { openModal.close(); return; }
     // 2. Wizard visible → navigate back within it (or stay at root; never exit)
     if (document.getElementById('wizard').style.display !== 'none') {
       if (wizardState.step !== 'root') wizardGoBack();
@@ -6640,7 +7272,7 @@ function triageAction(act) {
     e.preventDefault();
     const focused = document.activeElement;
     // If a modal is open, restrict the focusables to its contents (focus trap)
-    const openModalRoot = Array.from(document.querySelectorAll('.modal.active')).pop() || null;
+    const openModalRoot = Array.from(document.querySelectorAll('.modal[open]')).pop() || null;
     const searchRoot = openModalRoot || document;
     if (!focused || focused === document.body) {
       // V5.21.2: Filter for visibility (offsetParent !== null) and prefer the

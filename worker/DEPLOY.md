@@ -150,6 +150,69 @@ Settings → Plex Webhook Bridge:
 - `POST /plex/scrobble` — Body `{ secret, ratingKey }`. Marks the item watched on Plex.
 - `GET /plex/history?secret=X&start=N&size=N` — Returns Plex's raw paginated `MediaContainer` for `/status/sessions/history/all`.
 
+## v5.6 — streaming-leaving alerts
+
+The Worker can now monitor TMDB watch/providers for the user's queued
+and watching items, and queue notifications when a provider drops a
+title. Setup needs three small additions to a working v5.5 deployment.
+
+### 1. Create a sixth KV namespace
+
+Workers & Pages → KV → Create a namespace, name it `WATCHTRACK_ALERTS`.
+
+Bind it to the Worker as `ALERTS`:
+
+| Variable name | KV namespace |
+|---|---|
+| `ALERTS` | WATCHTRACK_ALERTS |
+
+Save and deploy.
+
+### 2. Add a Cron Trigger
+
+Worker → **Settings → Triggers → Cron Triggers → Add Cron Trigger**.
+
+Cron expression: `0 13 * * *` (daily, 13:00 UTC = 8 AM Central).
+
+The Worker's `scheduled` handler calls `runAlertsCheck` automatically
+when the trigger fires. No URL needs to be configured on the trigger
+itself — the platform routes `scheduled` events to the Worker directly.
+
+### 3. (Optional) Manual trigger for testing
+
+Visit `https://watchtrack-plex.YOURNAME.workers.dev/cron/check-alerts?secret=YOUR_SHARED_SECRET`.
+
+You should get JSON like `{"usersChecked":1,"notificationsQueued":0,"lookupsRun":12,"ranAt":...}`. Subsequent runs detect provider changes between TMDB
+fetches and queue notifications under `ALERTS:notif:{userHash}:{ts}`.
+
+### Storage usage
+
+Worst case for one user with 50 queued items: one snapshot value (~5 KB)
+plus a notification queue of typically 0–3 entries during a streaming
+month, each ≤ 0.5 KB. Free tier KV (1,000 writes/day, 100,000 reads/day)
+is more than enough for personal use.
+
+### Endpoints reference (v5.6 additions)
+
+- `POST /alerts/subscribe` — body `{ secret, userHash, region, items }`. The client posts its current queued+watching item manifest each time the subscription is refreshed.
+- `POST /alerts/unsubscribe` — body `{ secret, userHash }`.
+- `GET /alerts/status?secret=X&user=HASH` — current subscription record.
+- `GET /alerts/notifications?secret=X&user=HASH&since=TS` — pending notifications since the given timestamp.
+- `POST /alerts/notifications/seen` — body `{ secret, userHash, keys }` clears delivered notifications.
+- `GET /cron/check-alerts?secret=X` — manual trigger of the daily walk.
+
+### Why polling, not Web Push
+
+Web Push from a Cloudflare Worker requires implementing VAPID JWT
+signing and AES128GCM payload encryption inline — a few hundred lines
+of crypto code and a one-time VAPID keypair. For a single-user
+personal tracker that opens daily, the polling model in app.js
+(`alertsCheckNotifications` on visibility-change and bootstrap)
+delivers the same UX with simpler code and no cross-device key
+management. If a future iteration needs out-of-app delivery (e.g.
+notifications while WatchTrack is closed), Web Push can layer on top
+without changing the existing endpoints.
+
 ## Quotas & cost
 
 - **Workers free tier:** 100,000 requests/day. Personal use is well within.

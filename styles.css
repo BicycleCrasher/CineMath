@@ -351,12 +351,28 @@ footer {
   padding-bottom: max(40px, env(safe-area-inset-bottom));
 }
 .ornament { text-align: center; color: var(--accent-dim); font-size: 14px; letter-spacing: 0.4em; margin: 6px 0 2px; }
+/* v5.38.0 R3: native <dialog> migration. The <dialog> element handles
+   open/closed display via the [open] attribute and provides an
+   accessible focus trap, Esc-to-close, and a backdrop pseudo-element.
+   We reset the user-agent's solid border, padding, and background
+   so the inner .modal-content remains the visible card, and we use
+   ::backdrop for the dim overlay. */
 .modal {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.85);
-  display: none; align-items: center; justify-content: center;
-  z-index: 200; padding: 20px;
+  border: 0;
+  padding: 20px;
+  background: transparent;
+  color: inherit;
+  max-width: 100vw;
+  max-height: 100vh;
 }
-.modal.active { display: flex; }
+.modal[open] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal::backdrop {
+  background: rgba(0, 0, 0, 0.85);
+}
 .modal-content {
   background: var(--bg-elev); border: 1px solid var(--rule);
   border-radius: 6px; padding: 20px; max-width: 500px; width: 100%;
@@ -1086,8 +1102,51 @@ body.tv-mode .modal-textarea {
 }
 
 /* TV mode: hide notes textarea (typing on remote is brutal) */
+/* TV mode: textarea is hidden because D-pad typing is impractical, but we
+   still surface saved notes in a read-only block and offer voice dictation
+   via the mic button (B1, v5.37.0). */
 body.tv-mode .notes-input { display: none; }
 body.tv-mode .notes-label { display: none; }
+body.tv-mode .notes-tv-display { display: block; }
+body.tv-mode .voice-dictate-btn { display: inline-block; }
+.notes-tv-display { display: none; }
+.voice-dictate-btn { display: none; }
+body.tv-mode .notes-tv-display {
+  background: var(--bg-elev);
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  padding: 14px 16px;
+  border-radius: 4px;
+  margin-top: 14px;
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  min-height: 28px;
+}
+body.tv-mode .notes-tv-display:empty::before {
+  content: 'No notes yet — tap mic to dictate.';
+  color: var(--ink-faint);
+  font-style: italic;
+}
+body.tv-mode .voice-dictate-btn {
+  margin-top: 10px;
+  padding: 12px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--accent-dim);
+  color: var(--accent);
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+body.tv-mode .voice-dictate-btn.recording {
+  background: var(--love);
+  border-color: var(--love);
+  color: #1a1612;
+}
 
 /* === Focus rings (D-pad / keyboard navigation) — mode-agnostic ===
    No body.tv-mode / phone-mode prefix because TV-mode detection in a TWA

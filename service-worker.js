@@ -1,4 +1,4 @@
-const CACHE_NAME = 'scifi-tracker-v75';
+const CACHE_NAME = 'scifi-tracker-v80';
 const inflightRevalidations = new Set();
 const ASSETS = [
   './',
@@ -53,6 +53,30 @@ self.addEventListener('activate', (event) => {
     )
   );
   self.clients.claim();
+});
+
+// v5.39.0: streaming-leaving notification click handler. The polling
+// path in app.js calls Notifications API directly when the page is
+// visible; clicks dispatched against those notifications navigate via
+// the page's own handler. This SW handler covers the rarer case where
+// a notification fires while the page is closed (e.g. via future Web
+// Push integration) — focus the existing client or open a new one.
+self.addEventListener('notificationclick', (event) => {
+  const data = event.notification.data || {};
+  const tabId = data.tabId;
+  const itemId = data.itemId;
+  event.notification.close();
+  event.waitUntil((async () => {
+    const all = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    const target = all.find(c => c.url.includes(self.location.origin));
+    const url = `./?action=open-item&tab=${encodeURIComponent(tabId || '')}&id=${encodeURIComponent(itemId || '')}`;
+    if (target) {
+      target.focus();
+      target.postMessage({ type: 'NOTIFICATION_CLICK', tabId, itemId });
+    } else {
+      self.clients.openWindow(url);
+    }
+  })());
 });
 
 self.addEventListener('fetch', (event) => {

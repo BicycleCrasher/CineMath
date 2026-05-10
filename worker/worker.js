@@ -1,4 +1,4 @@
-// WatchTrack ↔ Plex bridge (v5.5 — adds videos to TMDB lookup for trailer embedding)
+// WatchTrack ↔ Plex bridge (v5.6 — adds streaming-leaving alerts)
 //
 // Endpoints:
 //   POST /webhook/{secret}              Plex Pass webhook receiver
@@ -18,6 +18,12 @@
 //   GET  /plex/history?secret=X&start=N&size=N   Paginated Plex viewing history
 //   GET  /sync/get?user=HASH&secret=X   v5.4: fetch user's synced state blob
 //   PUT  /sync/put?user=HASH&secret=X   v5.4: store user's state blob (body = JSON)
+//   POST /alerts/subscribe              v5.6: opt user into streaming-leaving alerts
+//   POST /alerts/unsubscribe            v5.6: opt out
+//   GET  /alerts/status?secret=X&user=HASH      v5.6: subscription state + last check ts
+//   GET  /alerts/notifications?secret=X&user=HASH&since=TS  v5.6: poll pending alerts
+//   POST /alerts/notifications/seen     v5.6: mark notifications as delivered (clear queue)
+//   GET  /cron/check-alerts             v5.6: internal — fired by Cloudflare Cron Trigger
 //   GET  /                              health check
 //
 // KV bindings expected (variable names must match exactly):
@@ -27,6 +33,7 @@
 //   METADATA    — TMDB enrichment cache
 //   PROMOTIONS  — orphan promotions persisted across devices
 //   SYNC_KV     — v5.4: cross-device state sync blobs, keyed by user:HASH
+//   ALERTS      — v5.6: per-user alert subscription, snapshot, and notification queue
 
 // Library whitelist — only ingest from these Plex library section IDs.
 // Adjust if your library config changes.
@@ -162,7 +169,7 @@ export default {
 
     // Health
     if (path === '/' || path === '/health') {
-      return new Response('WatchTrack-Plex bridge online (v5.5 — videos for trailer embedding)', { headers: cors });
+      return new Response('WatchTrack-Plex bridge online (v5.6 — streaming-leaving alerts)', { headers: cors });
     }
 
     // === Plex webhook receiver ===
@@ -553,6 +560,217 @@ export default {
       return new Response('ok', { headers: cors });
     }
 
+    // === v5.6: Streaming-leaving alerts ===
+    //
+    // Daily Cron walks each subscribed user's queued/watching items, calls
+    // tmdbLookup (cache-first), diffs the watch/providers result against the
+    // last snapshot, and writes any provider-disappearance to the user's
+    // notification queue. The client polls /alerts/notifications when it
+    // becomes visible (pull model — no Web Push protocol implementation
+    // needed in the Worker; the client uses the browser-native Notifications
+    // API to display alerts that the queue surfaces).
+    //
+    // ALERTS KV layout:
+    //   sub:{userHash}            JSON { region, enabled, subscribedAt }
+    //   snap:{userHash}           JSON map: tmdbKey -> [provider names]
+    //   notif:{userHash}:{ts}     JSON { title, body, itemRef, ts }
+
+    // POST /alerts/subscribe — body { secret, userHash, region, items? }
+    // `items` is the per-device list of catalog entries the user wants
+    // monitored — each one is { tabId, itemId, title, year, type, tmdbId? }.
+    // The client refreshes the subscription whenever its queued/watching set
+    // changes; the Worker simply replaces the stored manifest.
+    if (path === '/alerts/subscribe' && method === 'POST') {
+      try {
+        const body = await request.json();
+        if (!(await checkSecret(env, body.secret))) return new Response('Forbidden', { status: 403, headers: cors });
+        if (!body.userHash || !/^[a-f0-9]{16,64}$/i.test(body.userHash)) {
+          return new Response('Bad user hash', { status: 400, headers: cors });
+        }
+        const region = (body.region || 'US').slice(0, 4).toUpperCase();
+        const items = Array.isArray(body.items) ? body.items.slice(0, 500) : [];
+        await env.ALERTS.put(`sub:${body.userHash}`, JSON.stringify({
+          region,
+          enabled: true,
+          subscribedAt: Date.now(),
+          items,
+        }));
+        return jsonResponse({ ok: true, region, itemCount: items.length });
+      } catch (e) {
+        return new Response('Bad request: ' + e.message, { status: 400, headers: cors });
+      }
+    }
+
+    // POST /alerts/unsubscribe — body { secret, userHash }
+    if (path === '/alerts/unsubscribe' && method === 'POST') {
+      try {
+        const body = await request.json();
+        if (!(await checkSecret(env, body.secret))) return new Response('Forbidden', { status: 403, headers: cors });
+        if (!body.userHash) return new Response('Missing userHash', { status: 400, headers: cors });
+        await env.ALERTS.delete(`sub:${body.userHash}`);
+        return jsonResponse({ ok: true });
+      } catch (e) {
+        return new Response('Bad request: ' + e.message, { status: 400, headers: cors });
+      }
+    }
+
+    // GET /alerts/status?secret=X&user=HASH
+    if (path === '/alerts/status' && method === 'GET') {
+      const providedSecret = url.searchParams.get('secret');
+      if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
+      const userHash = url.searchParams.get('user');
+      if (!userHash) return new Response('Missing user', { status: 400, headers: cors });
+      const sub = await env.ALERTS.get(`sub:${userHash}`);
+      if (!sub) return jsonResponse({ enabled: false });
+      try { return jsonResponse({ ...JSON.parse(sub), enabled: true }); }
+      catch { return jsonResponse({ enabled: false }); }
+    }
+
+    // GET /alerts/notifications?secret=X&user=HASH&since=TS — return pending notifications
+    if (path === '/alerts/notifications' && method === 'GET') {
+      const providedSecret = url.searchParams.get('secret');
+      if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
+      const userHash = url.searchParams.get('user');
+      const since = parseInt(url.searchParams.get('since') || '0');
+      if (!userHash) return new Response('Missing user', { status: 400, headers: cors });
+      const list = await env.ALERTS.list({ prefix: `notif:${userHash}:` });
+      const records = [];
+      const CONCURRENCY = 50;
+      for (let i = 0; i < list.keys.length; i += CONCURRENCY) {
+        const batch = list.keys.slice(i, i + CONCURRENCY);
+        const results = await Promise.all(batch.map(k => env.ALERTS.get(k.name).catch(() => null)));
+        results.forEach((v, idx) => {
+          if (!v) return;
+          try {
+            const rec = JSON.parse(v);
+            if (rec.ts > since) records.push({ key: batch[idx].name, ...rec });
+          } catch {}
+        });
+      }
+      records.sort((a, b) => a.ts - b.ts);
+      return jsonResponse({ notifications: records });
+    }
+
+    // POST /alerts/notifications/seen — body { secret, userHash, keys: [...] }
+    if (path === '/alerts/notifications/seen' && method === 'POST') {
+      try {
+        const body = await request.json();
+        if (!(await checkSecret(env, body.secret))) return new Response('Forbidden', { status: 403, headers: cors });
+        if (!body.userHash) return new Response('Missing userHash', { status: 400, headers: cors });
+        const keys = Array.isArray(body.keys) ? body.keys : [];
+        for (const k of keys) {
+          if (typeof k === 'string' && k.startsWith(`notif:${body.userHash}:`)) {
+            await env.ALERTS.delete(k);
+          }
+        }
+        return jsonResponse({ deleted: keys.length });
+      } catch (e) {
+        return new Response('Bad request: ' + e.message, { status: 400, headers: cors });
+      }
+    }
+
+    // GET /cron/check-alerts — fired by Cloudflare Cron Trigger.
+    // Walks every subscribed user, fetches their state from SYNC_KV,
+    // checks queued/watching items against TMDB watch/providers, and
+    // queues notifications for any provider that disappeared.
+    if (path === '/cron/check-alerts' && method === 'GET') {
+      // Permit either the secret (manual trigger) OR same-host scheduled
+      // event. Cloudflare's scheduled handler calls fetch with a special
+      // user-agent or path; we just gate on the shared secret here so the
+      // user can trigger a manual check via curl during testing.
+      const providedSecret = url.searchParams.get('secret');
+      if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
+      const summary = await runAlertsCheck(env);
+      return jsonResponse(summary);
+    }
+
     return new Response('Not found', { status: 404, headers: cors });
   },
+
+  // Cloudflare Cron Trigger handler. The trigger is configured in the
+  // dashboard (Settings → Triggers → Cron Triggers); cron expression
+  // recommended in DEPLOY.md is `0 13 * * *` (daily 13:00 UTC, 8 AM Central).
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(runAlertsCheck(env));
+  },
 };
+
+// === v5.6: Alerts cron worker ===
+async function runAlertsCheck(env) {
+  const subList = await env.ALERTS.list({ prefix: 'sub:' });
+  let usersChecked = 0, notificationsQueued = 0, lookupsRun = 0;
+
+  for (const k of subList.keys) {
+    const userHash = k.name.slice('sub:'.length);
+    const subRaw = await env.ALERTS.get(k.name);
+    if (!subRaw) continue;
+    let sub;
+    try { sub = JSON.parse(subRaw); } catch { continue; }
+    if (!sub.enabled) continue;
+    const region = sub.region || 'US';
+    const items = Array.isArray(sub.items) ? sub.items : [];
+    if (items.length === 0) continue;
+
+    // Cross-check user's state from SYNC_KV: only fire on items still
+    // marked queued or watching at cron time. This protects against stale
+    // subscription manifests.
+    const stateRaw = await env.SYNC_KV.get(`user:${userHash}`);
+    let activeIds = null;
+    if (stateRaw) {
+      try {
+        const stateBlob = JSON.parse(stateRaw);
+        const userState = (stateBlob && stateBlob.state) || stateBlob || {};
+        activeIds = new Set();
+        Object.keys(userState).forEach(tab => {
+          const tabState = userState[tab];
+          if (!tabState || typeof tabState !== 'object') return;
+          Object.keys(tabState).forEach(id => {
+            const e = tabState[id];
+            if (!e) return;
+            if (e.status === 'queued' || e.status === 'watching') activeIds.add(`${tab}|${id}`);
+          });
+        });
+      } catch {}
+    }
+
+    const snapRaw = await env.ALERTS.get(`snap:${userHash}`);
+    let snapshot = {};
+    try { snapshot = snapRaw ? JSON.parse(snapRaw) : {}; } catch { snapshot = {}; }
+    const newSnapshot = {};
+
+    for (const it of items) {
+      if (!it || !it.itemId || !it.tabId) continue;
+      const ref = `${it.tabId}|${it.itemId}`;
+      if (activeIds && !activeIds.has(ref)) continue; // dropped or watched since
+      const enrichment = await tmdbLookup(env, it.title, it.year, it.type === 'tv' ? 'tv' : 'movie', it.tmdbId || null);
+      lookupsRun++;
+      if (!enrichment || !enrichment.found) continue;
+      const regionProviders = enrichment.watchProviders && enrichment.watchProviders[region];
+      const flatrate = (regionProviders && regionProviders.flatrate) || [];
+      const currentNames = flatrate.map(p => p.provider_name).sort();
+      const previous = snapshot[ref] || null;
+      const previousNames = previous ? previous.providers : null;
+      newSnapshot[ref] = { providers: currentNames, ts: Date.now() };
+      if (previousNames && previousNames.length > 0) {
+        const dropped = previousNames.filter(p => !currentNames.includes(p));
+        if (dropped.length > 0) {
+          const ts = Date.now();
+          const notifKey = `notif:${userHash}:${ts}_${Math.random().toString(36).slice(2, 8)}`;
+          const dropList = dropped.join(', ');
+          await env.ALERTS.put(notifKey, JSON.stringify({
+            ts,
+            title: `${it.title} leaving ${dropList}`,
+            body: `${it.title} (${it.year}) is no longer streaming on ${dropList} in ${region}. Catch it before it's gone.`,
+            itemRef: ref,
+            tabId: it.tabId,
+            itemId: it.itemId,
+          }), { expirationTtl: 30 * 24 * 60 * 60 });
+          notificationsQueued++;
+        }
+      }
+    }
+    await env.ALERTS.put(`snap:${userHash}`, JSON.stringify(newSnapshot));
+    usersChecked++;
+  }
+  return { usersChecked, notificationsQueued, lookupsRun, ranAt: Date.now() };
+}

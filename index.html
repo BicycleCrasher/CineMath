@@ -54,6 +54,7 @@
     <button class="header-btn" id="stats-btn">Stats</button>
     <button class="header-btn" id="triage-queue-btn">Triage Queue</button>
     <button class="header-btn" id="triage-suggest-btn">Triage Suggested</button>
+    <button class="header-btn" id="find-gaps-btn">Find Gaps</button>
     <button class="header-btn" id="settings-btn">Settings</button>
     <button class="header-btn" id="history-btn">Plex History</button>
     <button class="header-btn" id="reset-btn">Reset</button>
@@ -77,7 +78,7 @@
 
 <!-- Modals (live outside app-shell so they're accessible from wizard too) -->
 
-<div class="modal" id="export-modal">
+<dialog class="modal" id="export-modal">
   <div class="modal-content">
     <h3>Export progress</h3>
     <p>Includes all tabs. Save it or share with Claude for new recommendations.</p>
@@ -87,9 +88,9 @@
       <button class="action-btn" id="export-close">Close</button>
     </div>
   </div>
-</div>
+</dialog>
 
-<div class="modal" id="import-modal">
+<dialog class="modal" id="import-modal">
   <div class="modal-content">
     <h3>Import progress</h3>
     <p>Paste a previously exported text. This replaces all current progress.</p>
@@ -99,9 +100,9 @@
       <button class="action-btn" id="import-close">Cancel</button>
     </div>
   </div>
-</div>
+</dialog>
 
-<div class="modal" id="search-modal">
+<dialog class="modal" id="search-modal">
   <div class="modal-content">
     <h3>Search</h3>
     <input type="text" class="modal-input" id="search-input" placeholder="Title, director, country, section, pitch..." autocomplete="off">
@@ -110,9 +111,9 @@
       <button class="action-btn" id="search-close">Close</button>
     </div>
   </div>
-</div>
+</dialog>
 
-<div class="modal" id="notes-search-modal">
+<dialog class="modal" id="notes-search-modal">
   <div class="modal-content">
     <h3>Search notes</h3>
     <input type="text" class="modal-input" id="notes-search-input" placeholder="Search across all your notes..." autocomplete="off">
@@ -121,9 +122,9 @@
       <button class="action-btn" id="notes-search-close">Close</button>
     </div>
   </div>
-</div>
+</dialog>
 
-<div class="modal" id="stats-modal">
+<dialog class="modal" id="stats-modal">
   <div class="modal-content">
     <h3>Stats</h3>
     <div class="stats-content" id="stats-content"></div>
@@ -133,9 +134,9 @@
       <button class="action-btn" id="stats-close">Close</button>
     </div>
   </div>
-</div>
+</dialog>
 
-<div class="modal" id="period-review-modal">
+<dialog class="modal" id="period-review-modal">
   <div class="modal-content">
     <h3>Period in Review</h3>
     <p class="settings-help">Generate a markdown report covering a specific time window.</p>
@@ -165,21 +166,22 @@
     <p id="period-review-status" class="settings-help"></p>
     <div class="modal-actions">
       <button class="action-btn" id="period-review-generate">Generate &amp; download</button>
+      <button class="action-btn" id="period-review-share">Share…</button>
       <button class="action-btn" id="period-review-cancel">Cancel</button>
     </div>
   </div>
-</div>
+</dialog>
 
-<div class="modal" id="triage-modal">
+<dialog class="modal" id="triage-modal">
   <div class="modal-content">
     <h3 id="triage-title">Triage</h3>
     <div class="triage-progress" id="triage-progress"></div>
     <div class="triage-card" id="triage-card"></div>
     <div class="modal-actions" id="triage-actions"></div>
   </div>
-</div>
+</dialog>
 
-<div class="modal" id="pair-modal">
+<dialog class="modal" id="pair-modal">
   <div class="modal-content">
     <h3>Pair Another Device</h3>
     <p class="settings-help">
@@ -204,9 +206,9 @@
       <button class="action-btn" id="pair-close">Close</button>
     </div>
   </div>
-</div>
+</dialog>
 
-<div class="modal" id="watch-modal">
+<dialog class="modal" id="watch-modal">
   <div class="modal-content">
     <h3 id="watch-modal-title">Watch</h3>
     <div id="watch-modal-body"><div class="streaming-loading">Looking up where to watch…</div></div>
@@ -215,9 +217,9 @@
       <button class="action-btn" id="watch-cancel">Cancel</button>
     </div>
   </div>
-</div>
+</dialog>
 
-<div class="modal" id="import-summary-modal">
+<dialog class="modal" id="import-summary-modal">
   <div class="modal-content">
     <h3>Import summary</h3>
     <div class="stats-content" id="import-summary-content"></div>
@@ -225,27 +227,27 @@
       <button class="action-btn" id="import-summary-close">Close</button>
     </div>
   </div>
-</div>
+</dialog>
 
-<div class="modal" id="bulk-sync-progress-modal">
+<dialog class="modal" id="bulk-sync-progress-modal">
   <div class="modal-content">
     <h3>Syncing from Plex</h3>
     <p id="bulk-sync-status">Starting...</p>
     <div class="bulk-progress-bar"><div class="bulk-progress-fill" id="bulk-sync-bar"></div></div>
     <p class="settings-help">This may take 10-60 seconds depending on history size. Don't close the app.</p>
   </div>
-</div>
+</dialog>
 
-<div class="modal" id="enrichment-progress-modal">
+<dialog class="modal" id="enrichment-progress-modal">
   <div class="modal-content">
     <h3>Enriching catalog</h3>
     <p id="enrichment-status">Starting...</p>
     <div class="bulk-progress-bar"><div class="bulk-progress-fill" id="enrichment-bar"></div></div>
     <p class="settings-help">Looking up TMDB IDs and metadata for every catalog item. ~30-90 seconds for 650 items. Items already enriched within 30 days are skipped. Don't close the app.</p>
   </div>
-</div>
+</dialog>
 
-<div class="modal" id="enrichment-result-modal">
+<dialog class="modal" id="enrichment-result-modal">
   <div class="modal-content">
     <h3>Enrichment complete</h3>
     <div class="stats-content" id="enrichment-result-content"></div>
@@ -253,9 +255,9 @@
       <button class="action-btn" id="enrichment-result-close">Close</button>
     </div>
   </div>
-</div>
+</dialog>
 
-<div class="modal" id="bulk-sync-result-modal">
+<dialog class="modal" id="bulk-sync-result-modal">
   <div class="modal-content">
     <h3>Sync complete</h3>
     <div class="stats-content" id="bulk-sync-result-content"></div>
@@ -263,9 +265,9 @@
       <button class="action-btn" id="bulk-sync-result-close">Close</button>
     </div>
   </div>
-</div>
+</dialog>
 
-<div class="modal" id="history-modal">
+<dialog class="modal" id="history-modal">
   <div class="modal-content">
     <h3>Plex History</h3>
     <div class="history-controls">
@@ -290,9 +292,21 @@
       <button class="action-btn" id="history-close">Close</button>
     </div>
   </div>
-</div>
+</dialog>
 
-<div class="modal" id="promote-modal">
+<dialog class="modal" id="find-gaps-modal">
+  <div class="modal-content">
+    <h3>Find Gaps</h3>
+    <p class="settings-help" id="find-gaps-summary">Computing gap candidates from your TMDB-enriched watch history…</p>
+    <div class="search-results" id="find-gaps-list"></div>
+    <div class="modal-actions">
+      <button class="action-btn" id="find-gaps-refresh">Refresh</button>
+      <button class="action-btn" id="find-gaps-close">Close</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog class="modal" id="promote-modal">
   <div class="modal-content">
     <h3>Promote to catalog</h3>
     <p class="settings-help" id="promote-info"></p>
@@ -305,9 +319,9 @@
       <button class="action-btn" id="promote-cancel">Cancel</button>
     </div>
   </div>
-</div>
+</dialog>
 
-<div class="modal" id="promotions-mgr-modal">
+<dialog class="modal" id="promotions-mgr-modal">
   <div class="modal-content">
     <h3>Manage promotions</h3>
     <p class="settings-help" id="promotions-mgr-status">Loading promotions...</p>
@@ -318,9 +332,9 @@
       <button class="action-btn" id="promotions-mgr-close">Close</button>
     </div>
   </div>
-</div>
+</dialog>
 
-<div class="modal" id="settings-modal">
+<dialog class="modal" id="settings-modal">
   <div class="modal-content">
     <h3>Settings</h3>
     <div class="settings-scroll">
@@ -416,13 +430,23 @@
       </div>
       <p class="settings-status" id="trakt-status">Not connected.</p>
     </div>
+    <div class="settings-section" data-section="alerts">
+      <h4>Streaming-leaving alerts</h4>
+      <p class="settings-help">Daily check against TMDB for items you have queued or marked as watching. If a title is about to leave a streaming service in your region, you get a notification next time the app is open. Requires a Cloudflare Worker with a Cron Trigger configured (see worker/DEPLOY.md). Region uses your existing Streaming providers setting.</p>
+      <div class="settings-row">
+        <button class="action-btn" id="alerts-enable">Enable alerts</button>
+        <button class="action-btn" id="alerts-disable" style="display:none">Disable alerts</button>
+        <button class="action-btn" id="alerts-test">Check now</button>
+      </div>
+      <p class="settings-status" id="alerts-status">Off.</p>
+    </div>
     </div>
     <div class="modal-actions">
       <button class="action-btn" id="settings-save">Save</button>
       <button class="action-btn" id="settings-close">Cancel</button>
     </div>
   </div>
-</div>
+</dialog>
 
 <div class="legend">
   <div class="legend-row">
@@ -437,7 +461,7 @@
   Tap a card to expand. Tap circle to cycle status.
 </footer>
 
-<div class="modal" id="reset-confirm-modal">
+<dialog class="modal" id="reset-confirm-modal">
   <div class="modal-content">
     <h3>Reset this tab?</h3>
     <p class="settings-help" id="reset-confirm-detail"></p>
@@ -451,7 +475,7 @@
       <button class="action-btn" id="reset-confirm-cancel">Cancel</button>
     </div>
   </div>
-</div>
+</dialog>
 
 <div class="sw-update-banner" id="sw-update-banner" role="status" aria-live="polite">
   <span>New version available.</span>

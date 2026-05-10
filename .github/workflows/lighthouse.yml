@@ -1,0 +1,39 @@
+name: Lighthouse CI
+
+# Runs Lighthouse against the app served from a local static server.
+# Posts a scorecard comment on PRs. Soft-warn thresholds (see
+# .github/lighthouse-budget.json) — never blocks merge, just surfaces
+# regressions.
+
+on:
+  pull_request:
+    paths:
+      - 'app.js'
+      - 'styles.css'
+      - 'index.html'
+      - 'manifest.json'
+      - 'service-worker.js'
+
+permissions:
+  pull-requests: write
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - run: npm install -g @lhci/cli@0.13.x
+
+      - name: Serve and audit
+        run: |
+          npx --yes http-server . -p 8080 -s &
+          sleep 3
+          lhci autorun \
+            --collect.url=http://localhost:8080/ \
+            --upload.target=temporary-public-storage \
+            --config=.github/lighthouse-budget.json
+        continue-on-error: true

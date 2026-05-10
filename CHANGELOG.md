@@ -10,6 +10,319 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 5.41.0 — 2026-05-09
+**Service worker cache:** `scifi-tracker-v79` → `v80`
+
+### IndexedDB durability layer
+
+WatchTrack now mirrors its state to IndexedDB on every save and falls
+back to that mirror at bootstrap if `localStorage` is empty. Closes
+the long-standing risk that a single accidental site-data clear
+permanently wipes the user's watch history on a device.
+
+**What changed.** A small module-level helper (`idbOpen`, `idbGet`,
+`idbSet`, `idbMirrorState`, `idbMigrateOnce`, `idbRestoreIfNeeded`) is
+added near the top of `app.js`. `saveState()` now also schedules a
+1-second debounced write to IndexedDB under
+`state-snapshot`. The bootstrap calls `idbRestoreIfNeeded()` before
+`loadState()` — if `localStorage[STORAGE_KEY]` is missing but the
+IndexedDB snapshot exists, the snapshot is replayed back into
+`localStorage` so `loadState()` finds it. On first boot of v5.41.0,
+`idbMigrateOnce()` snapshots every `watchtrack-*` and `scifi-tracker-*`
+key into IndexedDB under `localstorage-backup:v5.41-bootstrap` as a
+single archive value — a "seatbelt" copy in case any restore goes
+sideways.
+
+**What didn't change.** Every existing `localStorage` callsite still
+works exactly as before. No async cascade through the codebase.
+Synchronous reads and writes remain the source of truth; IndexedDB is
+purely an additive backup. The full async-state-layer migration is
+deferred — the value-to-risk ratio of a 118-callsite refactor was
+poor relative to this much smaller change that addresses the real
+durability concern.
+
+**Why v5.41 and not v6.0.** No semantic break for users. State shape,
+sync layer, Trakt push/pull, Plex webhook flow — all unchanged. A
+future major version that flips reads to IndexedDB-first (with the
+async signature change that entails) can claim the v6 bump.
+
+---
+
+## 5.40.0 — 2026-05-09
+**Service worker cache:** `scifi-tracker-v78` → `v79`
+
+### Feature — Find Gaps (Stage 5f)
+
+A new **Find Gaps** header button surfaces titles the TMDB recommendation
+graph suggests you'd enjoy but that aren't in any of your catalog tabs
+yet. Closes the long-standing Stage 5f roadmap item.
+
+**Algorithm.** Walks every watched item plus every loved/liked item
+across all catalog tabs. For each, pulls the cached TMDB
+`recommendations` and `similar` arrays from the enrichment store.
+Aggregates into a frequency-ranked union, weighted by the source rating
+(loved=3, liked=2, watched=1). Subtracts anything already present in
+any catalog tab and anything the user has already dismissed via Skip.
+Returns the top 50, rendered with title, year, score, and which
+already-rated source titles contributed.
+
+**UI.** A new Find Gaps button in the header opens the
+`#find-gaps-modal` dialog (native `<dialog>`, opened via
+`.showModal()`). Each candidate has Promote and Skip buttons.
+Promote routes through the existing promote-modal/confirmPromote
+pipeline — the gap is added to a new "X. TMDB Recommendations
+(Promoted)" section in the chosen tab and synced to the Worker
+Promotions KV. Skip stores the TMDB id under
+`watchtrack-gap-skips` in localStorage so the same gap won't return.
+
+**Source-count threshold.** No floor in v5.40.0 — even single-source
+recommendations show up because the TMDB graph is sparse for
+genre-specific titles. If the list is too noisy in practice, raise
+`weight` thresholds in `findGaps()` or hide candidates with
+`sourceCount === 1`.
+
+**Why no Plex-history orphans yet.** The plan called for unioning
+Plex viewing history orphans into the gap pool. Skipped in this
+release because the existing Plex History modal already surfaces
+orphans with explicit Promote actions, and bundling the same items
+into Find Gaps would duplicate the surface. If a future iteration
+wants a single unified gap stream, it's a couple lines added to the
+candidate aggregation in `findGaps()`.
+
+**Roadmap status:**
+
+| Stage | Status |
+|-------|--------|
+| 5b. Persistent orphan promotions | ✅ 5.13.x |
+| 5c. TWA APK packaging | ✅ |
+| 5d. Multi-select / period review | ✅ 5.20.x |
+| 5e. Recommendation engine | ✅ 5.27.x (wizard recs) |
+| **5f. Find Gaps** | ✅ **5.40.0 (this release)** |
+
+---
+
+## 5.39.0 — 2026-05-09
+**Service worker cache:** `scifi-tracker-v77` → `v78`
+**Requires Worker patch:** worker.js v5.6 — adds `/alerts/*` and `/cron/check-alerts` endpoints, scheduled handler. Needs a new `WATCHTRACK_ALERTS` KV namespace bound as `ALERTS` and a Cron Trigger. See `worker/DEPLOY.md` v5.6 section.
+
+### Feature — Streaming-leaving alerts (Phase 3d)
+
+Daily cron compares TMDB watch/providers for every queued or watching
+item against the prior snapshot; when a provider drops a title in the
+user's region, a notification entry queues into KV and surfaces the
+next time the app opens.
+
+**Why polling, not Web Push.** Sending push notifications from a
+Cloudflare Worker requires VAPID JWT signing plus AES128GCM payload
+encryption — several hundred lines of crypto for a single-user
+personal tracker. The polling path: cron writes to a KV queue, and
+the client fetches pending notifications on visibility-change and
+bootstrap, then surfaces them via the browser-native Notifications
+API. WatchTrack is opened daily, so end-to-end latency is bounded by
+"next time you open the app," which matches the use case.
+
+**Worker side (v5.6):**
+- New `ALERTS` KV namespace stores three key prefixes per user:
+  `sub:{userHash}` for the subscription record (region + items
+  manifest), `snap:{userHash}` for the last seen provider snapshot,
+  and `notif:{userHash}:{ts}` for pending notification entries
+  (30-day TTL).
+- New endpoints: `POST /alerts/subscribe`, `POST /alerts/unsubscribe`,
+  `GET /alerts/status`, `GET /alerts/notifications`,
+  `POST /alerts/notifications/seen`, `GET /cron/check-alerts`.
+- New `scheduled()` export — Cloudflare Cron Trigger calls
+  `runAlertsCheck` directly. Recommended cron expression in
+  `DEPLOY.md`: `0 13 * * *` (daily 13:00 UTC).
+- `runAlertsCheck` walks subscribers, cross-checks each user's state
+  in `SYNC_KV` to confirm items are still queued/watching, calls
+  `tmdbLookup` (cache-first) for each, and diffs the flat-rate
+  provider list for the user's region.
+
+**Client side:**
+- `alertsSubscribe()` requests notification permission, builds an
+  items manifest from `state` (only items currently `queued` or
+  `watching`), and POSTs to the Worker. `alertsUnsubscribe()` clears.
+- `alertsCheckNotifications()` runs on app bootstrap and on every
+  visibility-change. Fetches notifications from the Worker since the
+  last poll timestamp, displays each via `new Notification(...)` with
+  the icon and `tag` set so duplicates collapse, then marks them seen.
+- `setStatus()` calls `alertsRefreshSubscription()` whenever an item
+  enters or leaves the queued/watching set — keeps the Worker's
+  manifest fresh without forcing the user to re-toggle. Re-subscribe
+  is debounced 5 s to absorb bulk changes.
+- New "Streaming-leaving alerts" section in the Settings card grid.
+  Status badge shows ON/OFF; the section has Enable, Disable, and
+  "Check now" buttons. Region uses the existing
+  `getStreamingRegion()` setting (already used by streaming-provider
+  badges).
+
+**Service worker:** added `notificationclick` handler — focuses an
+existing app window or opens a new one, with `?action=open-item&tab=…&id=…`
+URL params for future deep-linking. Cache bumped to `v78`.
+
+**One-time setup** (per `worker/DEPLOY.md` v5.6 section): create
+`WATCHTRACK_ALERTS` KV namespace, bind as `ALERTS`, paste new
+`worker.js`, add a Cron Trigger.
+
+**Roadmap status:**
+
+| Phase | Status |
+|-------|--------|
+| 1. Settings card grid | ✅ 5.27.x |
+| 2. Cross-platform sync | ✅ 5.31.x |
+| 3a. Time budget filter | ✅ 5.32.0 |
+| 3b. Mood archetype filter | ✅ 5.33.0 |
+| 3c. Trailer embed | ✅ 5.34.0 |
+| **3d. Streaming-leaving alerts** | ✅ **5.39.0 (this release; Worker patch required)** |
+
+---
+
+## 5.38.0 — 2026-05-09
+**Service worker cache:** `scifi-tracker-v76` → `v77`
+
+### Native `<dialog>` migration
+
+All 19 modal containers in `index.html` now use the native `<dialog>`
+element. The change is purely structural — every modal still opens
+the same way from the user's perspective, but the browser now provides
+several behaviors we previously hand-rolled or didn't have at all.
+
+**What changes for the user.** Pressing Escape closes the topmost
+modal — previously this required a custom keydown listener. Modal
+backgrounds dim via the native `::backdrop` pseudo-element. Focus
+moves into the modal automatically when it opens and returns to the
+trigger element when it closes. Screen-reader semantics improve
+because `<dialog>` is properly announced as a modal.
+
+**What changes in the code.**
+- Every `<div class="modal" id="…">` in `index.html` is now
+  `<dialog class="modal" id="…">`. The inner `.modal-content` wrapper
+  stays as-is, so all child selectors still match.
+- The CSS `.modal { position: fixed; inset: 0; background: rgba(...);
+  display: none; }` and `.modal.active { display: flex; }` rules are
+  replaced. New rules reset the `<dialog>` user-agent border, padding,
+  and background; size to viewport bounds; flex-center the inner card
+  via `.modal[open]`; and style the backdrop via `.modal::backdrop`.
+- 50+ JS sites that toggled `.classList.add('active')` /
+  `.classList.remove('active')` on modal elements now call
+  `.showModal()` and `.close()` respectively. Local-variable references
+  (`settingsModal`, `progressModal`, `modal`, `openModal`,
+  `m.classList…` inside qsa-forEach) were migrated alongside the
+  `getElementById(…)` references.
+- `.modal.active` selectors in JS query strings are now `.modal[open]`.
+- The triage wake-lock observer (5.37.0) now watches the `open`
+  attribute instead of `class` — same behavior, native signal.
+- The category-pill and filter-pill `.active` toggles are unchanged
+  because those elements aren't modals.
+
+**Why this is its own release.** The change touches every modal-opening
+path in the app and is the riskiest UI migration on the roadmap. It
+shipped alone so any regression has a single bisect point.
+
+---
+
+## 5.37.0 — 2026-05-09
+**Service worker cache:** `scifi-tracker-v75` → `v76`
+
+### Native web-platform pass — voice notes, shortcuts, transitions, share, wake lock
+
+Six small features that each map to a single browser API already
+supported on Sony Bravia / Google TV / Android Chrome. No new
+dependencies. Feature-detection guards every site so older WebViews
+fall through to existing behavior.
+
+**Voice notes in TV mode (B1).** The notes textarea is hidden in TV
+mode because D-pad typing is impractical, so item bodies now also
+include a read-only `.notes-tv-display` block (shows whatever has
+already been saved) and a 🎤 mic button. Tap the button to dictate;
+tap again to stop. Transcribed text appends to the existing note via
+the same `setNotes()` path the textarea uses, so Trakt/sync layers see
+no difference. Uses `webkitSpeechRecognition` (or `SpeechRecognition`
+where available); shows an alert on devices without speech support.
+
+**Manifest shortcuts (B2).** Long-pressing the WatchTrack icon on
+Android exposes four jump-in shortcuts: Triage Queue, Triage Suggested,
+Search, Stats. Each routes via a new `?action=` URL parameter that
+the bootstrap reads after the wizard renders, then triggers the
+corresponding click — the existing button handlers do the work, so
+all four behave exactly like opening the app and tapping the header
+button.
+
+**View Transitions on tab switch (B3).** `switchTab()` body is now
+wrapped in `document.startViewTransition()` where supported (Chromium
+≥ 111, which covers Bravia and Android Chrome). Native crossfade
+between tabs replaces the abrupt content swap. Older engines fall
+through unchanged.
+
+**Page Visibility catch-up poll (B5).** A `visibilitychange` listener
+fires `pollPlexWebhookEvents()` when the app returns from being
+hidden. Plex polling is one-shot (only on startup and settings save),
+so this is the cleanest place to fold in a refresh — when you
+switch back from the Plex app to WatchTrack, any new scrobbles surface
+immediately instead of waiting for the next manual trigger.
+
+**Web Share for Period in Review (B6).** New "Share…" button next to
+"Generate & download" in the Period-in-Review modal. Generates the
+markdown report, shares it as a `File` via `navigator.share` where
+file-share is supported (most modern phones), falls back to text-share
+otherwise. Hidden entirely on devices without `navigator.share`. The
+download path is unchanged for users who prefer it.
+
+**Wake Lock during triage (B7).** When the triage modal opens,
+`navigator.wakeLock.request('screen')` keeps the Bravia from dimming
+mid-session. Released on close. Implemented via a `MutationObserver`
+on `.triage-modal` so every entry/exit path — wizard triage, direct
+triage, completion-close, back-button — works without touching the
+existing handlers.
+
+---
+
+## 5.36.1 — 2026-05-09
+**Service worker cache:** unchanged (tooling only, no user-facing change)
+
+### Tooling — GitHub Actions workflows
+
+Four CI workflows added under `.github/workflows/` to reduce manual
+release friction. None ship to users — purely repo-side.
+
+**`lint-catalogs.yml`** — runs `python3 scripts/lint-catalogs.py` on
+every push to main and every PR that touches `data/*.json` or the lint
+script itself. Fails the check if duplicates, missing fields, or invalid
+JSON are detected.
+
+**`sw-cache-bump.yml`** — auto-increments
+`scifi-tracker-vN` in `service-worker.js` when any cached asset
+(`app.js`, `styles.css`, `index.html`, `manifest.json`, `data/*.json`,
+or any icon) is pushed to main without a same-push update to
+`service-worker.js`. Commits the bump back as `github-actions[bot]`.
+Replaces the manual bump every release.
+
+**`build-min.yml`** — runs on PRs that touch `app.js`. Uses
+`esbuild --minify --target=es2020` to compute minified + gzipped sizes,
+posts a comment on the PR with a comparison table. Does **not** commit
+the minified bundle — keeps the source-only deploy intact. To ship a
+minified production build: run `npm run build:min` locally, swap the
+output into `index.html` and the SW asset list, commit.
+
+**`lighthouse.yml`** — runs Lighthouse CI against the app served by
+`http-server` on a temporary GitHub-hosted runner. Soft-warn thresholds
+in `.github/lighthouse-budget.json` (perf 0.85, a11y 0.90, best
+practices 0.90, SEO 0.90, PWA 0.70). Posts a scorecard via the LHCI
+temporary public storage URL.
+
+A new `package.json` declares `esbuild` as the only devDep and exposes
+`npm run lint:catalogs`, `npm run build:min`, `npm run size`. The site
+itself has zero runtime deps — `package.json` exists only so CI can
+install esbuild.
+
+**One-time setup the first time these run:**
+- Repo Settings → Actions → General → Workflow permissions: select
+  **Read and write permissions** so `sw-cache-bump.yml` can push back.
+- Actions tab on GitHub will show the four workflows; enable each if
+  not already on.
+
+---
+
 ## 5.36.0 — 2026-05-09
 **Service worker cache:** `scifi-tracker-v74` → `v75`
 

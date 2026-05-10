@@ -1,0 +1,58 @@
+name: Auto-bump SW cache
+
+# Watches the asset list cached by service-worker.js. When any of those
+# assets changes in a push to main and service-worker.js itself wasn't
+# updated in the same push, the cache name (scifi-tracker-vN) is
+# auto-incremented and committed back. Removes the manual bump step.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'app.js'
+      - 'styles.css'
+      - 'index.html'
+      - 'manifest.json'
+      - 'data/**.json'
+      - 'icons/**'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sw-cache-bump
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-actions[bot]'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Skip if SW was changed in this push
+        id: check
+        run: |
+          if git diff --name-only HEAD~1 HEAD | grep -q '^service-worker.js$'; then
+            echo "sw_changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "sw_changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Bump cache version
+        if: steps.check.outputs.sw_changed == 'false'
+        run: |
+          set -eu
+          current=$(grep -oE "scifi-tracker-v[0-9]+" service-worker.js | head -1)
+          n=${current#scifi-tracker-v}
+          next=$((n + 1))
+          sed -i "s/scifi-tracker-v${n}/scifi-tracker-v${next}/" service-worker.js
+          echo "Bumped scifi-tracker-v${n} -> scifi-tracker-v${next}"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add service-worker.js
+          git commit -m "chore(sw): auto-bump cache to v${next}"
+          git push
