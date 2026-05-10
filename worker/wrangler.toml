@@ -77,3 +77,13 @@ database_id = "2d67ee44-2896-4d32-8734-b1e6fc4f8021"
 # the platform-managed AI gateway is just attached by name.
 [ai]
 binding = "AI"
+
+# === Workers observability ===
+# Enable full log capture so console.log lines from the Worker show up
+# in the Cloudflare → Logs tab. The dashboard sometimes suggests
+# `enabled = false, invocation_logs = true` — that captures request
+# counters only, no log content. We want full observability for
+# diagnosis, especially during the chat tuning phase.
+[observability]
+enabled = true
+head_sampling_rate = 1
