@@ -432,11 +432,11 @@ function clearTagFilters(tab) {
 // other modes from a laptop without polluting the option list on phones/TVs.
 const DISPLAY_MODE_KEY = 'watchtrack-display-mode';
 function getDisplayModePref() {
-  return localStorage.getItem(DISPLAY_MODE_KEY) || 'auto';
+  return lsGet(DISPLAY_MODE_KEY) || 'auto';
 }
 function setDisplayModePref(mode) {
-  if (mode === 'auto') localStorage.removeItem(DISPLAY_MODE_KEY);
-  else localStorage.setItem(DISPLAY_MODE_KEY, mode);
+  if (mode === 'auto') lsDel(DISPLAY_MODE_KEY);
+  else lsSet(DISPLAY_MODE_KEY, mode);
 }
 function detectTVMode() {
   const ua = navigator.userAgent.toLowerCase();
@@ -482,20 +482,20 @@ function updateDisplayModePicker() {
 const PLEX_TOKEN_KEY = 'watchtrack-plex-token';
 const PLEX_SERVER_URL_KEY = 'watchtrack-plex-server-url';
 const PLEX_CLIENT_ID_KEY = 'watchtrack-plex-client-id';
-function getPlexToken() { return localStorage.getItem(PLEX_TOKEN_KEY) || ''; }
+function getPlexToken() { return lsGet(PLEX_TOKEN_KEY) || ''; }
 function setPlexToken(t) {
-  if (!t) localStorage.removeItem(PLEX_TOKEN_KEY);
-  else localStorage.setItem(PLEX_TOKEN_KEY, t);
+  if (!t) lsDel(PLEX_TOKEN_KEY);
+  else lsSet(PLEX_TOKEN_KEY, t);
 }
-function getPlexServerUrl() { return localStorage.getItem(PLEX_SERVER_URL_KEY) || ''; }
+function getPlexServerUrl() { return lsGet(PLEX_SERVER_URL_KEY) || ''; }
 function setPlexServerUrl(u) {
-  if (!u) localStorage.removeItem(PLEX_SERVER_URL_KEY);
-  else localStorage.setItem(PLEX_SERVER_URL_KEY, u.replace(/\/$/, ''));
+  if (!u) lsDel(PLEX_SERVER_URL_KEY);
+  else lsSet(PLEX_SERVER_URL_KEY, u.replace(/\/$/, ''));
 }
-function getPlexClientId() { return localStorage.getItem(PLEX_CLIENT_ID_KEY) || ''; }
+function getPlexClientId() { return lsGet(PLEX_CLIENT_ID_KEY) || ''; }
 function setPlexClientId(c) {
-  if (!c) localStorage.removeItem(PLEX_CLIENT_ID_KEY);
-  else localStorage.setItem(PLEX_CLIENT_ID_KEY, c);
+  if (!c) lsDel(PLEX_CLIENT_ID_KEY);
+  else lsSet(PLEX_CLIENT_ID_KEY, c);
 }
 function isPlexConfigured() {
   return Boolean(getPlexToken() && getPlexServerUrl());
@@ -608,21 +608,21 @@ const WEBHOOK_URL_KEY = 'watchtrack-webhook-url';
 const WEBHOOK_SECRET_KEY = 'watchtrack-webhook-secret';
 const WEBHOOK_LAST_POLL_KEY = 'watchtrack-webhook-last-poll';
 
-function getWebhookUrl() { return localStorage.getItem(WEBHOOK_URL_KEY) || ''; }
+function getWebhookUrl() { return lsGet(WEBHOOK_URL_KEY) || ''; }
 function setWebhookUrl(u) {
-  if (!u) localStorage.removeItem(WEBHOOK_URL_KEY);
-  else localStorage.setItem(WEBHOOK_URL_KEY, u.replace(/\/$/, ''));
+  if (!u) lsDel(WEBHOOK_URL_KEY);
+  else lsSet(WEBHOOK_URL_KEY, u.replace(/\/$/, ''));
 }
-function getWebhookSecret() { return localStorage.getItem(WEBHOOK_SECRET_KEY) || ''; }
+function getWebhookSecret() { return lsGet(WEBHOOK_SECRET_KEY) || ''; }
 function setWebhookSecret(s) {
-  if (!s) localStorage.removeItem(WEBHOOK_SECRET_KEY);
-  else localStorage.setItem(WEBHOOK_SECRET_KEY, s);
+  if (!s) lsDel(WEBHOOK_SECRET_KEY);
+  else lsSet(WEBHOOK_SECRET_KEY, s);
 }
 function getWebhookLastPoll() {
-  return parseInt(localStorage.getItem(WEBHOOK_LAST_POLL_KEY) || '0');
+  return parseInt(lsGet(WEBHOOK_LAST_POLL_KEY) || '0');
 }
 function setWebhookLastPoll(ts) {
-  localStorage.setItem(WEBHOOK_LAST_POLL_KEY, String(ts));
+  lsSet(WEBHOOK_LAST_POLL_KEY, String(ts));
 }
 
 // === Trakt settings ===
@@ -633,16 +633,16 @@ const TRAKT_ACCESS_TOKEN_KEY   = 'watchtrack-trakt-access-token';
 const TRAKT_REFRESH_TOKEN_KEY  = 'watchtrack-trakt-refresh-token';
 const TRAKT_USERNAME_KEY       = 'watchtrack-trakt-username';
 
-function getTraktClientId()     { return localStorage.getItem(TRAKT_CLIENT_ID_KEY) || ''; }
-function setTraktClientId(v)    { if (!v) localStorage.removeItem(TRAKT_CLIENT_ID_KEY); else localStorage.setItem(TRAKT_CLIENT_ID_KEY, v.trim()); }
-function getTraktClientSecret() { return localStorage.getItem(TRAKT_CLIENT_SECRET_KEY) || ''; }
-function setTraktClientSecret(v){ if (!v) localStorage.removeItem(TRAKT_CLIENT_SECRET_KEY); else localStorage.setItem(TRAKT_CLIENT_SECRET_KEY, v.trim()); }
-function getTraktAccessToken()  { return localStorage.getItem(TRAKT_ACCESS_TOKEN_KEY) || ''; }
-function setTraktAccessToken(t) { if (!t) localStorage.removeItem(TRAKT_ACCESS_TOKEN_KEY); else localStorage.setItem(TRAKT_ACCESS_TOKEN_KEY, t); }
-function getTraktRefreshToken() { return localStorage.getItem(TRAKT_REFRESH_TOKEN_KEY) || ''; }
-function setTraktRefreshToken(t){ if (!t) localStorage.removeItem(TRAKT_REFRESH_TOKEN_KEY); else localStorage.setItem(TRAKT_REFRESH_TOKEN_KEY, t); }
-function getTraktUsername()     { return localStorage.getItem(TRAKT_USERNAME_KEY) || ''; }
-function setTraktUsername(u)    { if (!u) localStorage.removeItem(TRAKT_USERNAME_KEY); else localStorage.setItem(TRAKT_USERNAME_KEY, u); }
+function getTraktClientId()     { return lsGet(TRAKT_CLIENT_ID_KEY) || ''; }
+function setTraktClientId(v)    { if (!v) lsDel(TRAKT_CLIENT_ID_KEY); else lsSet(TRAKT_CLIENT_ID_KEY, v.trim()); }
+function getTraktClientSecret() { return lsGet(TRAKT_CLIENT_SECRET_KEY) || ''; }
+function setTraktClientSecret(v){ if (!v) lsDel(TRAKT_CLIENT_SECRET_KEY); else lsSet(TRAKT_CLIENT_SECRET_KEY, v.trim()); }
+function getTraktAccessToken()  { return lsGet(TRAKT_ACCESS_TOKEN_KEY) || ''; }
+function setTraktAccessToken(t) { if (!t) lsDel(TRAKT_ACCESS_TOKEN_KEY); else lsSet(TRAKT_ACCESS_TOKEN_KEY, t); }
+function getTraktRefreshToken() { return lsGet(TRAKT_REFRESH_TOKEN_KEY) || ''; }
+function setTraktRefreshToken(t){ if (!t) lsDel(TRAKT_REFRESH_TOKEN_KEY); else lsSet(TRAKT_REFRESH_TOKEN_KEY, t); }
+function getTraktUsername()     { return lsGet(TRAKT_USERNAME_KEY) || ''; }
+function setTraktUsername(u)    { if (!u) lsDel(TRAKT_USERNAME_KEY); else lsSet(TRAKT_USERNAME_KEY, u); }
 function isTraktConnected()     { return Boolean(getTraktClientId() && getTraktAccessToken()); }
 function isWebhookConfigured() {
   return Boolean(getWebhookUrl() && getWebhookSecret());
@@ -1018,7 +1018,7 @@ function tmdbCacheKey(title, year, type) {
 
 function tmdbGetCached(title, year, type) {
   try {
-    const raw = localStorage.getItem(tmdbCacheKey(title, year, type));
+    const raw = lsGet(tmdbCacheKey(title, year, type));
     if (!raw) return null;
     const obj = JSON.parse(raw);
     if (obj.cachedAt && (Date.now() - obj.cachedAt > TMDB_CACHE_TTL_MS)) return null;
@@ -1028,7 +1028,7 @@ function tmdbGetCached(title, year, type) {
 
 function tmdbSetCached(title, year, type, data) {
   try {
-    localStorage.setItem(tmdbCacheKey(title, year, type), JSON.stringify({
+    lsSet(tmdbCacheKey(title, year, type), JSON.stringify({
       cachedAt: Date.now(), data,
     }));
   } catch {}  // localStorage may be full; ignore quietly
@@ -1100,10 +1100,10 @@ async function tmdbBulkLookup(items, progressCb) {
 // =====================================================================
 const REGION_KEY = 'watchtrack-streaming-region';
 function getStreamingRegion() {
-  return localStorage.getItem(REGION_KEY) || 'US';
+  return lsGet(REGION_KEY) || 'US';
 }
 function setStreamingRegion(r) {
-  localStorage.setItem(REGION_KEY, r || 'US');
+  lsSet(REGION_KEY, r || 'US');
 }
 // All regions TMDB supports for watch providers (ISO 3166-1 alpha-2 country codes).
 // Sorted, with common ones at top for the dropdown.
@@ -1215,13 +1215,13 @@ const PROVIDER_ALIASES = {
 
 function getMySubscriptions() {
   try {
-    const raw = localStorage.getItem(MY_SUBS_KEY);
+    const raw = lsGet(MY_SUBS_KEY);
     if (raw) return JSON.parse(raw);
   } catch {}
   return DEFAULT_MY_SUBS.slice();
 }
 function setMySubscriptions(arr) {
-  localStorage.setItem(MY_SUBS_KEY, JSON.stringify(arr));
+  lsSet(MY_SUBS_KEY, JSON.stringify(arr));
 }
 // Returns true if the TMDB-returned provider name matches one of the user's subs
 function isMySub(providerName) {
@@ -1337,13 +1337,13 @@ const CATALOG_ENRICHMENT_KEY = 'watchtrack-catalog-enrichment';
 
 function loadCatalogEnrichment() {
   try {
-    const raw = localStorage.getItem(CATALOG_ENRICHMENT_KEY);
+    const raw = lsGet(CATALOG_ENRICHMENT_KEY);
     return raw ? JSON.parse(raw) : {};
   } catch { return {}; }
 }
 function saveCatalogEnrichment(idx) {
   try {
-    localStorage.setItem(CATALOG_ENRICHMENT_KEY, JSON.stringify(idx));
+    lsSet(CATALOG_ENRICHMENT_KEY, JSON.stringify(idx));
   } catch (e) {
     console.warn('Catalog enrichment save failed:', e);
   }
@@ -1478,7 +1478,7 @@ async function tmdbLookupById(tmdbId, type) {
   // Cache key
   const cacheKey = `${TMDB_CACHE_PREFIX}${type}-id:${tmdbId}`;
   try {
-    const raw = localStorage.getItem(cacheKey);
+    const raw = lsGet(cacheKey);
     if (raw) {
       const obj = JSON.parse(raw);
       if (obj.cachedAt && (Date.now() - obj.cachedAt < TMDB_CACHE_TTL_MS)) return obj.data;
@@ -1494,7 +1494,7 @@ async function tmdbLookupById(tmdbId, type) {
     if (!resp.ok) return null;
     const data = await resp.json();
     try {
-      localStorage.setItem(cacheKey, JSON.stringify({ cachedAt: Date.now(), data }));
+      lsSet(cacheKey, JSON.stringify({ cachedAt: Date.now(), data }));
     } catch {}
     return data;
   } catch { return null; }
@@ -1785,7 +1785,7 @@ function normalizeStateIds(s) {
 
 function loadState() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = lsGet(STORAGE_KEY);
     if (raw) {
       state = normalizeStateIds(JSON.parse(raw));
       catalogManifest.forEach(c => { if (!state[c.id]) state[c.id] = {}; });
@@ -1813,38 +1813,45 @@ function loadState() {
 }
 
 function saveState() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  // v6.0.0: lsSet writes to IndexedDB fire-and-forget. The dedicated
+  // mirror layer from v5.41 is gone — every persisted key flows through
+  // the same code path now, so a single lsSet here covers durability
+  // and quota headroom both.
+  try { lsSet(STORAGE_KEY, JSON.stringify(state)); }
   catch (e) { console.error('Save failed:', e); }
-  // v5.41.0: mirror to IndexedDB for durability against localStorage clears
-  // (e.g. browser site-data reset, private mode promotion). Debounced 1s so
-  // a burst of state changes only writes once. Best-effort — never blocks.
-  if (typeof idbMirrorState === 'function') idbMirrorState();
   // V5.28.0: mark sync dirty so the debounced push captures this change
   if (typeof syncMarkDirty === 'function') syncMarkDirty();
 }
 
-// === v5.41.0 R6: IndexedDB durability layer ===
+// === v6.0.0: IndexedDB primary store (cache-backed-by-IDB) ===
 //
-// Goal: protect against accidental loss of state when localStorage is
-// cleared (browser site-data reset, private-mode upgrade, sync wipe).
-// localStorage stays the synchronous source of truth — every callsite
-// keeps working unchanged. IndexedDB is a write-through mirror plus a
-// bootstrap fallback: if localStorage is missing the state key but
-// IndexedDB has a snapshot, we restore from IndexedDB before showing
-// the seed defaults.
+// Architecture:
+//   _kv          in-memory Map<string,string>, the synchronous source
+//                of truth at runtime. Hydrated from IndexedDB at boot.
+//   IndexedDB    durable backing store. Every lsSet writes through to
+//                IDB fire-and-forget; reads only ever hit _kv.
+//   localStorage legacy. Read-once at first boot of v6.0.0 to migrate
+//                pre-existing keys into IDB; thereafter unused. The
+//                pre-v6 mirror behavior collapses into this single
+//                layer — no more "fall back to IDB if localStorage is
+//                empty" because IDB IS the canonical store.
 //
-// Not a full async migration of the 118 localStorage callsites; that's
-// a separate refactor with significant cascade and was deferred in
-// favour of this lower-risk additive layer.
+// Why cache-backed instead of fully async: every existing callsite
+// expected synchronous getItem/setItem semantics. Making them async
+// would cascade through 75 callsites including hot paths like
+// setStatus, setRating, render. The cache wrapper preserves the
+// signatures while still moving the durable store off the localStorage
+// quota cap onto IDB's effectively-unbounded space.
 
 const IDB_NAME = 'watchtrack';
 const IDB_VERSION = 1;
 const IDB_STORE = 'kv';
 const IDB_STATE_KEY = 'state-snapshot';
 const IDB_BACKUP_PREFIX = 'localstorage-backup:';
-const IDB_MIGRATED_KEY = 'migrated-v5.41';
+const IDB_MIGRATED_V6_KEY = 'migrated-v6.0';
 let _idbConn = null;
-let _idbMirrorTimer = null;
+const _kv = new Map();
+let _kvHydrated = false;
 
 function idbOpen() {
   if (_idbConn) return Promise.resolve(_idbConn);
@@ -1878,55 +1885,115 @@ function idbSet(key, value) {
   })).catch(() => false);
 }
 
-function idbMirrorState() {
-  if (_idbMirrorTimer) clearTimeout(_idbMirrorTimer);
-  _idbMirrorTimer = setTimeout(() => {
-    idbSet(IDB_STATE_KEY, { state, savedAt: Date.now(), via: 'mirror' });
-  }, 1000);
+function idbDelete(key) {
+  return idbOpen().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_STORE, 'readwrite');
+    const req = tx.objectStore(IDB_STORE).delete(key);
+    req.onsuccess = () => resolve(true);
+    req.onerror = () => reject(req.error);
+  })).catch(() => false);
 }
 
-// One-time migration: copy every watchtrack-* / scifi-tracker-* key from
-// localStorage into IndexedDB. Runs once on the first boot of v5.41.0
-// (gated by IDB_MIGRATED_KEY). Idempotent if it ever re-runs — keys are
-// just re-written.
-async function idbMigrateOnce() {
-  try {
-    const already = await idbGet(IDB_MIGRATED_KEY);
-    if (already) return;
+// Iterate every key in the IDB store. Used by hydrate() at bootstrap.
+function idbListAll() {
+  return idbOpen().then(db => new Promise((resolve) => {
+    const out = {};
+    const tx = db.transaction(IDB_STORE, 'readonly');
+    const store = tx.objectStore(IDB_STORE);
+    const req = store.openCursor();
+    req.onsuccess = (e) => {
+      const cur = e.target.result;
+      if (!cur) { resolve(out); return; }
+      out[cur.key] = cur.value;
+      cur.continue();
+    };
+    req.onerror = () => resolve(out);
+  })).catch(() => ({}));
+}
+
+// === v6.0.0: synchronous KV wrappers backed by the in-memory cache ===
+// API matches localStorage.getItem/setItem/removeItem so all existing
+// callsites work unchanged after a one-shot identifier rename.
+function lsGet(key) {
+  return _kv.has(key) ? _kv.get(key) : null;
+}
+function lsSet(key, value) {
+  const v = String(value);
+  _kv.set(key, v);
+  // fire-and-forget IDB write; in-memory cache is the read source of truth
+  idbSet(key, v);
+}
+function lsDel(key) {
+  _kv.delete(key);
+  idbDelete(key);
+}
+// Iterate cache keys (for migration walks and rare bulk-introspection).
+function lsKeys() { return [..._kv.keys()]; }
+
+// Bootstrap hydration: load every IDB key into _kv, run the one-time
+// pre-v6 migration if needed, then mark as hydrated. Must complete
+// before any lsGet runs.
+async function hydrate() {
+  if (_kvHydrated) return;
+  let allFromIdb = {};
+  try { allFromIdb = await idbListAll(); } catch { allFromIdb = {}; }
+  // Populate cache from IDB first so subsequent lsGet calls see real data.
+  for (const k of Object.keys(allFromIdb)) {
+    if (k.startsWith('watchtrack-') || k.startsWith('scifi-tracker-')) {
+      _kv.set(k, String(allFromIdb[k]));
+    }
+  }
+  // One-time migration from localStorage if v6 hasn't run yet on this device.
+  // Important: the v5.41 mirror layer left both stores populated; we want IDB
+  // to win conflicts (fresher snapshots) but NOT lose localStorage-only
+  // keys that pre-date the mirror.
+  const v6Done = !!allFromIdb[IDB_MIGRATED_V6_KEY];
+  if (!v6Done && typeof localStorage !== 'undefined') {
     const backup = {};
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
       if (!k) continue;
       if (k.startsWith('watchtrack-') || k.startsWith('scifi-tracker-')) {
-        backup[k] = localStorage.getItem(k);
+        const v = localStorage.getItem(k);
+        if (v == null) continue;
+        backup[k] = v;
+        // Cache wins if IDB already had it; otherwise localStorage seeds it.
+        if (!_kv.has(k)) {
+          _kv.set(k, v);
+          idbSet(k, v);
+        }
       }
     }
-    await idbSet(IDB_BACKUP_PREFIX + 'v5.41-bootstrap', { backup, ts: Date.now() });
-    await idbSet(IDB_MIGRATED_KEY, true);
-  } catch {}
+    // Belt-and-suspenders: store the entire localStorage snapshot under
+    // a single backup key so we can recover even if migration loses a
+    // value during the rename. Drop in v6.1.
+    idbSet(IDB_BACKUP_PREFIX + 'v5.41-pre-v6', { backup, ts: Date.now() });
+    idbSet(IDB_MIGRATED_V6_KEY, true);
+  }
+  _kvHydrated = true;
 }
 
-// Bootstrap fallback: if localStorage doesn't have STORAGE_KEY but
-// IndexedDB has a state snapshot, restore from there. Returns true if
-// state was restored from IndexedDB.
+// Bootstrap fallback retained for diagnostic value: caller can still
+// invoke this to surface the most-recent state-snapshot via the cache.
+// In v6.0 this is a no-op when the cache has the state already.
 async function idbRestoreIfNeeded() {
-  if (localStorage.getItem(STORAGE_KEY)) return false;
+  if (lsGet(STORAGE_KEY)) return false;
   const snap = await idbGet(IDB_STATE_KEY);
   if (snap && snap.state) {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(snap.state)); return true; }
-    catch { return false; }
+    lsSet(STORAGE_KEY, JSON.stringify(snap.state));
+    return true;
   }
   return false;
 }
 
 function loadActiveTab() {
   try {
-    const t = localStorage.getItem(TAB_KEY);
+    const t = lsGet(TAB_KEY);
     if (t) activeTab = t;
   } catch (e) {}
 }
 function saveActiveTab() {
-  try { localStorage.setItem(TAB_KEY, activeTab); } catch (e) {}
+  try { lsSet(TAB_KEY, activeTab); } catch (e) {}
 }
 
 async function loadCatalogManifest() {
@@ -2367,12 +2434,12 @@ function updateStats() {
 // Virtual tabs (watchlist, auteur) always show regardless of filter.
 const TAB_FILTER_KEY = 'watchtrack-tab-filter';
 function getTabFilter() {
-  const v = localStorage.getItem(TAB_FILTER_KEY);
+  const v = lsGet(TAB_FILTER_KEY);
   return v === 'film' || v === 'tv' ? v : 'all';
 }
 function setTabFilter(v) {
-  if (v === 'all') localStorage.removeItem(TAB_FILTER_KEY);
-  else localStorage.setItem(TAB_FILTER_KEY, v);
+  if (v === 'all') lsDel(TAB_FILTER_KEY);
+  else lsSet(TAB_FILTER_KEY, v);
 }
 function tabPassesFilter(c, filter) {
   if (filter === 'all') return true;
@@ -3521,7 +3588,7 @@ function setupModals() {
     { id: 'trakt', title: 'Trakt', desc: 'Watch history sync', statusFn: () => (typeof getTraktAccessToken === 'function' && getTraktAccessToken()) ? { label: 'CONNECTED', cls: 'ok' } : { label: 'EMPTY', cls: 'empty' } },
     { id: 'sync', title: 'Cross-Device Sync', desc: 'Auto-sync settings & state via Worker', statusFn: () => {
       if (!isWebhookConfigured() || !getPlexToken()) return { label: 'NEEDS PLEX + WORKER', cls: 'empty' };
-      const lastPush = parseInt(localStorage.getItem(SYNC_LAST_PUSH_KEY) || '0');
+      const lastPush = parseInt(lsGet(SYNC_LAST_PUSH_KEY) || '0');
       if (lastPush && (Date.now() - lastPush < 60000)) return { label: 'IN SYNC', cls: 'ok' };
       if (lastPush) return { label: 'ACTIVE', cls: 'ok' };
       return { label: 'READY', cls: 'warn' };
@@ -4933,18 +5000,26 @@ function _levenshteinCapped(a, b, cap) {
   return prev[lb];
 }
 
-// Fuzzy-match a query against a title by walking each whitespace-split
-// token in the title and checking if any token's Levenshtein distance to
-// the query is ≤ cap. Returns true on the first hit. Skips if the query
-// is too short — fuzziness on short strings produces too many matches.
+// Fuzzy-match a query against a title. Single-word query: walk title
+// tokens, return true on first within-cap match. Multi-word query: every
+// query token must have at least one within-cap match in the title (so
+// "tinkr tailr" matches "Tinker Tailor Soldier Spy" because both
+// "tinkr"→"tinker" and "tailr"→"tailor" are ≤ 2 edits). Skips when the
+// joined query is < 4 chars — fuzziness on short strings is too noisy.
 function _fuzzyTitleMatch(query, title, cap) {
   if (query.length < 4) return false;
-  const tokens = title.split(/\s+/);
-  for (const tok of tokens) {
-    if (tok.length < 3) continue;
-    if (_levenshteinCapped(query, tok.toLowerCase(), cap) <= cap) return true;
+  const titleTokens = title.split(/\s+/).filter(t => t.length >= 3);
+  if (titleTokens.length === 0) return false;
+  const queryTokens = query.split(/\s+/).filter(t => t.length >= 3);
+  if (queryTokens.length === 0) return false;
+  for (const qt of queryTokens) {
+    let found = false;
+    for (const tt of titleTokens) {
+      if (_levenshteinCapped(qt, tt.toLowerCase(), cap) <= cap) { found = true; break; }
+    }
+    if (!found) return false;
   }
-  return false;
+  return true;
 }
 
 // === Title/director/country/section/pitch search ===
@@ -5538,7 +5613,7 @@ const ALERTS_ENABLED_KEY = 'watchtrack-alerts-enabled';
 const ALERTS_LAST_POLL_KEY = 'watchtrack-alerts-last-poll';
 let _alertsRefreshTimer = null;
 
-function isAlertsEnabled() { return localStorage.getItem(ALERTS_ENABLED_KEY) === '1'; }
+function isAlertsEnabled() { return lsGet(ALERTS_ENABLED_KEY) === '1'; }
 
 function alertsBuildItemsManifest() {
   const items = [];
@@ -5636,7 +5711,7 @@ async function alertsSubscribe() {
       body: JSON.stringify({ secret: getWebhookSecret(), userHash, region, items, push }),
     });
     if (!resp.ok) return { ok: false, reason: `${resp.status}` };
-    localStorage.setItem(ALERTS_ENABLED_KEY, '1');
+    lsSet(ALERTS_ENABLED_KEY, '1');
     return { ok: true, itemCount: items.length, region, hasPush: !!push };
   } catch (e) {
     return { ok: false, reason: e.message };
@@ -5645,12 +5720,12 @@ async function alertsSubscribe() {
 
 async function alertsUnsubscribe() {
   if (!isWebhookConfigured()) {
-    localStorage.removeItem(ALERTS_ENABLED_KEY);
+    lsDel(ALERTS_ENABLED_KEY);
     return { ok: true };
   }
   const userHash = await getUserHash();
   if (!userHash) {
-    localStorage.removeItem(ALERTS_ENABLED_KEY);
+    lsDel(ALERTS_ENABLED_KEY);
     return { ok: true };
   }
   try {
@@ -5660,7 +5735,7 @@ async function alertsUnsubscribe() {
       body: JSON.stringify({ secret: getWebhookSecret(), userHash }),
     });
   } catch {}
-  localStorage.removeItem(ALERTS_ENABLED_KEY);
+  lsDel(ALERTS_ENABLED_KEY);
   return { ok: true };
 }
 
@@ -5677,7 +5752,7 @@ async function alertsCheckNotifications() {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
   const userHash = await getUserHash();
   if (!userHash) return;
-  const since = parseInt(localStorage.getItem(ALERTS_LAST_POLL_KEY) || '0');
+  const since = parseInt(lsGet(ALERTS_LAST_POLL_KEY) || '0');
   try {
     const resp = await fetch(
       `${getWebhookUrl()}/alerts/notifications?secret=${encodeURIComponent(getWebhookSecret())}&user=${userHash}&since=${since}`
@@ -5698,7 +5773,7 @@ async function alertsCheckNotifications() {
         seenKeys.push(n.key);
       } catch {}
     }
-    localStorage.setItem(ALERTS_LAST_POLL_KEY, String(Date.now()));
+    lsSet(ALERTS_LAST_POLL_KEY, String(Date.now()));
     if (seenKeys.length > 0) {
       await fetch(`${getWebhookUrl()}/alerts/notifications/seen`, {
         method: 'POST',
@@ -5736,21 +5811,21 @@ async function syncPush(reason) {
   };
   const body = JSON.stringify(payload);
   if (body.length > SYNC_MAX_BYTES) {
-    localStorage.setItem(SYNC_LAST_ERROR_KEY, `Payload too large: ${(body.length / 1024 / 1024).toFixed(1)} MB exceeds ${(SYNC_MAX_BYTES / 1024 / 1024)} MB cap`);
+    lsSet(SYNC_LAST_ERROR_KEY, `Payload too large: ${(body.length / 1024 / 1024).toFixed(1)} MB exceeds ${(SYNC_MAX_BYTES / 1024 / 1024)} MB cap`);
     return false;
   }
   try {
     const url = `${getWebhookUrl()}/sync/put?user=${userHash}&secret=${encodeURIComponent(getWebhookSecret())}`;
     const resp = await fetch(url, { method: 'PUT', headers: { 'content-type': 'application/json' }, body });
     if (resp.ok) {
-      localStorage.setItem(SYNC_LAST_PUSH_KEY, String(Date.now()));
-      localStorage.removeItem(SYNC_LAST_ERROR_KEY);
+      lsSet(SYNC_LAST_PUSH_KEY, String(Date.now()));
+      lsDel(SYNC_LAST_ERROR_KEY);
       updateSyncStatusUI();
       return true;
     }
-    localStorage.setItem(SYNC_LAST_ERROR_KEY, `PUT ${resp.status}: ${resp.statusText}`);
+    lsSet(SYNC_LAST_ERROR_KEY, `PUT ${resp.status}: ${resp.statusText}`);
   } catch (e) {
-    localStorage.setItem(SYNC_LAST_ERROR_KEY, `Network error: ${e.message}`);
+    lsSet(SYNC_LAST_ERROR_KEY, `Network error: ${e.message}`);
   }
   updateSyncStatusUI();
   return false;
@@ -5764,16 +5839,16 @@ async function syncFetch() {
     const url = `${getWebhookUrl()}/sync/get?user=${userHash}&secret=${encodeURIComponent(getWebhookSecret())}`;
     const resp = await fetch(url);
     if (!resp.ok) {
-      if (resp.status !== 404) localStorage.setItem(SYNC_LAST_ERROR_KEY, `GET ${resp.status}: ${resp.statusText}`);
+      if (resp.status !== 404) lsSet(SYNC_LAST_ERROR_KEY, `GET ${resp.status}: ${resp.statusText}`);
       return null;
     }
     const data = await resp.json();
     if (!data) return null;
-    localStorage.setItem(SYNC_LAST_PULL_KEY, String(Date.now()));
-    localStorage.removeItem(SYNC_LAST_ERROR_KEY);
+    lsSet(SYNC_LAST_PULL_KEY, String(Date.now()));
+    lsDel(SYNC_LAST_ERROR_KEY);
     return data;
   } catch (e) {
-    localStorage.setItem(SYNC_LAST_ERROR_KEY, `Network error: ${e.message}`);
+    lsSet(SYNC_LAST_ERROR_KEY, `Network error: ${e.message}`);
     return null;
   }
 }
@@ -5832,7 +5907,7 @@ function syncApplyRemote(remote) {
       }
     }
     if (mergedItems > 0) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      lsSet(STORAGE_KEY, JSON.stringify(state));
     }
   }
   return true;
@@ -5869,9 +5944,9 @@ async function syncOnLaunch() {
 function updateSyncStatusUI() {
   const el = document.getElementById('sync-status-line');
   if (!el) return;
-  const lastPush = parseInt(localStorage.getItem(SYNC_LAST_PUSH_KEY) || '0');
-  const lastPull = parseInt(localStorage.getItem(SYNC_LAST_PULL_KEY) || '0');
-  const err = localStorage.getItem(SYNC_LAST_ERROR_KEY);
+  const lastPush = parseInt(lsGet(SYNC_LAST_PUSH_KEY) || '0');
+  const lastPull = parseInt(lsGet(SYNC_LAST_PULL_KEY) || '0');
+  const err = lsGet(SYNC_LAST_ERROR_KEY);
   const fmt = (ts) => {
     if (!ts) return 'never';
     const ago = Math.floor((Date.now() - ts) / 1000);
@@ -6234,13 +6309,13 @@ function computeRecsForTab(tabIds, opts) {
 const GAP_SKIPS_KEY = 'watchtrack-gap-skips';
 
 function getGapSkips() {
-  try { return new Set(JSON.parse(localStorage.getItem(GAP_SKIPS_KEY) || '[]')); }
+  try { return new Set(JSON.parse(lsGet(GAP_SKIPS_KEY) || '[]')); }
   catch { return new Set(); }
 }
 function addGapSkip(tmdbId) {
   const skips = getGapSkips();
   skips.add(tmdbId);
-  localStorage.setItem(GAP_SKIPS_KEY, JSON.stringify([...skips]));
+  lsSet(GAP_SKIPS_KEY, JSON.stringify([...skips]));
 }
 
 function findGaps(limit) {
@@ -7215,16 +7290,17 @@ function triageAction(act) {
   if (applyConfigFromUrl()) return;
 
   await loadCatalogManifest();
+  // v6.0.0: hydrate the in-memory KV cache from IndexedDB before any
+  // synchronous lsGet runs. Includes the one-shot pre-v6 migration that
+  // copies any watchtrack-* / scifi-tracker-* keys still living in
+  // localStorage into IDB. After this returns, every persisted key is
+  // available synchronously via lsGet/lsSet/lsDel.
+  await hydrate();
   loadActiveTab();
-  // v5.41.0 R6: if localStorage has been cleared but IndexedDB has a
-  // snapshot, restore it before loadState() runs so the user doesn't see
-  // a fresh seed-data init. No-op when localStorage already has state.
+  // Legacy v5.41 'state-snapshot' fallback: if the cache somehow lacks
+  // STORAGE_KEY but the v5.41 mirror snapshot exists, replay it.
   await idbRestoreIfNeeded();
   loadState();
-  // After load, mirror current state to IndexedDB and run the one-shot
-  // backup of all watchtrack-* localStorage keys (the "seatbelt" archive).
-  if (typeof idbMirrorState === 'function') idbMirrorState();
-  if (typeof idbMigrateOnce === 'function') idbMigrateOnce();
   // V5.28.0: pull remote sync state before catalogs load. If remote has newer
   // settings/state than our last-push timestamp, applies them silently.
   // syncOnLaunch() short-circuits if Plex/Worker aren't configured.

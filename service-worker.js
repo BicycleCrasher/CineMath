@@ -1,4 +1,4 @@
-const CACHE_NAME = 'scifi-tracker-v84';
+const CACHE_NAME = 'scifi-tracker-v100';
 const inflightRevalidations = new Set();
 const ASSETS = [
   './',

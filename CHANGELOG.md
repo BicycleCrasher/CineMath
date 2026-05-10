@@ -10,6 +10,64 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 6.0.0 — 2026-05-09
+**Service worker cache:** `scifi-tracker-v84` → `v100` (major reset)
+
+### Round 2 / R6 — IndexedDB primary store
+
+Earns the major version bump — the persistence layer is fundamentally
+re-rooted, even though no callsite signature changes.
+
+**Architecture.** A new in-memory `_kv` Map is the synchronous source
+of truth at runtime, hydrated from IndexedDB at boot. Every write
+(`lsSet`) updates the cache and fire-and-forgets a write to IDB.
+Reads (`lsGet`) only ever hit the cache — sub-microsecond, no async,
+no quota concerns. localStorage is no longer in the read path; it's
+read once at the first boot of v6.0 to migrate any pre-v6 keys into
+IDB and then ignored.
+
+**Why cache-backed instead of fully async.** A pure async refactor
+would cascade through 75 callsites including `setStatus`,
+`setRating`, `render`, `saveState` — every state-touching path
+would need to be `async/await`. The cache wrapper preserves the
+synchronous signatures the codebase already relies on while still
+moving the durable store off localStorage's 5 MB cap onto IDB's
+effectively-unbounded space. Same user-visible benefit, none of the
+async cascade.
+
+**The mechanical change.** All 75 `localStorage.getItem/setItem/removeItem`
+callsites were renamed to `lsGet/lsSet/lsDel`. The hydrate function
+itself still reads `localStorage.length / .key / .getItem` for the
+one-time migration walk — those three references are the only
+remaining direct localStorage usage.
+
+**One-time migration.** On first boot of v6.0 (gated by an
+`migrated-v6.0` flag in IDB), `hydrate()` walks every
+`watchtrack-*` and `scifi-tracker-*` key in localStorage and writes
+them into IDB if IDB doesn't already have them. The IDB version
+wins on conflict — that's the freshest snapshot when the v5.41
+mirror was active. Plus a belt-and-suspenders archive of the
+entire localStorage contents lands under
+`localstorage-backup:v5.41-pre-v6` for one-version recovery.
+
+**Saved state mirroring.** The dedicated v5.41 mirror layer
+(`idbMirrorState`) is removed. `saveState()` now just calls
+`lsSet(STORAGE_KEY, ...)` once — that single write covers both the
+in-memory cache and the IDB-durable store.
+
+**Why no semantic break for users.** Every UI flow, every external
+integration, every saved field reads and writes the same way it did
+in v5.41. The shape of state, the sync layer, Trakt push/pull,
+Plex webhooks, alerts — all unchanged. The bump to 6.0 reflects the
+internal architecture, not the user surface.
+
+**Recovery.** If v6.0 has a bug that loses the IDB write path,
+localStorage retains its existing values for one minor version (the
+migration doesn't clear them; they just become inert). A rollback to
+v5.41 would re-read them from localStorage as before.
+
+---
+
 ## 5.46.0 — 2026-05-09
 **Service worker cache:** `scifi-tracker-v83` → `v84`
 
