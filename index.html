@@ -63,8 +63,6 @@
     <button class="header-btn" id="settings-btn">Settings</button>
     <button class="header-btn" id="history-btn">Plex History</button>
     <button class="header-btn" id="reset-btn">Reset</button>
-    <button class="header-btn" id="export-btn">Export</button>
-    <button class="header-btn" id="import-btn">Import</button>
   </div>
 </header>
 
@@ -82,30 +80,6 @@
 </div>
 
 <!-- Modals (live outside app-shell so they're accessible from wizard too) -->
-
-<dialog class="modal" id="export-modal">
-  <div class="modal-content">
-    <h3>Export progress</h3>
-    <p>Includes all tabs. Save it or share with Claude for new recommendations.</p>
-    <textarea class="modal-textarea" id="export-text" readonly></textarea>
-    <div class="modal-actions">
-      <button class="action-btn" id="export-copy">Copy to clipboard</button>
-      <button class="action-btn" id="export-close">Close</button>
-    </div>
-  </div>
-</dialog>
-
-<dialog class="modal" id="import-modal">
-  <div class="modal-content">
-    <h3>Import progress</h3>
-    <p>Paste a previously exported text. This replaces all current progress.</p>
-    <textarea class="modal-textarea" id="import-text" placeholder="Paste exported JSON here..."></textarea>
-    <div class="modal-actions">
-      <button class="action-btn" id="import-confirm">Restore</button>
-      <button class="action-btn" id="import-close">Cancel</button>
-    </div>
-  </div>
-</dialog>
 
 <dialog class="modal" id="search-modal">
   <div class="modal-content">
@@ -226,16 +200,6 @@
     <div class="modal-actions">
       <button class="action-btn" id="watch-mark-only">Mark watching (no platform)</button>
       <button class="action-btn" id="watch-cancel">Cancel</button>
-    </div>
-  </div>
-</dialog>
-
-<dialog class="modal" id="import-summary-modal">
-  <div class="modal-content">
-    <h3>Import summary</h3>
-    <div class="stats-content" id="import-summary-content"></div>
-    <div class="modal-actions">
-      <button class="action-btn" id="import-summary-close">Close</button>
     </div>
   </div>
 </dialog>

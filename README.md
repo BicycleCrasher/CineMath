@@ -120,7 +120,9 @@ Category filters remember your selection per tab as you switch between tabs. The
 - **Triage Queue** — focused single-item review of your queued items
 - **Triage Suggested** — focused review of system suggestions
 - **Settings** — display mode (Auto / Phone / TV) and Plex Media Server connection
-- **Reset / Export / Import** — same as before. Import now shows a diagnostic summary instead of a generic confirmation.
+- **Reset** — restores seed data for the active tab on this device. Cross-device sync from another device will overwrite the reset on next pull unless you push from this device afterward.
+
+State durability is now handled automatically: cross-device sync mirrors state across every device with the same Plex token, IndexedDB keeps a local snapshot independent of localStorage clears, and (as of v6.3.0) the Worker writes a daily compressed backup to R2 keyed by date.
 
 ### TV mode
 
@@ -163,16 +165,6 @@ When Claude updates `app.js`, `service-worker.js`, or the catalog manifest, you'
 
 ---
 
-## Sharing your progress with Claude
-
-- Open the app
-- Tap **Export** in the header
-- Tap **Copy to clipboard**
-- Paste into a Claude conversation
-- Claude reads the JSON directly, sees what you've watched, rated, and tagged across all 21 tabs
-
----
-
 ## Troubleshooting
 
 **"Add to Home screen" doesn't appear:**
@@ -190,8 +182,7 @@ When Claude updates `app.js`, `service-worker.js`, or the catalog manifest, you'
 
 **Progress not saving:**
 - Make sure you're using the installed app, not in a private/incognito tab
-- localStorage is per-domain — uninstalling and reinstalling preserves data; clearing browser data wipes it
-- Use Export periodically as a backup
+- State lives in IndexedDB (since v6.0) plus mirrors to the Cloudflare Worker via cross-device sync — uninstalling and reinstalling preserves data; clearing all browser data on the domain wipes the local copy but the next Plex-token-keyed sync pull from another device or a daily R2 backup restores it
 
 **Updates not showing:**
 - Service workers cache aggressively. Close the app completely (swipe up to remove from recents) and reopen.

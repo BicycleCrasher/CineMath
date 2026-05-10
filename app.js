@@ -3315,62 +3315,6 @@ function setupModals() {
   document.getElementById('reset-confirm-cancel').addEventListener('click', () => {
     document.getElementById('reset-confirm-modal').close();
   });
-  document.getElementById('export-btn').addEventListener('click', () => {
-    document.getElementById('export-text').value = JSON.stringify(state, null, 2);
-    document.getElementById('export-modal').showModal();
-  });
-  document.getElementById('export-close').addEventListener('click', () => {
-    document.getElementById('export-modal').close();
-  });
-  document.getElementById('export-copy').addEventListener('click', () => {
-    const ta = document.getElementById('export-text');
-    ta.select(); ta.setSelectionRange(0, 99999);
-    try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(ta.value).then(
-          () => alert('Copied to clipboard.'),
-          () => { document.execCommand('copy'); alert('Copied via fallback.'); }
-        );
-      } else { document.execCommand('copy'); alert('Copied.'); }
-    } catch (e) { alert('Manually select and copy.'); }
-  });
-  document.getElementById('import-btn').addEventListener('click', () => {
-    document.getElementById('import-text').value = '';
-    document.getElementById('import-modal').showModal();
-  });
-  document.getElementById('import-close').addEventListener('click', () => {
-    document.getElementById('import-modal').close();
-  });
-  document.getElementById('import-confirm').addEventListener('click', () => {
-    const input = document.getElementById('import-text').value;
-    if (!input.trim()) { alert('Nothing to import.'); return; }
-    try {
-      const parsed = JSON.parse(input);
-      let newState;
-      if (typeof parsed === 'object' && (parsed.scifi || parsed["scifi-tv"] || parsed.films || parsed["tv-limited"] || parsed["tv-ongoing"])) {
-        newState = parsed;
-      } else {
-        newState = { ...state, [activeTab]: parsed };
-      }
-      catalogManifest.forEach(c => { if (!newState[c.id]) newState[c.id] = {}; });
-      newState = normalizeStateIds(newState);
-
-      // Build diagnostic before commit
-      const diagnostic = buildImportDiagnostic(newState);
-
-      state = newState;
-      saveState(); render();
-      document.getElementById('import-modal').close();
-
-      // Show import summary modal instead of generic alert
-      document.getElementById('import-summary-content').innerHTML = renderImportDiagnostic(diagnostic);
-      document.getElementById('import-summary-modal').showModal();
-    } catch (e) { alert('Invalid format: ' + e.message); }
-  });
-  document.getElementById('import-summary-close').addEventListener('click', () => {
-    document.getElementById('import-summary-modal').close();
-  });
-
   // === App logo (top-left): reset to Watchlist with cleared filter/search state ===
   document.getElementById('app-logo-btn').addEventListener('click', () => {
     // Clear search input if open
@@ -4891,50 +4835,6 @@ function updatePlexStatusLine() {
     status.textContent = `Library: ${plexLibrary.size} items (refreshed ${ago}m ago).`;
     status.className = 'settings-status ok';
   }
-}
-
-// === Import diagnostic ===
-function buildImportDiagnostic(newState) {
-  let totalEntries = 0, knownIds = 0, unknownIds = 0, withRating = 0, withTags = 0, withNotes = 0;
-  const unknownByTab = {};
-  const tabsTouched = new Set();
-
-  for (const tab in newState) {
-    const tabState = newState[tab];
-    if (!tabState || typeof tabState !== 'object') continue;
-    tabsTouched.add(tab);
-    const cat = catalogs[tab];
-    const validIds = cat ? new Set(cat.items.map(it => it.id)) : new Set();
-    for (const id in tabState) {
-      const e = tabState[id];
-      if (!e || typeof e !== 'object') continue;
-      totalEntries++;
-      if (cat && validIds.has(id)) knownIds++;
-      else { unknownIds++; (unknownByTab[tab] = unknownByTab[tab] || []).push(id); }
-      if (e.rating) withRating++;
-      if (e.reactionTags && e.reactionTags.length) withTags++;
-      if (e.notes) withNotes++;
-    }
-  }
-  return { totalEntries, knownIds, unknownIds, unknownByTab, withRating, withTags, withNotes, tabCount: tabsTouched.size };
-}
-
-function renderImportDiagnostic(d) {
-  let html = '';
-  html += `<div class="stat-line"><span>Total entries imported</span><strong>${d.totalEntries}</strong></div>`;
-  html += `<div class="stat-line"><span>Tabs covered</span><strong>${d.tabCount}</strong></div>`;
-  html += `<div class="stat-line"><span>Matched to catalog</span><strong>${d.knownIds}</strong></div>`;
-  html += `<div class="stat-line"><span>Unknown IDs (orphaned)</span><strong>${d.unknownIds}</strong></div>`;
-  html += `<div class="stat-line"><span>With rating</span><strong>${d.withRating}</strong></div>`;
-  html += `<div class="stat-line"><span>With reaction tags</span><strong>${d.withTags}</strong></div>`;
-  html += `<div class="stat-line"><span>With notes</span><strong>${d.withNotes}</strong></div>`;
-  if (d.unknownIds > 0) {
-    html += `<h4>Orphaned IDs (preserved but won't render)</h4>`;
-    for (const tab in d.unknownByTab) {
-      html += `<div style="margin-top:6px"><strong>${tab}:</strong> ${d.unknownByTab[tab].slice(0,5).join(', ')}${d.unknownByTab[tab].length > 5 ? ` (+${d.unknownByTab[tab].length - 5} more)` : ''}</div>`;
-    }
-  }
-  return html;
 }
 
 // === Bulk-sync results ===

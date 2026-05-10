@@ -10,6 +10,34 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 6.2.0 — 2026-05-10
+**Service worker cache:** `scifi-tracker-v102` → `v103`
+
+### Removal — Export and Import buttons + modals
+
+The header `Export` and `Import` buttons are gone, along with the
+three associated dialogs (`#export-modal`, `#import-modal`,
+`#import-summary-modal`) and the `buildImportDiagnostic` /
+`renderImportDiagnostic` helpers that drove the import summary view.
+
+**Why now.** State durability is fully covered by other systems that
+shipped over the last two rounds:
+- IndexedDB primary store (v6.0) — survives localStorage clears.
+- Cross-device sync via Worker (v5.31) — every device with the same
+  Plex token mirrors automatically.
+- Daily R2 backups (v6.3.0, next release) — durable, dated snapshots
+  that don't depend on any device staying online.
+
+The remaining "share JSON with Claude" use case will be replaced by
+the AI chat flow (v6.5.0+, planned), which talks directly to your
+state instead of asking you to copy-paste a 13 KB JSON blob.
+
+If you ever genuinely need an export today, `JSON.stringify(state)`
+in the DevTools console returns the exact same payload the old
+button produced — the underlying `state` object is unchanged.
+
+---
+
 ## 6.1.4 — 2026-05-09
 **Service worker cache:** unchanged (tooling change)
 
