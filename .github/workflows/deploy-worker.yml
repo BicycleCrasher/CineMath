@@ -8,7 +8,11 @@ name: Deploy Worker
 # Worker source all roll out from the same commit.
 #
 # Required repo secrets (Settings → Secrets and variables → Actions):
-#   CLOUDFLARE_API_TOKEN   — token with scope "Account → Workers Scripts: Edit"
+#   CLOUDFLARE_API_TOKEN   — token with TWO scopes:
+#                              "Account → Workers Scripts: Edit"
+#                              "Account → Workers KV Storage: Edit"
+#                            (KV scope is required because the deploy
+#                             attaches KV bindings to the script)
 #   CLOUDFLARE_ACCOUNT_ID  — 32-char hex from any Worker page in the dashboard
 
 on:
