@@ -10,6 +10,37 @@ The `service-worker.js` cache name (`scifi-tracker-vN`) tracks deployments rathe
 
 ---
 
+## 6.5.0 — 2026-05-10
+**Service worker cache:** `scifi-tracker-v103` → `v104`
+**Requires Worker patch:** worker.js v5.12. New `[ai]` binding in `wrangler.toml` (Workers AI). Token already has `Workers AI: Read` from the most recent edit, no further setup.
+
+### Round 2 / R9 — Workers AI chat: "Tell me what to watch"
+
+The product vision's first concrete shape. New wizard root option, right above "Looking for something to watch":
+
+> **Tell me what to watch** — Talk to the bot, it picks one for you.
+
+Tap → chat modal opens → freeform input ("something tense but not bleak", "rainy-day comfort", "a Coen brothers I haven't seen yet") → bot responds with a 1-2 sentence reply naming a pick AND a "Watch Card" rendering of that pick: title, year, director, runtime, pitch, why-it's-being-suggested, trailer button, streaming providers in your region, and Mark watching / Queue / Pass actions.
+
+**Worker side (v5.12):**
+- New `[ai]` binding declared in `wrangler.toml` (Workers AI inference, no namespace ID required).
+- `POST /chat` accepts `{ secret, userHash, message, history?, candidates? }`. Pulls last 30 viewing-history rows from D1 (now possible because of v6.4's migration), composes a system + context + user prompt, calls `@cf/meta/llama-3.3-70b-instruct-fp8-fast` with a strict-JSON output instruction, and returns `{ reply, pick: { tabId, itemId, why } | null }`.
+- The model is told to ground recommendations in observable taste signals — recent viewing patterns, applied reaction tags, director affinity — so the "why" line cites specific evidence rather than generic mood-matching.
+- Failure modes are handled: missing AI binding → 500 with explanation; D1 read failure → degrade gracefully (still respond, just less personalized); JSON parse failure → return raw text in `reply`, set `pick: null`.
+
+**Client side:**
+- `voiceSearchInto` reused from the search modals — the chat input has a 🎤 button. Free-form mood queries are exactly the case where typing on a Bravia remote is brutal.
+- `buildChatCandidates()` walks every catalog tab, weights queued (3) > watching (2) > unrated (1) > rated (skip), caps at 50. The bot picks from this curated subset rather than the full ~720-item catalog (token budget).
+- `_chatHistory` keeps the last 8 turns for multi-turn context within one session. Cleared on each modal open.
+- Watch Card rendering reuses existing helpers (`getTrailerKey`, `getEnrichmentForItem`, `getStreamingRegion`) so pick metadata matches what the rest of the app shows.
+- Cmd/Ctrl+Enter sends; Enter alone inserts a newline (textarea default — multi-line mood descriptions feel natural).
+
+**The bigger arc.** Per the product vision: "user opens app, talks to bot, clicks watch." This release ships the chat as **option (A)** — a wizard-root entry alongside the existing structured 3-button flow. Once the chat handles the common cases reliably, **option (C)** (chat AS the wizard root) becomes the natural next step in v7.0.
+
+R10 (Vectorize) is what makes the chat scale gracefully to "more like this" buttons and to a catalog larger than 50-item context windows can hold. The pieces sit ready.
+
+---
+
 ## 6.4.0 — 2026-05-10
 **Service worker cache:** unchanged (Worker-only release)
 **Requires Worker patch:** worker.js v5.11. New D1 database (`watchtrack-viewed`) and `D1_VIEWED` binding in `wrangler.toml`. Token needs additional scope `Account → D1: Edit`. After deploy, hit `/cron/migrate-viewed-to-d1?secret=…` once to seed the database. See `worker/DEPLOY.md` v5.11 section.
