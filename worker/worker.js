@@ -986,13 +986,21 @@ export default {
 
     // GET /cron/migrate-viewed-to-d1 — one-time backfill of the VIEWED
     // KV namespace into the D1 `views` table. Idempotent — INSERT OR
-    // IGNORE keeps re-runs safe. Should be called once after deploying
-    // v5.11 to seed D1 with all historical views.
+    // IGNORE keeps re-runs safe. Chunked: each call processes up to
+    // `limit` records (default 500) and returns the next cursor for
+    // continuation. Loop the call client-side until cursor is null.
     if (path === '/cron/migrate-viewed-to-d1' && method === 'GET') {
       const providedSecret = url.searchParams.get('secret');
       if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
-      const summary = await migrateViewedToD1(env);
-      return jsonResponse(summary);
+      try {
+        const cursor = url.searchParams.get('cursor') || undefined;
+        const limit = Math.min(parseInt(url.searchParams.get('limit') || '500'), 1000);
+        const summary = await migrateViewedToD1(env, { cursor, limit });
+        return jsonResponse(summary);
+      } catch (e) {
+        console.log('[d1-migrate] uncaught', e.stack || e.message);
+        return jsonResponse({ error: e.message || String(e), stack: (e.stack || '').slice(0, 500) }, 500);
+      }
     }
 
     // GET /cron/check-alerts — fired by Cloudflare Cron Trigger.
@@ -1233,38 +1241,56 @@ async function insertViewToD1(env, record) {
   return true;
 }
 
-// One-shot migration: walk the entire VIEWED KV namespace and INSERT
-// every record into D1. Re-run safely — INSERT OR IGNORE skips rows
-// that already exist (matched by primary key `id`).
-async function migrateViewedToD1(env) {
+// Chunked migration of the VIEWED KV namespace into the D1 `views`
+// table. Free-tier Workers cap CPU time per request at 10 ms, so
+// walking thousands of records in one HTTP call blows the budget and
+// throws 1101. The chunked API processes up to `opts.limit` records
+// per call (default 500), uses Promise.all on the inserts so D1 round
+// trips amortize, and returns a continuation cursor.
+//
+// Calling pattern:
+//   GET /cron/migrate-viewed-to-d1?secret=...
+//   → returns { scanned, inserted, errors, cursor, done }
+//   if !done, repeat: GET /cron/migrate-viewed-to-d1?secret=...&cursor=ABC
+async function migrateViewedToD1(env, opts) {
   if (!env.D1_VIEWED || !env.VIEWED) {
     return { error: 'D1_VIEWED or VIEWED binding missing' };
   }
-  console.log('[d1-migrate] starting');
-  let cursor;
-  let scanned = 0, inserted = 0, errors = 0, batches = 0;
-  do {
-    const list = await env.VIEWED.list({ cursor, limit: 1000 });
-    cursor = list.list_complete ? null : list.cursor;
-    const CONCURRENCY = 25;
-    for (let i = 0; i < list.keys.length; i += CONCURRENCY) {
-      const batch = list.keys.slice(i, i + CONCURRENCY);
-      const values = await Promise.all(batch.map(k => env.VIEWED.get(k.name).catch(() => null)));
-      for (const v of values) {
-        if (!v) continue;
-        scanned++;
-        try {
-          const rec = JSON.parse(v);
-          await insertViewToD1(env, rec);
-          inserted++;
-        } catch (e) {
-          errors++;
-        }
-      }
-      batches++;
+  const limit = (opts && opts.limit) || 500;
+  const startCursor = (opts && opts.cursor) || undefined;
+  console.log('[d1-migrate] chunk start cursor=', startCursor || '<begin>', 'limit=', limit);
+  const list = await env.VIEWED.list({ cursor: startCursor, limit });
+  const records = [];
+  for (const k of list.keys) {
+    try {
+      const v = await env.VIEWED.get(k.name);
+      if (!v) continue;
+      records.push(JSON.parse(v));
+    } catch (e) {
+      console.log('[d1-migrate] read/parse failed', k.name, e.message);
     }
-  } while (cursor);
-  const summary = { scanned, inserted, errors, batches, ranAt: Date.now() };
-  console.log('[d1-migrate] done', JSON.stringify(summary));
+  }
+  // Insert each record individually with per-row try/catch so a single
+  // bad row doesn't fail the chunk. If we ever go wide enough to want
+  // batched D1 statements, env.D1_VIEWED.batch([...]) is the API.
+  let inserted = 0, errors = 0;
+  for (const rec of records) {
+    try {
+      await insertViewToD1(env, rec);
+      inserted++;
+    } catch (e) {
+      errors++;
+      console.log('[d1-migrate] insert failed for', rec && rec.id, e.message);
+    }
+  }
+  const summary = {
+    scanned: records.length,
+    inserted,
+    errors,
+    cursor: list.list_complete ? null : list.cursor,
+    done: !!list.list_complete,
+    ranAt: Date.now(),
+  };
+  console.log('[d1-migrate] chunk done', JSON.stringify(summary));
   return summary;
 }
