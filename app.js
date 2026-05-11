@@ -130,6 +130,14 @@ const TAG_SETS = {
   }
 };
 
+// v7.1.0: Hall of Fame — universal positive tag, last in every content type's
+// positive array. Selecting it auto-sets rating to Loved (see toggleTag).
+Object.keys(TAG_SETS).forEach(k => {
+  if (!TAG_SETS[k].positive.includes('Hall of Fame')) {
+    TAG_SETS[k].positive.push('Hall of Fame');
+  }
+});
+
 // Backwards compatibility: legacy POSITIVE_TAGS/NEGATIVE_TAGS still referenced from import code.
 const POSITIVE_TAGS = TAG_SETS['film-narrative'].positive;
 const NEGATIVE_TAGS = TAG_SETS['film-narrative'].negative;
@@ -623,6 +631,68 @@ function getWebhookLastPoll() {
 }
 function setWebhookLastPoll(ts) {
   lsSet(WEBHOOK_LAST_POLL_KEY, String(ts));
+}
+
+// === v7.1.0: Palate — D1-backed archive of fully-processed items ===
+// archivedIds is the live mask used by render(). Cached in localStorage for
+// instant first paint; refreshed from /palate/archived in the background.
+const PALATE_ARCHIVED_KEY = 'watchtrack-palate-archived';
+let archivedIds = new Set();
+
+function paletteKey(tabId, itemId) { return `${tabId}:${itemId}`; }
+function isArchived(tabId, itemId) { return archivedIds.has(paletteKey(tabId, itemId)); }
+
+async function loadArchivedIds() {
+  try {
+    const cached = lsGet(PALATE_ARCHIVED_KEY);
+    if (cached) archivedIds = new Set(JSON.parse(cached));
+  } catch {}
+  if (!isWebhookConfigured()) return;
+  try {
+    const resp = await fetch(`${getWebhookUrl()}/palate/archived?secret=${encodeURIComponent(getWebhookSecret())}`);
+    if (!resp.ok) return;
+    const data = await resp.json();
+    archivedIds = new Set(data.ids || []);
+    lsSet(PALATE_ARCHIVED_KEY, JSON.stringify([...archivedIds]));
+  } catch {}
+}
+
+// Fire-and-forget upsert. Used by both archiveItem and Hall of Fame toggling.
+function palateUpsert(payload) {
+  if (!isWebhookConfigured()) return;
+  fetch(`${getWebhookUrl()}/palate/upsert`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ secret: getWebhookSecret(), ...payload }),
+  }).catch(() => {});
+}
+
+// reason: 'finished' | 'notInterested'
+function archiveItem(tabId, itemId, reason) {
+  const key = paletteKey(tabId, itemId);
+  archivedIds.add(key);
+  lsSet(PALATE_ARCHIVED_KEY, JSON.stringify([...archivedIds]));
+  const s = (state[tabId] && state[tabId][itemId]) || {};
+  const cat = catalogs[tabId];
+  const item = cat && cat.items && cat.items.find(it => it.id === itemId);
+  const enrich = getEnrichmentForItem(itemId);
+  const tags = s.reactionTags || [];
+  palateUpsert({
+    tabId, itemId,
+    title: item ? item.title : itemId,
+    year: item ? item.year : null,
+    tmdbId: enrich ? enrich.tmdbId : null,
+    status: s.status || 'none',
+    rating: s.rating || 'none',
+    reactionTags: tags,
+    notes: s.notes || '',
+    archived: 1,
+    archivedReason: reason,
+    hof: tags.includes('Hall of Fame') ? 1 : 0,
+  });
+  // Yank the rendered card from the DOM without forcing a full re-render.
+  const itemEl = document.querySelector(`.item[data-id="${itemId}"]`);
+  if (itemEl) itemEl.remove();
 }
 
 // === Trakt settings ===
@@ -2339,6 +2409,32 @@ function toggleTag(id, tag, tab) {
   if (idx === -1) state[tab][id].reactionTags.push(tag);
   else state[tab][id].reactionTags.splice(idx, 1);
   touchEntry(tab, id);
+  // v7.1.0: Hall of Fame side effects.
+  //   - Adding HoF when rating is 'none' auto-promotes to Loved.
+  //     (setRating does NOT re-enter toggleTag, verified at app.js:setRating.)
+  //   - Either direction mirrors to the palate D1 row with hof flag.
+  if (tag === 'Hall of Fame') {
+    const isAdding = state[tab][id].reactionTags.includes('Hall of Fame');
+    if (isAdding && (state[tab][id].rating || 'none') === 'none') {
+      setRating(id, 'loved', tab);
+    }
+    const catItem = catalogs[tab] && catalogs[tab].items && catalogs[tab].items.find(it => it.id === id);
+    const enrich = getEnrichmentForItem(id);
+    const s = state[tab][id];
+    palateUpsert({
+      tabId: tab, itemId: id,
+      title: catItem ? catItem.title : id,
+      year: catItem ? catItem.year : null,
+      tmdbId: enrich ? enrich.tmdbId : null,
+      status: s.status || 'none',
+      rating: s.rating || 'none',
+      reactionTags: s.reactionTags || [],
+      notes: s.notes || '',
+      archived: isArchived(tab, id) ? 1 : 0,
+      archivedReason: null,
+      hof: isAdding ? 1 : 0,
+    });
+  }
   saveState(); updateItemInPlace(id);
   // Rebuild tag pills since the set of tags-in-use may have changed
   if (typeof buildTagPills === 'function') buildTagPills();
@@ -3034,6 +3130,10 @@ function _renderImpl() {
 
     // For watchlist virtual tab, items operate on their source tab's state
     const itemTab = item._watchlist_source_tab || item._auteur_source_tab || activeTab;
+
+    // v7.1.0: skip archived items everywhere except the Auteur tab.
+    // Auteur stays unfiltered so directors finish out their filmography first.
+    if (activeTab !== 'auteur' && isArchived(itemTab, item.id)) return;
 
     // A2: register so the delegated handlers can dispatch on this id
     _itemRegistry.set(item.id, { item, itemTab });
@@ -7478,6 +7578,9 @@ function triageAction(act) {
   // STORAGE_KEY but the v5.41 mirror snapshot exists, replay it.
   await idbRestoreIfNeeded();
   loadState();
+  // v7.1.0: hydrate archived palate IDs (cached + background refresh).
+  // Does not block init — render() will mask archived items once the Set is populated.
+  loadArchivedIds();
   // V5.28.0: pull remote sync state before catalogs load. If remote has newer
   // settings/state than our last-push timestamp, applies them silently.
   // syncOnLaunch() short-circuits if Plex/Worker aren't configured.

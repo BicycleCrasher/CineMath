@@ -391,7 +391,7 @@ export default {
 
     // Health (no rate limit, no auth)
     if (path === '/' || path === '/health') {
-      return new Response('CinéMath-Plex bridge online (v5.12 — /chat endpoint via Workers AI)', { headers: cors });
+      return new Response('CinéMath-Plex bridge online (v5.13 — /palate/{upsert,archived,list})', { headers: cors });
     }
 
     // v5.7: per-IP rate limit. Applies to every other route. Returns 429
@@ -664,6 +664,105 @@ export default {
       const key = `${tab}|${itemId}`;
       await env.PROMOTIONS.delete(key);
       return jsonResponse({ ok: true, deleted: key });
+    }
+
+    // === Palate: D1-backed record of archived items, ratings, tags, HoF ===
+    // POST /palate/upsert — body: {
+    //   secret, tabId, itemId, title, year, tmdbId, status, rating,
+    //   reactionTags (array), notes, archived (0/1), archivedReason, hof (0/1)
+    // }
+    if (path === '/palate/upsert' && method === 'POST') {
+      try {
+        const body = await request.json();
+        if (!(await checkSecret(env, body.secret))) return new Response('Forbidden', { status: 403, headers: cors });
+        if (!body.tabId || !body.itemId) {
+          return new Response('Missing tabId or itemId', { status: 400, headers: cors });
+        }
+        if (!env.D1_VIEWED) return jsonResponse({ error: 'D1 not configured' }, 500);
+        const id = `${body.tabId}:${body.itemId}`;
+        const now = Date.now();
+        const tagsJson = JSON.stringify(Array.isArray(body.reactionTags) ? body.reactionTags : []);
+        await env.D1_VIEWED.prepare(
+          `INSERT INTO palate (
+             id, tab_id, item_id, title, year, tmdb_id, status, rating,
+             reaction_tags, notes, archived, archived_reason, hof, created_at, updated_at
+           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+           ON CONFLICT(id) DO UPDATE SET
+             tab_id = excluded.tab_id,
+             item_id = excluded.item_id,
+             title = excluded.title,
+             year = excluded.year,
+             tmdb_id = excluded.tmdb_id,
+             status = excluded.status,
+             rating = excluded.rating,
+             reaction_tags = excluded.reaction_tags,
+             notes = excluded.notes,
+             archived = excluded.archived,
+             archived_reason = excluded.archived_reason,
+             hof = excluded.hof,
+             updated_at = excluded.updated_at`
+        ).bind(
+          id, body.tabId, body.itemId,
+          body.title || null,
+          body.year || null,
+          body.tmdbId || null,
+          body.status || null,
+          body.rating || null,
+          tagsJson,
+          body.notes || null,
+          body.archived ? 1 : 0,
+          body.archivedReason || null,
+          body.hof ? 1 : 0,
+          now, now
+        ).run();
+        return jsonResponse({ ok: true, id });
+      } catch (e) {
+        return new Response('Bad request: ' + e.message, { status: 400, headers: cors });
+      }
+    }
+
+    // GET /palate/archived?secret=X — fast id-only fetch for startup hydration
+    if (path === '/palate/archived' && method === 'GET') {
+      const providedSecret = url.searchParams.get('secret');
+      if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
+      if (!env.D1_VIEWED) return jsonResponse({ ids: [] });
+      try {
+        const r = await env.D1_VIEWED.prepare(
+          'SELECT id FROM palate WHERE archived = 1'
+        ).all();
+        const ids = (r.results || []).map(row => row.id);
+        return jsonResponse({ ids });
+      } catch (e) {
+        return new Response('D1 error: ' + e.message, { status: 500, headers: cors });
+      }
+    }
+
+    // GET /palate/list?secret=X&cursor=N&limit=100 — full paginated palate
+    if (path === '/palate/list' && method === 'GET') {
+      const providedSecret = url.searchParams.get('secret');
+      if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
+      if (!env.D1_VIEWED) return jsonResponse({ records: [], next_cursor: null });
+      const limit = Math.min(parseInt(url.searchParams.get('limit') || '100'), 500);
+      const offset = parseInt(url.searchParams.get('cursor') || '0');
+      try {
+        const r = await env.D1_VIEWED.prepare(
+          `SELECT id, tab_id AS tabId, item_id AS itemId, title, year,
+                  tmdb_id AS tmdbId, status, rating, reaction_tags AS reactionTags,
+                  notes, archived, archived_reason AS archivedReason, hof,
+                  created_at AS createdAt, updated_at AS updatedAt
+             FROM palate
+             ORDER BY updated_at DESC
+             LIMIT ? OFFSET ?`
+        ).bind(limit, offset).all();
+        const records = (r.results || []).map(row => ({
+          ...row,
+          reactionTags: row.reactionTags ? JSON.parse(row.reactionTags) : [],
+        }));
+        const next_cursor = records.length === limit ? offset + limit : null;
+        return jsonResponse({ records, next_cursor });
+      } catch (e) {
+        return new Response('D1 error: ' + e.message, { status: 500, headers: cors });
+      }
     }
 
     // === Plex proxy: store URL + token in CONFIG KV (one-time setup) ===
