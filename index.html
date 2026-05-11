@@ -60,13 +60,21 @@
           <rect x="1140" y="618" width="40" height="24" rx="3"/><rect x="1220" y="618" width="40" height="24" rx="3"/>
         </g>
         <!-- wordmark: calligraphic 'Ciné' + geometric 'math' -->
-        <text x="640" y="380" text-anchor="middle" font-family="'Cine Script', 'Great Vibes', 'Snell Roundhand', 'Edwardian Script ITC', cursive" font-size="240" fill="#d4a843" font-style="italic">Ciné</text>
-        <text x="640" y="380" dx="160" text-anchor="start" font-family="'Futura', 'Avenir Next', 'Avenir', 'Century Gothic', 'Helvetica Neue', sans-serif" font-size="170" fill="#f5f1e8" font-weight="300" letter-spacing="6">Math</text>
+        <!-- wordmark: Ciné + Math centered as a unit (v7.6.0 fix).
+             Both texts share absolute anchors near the 1280px viewBox center
+             instead of using a relative dx — the script font's varying width
+             across WebView versions previously pushed Math off-center on TV. -->
+        <text x="540" y="380" text-anchor="end"
+              font-family="'Cine Script', 'Great Vibes', 'Snell Roundhand', 'Edwardian Script ITC', cursive"
+              font-size="240" fill="#d4a843" font-style="italic">Ciné</text>
+        <text x="556" y="380" text-anchor="start"
+              font-family="'Futura', 'Avenir Next', 'Avenir', 'Century Gothic', 'Helvetica Neue', sans-serif"
+              font-size="170" fill="#f5f1e8" font-weight="300" letter-spacing="6">Math</text>
         <!-- tagline -->
         <text x="640" y="490" text-anchor="middle" font-family="'Futura', 'Avenir Next', 'Avenir', 'Helvetica Neue', sans-serif" font-size="34" fill="#a89878" font-weight="300" letter-spacing="14">YOUR  PALATE,  COMPUTED</text>
       </svg>
     </div>
-    <p class="wizard-subtitle" id="wizard-subtitle">What are you doing?</p>
+    <nav id="wizard-breadcrumb" aria-label="Navigation breadcrumb"></nav>
     <div class="wizard-step" id="wizard-step"></div>
     <div class="wizard-footer">
       <button class="wizard-back" id="wizard-back" style="display:none">← Back</button>

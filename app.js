@@ -2493,6 +2493,7 @@ function updateItemInPlace(id, tab) {
   if (!itemEl) return;
   const rating = getRating(id, tab);
   const reactionTags = getTags(id, tab);
+  itemEl.dataset.rating = rating;  // v7.6.0: keep [data-rating] in sync for the loved-tint CSS
   itemEl.querySelectorAll('.rating-btn').forEach(btn => {
     btn.classList.remove('active-loved','active-liked','active-mixed','active-disliked');
     if (btn.dataset.rating === rating) btn.classList.add(`active-${rating}`);
@@ -2649,6 +2650,27 @@ function itemMatchesCategory(item) {
   return Array.isArray(item.categories) && item.categories.includes(active);
 }
 
+// v7.6.0: returns item count for key filter buttons (used for badge display).
+function filterCount(filterKey) {
+  const cat = activeTab === 'watchlist' ? buildWatchlistCatalog() : catalogs[activeTab];
+  if (!cat || !cat.items) return 0;
+  const COUNTED = new Set(['all','watching','queued','watched','loved','unwatched']);
+  if (!COUNTED.has(filterKey)) return 0;
+  let count = 0;
+  cat.items.forEach(item => {
+    const tab = item._watchlist_source_tab || activeTab;
+    const status = getStatus(item.id, tab);
+    const rating = getRating(item.id, tab);
+    if (filterKey === 'all')      count++;
+    else if (filterKey === 'watching' && status === 'watching') count++;
+    else if (filterKey === 'queued'   && status === 'queued')   count++;
+    else if (filterKey === 'watched'  && status === 'watched')  count++;
+    else if (filterKey === 'loved'    && rating === 'loved')    count++;
+    else if (filterKey === 'unwatched' && (status === 'none' || status === 'queued')) count++;
+  });
+  return count;
+}
+
 function buildFilters() {
   const isFilms = !activeTab.endsWith('-tv') && activeTab !== 'scifi-tv';
   const isTV = activeTab.endsWith('-tv') || activeTab === 'scifi-tv';
@@ -2683,9 +2705,10 @@ function buildFilters() {
     <option value="title" ${currentSort==='title'?'selected':''}>Title (A→Z)</option>
     <option value="rating" ${currentSort==='rating'?'selected':''}>My rating</option>
   </select>`;
-  container.innerHTML = sortHtml + filters.map(f =>
-    `<button class="filter-btn ${activeFilter === f.key ? 'active' : ''}" data-filter="${f.key}">${f.label}</button>`
-  ).join('');
+  container.innerHTML = sortHtml + filters.map(f => {
+    const cnt = filterCount(f.key);
+    return `<button class="filter-btn ${activeFilter === f.key ? 'active' : ''}" data-filter="${f.key}">${f.label}${cnt ? `<span class="filter-count">${cnt}</span>` : ''}</button>`;
+  }).join('');
   const sortSelect = container.querySelector('#sort-select');
   if (sortSelect) {
     sortSelect.addEventListener('change', (e) => {
@@ -2933,6 +2956,55 @@ function buildWatchlistCatalog() {
     sections: [sectionA, sectionB, sectionC].filter(s => s.items.length > 0),
     items: allItems
   };
+}
+
+// v7.6.0: Watching-now banner — sticky strip at top of Watchlist showing
+// items currently in progress. Tapping any item navigates to it in its tab.
+function renderWatchingNowBanner() {
+  // Container is <main id="items-container"> in this app — patch doc said
+  // "main" but that ID doesn't exist here. Use the actual container.
+  const main = document.getElementById('items-container');
+  if (!main) return;
+  const existing = document.getElementById('watchlist-now-banner');
+  if (existing) existing.remove();
+  if (activeTab !== 'watchlist') return;
+  const watching = [];
+  for (const tabId in catalogs) {
+    if (tabId === 'watchlist') continue;
+    const cat = catalogs[tabId];
+    if (!cat || !cat.items) continue;
+    cat.items.forEach(item => {
+      const st = (state[tabId] && state[tabId][item.id] && state[tabId][item.id].status) || 'none';
+      if (st === 'watching') watching.push({ title: item.title, id: item.id, tabId, tabLabel: cat.title || tabId });
+    });
+  }
+  if (watching.length === 0) return;
+  const banner = document.createElement('div');
+  banner.id = 'watchlist-now-banner';
+  banner.setAttribute('aria-label', 'Currently watching');
+  banner.innerHTML = `
+    <span class="now-banner-label">Now watching</span>
+    <div class="now-banner-items">
+      ${watching.map(w => `<button class="now-banner-item" data-tab="${w.tabId}" data-id="${w.id}">
+        ${escapeHtml(w.title)}<span class="now-banner-source">${escapeHtml(w.tabLabel)}</span>
+      </button>`).join('')}
+    </div>`;
+  banner.querySelectorAll('.now-banner-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      wizardHide();
+      switchTab(btn.dataset.tab);
+      setTimeout(() => {
+        const target = document.querySelector(`.item[data-id="${btn.dataset.id}"]`);
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          target.classList.add('expanded');
+        }
+      }, 100);
+    });
+  });
+  const firstSection = main.querySelector('.section-header');
+  if (firstSection) main.insertBefore(banner, firstSection);
+  else main.prepend(banner);
 }
 
 // === Auteur (virtual tab) generator ===
@@ -3187,6 +3259,7 @@ function _renderImpl() {
     itemEl.className = 'item' + priorityClass;
     itemEl.dataset.id = item.id;
     itemEl.dataset.status = status;
+    itemEl.dataset.rating = rating;  // v7.6.0: enables [data-rating="loved"] CSS tint
     itemEl.tabIndex = 0;  // Focusable for D-pad nav
     if (expandedIds.has(item.id)) {
       itemEl.classList.add('expanded');
@@ -3283,6 +3356,8 @@ function _renderImpl() {
   });
 
   updateStats();
+  // v7.6.0: refresh the "Now watching" strip at top of Watchlist (no-op elsewhere)
+  renderWatchingNowBanner();
 }
 
 // v5.37.0 B1: Voice dictation for TV mode. The notes textarea is hidden
@@ -3374,6 +3449,28 @@ function voiceDictate(id, tab, btn) {
   } catch (e) {
     _voiceActive = null;
   }
+}
+
+// v7.6.0: Swipe-down gesture to collapse expanded item cards.
+// REVERSIBLE: to disable, comment out the enableSwipeCollapse() call in the
+// boot IIFE — the function itself is inert until called.
+function enableSwipeCollapse() {
+  let touchStartY = 0;
+  let touchTarget = null;
+  document.addEventListener('touchstart', (e) => {
+    const body = e.target.closest('.item-body');
+    if (!body) return;
+    touchStartY = e.touches[0].clientY;
+    touchTarget = body.closest('.item');
+  }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    if (!touchTarget) return;
+    if (e.changedTouches[0].clientY - touchStartY > 44) {
+      touchTarget.classList.remove('expanded');
+    }
+    touchTarget = null;
+  }, { passive: true });
+  document.addEventListener('touchcancel', () => { touchTarget = null; }, { passive: true });
 }
 
 function switchTab(tab) {
@@ -7442,8 +7539,59 @@ function wizardHide() {
   }, 50);
 }
 
+// v7.6.0: Wizard breadcrumb trail — renders navigation context above wizard steps.
+// Called via the subtitle setter proxy in wizardRender(). Each non-root step
+// shows tappable crumbs back to earlier steps.
+function _wizardSetBreadcrumb(el, stepLabel) {
+  if (!el) return;
+  const crumbs = [{ label: 'Home', step: 'root' }];
+  if (wizardState.step === 'root') {
+    el.innerHTML = `<span class="wizard-crumb current">${stepLabel}</span>`;
+    return;
+  }
+  if (wizardState.step === 'rate') {
+    crumbs.push({ label: stepLabel, current: true });
+  } else if (wizardState.step === 'time') {
+    crumbs.push({ label: 'Watch', step: 'root' });
+    crumbs.push({ label: stepLabel, current: true });
+  } else if (wizardState.step === 'mood') {
+    crumbs.push({ label: 'Watch', step: 'root' });
+    crumbs.push({ label: TIME_BUDGETS[wizardState.timeBudget]?.label || 'Time', step: 'time' });
+    crumbs.push({ label: stepLabel, current: true });
+  } else if (wizardState.step === 'genre') {
+    crumbs.push({ label: 'Watch', step: 'root' });
+    crumbs.push({ label: TIME_BUDGETS[wizardState.timeBudget]?.label || 'Time', step: 'time' });
+    crumbs.push({ label: MOOD_ARCHETYPES[wizardState.mood]?.label || 'Mood', step: 'mood' });
+    crumbs.push({ label: stepLabel, current: true });
+  } else if (wizardState.step === 'recs') {
+    crumbs.push({ label: 'Watch', step: 'root' });
+    crumbs.push({ label: TIME_BUDGETS[wizardState.timeBudget]?.label || 'Time', step: 'time' });
+    crumbs.push({ label: MOOD_ARCHETYPES[wizardState.mood]?.label || 'Mood', step: 'mood' });
+    crumbs.push({ label: wizardState.genre || 'Genre', step: 'genre' });
+    crumbs.push({ label: 'Picks', current: true });
+  } else if (wizardState.step === 'continue-list') {
+    crumbs.push({ label: stepLabel, current: true });
+  } else {
+    crumbs.push({ label: stepLabel, current: true });
+  }
+  el.innerHTML = crumbs.map((c, i) => {
+    const sep = i > 0 ? `<span class="wizard-crumb-sep" aria-hidden="true"> › </span>` : '';
+    if (c.current || !c.step) {
+      return `${sep}<span class="wizard-crumb current">${c.label}</span>`;
+    }
+    return `${sep}<button class="wizard-crumb" data-crumb-step="${c.step}">${c.label}</button>`;
+  }).join('');
+  el.querySelectorAll('.wizard-crumb[data-crumb-step]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      wizardState.step = btn.dataset.crumbStep;
+      wizardRender();
+    });
+  });
+}
+
 function wizardRender() {
-  const subtitle = document.getElementById('wizard-subtitle');
+  const breadcrumbEl = document.getElementById('wizard-breadcrumb');
+  const subtitle = { set textContent(v) { _wizardSetBreadcrumb(breadcrumbEl, v); } };
   const stepEl = document.getElementById('wizard-step');
   const backBtn = document.getElementById('wizard-back');
   stepEl.className = 'wizard-step';   // reset matrix class
@@ -8081,10 +8229,10 @@ function renderRateTagTriage(item, sourceTab) {
       <div class="triage-rate-step">
         <h5>How did you like it?</h5>
         <div class="triage-rate-buttons">
-          <button class="triage-rate-btn rating-loved" data-rate="loved">♥ Loved</button>
-          <button class="triage-rate-btn rating-liked" data-rate="liked">▲ Liked</button>
-          <button class="triage-rate-btn rating-mixed" data-rate="mixed">◐ Mixed</button>
-          <button class="triage-rate-btn rating-disliked" data-rate="disliked">▽ Disliked</button>
+          <button class="triage-rate-btn rating-loved" data-rate="loved" data-shortcut="1">♥ Loved</button>
+          <button class="triage-rate-btn rating-liked" data-rate="liked" data-shortcut="2">▲ Liked</button>
+          <button class="triage-rate-btn rating-mixed" data-rate="mixed" data-shortcut="3">◐ Mixed</button>
+          <button class="triage-rate-btn rating-disliked" data-rate="disliked" data-shortcut="4">▽ Disliked</button>
         </div>
       </div>
     `;
@@ -8256,6 +8404,7 @@ function triageAction(act) {
   applyDisplayMode();
   buildTabs();
   setupModals();
+  enableSwipeCollapse(); // v7.6.0: comment out to disable swipe-to-collapse
   buildCategoryFilters();
   buildFilters();
   buildTagPills();

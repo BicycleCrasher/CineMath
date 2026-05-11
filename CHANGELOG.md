@@ -10,6 +10,84 @@ The `service-worker.js` cache name tracks deployments rather than semantic versi
 
 ---
 
+## 7.6.0 — 2026-05-11
+**Service worker cache:** bumped by `sw-cache-bump` workflow on push.
+
+### Design polish, breadcrumb, watching banner, swipe-to-collapse + 2 bug fixes
+
+A wide pass of visual and UX refinements. Each change is independently
+reversible and lives behind a labeled block in the appended `styles.css`
+section or a single helper in `app.js`.
+
+**Visual (V1–V5).**
+- **V1 — Loved tint.** Items where `data-rating="loved"` now render with
+  a 2px coral border-left and a 4%-alpha coral background, with 18px
+  padding-left to keep text from shifting. The render pipeline and
+  `updateItemInPlace` both write `data-rating` to the element so the
+  rule fires on the first paint *and* when the rating toggles live.
+- **V2 — Icon-only status pills.** Collapsed item cards render the
+  status pill as a single 28px glyph (✓ / ▸ / ⊞ / ⊘ / ●) with no text.
+  When the card expands, the pill restores the readable label.
+- **V3 — Editorial section headers.** The section number becomes a
+  large (80px) ghost watermark at 5% opacity behind the title; titles
+  upsize from 20 → 24px and gain a soft ruled-line underneath.
+- **V4 — Thicker active tab indicator.** Underline goes from 2 → 3px
+  and gains a 12px gold text-shadow glow.
+- **V5 — Stronger grain.** Background grain overlay opacity 0.04 → 0.065.
+
+**Layout (L1–L3).**
+- **L1** — Phone header top-padding tightened to `max(18px, env(safe-area-inset-top))`.
+- **L2** — Modals cap at 480px wide in computer mode, centered.
+- **L3** — Pitch text bumps to 15px with `var(--ink-dim)`.
+
+**UX (U1–U5).**
+- **U1 — Wizard breadcrumb.** The flat `#wizard-subtitle` text becomes
+  a `<nav id="wizard-breadcrumb">` rendered by a new `_wizardSetBreadcrumb`
+  helper. Each non-root step shows tappable crumbs back to earlier
+  steps (Home › Watch › Time › Mood › Genre › Picks). Implementation
+  trick: `wizardRender()` keeps its existing `subtitle.textContent = '...'`
+  assignments unchanged — they now flow through a setter proxy that
+  routes the label into the breadcrumb renderer.
+- **U2 — Watching-now banner.** The Watchlist tab gains a sticky strip
+  at the top listing every item currently `status === 'watching'` across
+  all real tabs. Each pill shows the title + source-tab badge in teal
+  and jumps to the item in its home tab on tap. Hidden on non-Watchlist
+  tabs. Rendered by `renderWatchingNowBanner()`, called from the bottom
+  of `_renderImpl`. (Patch doc said `#main`; the actual container is
+  `#items-container` — corrected.)
+- **U3 — Swipe-down to collapse.** Touch-only gesture wired in
+  `enableSwipeCollapse()`. Any `touchstart` that lands inside an
+  `.item-body` and ends 44px or more lower removes the `.expanded`
+  class. Comment out the single call in the boot IIFE to disable.
+- **U4 — Filter count badges.** `filterCount(filterKey)` walks the
+  active catalog and returns the count for All / Watching / Queued /
+  Watched / Loved / Unwatched. Counts render in 9px `--ink-faint`
+  alongside the filter pill label. Acceptable cost on Watchlist
+  because `buildWatchlistCatalog()` is already memoizable; if the
+  full sweep ever shows up in render profiles, cache it.
+- **U5 — Triage shortcut hints.** The four `renderRateTagTriage`
+  buttons gain `data-shortcut="1..4"`; a CSS `::after` rule renders
+  those as faint corner labels — but only in `body.computer-mode`,
+  not phone or TV. No key handler is bound; this is a visual hint.
+
+**Bug fixes.**
+- **CinéMath wordmark centering.** The wizard banner's Math word used
+  a relative `dx="160"` offset from the Ciné anchor; script-font width
+  varies across WebView versions, so on TV the wordmark crept right.
+  Both texts now anchor near the viewBox center (`x=540 end` / `x=556 start`)
+  for stable, font-agnostic centering. The 16px seam matches the kerning
+  between a script and a geometric typeface.
+- **TV mode hides desktop-only buttons.** `#triage-queue-btn`,
+  `#triage-suggest-btn`, `#find-gaps-btn`, `#history-btn` are hidden
+  on `body.tv-mode` — they were unreachable on D-pad anyway, and
+  hiding them tightens the TV header layout.
+
+**Cleanup note.** The `.wizard-subtitle` CSS class (legacy `<p>`
+selector) is no longer applied to any element. Left in place as dead
+CSS — harmless, and removing it isn't load-bearing.
+
+---
+
 ## 7.5.0 — 2026-05-11
 **Service worker cache:** `cinemath-v5` → `cinemath-v6`
 

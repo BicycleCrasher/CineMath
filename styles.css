@@ -1988,3 +1988,210 @@ body.tv-mode .qt-action { height: 72px; font-size: 26px; }
 
 body.tv-mode .th-title { font-size: 22px; }
 body.tv-mode #triage-actions .th-btn { font-size: 15px; padding: 14px 16px; }
+
+/* ============================================================
+   CinéMath Design Patch — styles-patch.css
+   Apply by appending this entire block to the END of styles.css
+   Version: design-patch-1 (shipped as v7.6.0)
+   ============================================================ */
+
+/* ── V1: Loved item card tint ─────────────────────────────── */
+.item[data-rating="loved"] {
+  border-left: 2px solid var(--love);
+  background: rgba(201, 123, 99, 0.04);
+  padding-left: 18px; /* compensate for the 2px border so text doesn't shift */
+}
+
+/* ── V2: Status pill — icon-only in collapsed state ──────── */
+/* Replace text content with icon glyphs via CSS.
+   The JS still sets the class; we restyle the display here.
+   Expanded items restore a text label via .item.expanded .status-pill */
+.status-pill { font-size: 0; width: 28px; height: 28px; }
+.status-pill::before { font-size: 13px; }
+.status-pill.watched::before  { content: '✓'; }
+.status-pill.watching::before { content: '▸'; }
+.status-pill.queued::before   { content: '⊞'; }
+.status-pill.skip::before     { content: '⊘'; }
+/* Empty / no-status pill stays as a faint dot */
+.status-pill:not(.watched):not(.watching):not(.queued):not(.skip)::before {
+  content: '●'; color: var(--ink-faint); font-size: 8px;
+}
+/* In expanded state, restore readable label alongside icon */
+.item.expanded .status-pill {
+  font-size: 10px; width: auto; height: auto;
+  padding: 6px 10px; gap: 4px;
+  display: flex; align-items: center;
+}
+.item.expanded .status-pill::before { margin-right: 3px; }
+.item.expanded .status-pill.watched::before  { content: '✓'; }
+.item.expanded .status-pill.watching::before { content: '▸'; }
+.item.expanded .status-pill.queued::before   { content: '⊞'; }
+.item.expanded .status-pill.skip::before     { content: '⊘'; }
+
+/* ── V3: Section header — editorial ghost number + larger title ── */
+.section-header { position: relative; overflow: visible; }
+.section-num {
+  font-size: 11px; /* was 10px */
+  letter-spacing: 0.3em;
+  /* Ghost watermark behind title: absolute, large, faint */
+  position: absolute;
+  top: 18px; left: 14px;
+  font-size: 80px;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  opacity: 0.05;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+  z-index: 0;
+}
+/* Restore the small eyebrow number as a separate element — we need JS to
+   split the render (see app.js patch). If that isn't applied yet, the ghost
+   number will just be large. The below rules assume .section-num-label exists: */
+.section-num-label {
+  font-family: 'Helvetica Neue', sans-serif;
+  font-size: 10px; letter-spacing: 0.3em;
+  color: var(--accent); font-weight: 600;
+  position: relative; z-index: 1;
+  display: block; margin-bottom: 2px;
+}
+.section-title {
+  font-size: 24px; /* was 20px */
+  letter-spacing: 0.01em;
+  position: relative; z-index: 1;
+  margin: 4px 0 4px;
+}
+/* Thicker ruled line under section title */
+.section-header::after {
+  content: '';
+  display: block;
+  height: 1px;
+  background: var(--rule);
+  margin-top: 10px;
+  opacity: 0.6;
+}
+
+/* ── V4: Tab nav active indicator — thicker + soft glow ─── */
+.tab-btn.active {
+  border-bottom-width: 3px; /* was 2px */
+  text-shadow: 0 0 12px rgba(200, 163, 90, 0.35);
+}
+
+/* ── V5: Grain overlay bump ──────────────────────────────── */
+.grain { opacity: 0.065; } /* was 0.04 */
+
+/* ── L1: Reduce header top padding on phone ─────────────── */
+/* Test flag — remove this rule if you don't like the feel */
+@media (max-width: 768px) {
+  body:not(.tv-mode) header {
+    padding-top: max(18px, env(safe-area-inset-top));
+  }
+}
+
+/* ── L2: Modal max-width cap for computer-mode ───────────── */
+body.computer-mode .modal-content {
+  max-width: 480px;
+  width: 100%;
+}
+body.computer-mode dialog.modal {
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── L3: Pitch text — slightly warmer + larger ───────────── */
+.pitch {
+  font-size: 15px; /* was 14px */
+  color: var(--ink-dim); /* was var(--ink) */
+}
+
+/* ── U2: Watching-now banner on Watchlist ─────────────────── */
+/* Rendered by JS as #watchlist-now-banner, injected above .section-header:first-child */
+#watchlist-now-banner {
+  margin: 0;
+  padding: 10px 20px;
+  background: rgba(107, 154, 154, 0.08);
+  border-bottom: 1px solid rgba(107, 154, 154, 0.2);
+  display: flex; flex-direction: column; gap: 4px;
+}
+#watchlist-now-banner.hidden { display: none; }
+.now-banner-label {
+  font-family: 'Helvetica Neue', sans-serif;
+  font-size: 9px; letter-spacing: 0.28em;
+  text-transform: uppercase; color: var(--watching);
+  font-weight: 600;
+}
+.now-banner-items {
+  display: flex; flex-wrap: wrap; gap: 6px;
+}
+.now-banner-item {
+  background: transparent;
+  border: 1px solid rgba(107, 154, 154, 0.35);
+  border-radius: 3px;
+  padding: 5px 10px;
+  font-size: 13px; color: var(--ink);
+  cursor: pointer; font-family: inherit;
+  transition: background 0.15s;
+}
+.now-banner-item:hover { background: rgba(107, 154, 154, 0.12); }
+.now-banner-source {
+  font-size: 10px; color: var(--watching);
+  letter-spacing: 0.04em; text-transform: uppercase;
+  margin-left: 5px;
+}
+
+/* ── U1: Wizard breadcrumb trail ─────────────────────────── */
+/* #wizard-subtitle replaced by #wizard-breadcrumb (JS patch) */
+#wizard-breadcrumb {
+  font-family: 'Helvetica Neue', sans-serif;
+  font-size: 11px; letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  margin: 0 0 28px;
+  display: flex; align-items: center; flex-wrap: wrap;
+  gap: 4px; justify-content: center;
+}
+.wizard-crumb {
+  color: var(--ink-dim);
+  background: transparent;
+  border: none;
+  padding: 2px 4px;
+  font-family: inherit; font-size: inherit;
+  letter-spacing: inherit; text-transform: inherit;
+  cursor: pointer; border-radius: 2px;
+  transition: color 0.15s;
+}
+.wizard-crumb:hover { color: var(--accent); }
+.wizard-crumb.current { color: var(--ink); cursor: default; }
+.wizard-crumb-sep { color: var(--ink-faint); user-select: none; }
+
+/* ── U3: Swipe-down to collapse (reversible flag) ─────────── */
+/* No CSS changes needed — the JS adds/removes .expanded.
+   Add .swipe-collapse-enabled to body to activate feature. */
+
+/* ── U4: Filter pill count badges ────────────────────────── */
+.filter-count {
+  font-size: 9px; color: var(--ink-faint);
+  margin-left: 3px; letter-spacing: 0;
+}
+.filter-btn.active .filter-count { color: rgba(26,22,18,0.5); }
+
+/* ── U5: Triage keyboard hints — computer-mode only ─────── */
+body.computer-mode .triage-rate-btn { position: relative; }
+body.computer-mode .triage-rate-btn::after {
+  content: attr(data-shortcut);
+  position: absolute; bottom: 5px; right: 7px;
+  font-size: 9px; color: var(--ink-faint);
+  font-family: 'Helvetica Neue', sans-serif;
+  letter-spacing: 0;
+}
+
+/* ── TV-mode: hide Triage, Find Gaps, Plex History buttons ─ */
+body.tv-mode #triage-queue-btn,
+body.tv-mode #triage-suggest-btn,
+body.tv-mode #find-gaps-btn,
+body.tv-mode #history-btn { display: none; }
+
+/* ── Banner SVG fix (TV centering) ───────────────────────── */
+/* The SVG text layout is fixed in index.html (see patch).
+   This rule ensures the banner container doesn't clip on TV. */
+body.tv-mode .wizard-banner { overflow: visible; }
