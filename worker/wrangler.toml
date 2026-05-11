@@ -78,6 +78,17 @@ database_id = "2d67ee44-2896-4d32-8734-b1e6fc4f8021"
 [ai]
 binding = "AI"
 
+# === Secrets (v7.4.0) ===
+# Declares the encrypted secrets the Worker depends on. The secret VALUES
+# are never stored here — only the names. They're set via the Cloudflare
+# dashboard (Workers & Pages → watchtrack-plex → Settings → Variables and
+# Secrets, type: Secret). `wrangler deploy` validates that every name in
+# `secrets.required` is actually configured on the Worker before deploying,
+# so a missing key fails the CI deploy with a clear error instead of
+# silently shipping a Worker that 500s on first /palate/predict-tags hit.
+[secrets]
+required = ["ANTHROPIC_API_KEY"]
+
 # === Workers observability ===
 # Enable full log capture so console.log lines from the Worker show up
 # in the Cloudflare → Logs tab. The dashboard sometimes suggests
