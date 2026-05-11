@@ -391,7 +391,7 @@ export default {
 
     // Health (no rate limit, no auth)
     if (path === '/' || path === '/health') {
-      return new Response('CinéMath-Plex bridge online (v5.13 — /palate/{upsert,archived,list})', { headers: cors });
+      return new Response('CinéMath-Plex bridge online (v5.14 — /palate/predict-tags via Claude Sonnet 4.6)', { headers: cors });
     }
 
     // v5.7: per-IP rate limit. Applies to every other route. Returns 429
@@ -762,6 +762,70 @@ export default {
         return jsonResponse({ records, next_cursor });
       } catch (e) {
         return new Response('D1 error: ' + e.message, { status: 500, headers: cors });
+      }
+    }
+
+    // POST /palate/predict-tags — body: { secret, tasteProfile, items }
+    //   Calls Anthropic Claude Sonnet 4.6 to predict reaction tags for each item.
+    //   Returns: { predictions: [{ tabId, itemId, predictedTags, confidence }, ...] }
+    //   ANTHROPIC_API_KEY must be set as a Worker secret (Cloudflare dashboard → Settings).
+    if (path === '/palate/predict-tags' && method === 'POST') {
+      try {
+        const body = await request.json();
+        if (!(await checkSecret(env, body.secret))) return new Response('Forbidden', { status: 403, headers: cors });
+        if (!Array.isArray(body.items) || body.items.length === 0) {
+          return new Response('Missing items array', { status: 400, headers: cors });
+        }
+        if (!env.ANTHROPIC_API_KEY) {
+          return jsonResponse({ predictions: [], error: 'ANTHROPIC_API_KEY not configured on Worker' }, 500);
+        }
+        const systemPrompt = `You are a film and TV taste analysis engine. Given a list of watched items with their ratings, predict the most likely reaction tags for each item based on:
+1. The item's known characteristics (genre, director, style, era)
+2. The user's demonstrated taste profile from their ratings
+3. The available tag set for each item's content type
+
+Respond ONLY with a JSON array. No preamble, no markdown fences. Each element:
+{
+  "tabId": "string",
+  "itemId": "string",
+  "predictedTags": ["tag1", "tag2"],
+  "confidence": "high|medium|low"
+}
+
+Only predict tags that are in the provided tag set for that item's content type. Predict 2-5 tags per item. Prioritize tags that are most likely to be accurate over completeness.`;
+        const userMessage = JSON.stringify({
+          tasteProfile: body.tasteProfile || [],
+          items: body.items,
+        });
+        const anthropicResp = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': env.ANTHROPIC_API_KEY,
+            'anthropic-version': '2023-06-01',
+          },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-6',
+            max_tokens: 4096,
+            system: systemPrompt,
+            messages: [{ role: 'user', content: userMessage }],
+          }),
+        });
+        if (!anthropicResp.ok) {
+          const text = await anthropicResp.text().catch(() => '');
+          return jsonResponse({ predictions: [], error: `Anthropic ${anthropicResp.status}: ${text.slice(0, 300)}` }, 502);
+        }
+        const data = await anthropicResp.json();
+        const content = data.content && data.content[0] && data.content[0].text;
+        if (!content) return jsonResponse({ predictions: [], error: 'Empty model response' }, 502);
+        // Strip any stray markdown fences and parse
+        const cleaned = content.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
+        let predictions = [];
+        try { predictions = JSON.parse(cleaned); }
+        catch (e) { return jsonResponse({ predictions: [], error: 'Failed to parse model output: ' + e.message, raw: cleaned.slice(0, 500) }, 502); }
+        return jsonResponse({ predictions });
+      } catch (e) {
+        return new Response('Bad request: ' + e.message, { status: 400, headers: cors });
       }
     }
 

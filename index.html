@@ -209,6 +209,28 @@
   </div>
 </dialog>
 
+<!-- v7.3.0: Quick Triage swipe deck. Cards stack inside #qt-stack; the
+     active card is dragged via pointer events. Action row below mirrors
+     the four swipe directions for non-touch users. -->
+<dialog class="modal modal-fullscreen" id="quick-triage-modal">
+  <div class="modal-content qt-content">
+    <header class="qt-header">
+      <h3>Quick Triage</h3>
+      <div class="qt-progress" id="qt-progress"></div>
+      <button class="qt-close" id="qt-close" aria-label="Close">✕</button>
+    </header>
+    <div class="qt-stack" id="qt-stack" aria-live="polite"></div>
+    <div class="qt-overlay" id="qt-overlay" aria-hidden="true"></div>
+    <div class="qt-actions">
+      <button class="qt-action qt-action--pass"    id="qt-pass"    title="Pass — archive">✗</button>
+      <button class="qt-action qt-action--restack" id="qt-restack" title="Restack — see later">↻</button>
+      <button class="qt-action qt-action--add"     id="qt-add"     title="Add to queue">＋</button>
+      <button class="qt-action qt-action--crusade" id="qt-crusade" title="Crusade — queue + high priority + Trakt watchlist">⚡</button>
+    </div>
+    <p class="qt-hint">Swipe ← Pass · → Add · ↓ Restack · ↑ Crusade</p>
+  </div>
+</dialog>
+
 <dialog class="modal" id="pair-modal">
   <div class="modal-content">
     <h3>Pair Another Device</h3>

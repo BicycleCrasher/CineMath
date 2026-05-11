@@ -10,6 +10,216 @@ The `service-worker.js` cache name tracks deployments rather than semantic versi
 
 ---
 
+## 7.5.0 — 2026-05-11
+**Service worker cache:** `cinemath-v5` → `cinemath-v6`
+
+### Trakt watchlist push on Crusade
+
+Wires Quick Triage's ↑ Crusade action into the existing Trakt sync
+layer. New `traktPushWatchlist(title, year, tabId)` mirrors the
+`traktPushStatus` / `traktPushRating` pattern — fire-and-forget call
+to `POST /sync/watchlist` with the same TMDB-id payload
+`buildTraktMoviePayload` produces. TV tabs (suffix `-tv` or
+`british-comedy`) route under `shows`; everything else under
+`movies`.
+
+The Crusade handler from v7.3.0 already guarded on
+`typeof traktPushWatchlist === 'function'`, so v7.5.0's only effect
+in code is making that branch real. Behavior unchanged when Trakt
+isn't connected — Crusade still queues the item and promotes the
+catalog priority to `high`; the watchlist hop just becomes a no-op.
+
+Nothing else in the Trakt integration changes. OAuth device flow,
+refresh-on-401, push-on-watch, push-on-rate, and full pull-sync are
+all untouched.
+
+---
+
+## 7.4.0 — 2026-05-11
+**Service worker cache:** `cinemath-v4` → `cinemath-v5`
+**Worker:** v5.13 → v5.14 (new `/palate/predict-tags` via Claude Sonnet 4.6)
+
+### Triage History — AI-assisted catch-up flow
+
+Replaces the wizard's "Watched but untagged" path with a two-round flow
+that gets every watched item from rated → tagged → archived in a single
+pass. Same wizard entry, much higher throughput.
+
+**Round 1: ratings.** One card per watched-and-non-archived item across
+every real tab. Five actions per card — Hall of Fame (full-width
+brand-gold), Loved, Liked, Mixed, Disliked. Swipe map: ↑ HoF, ← Loved,
+↓ Liked, → Disliked (Mixed is button-only). Picks are buffered in
+memory; nothing writes to state until Round 1 finishes, which makes
+the loop cheap.
+
+**Between rounds: Claude.** When Round 1 completes the client POSTs
+to the new Worker route `/palate/predict-tags`. The Worker calls
+Anthropic Claude Sonnet 4.6 with the rated items, their available
+tag sets (resolved per content type via `getTagSetForItem`), and the
+user's top-10 taste profile (loved + Hall-of-Fame items with their
+tags). The model returns a JSON array of predicted reaction tags
+per item with a confidence label. Endpoint requires the new
+`ANTHROPIC_API_KEY` Worker secret — set via Cloudflare dashboard
+Settings → Variables and Secrets.
+
+**Round 2: tag confirmation.** Predicted tags render as colored
+chips on each card (`+` for positive, `−` for negative) with the
+confidence badge from the model. Four actions:
+
+- **← / Confirm** — write tags to state, advance.
+- **→ / Disagree** — defer to the end-of-round review list.
+- **↑ / Edit + tags** — open a chip picker scoped to the item's
+  positive tag set. Pre-selects whatever's currently predicted.
+- **↓ / Edit − tags** — same for negatives.
+
+**Disagreed review.** After Round 2 wraps, any items the user flagged
+appear as a tappable list. Tapping one re-opens Round 2 on that
+single item; "Done — archive all" finalizes whatever tag set the user
+has on each.
+
+**Closing the loop.** Every item that reached Round 1 — confirmed,
+edited, or disagreed-then-resolved — gets `archiveItem(tab, id,
+'finished')` at the end. Summary screen shows the count.
+
+**Graceful degradation.** If the Worker is unreachable or returns an
+error (no `ANTHROPIC_API_KEY` set, Anthropic 500, parse failure),
+Round 2 still opens — just with empty predicted tags. The user can
+swipe through confirming nothing or open the edit modal to pick tags
+manually. The flow never blocks on the AI call.
+
+The existing wizard "Rating" submenu otherwise stays the same — only
+`rate-recent` ("Watched but untagged") is rewired. `rate-queued`,
+`rate-loved-untagged`, and `rate-tab` still use the existing
+Triage modal. The two flows coexist.
+
+---
+
+## 7.3.0 — 2026-05-11
+**Service worker cache:** `cinemath-v3` → `cinemath-v4`
+
+### Quick Triage — swipe deck for suggestions
+
+New wizard root entry. Reuses `buildChatCandidates()` (the same pool the
+bot picks from) and surfaces up to 50 candidates as a Tinder-style swipe
+deck. Each card shows the TMDB poster (or a Great-Vibes initial as
+fallback), title + year, source tab, priority, pitch, and the
+director/runtime line.
+
+**Four directions, four buttons.** Swipe and tap do the same things:
+
+- **← / ＋ Add** — `setStatus(id, 'queued', tab)`. Item lands in your
+  queue.
+- **→ / ✗ Pass** — `archiveItem(tab, id, 'notInterested')`. Item flows
+  into the palate table and disappears from every tab view. Also
+  clears the chat-pass count so the suggestion engine reads the
+  archive flag cleanly without a stale "passed once" trail.
+- **↓ / ↻ Restack** — moves the card to the bottom of the deck without
+  touching state. Useful when you're not ready to decide.
+- **↑ / ⚡ Crusade** — queues, promotes the catalog item's priority to
+  `high`, and (in v7.5.0) pushes to your Trakt watchlist if Trakt is
+  connected. The Crusade button is the only one with the brand-gold
+  background — visual signal that this is the heavyweight action.
+
+**Pointer events, not touch.** The swipe gesture uses Pointer Events,
+which means a desktop mouse drag works identically to a phone swipe.
+Threshold is 80px on whichever axis wins; below threshold the card
+snaps back. A live directional label ("ADD" / "PASS" / "RESTACK" /
+"CRUSADE") fades in during drag.
+
+**Full-screen modal on mobile.** New `modal-fullscreen` class on the
+`<dialog>` so the deck takes the full viewport on phones. TV mode
+upscales card text and action button heights.
+
+The existing Triage Queue / Triage Suggested header buttons and the
+wizard "Rating" submenu are unchanged — Quick Triage sits alongside
+them as a new path for fast "haven't seen this, what about it"
+decisions.
+
+---
+
+## 7.2.0 — 2026-05-11
+**Service worker cache:** `cinemath-v2` → `cinemath-v3`
+
+### Finished button + 2.5s skip auto-archive
+
+Two new exits from the active catalog. Both write through the palate
+table introduced in v7.1.0, so a finished item is durably out of the
+way and won't reappear on a fresh device.
+
+**Finished button.** Full-width button at the bottom of any expanded
+item that's marked Watched. Default is the same dark ink-on-paper as
+the rest of the chrome; the moment the item has any reaction tag set
+the button inverts to paper-on-ink — a quiet "ready to archive" cue
+you can spot at a glance during a tag pass. Tapping it calls
+`archiveItem(tab, id, 'finished')`: writes the full state snapshot to
+the `palate` table, adds the id to `archivedIds`, and yanks the
+rendered card from the DOM without forcing a full re-render. Hidden
+on items not in the Watched status.
+
+**Skip 2.5s auto-archive.** Setting status to `skip` and *staying*
+there for 2.5 seconds now auto-archives the item with reason
+`'notInterested'`. Cycling through skip (status pill taps) cancels
+the pending timer on the next status change, so the existing
+`cycleStatus` loop is unchanged in feel. The timer table is on
+`window._skipTimers` keyed by `${tab}:${id}` so concurrent skips on
+different items each track their own deadline.
+
+The pair gives the catalog a self-cleaning property: rate + tag a
+watched item, hit Finished; or hit Pass and walk away. Either way
+the item flows into the palate and out of the active tab view. The
+v7.1.0 archive filter masks both on the next render, and on every
+subsequent device after Worker sync.
+
+---
+
+## 7.1.0 — 2026-05-11
+**Service worker cache:** `cinemath-v1` → `cinemath-v2`
+**Worker:** v5.12 → v5.13 (new `/palate/{upsert,archived,list}` routes)
+
+### Palate table + Hall of Fame
+
+First slice of the v7 palate system. Every fully-processed item now has
+a durable home in D1, and the most-loved items get a marker that means
+something.
+
+**D1 `palate` table.** New table in the existing `watchtrack-viewed`
+database, keyed by `${tabId}:${itemId}`. Stores title, year, tmdbId,
+status, rating, reaction tags, notes, archived flag + reason,
+Hall-of-Fame flag, and created/updated timestamps. Indexes on tab,
+archived, hof, and updated_at. Run `worker/migrations/001_palate.sql`
+in the Cloudflare D1 dashboard once after deploy.
+
+**Three new Worker routes.** `POST /palate/upsert` writes a record
+with `ON CONFLICT(id) DO UPDATE` preserving the original `created_at`.
+`GET /palate/archived?secret=…` returns the id list for fast startup
+hydration. `GET /palate/list?secret=…&cursor=…&limit=…` returns
+paginated full records — currently used only by future taste-analysis
+features. All three CORS + secret-gated like every other endpoint.
+
+**Archived items disappear from tab views.** A new `archivedIds` Set
+loaded on init (localStorage cache + background refresh from the
+Worker) masks any item that's been finished from every render path
+except Auteur. Auteur is the one place it makes sense to see every
+film by a director regardless of whether you've processed each one.
+The localStorage cache means the mask is in place on first paint —
+the Worker refresh is a background reconciliation.
+
+**`archiveItem(tabId, itemId, reason)` helper.** Adds the id to the
+Set, mirrors to the palate table with the full state snapshot, and
+yanks the rendered card from the DOM without a full re-render.
+Reasons currently in use: `'finished'` (will be wired in Phase 2) and
+`'notInterested'` (Phase 2 skip timer + Phase 3 swipe-right).
+
+**Hall of Fame tag.** Added programmatically as the last entry of
+every `TAG_SETS` positive array — one universal positive tag across
+all 30 content types. Selecting it on an unrated item auto-promotes
+the rating to Loved. Toggling either direction mirrors the `hof`
+flag to the palate row so downstream taste analysis can reason about
+your A-list independently of "Loved." Reuses the existing `--accent`
+gold token; no new CSS variable.
+
+---
+
 ## 7.0.0 — 2026-05-10
 **Service worker cache:** `scifi-tracker-v105` → `cinemath-v1` (namespace rename)
 

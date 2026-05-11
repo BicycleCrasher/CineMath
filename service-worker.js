@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cinemath-v2';
+const CACHE_NAME = 'cinemath-v6';
 const inflightRevalidations = new Set();
 const ASSETS = [
   './',

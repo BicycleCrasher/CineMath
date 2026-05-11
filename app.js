@@ -2173,6 +2173,20 @@ function setStatus(id, status, tab) {
   if (wasMonitored !== isMonitored && typeof alertsRefreshSubscription === 'function') {
     alertsRefreshSubscription();
   }
+  // v7.2.0: Skip 2.5s auto-archive. Cycling through skip via cycleStatus
+  // cancels the timer on the next change; landing on skip deliberately and
+  // staying lets it fire. Stored on window so the Map survives function calls
+  // without leaking into the module-scope variable list.
+  window._skipTimers = window._skipTimers || new Map();
+  const skipKey = `${tab}:${id}`;
+  const existing = window._skipTimers.get(skipKey);
+  if (existing) { clearTimeout(existing); window._skipTimers.delete(skipKey); }
+  if (status === 'skip') {
+    window._skipTimers.set(skipKey, setTimeout(() => {
+      if (getStatus(id, tab) === 'skip') archiveItem(tab, id, 'notInterested');
+      window._skipTimers.delete(skipKey);
+    }, 2500));
+  }
   saveState(); render();
 }
 
@@ -2307,6 +2321,19 @@ function traktPushRating(title, year, tab, rating, isShow) {
   } else {
     traktApiCall('/sync/ratings/remove', 'POST', { [key]: [item] });
   }
+}
+
+// v7.5.0: Trakt watchlist push for Quick Triage's Crusade (up-swipe).
+// Fire-and-forget like traktPushStatus / traktPushRating. tabId determines
+// movies-vs-shows routing the same way the other push helpers infer it.
+async function traktPushWatchlist(title, year, tabId) {
+  if (!isTraktConnected()) return;
+  const payload = buildTraktMoviePayload(title, year, tabId);
+  const isTV = tabId.endsWith('-tv') || tabId === 'british-comedy';
+  const listKey = isTV ? 'shows' : 'movies';
+  try {
+    await traktApiCall('/sync/watchlist', 'POST', { [listKey]: [payload] });
+  } catch (e) { /* fire-and-forget */ }
 }
 
 async function traktPullSync() {
@@ -2492,6 +2519,11 @@ function updateItemInPlace(id, tab) {
       btn.classList.add(isPos ? 'active-pos' : 'active-neg');
     }
   });
+  // v7.2.0: keep the Finished button's ready-inversion synced with tag count.
+  const finishedBtn = itemEl.querySelector('.finished-btn');
+  if (finishedBtn) {
+    finishedBtn.classList.toggle('finished-btn--ready', reactionTags.length > 0);
+  }
   updateStats();
 }
 
@@ -2991,6 +3023,12 @@ function _attachItemDelegation() {
       cycleStatus(id, itemTab);
       return;
     }
+    // v7.2.0: Finished button — archive a watched + tagged item in one tap.
+    if (e.target.closest('.finished-btn[data-action="finished"]')) {
+      e.stopPropagation();
+      archiveItem(itemTab, id, 'finished');
+      return;
+    }
     const actionBtn = e.target.closest('.action-btn[data-action]');
     if (actionBtn) {
       e.stopPropagation();
@@ -3234,6 +3272,7 @@ function _renderImpl() {
           <div class="tag-group-label">What didn't</div>
           <div class="tag-cloud">${negTagsHtml}</div>
         </div>
+        ${status === 'watched' ? `<button class="finished-btn${reactionTags.length > 0 ? ' finished-btn--ready' : ''}" data-action="finished">Finished</button>` : ''}
         <textarea class="notes-input" placeholder="Notes after viewing..." data-id="${item.id}">${escapeHtml(notes)}</textarea>
         <div class="notes-tv-display">${escapeHtml(notes)}</div>
         <button class="voice-dictate-btn" type="button">🎤 Dictate notes</button>
@@ -6626,6 +6665,621 @@ function buildChatCandidates() {
   return cands.slice(0, 50).map(c => { delete c._weight; return c; });
 }
 
+// =====================================================================
+// v7.3.0: Quick Triage — Tinder-style swipe deck over chat candidates.
+// Left → Add to queue. Right → Pass (archive). Down → Restack (defer).
+// Up → Crusade (queue + high priority + Trakt watchlist push).
+// =====================================================================
+let _qtState = null;  // { deck: [...], idx: 0, dragging: false, dx: 0, dy: 0 }
+
+function openQuickTriage() {
+  const deck = buildChatCandidates();
+  if (!deck.length) {
+    alert('No suggestions to triage right now.');
+    return;
+  }
+  _qtState = { deck, idx: 0, dragging: false, dx: 0, dy: 0 };
+  const dlg = document.getElementById('quick-triage-modal');
+  document.getElementById('qt-close').onclick = closeQuickTriage;
+  document.getElementById('qt-pass').onclick    = () => qtFire('right');
+  document.getElementById('qt-add').onclick     = () => qtFire('left');
+  document.getElementById('qt-restack').onclick = () => qtFire('down');
+  document.getElementById('qt-crusade').onclick = () => qtFire('up');
+  dlg.showModal();
+  qtRenderStack();
+}
+
+function closeQuickTriage() {
+  const dlg = document.getElementById('quick-triage-modal');
+  if (dlg && dlg.open) dlg.close();
+  _qtState = null;
+  render();
+}
+
+function qtRenderStack() {
+  if (!_qtState) return;
+  const stack = document.getElementById('qt-stack');
+  const prog = document.getElementById('qt-progress');
+  if (!stack) return;
+  stack.innerHTML = '';
+  // End-of-deck state
+  if (_qtState.idx >= _qtState.deck.length) {
+    stack.innerHTML = `<div class="qt-empty">All caught up. Tap ✕ to close.</div>`;
+    prog.textContent = `${_qtState.deck.length} reviewed`;
+    return;
+  }
+  // Render up to 2 stacked cards: current on top, next peeking
+  for (let i = Math.min(_qtState.idx + 1, _qtState.deck.length - 1); i >= _qtState.idx; i--) {
+    const card = qtBuildCard(_qtState.deck[i], i === _qtState.idx);
+    stack.appendChild(card);
+  }
+  prog.textContent = `${_qtState.idx + 1} / ${_qtState.deck.length}`;
+}
+
+function qtBuildCard(pick, isTop) {
+  const enrich = getEnrichmentForItem(pick.itemId);
+  const poster = enrich && enrich.posterPath
+    ? `<img class="qt-poster" src="https://image.tmdb.org/t/p/w300${enrich.posterPath}" alt="" />`
+    : `<div class="qt-poster qt-poster--placeholder">${escapeHtml((pick.title || '?')[0])}</div>`;
+  const tabLabel = (catalogs[pick.tabId] && catalogs[pick.tabId].title) || pick.tabId;
+  const catItem = catalogs[pick.tabId] && catalogs[pick.tabId].items && catalogs[pick.tabId].items.find(it => it.id === pick.itemId);
+  const priority = catItem && catItem.priority ? `<span class="qt-pri qt-pri--${catItem.priority}">${priorityLabel(catItem.priority)}</span>` : '';
+  const meta = [pick.dir, pick.runtime].filter(Boolean).map(escapeHtml).join(' · ');
+  const card = document.createElement('div');
+  card.className = 'qt-card' + (isTop ? ' qt-card--top' : ' qt-card--peek');
+  card.dataset.itemId = pick.itemId;
+  card.dataset.tabId = pick.tabId;
+  card.innerHTML = `
+    ${poster}
+    <div class="qt-body">
+      <h4 class="qt-title">${escapeHtml(pick.title)} <span class="qt-year">${pick.year || ''}</span></h4>
+      <div class="qt-badges"><span class="qt-tab">${escapeHtml(tabLabel)}</span>${priority}</div>
+      <p class="qt-pitch">${escapeHtml(pick.pitch || '')}</p>
+      ${meta ? `<div class="qt-meta">${meta}</div>` : ''}
+    </div>
+  `;
+  if (isTop) qtAttachSwipe(card);
+  return card;
+}
+
+function qtAttachSwipe(card) {
+  let startX = 0, startY = 0, captured = false;
+  const SWIPE_THRESHOLD = 80;
+  card.addEventListener('pointerdown', (e) => {
+    startX = e.clientX; startY = e.clientY;
+    _qtState.dx = 0; _qtState.dy = 0; _qtState.dragging = true;
+    captured = true;
+    try { card.setPointerCapture(e.pointerId); } catch {}
+    card.classList.add('qt-card--dragging');
+  });
+  card.addEventListener('pointermove', (e) => {
+    if (!_qtState || !_qtState.dragging) return;
+    _qtState.dx = e.clientX - startX;
+    _qtState.dy = e.clientY - startY;
+    const rot = _qtState.dx * 0.04;
+    card.style.transform = `translate(${_qtState.dx}px, ${_qtState.dy}px) rotate(${rot}deg)`;
+    qtUpdateOverlay(_qtState.dx, _qtState.dy);
+  });
+  const release = (e) => {
+    if (!_qtState || !_qtState.dragging) return;
+    _qtState.dragging = false;
+    if (captured) { try { card.releasePointerCapture(e.pointerId); } catch {} captured = false; }
+    card.classList.remove('qt-card--dragging');
+    const { dx, dy } = _qtState;
+    const horiz = Math.abs(dx) >= Math.abs(dy);
+    if (horiz && dx <= -SWIPE_THRESHOLD) return qtFire('left');
+    if (horiz && dx >=  SWIPE_THRESHOLD) return qtFire('right');
+    if (!horiz && dy >=  SWIPE_THRESHOLD) return qtFire('down');
+    if (!horiz && dy <= -SWIPE_THRESHOLD) return qtFire('up');
+    // Snap back
+    card.style.transform = '';
+    qtUpdateOverlay(0, 0);
+  };
+  card.addEventListener('pointerup', release);
+  card.addEventListener('pointercancel', release);
+}
+
+function qtUpdateOverlay(dx, dy) {
+  const ov = document.getElementById('qt-overlay');
+  if (!ov) return;
+  const horiz = Math.abs(dx) >= Math.abs(dy);
+  const intensity = Math.min(1, Math.max(Math.abs(dx), Math.abs(dy)) / 120);
+  let label = '', cls = '';
+  if (horiz) {
+    if (dx < -10) { label = 'ADD'; cls = 'qt-overlay--add'; }
+    else if (dx > 10) { label = 'PASS'; cls = 'qt-overlay--pass'; }
+  } else {
+    if (dy > 10) { label = 'RESTACK'; cls = 'qt-overlay--restack'; }
+    else if (dy < -10) { label = 'CRUSADE'; cls = 'qt-overlay--crusade'; }
+  }
+  ov.className = `qt-overlay ${cls}`;
+  ov.textContent = label;
+  ov.style.opacity = String(intensity);
+}
+
+function qtFire(direction) {
+  if (!_qtState || _qtState.idx >= _qtState.deck.length) return;
+  const pick = _qtState.deck[_qtState.idx];
+  if (direction === 'left')  qtActionAdd(pick);
+  if (direction === 'right') qtActionPass(pick);
+  if (direction === 'down')  return qtActionRestack(pick);  // restack defers, doesn't advance idx by 1
+  if (direction === 'up')    qtActionCrusade(pick);
+  _qtState.idx += 1;
+  qtUpdateOverlay(0, 0);
+  qtRenderStack();
+}
+
+function qtActionAdd(pick) {
+  setStatus(pick.itemId, 'queued', pick.tabId);
+}
+function qtActionPass(pick) {
+  archiveItem(pick.tabId, pick.itemId, 'notInterested');
+  // Clear chat-pass count so later suggestion engines see the archive signal cleanly
+  try {
+    const m = getPassesMap();
+    delete m[`${pick.tabId}:${pick.itemId}`];
+    lsSet(CHAT_PASSES_KEY, JSON.stringify(m));
+  } catch {}
+}
+function qtActionRestack(pick) {
+  // Move current card to the end of the deck without advancing idx counter
+  // (the idx still points to the next card, which is now what was previously [idx+1]).
+  _qtState.deck.splice(_qtState.idx, 1);
+  _qtState.deck.push(pick);
+  qtUpdateOverlay(0, 0);
+  qtRenderStack();
+}
+function qtActionCrusade(pick) {
+  setStatus(pick.itemId, 'queued', pick.tabId);
+  // Promote priority on the catalog item so it floats to the top of the tab.
+  const catItem = catalogs[pick.tabId] && catalogs[pick.tabId].items && catalogs[pick.tabId].items.find(it => it.id === pick.itemId);
+  if (catItem) catItem.priority = 'high';
+  // Trakt watchlist push (Phase 5 adds traktPushWatchlist; guard for ordering).
+  if (typeof traktPushWatchlist === 'function' && isTraktConnected()) {
+    traktPushWatchlist(pick.title, pick.year, pick.tabId).catch(() => {});
+  }
+}
+
+// =====================================================================
+// v7.4.0: Triage History — 2-round catch-up flow over all watched items.
+// Replaces the previous wizard "Watched but untagged" (rate-recent) entry.
+// Round 1: assign a rating (or Hall of Fame) per item.
+// Round 2: confirm AI-predicted reaction tags from Claude Sonnet 4.6.
+// Disagreed items get a manual pass at the end. All processed items are
+// archived to the palate when the flow closes.
+// =====================================================================
+let _thState = null;
+
+function openTriageHistory() {
+  const pool = thBuildPool();
+  if (!pool.length) {
+    alert('No watched-and-untagged items to triage.');
+    return;
+  }
+  _thState = {
+    pool, round: 1, idx: 0,
+    round1: [], predictions: {}, disagreed: [],
+    currentCardTags: { positive: [], negative: [] },
+  };
+  document.getElementById('triage-title').textContent = 'Triage History — Rate';
+  document.getElementById('triage-modal').showModal();
+  thRender();
+}
+
+function thBuildPool() {
+  const out = [];
+  for (const tabId in catalogs) {
+    if (tabId === 'watchlist' || tabId === 'auteur') continue;
+    const cat = catalogs[tabId];
+    if (!cat || !cat.items) continue;
+    for (const item of cat.items) {
+      if (getStatus(item.id, tabId) !== 'watched') continue;
+      if (isArchived(tabId, item.id)) continue;
+      out.push({ tabId, itemId: item.id, item, enrich: getEnrichmentForItem(item.id) });
+    }
+  }
+  return out;
+}
+
+function thClose() {
+  const dlg = document.getElementById('triage-modal');
+  if (dlg && dlg.open) dlg.close();
+  _thState = null;
+  render();
+}
+
+function thRender() {
+  if (!_thState) return;
+  if (_thState.round === 1) return thRenderRound1();
+  if (_thState.round === 'loading') return thRenderLoading();
+  if (_thState.round === 2) return thRenderRound2();
+  if (_thState.round === 'review') return thRenderDisagreed();
+  if (_thState.round === 'done') return thRenderDone();
+}
+
+// ---- Round 1: rating cards -------------------------------------------------
+function thRenderRound1() {
+  const { pool, idx, round1 } = _thState;
+  if (idx >= pool.length) return thCompleteRound1();
+  const entry = pool[idx];
+  const { item, enrich, tabId } = entry;
+  const tabLabel = (catalogs[tabId] && catalogs[tabId].title) || tabId;
+  const poster = enrich && enrich.posterPath
+    ? `<img class="th-poster" src="https://image.tmdb.org/t/p/w300${enrich.posterPath}" alt="" />`
+    : `<div class="th-poster th-poster--placeholder">${escapeHtml((item.title || '?')[0])}</div>`;
+  const currentRating = getRating(item.id, tabId);
+  const ratingBadge = currentRating !== 'none' ? `<span class="rating-badge ${currentRating}">${ratingLabel(currentRating)}</span>` : '';
+  document.getElementById('triage-title').textContent = 'Triage History — Rate';
+  document.getElementById('triage-progress').textContent = `${idx + 1} / ${pool.length}`;
+  document.getElementById('triage-card').innerHTML = `
+    <div class="th-card" id="th-card">
+      ${poster}
+      <h4 class="th-title">${escapeHtml(item.title)} <span class="th-year">${item.year || ''}</span></h4>
+      <div class="th-meta"><span class="th-tab">${escapeHtml(tabLabel)}</span> ${ratingBadge}</div>
+    </div>
+  `;
+  document.getElementById('triage-actions').innerHTML = `
+    <button class="th-btn th-btn--hof"      data-r1="hof">⭐ Hall of Fame</button>
+    <button class="th-btn th-btn--loved"    data-r1="loved">💚 Loved</button>
+    <button class="th-btn th-btn--liked"    data-r1="liked">👍 Liked</button>
+    <button class="th-btn th-btn--mixed"    data-r1="mixed">🤷 Mixed</button>
+    <button class="th-btn th-btn--disliked" data-r1="disliked">👎 Disliked</button>
+    <button class="th-btn th-btn--close"    data-r1="close">Cancel</button>
+  `;
+  document.querySelectorAll('#triage-actions [data-r1]').forEach(b =>
+    b.addEventListener('click', () => thRound1Pick(b.dataset.r1)));
+  // Swipe gestures on the card: up=HoF, left=Loved, down=Liked, right=Disliked
+  thAttachSwipeMap(document.getElementById('th-card'), {
+    up: () => thRound1Pick('hof'),
+    left: () => thRound1Pick('loved'),
+    down: () => thRound1Pick('liked'),
+    right: () => thRound1Pick('disliked'),
+  });
+}
+
+function thRound1Pick(pick) {
+  if (!_thState || _thState.round !== 1) return;
+  if (pick === 'close') return thClose();
+  const entry = _thState.pool[_thState.idx];
+  if (pick === 'hof') {
+    _thState.round1.push({ tabId: entry.tabId, itemId: entry.itemId, rating: 'loved', isHoF: true });
+  } else {
+    _thState.round1.push({ tabId: entry.tabId, itemId: entry.itemId, rating: pick, isHoF: false });
+  }
+  _thState.idx += 1;
+  thRender();
+}
+
+function thCompleteRound1() {
+  // Batch-apply ratings + HoF
+  for (const r of _thState.round1) {
+    setRating(r.itemId, r.rating, r.tabId);
+    if (r.isHoF && !getTags(r.itemId, r.tabId).includes('Hall of Fame')) {
+      toggleTag(r.itemId, 'Hall of Fame', r.tabId);
+    }
+  }
+  saveState();
+  _thState.round = 'loading';
+  _thState.idx = 0;
+  thRender();
+  // Fire prediction request without blocking the render
+  thFetchPredictions().then(() => {
+    if (!_thState) return;
+    _thState.round = 2;
+    _thState.idx = 0;
+    thRender();
+  });
+}
+
+function thRenderLoading() {
+  document.getElementById('triage-title').textContent = 'Triage History — Analyzing';
+  document.getElementById('triage-progress').textContent = '';
+  document.getElementById('triage-card').innerHTML = `
+    <div class="th-loading">Analyzing your ratings to predict reaction tags…</div>
+  `;
+  document.getElementById('triage-actions').innerHTML = `
+    <button class="th-btn th-btn--close" data-r1="close">Cancel</button>
+  `;
+  document.querySelectorAll('#triage-actions [data-r1]').forEach(b =>
+    b.addEventListener('click', () => thRound1Pick(b.dataset.r1)));
+}
+
+async function thFetchPredictions() {
+  // Build taste profile: top 10 items by loved-or-HoF rating across all tabs
+  const profile = [];
+  for (const tabId in state) {
+    if (tabId === 'watchlist' || tabId === 'auteur') continue;
+    const entries = state[tabId] || {};
+    for (const id in entries) {
+      const e = entries[id];
+      const tags = e.reactionTags || [];
+      const isHoF = tags.includes('Hall of Fame');
+      if (e.rating === 'loved' || isHoF) {
+        const cat = catalogs[tabId];
+        const item = cat && cat.items && cat.items.find(it => it.id === id);
+        profile.push({
+          tabId, itemId: id,
+          title: item ? item.title : id,
+          year: item ? item.year : null,
+          rating: e.rating, isHoF,
+          tags,
+        });
+      }
+    }
+  }
+  profile.sort((a, b) => (b.isHoF ? 1 : 0) - (a.isHoF ? 1 : 0));
+  const topProfile = profile.slice(0, 10);
+
+  // Build items payload — only items that just got rated in Round 1
+  const items = _thState.round1.map(r => {
+    const cat = catalogs[r.tabId];
+    const item = cat && cat.items && cat.items.find(it => it.id === r.itemId);
+    if (!item) return null;
+    const set = getTagSetForItem(item, r.tabId);
+    return {
+      tabId: r.tabId, itemId: r.itemId,
+      title: item.title, year: item.year,
+      director: item.dir || null,
+      contentType: resolveContentType(item, r.tabId),
+      rating: r.rating, isHoF: r.isHoF,
+      availableTags: [...set.positive, ...set.negative],
+    };
+  }).filter(Boolean);
+
+  if (!isWebhookConfigured() || items.length === 0) {
+    _thState.predictions = {};
+    return;
+  }
+  try {
+    const resp = await fetch(`${getWebhookUrl()}/palate/predict-tags`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        secret: getWebhookSecret(),
+        tasteProfile: topProfile,
+        items,
+      }),
+    });
+    if (!resp.ok) {
+      _thState.predictions = {};
+      return;
+    }
+    const data = await resp.json();
+    const out = {};
+    for (const p of (data.predictions || [])) {
+      out[`${p.tabId}:${p.itemId}`] = p;
+    }
+    _thState.predictions = out;
+  } catch (e) {
+    _thState.predictions = {};
+  }
+}
+
+// ---- Round 2: tag confirmation -------------------------------------------------
+function thRenderRound2() {
+  const { pool, idx } = _thState;
+  if (idx >= _thState.round1.length) return thCompleteRound2();
+  const r1 = _thState.round1[idx];
+  const entry = pool.find(p => p.tabId === r1.tabId && p.itemId === r1.itemId) || pool[idx];
+  const { item, tabId } = entry;
+  const set = getTagSetForItem(item, tabId);
+  const pred = _thState.predictions[`${r1.tabId}:${r1.itemId}`];
+  // Working tags split into positive / negative buckets based on the item's tag set
+  const workingTags = (pred && pred.predictedTags) ? [...pred.predictedTags] : [];
+  _thState.currentCardTags = {
+    positive: workingTags.filter(t => set.positive.includes(t)),
+    negative: workingTags.filter(t => set.negative.includes(t)),
+  };
+  thRedrawRound2Card();
+}
+
+function thRedrawRound2Card() {
+  const { idx, currentCardTags } = _thState;
+  const r1 = _thState.round1[idx];
+  const cat = catalogs[r1.tabId];
+  const item = cat && cat.items && cat.items.find(it => it.id === r1.itemId);
+  if (!item) {
+    _thState.idx += 1;
+    return thRender();
+  }
+  const ratingLabelText = ratingLabel(r1.rating) + (r1.isHoF ? ' · Hall of Fame' : '');
+  const pred = _thState.predictions[`${r1.tabId}:${r1.itemId}`];
+  const confBadge = pred && pred.confidence ? `<span class="th-conf th-conf--${pred.confidence}">${pred.confidence}</span>` : '';
+  const posList = currentCardTags.positive.map(t => `<span class="th-tag th-tag--pos">+ ${escapeHtml(t)}</span>`).join('');
+  const negList = currentCardTags.negative.map(t => `<span class="th-tag th-tag--neg">− ${escapeHtml(t)}</span>`).join('');
+  const empty = (currentCardTags.positive.length + currentCardTags.negative.length) === 0
+    ? `<div class="th-empty">No tags predicted. Use ↑ / ↓ to add.</div>` : '';
+  document.getElementById('triage-title').textContent = 'Triage History — Confirm tags';
+  document.getElementById('triage-progress').textContent = `${idx + 1} / ${_thState.round1.length}`;
+  document.getElementById('triage-card').innerHTML = `
+    <div class="th-card" id="th-card">
+      <h4 class="th-title">${escapeHtml(item.title)} <span class="th-year">${item.year || ''}</span></h4>
+      <div class="th-meta"><span class="th-tab">${escapeHtml(ratingLabelText)}</span> ${confBadge}</div>
+      <div class="th-tag-list">${posList}${negList}${empty}</div>
+      <div class="th-hint">↑ edit positives · ↓ edit negatives</div>
+    </div>
+  `;
+  document.getElementById('triage-actions').innerHTML = `
+    <button class="th-btn th-btn--confirm"  data-r2="confirm">✓ Confirm</button>
+    <button class="th-btn th-btn--disagree" data-r2="disagree">✗ Disagree</button>
+    <button class="th-btn th-btn--edit-pos" data-r2="edit-pos">Edit + tags</button>
+    <button class="th-btn th-btn--edit-neg" data-r2="edit-neg">Edit − tags</button>
+    <button class="th-btn th-btn--close"    data-r2="close">Cancel</button>
+  `;
+  document.querySelectorAll('#triage-actions [data-r2]').forEach(b =>
+    b.addEventListener('click', () => thRound2Action(b.dataset.r2)));
+  thAttachSwipeMap(document.getElementById('th-card'), {
+    left: () => thRound2Action('confirm'),
+    right: () => thRound2Action('disagree'),
+    up: () => thRound2Action('edit-pos'),
+    down: () => thRound2Action('edit-neg'),
+  });
+}
+
+function thRound2Action(action) {
+  if (!_thState) return;
+  if (action === 'close') return thClose();
+  const r1 = _thState.round1[_thState.idx];
+  if (action === 'confirm') {
+    thApplyCurrentTags(r1);
+    _thState.idx += 1;
+    return thRender();
+  }
+  if (action === 'disagree') {
+    _thState.disagreed.push({ tabId: r1.tabId, itemId: r1.itemId });
+    _thState.idx += 1;
+    return thRender();
+  }
+  if (action === 'edit-pos') return thOpenTagEdit('positive');
+  if (action === 'edit-neg') return thOpenTagEdit('negative');
+}
+
+function thApplyCurrentTags(r1) {
+  const all = [..._thState.currentCardTags.positive, ..._thState.currentCardTags.negative];
+  const existing = getTags(r1.itemId, r1.tabId);
+  // Add tags that aren't already present
+  for (const t of all) {
+    if (!existing.includes(t)) toggleTag(r1.itemId, t, r1.tabId);
+  }
+}
+
+// Tag edit overlay (in-modal, replaces actions row temporarily)
+function thOpenTagEdit(polarity) {
+  if (!_thState) return;
+  const r1 = _thState.round1[_thState.idx];
+  const cat = catalogs[r1.tabId];
+  const item = cat && cat.items && cat.items.find(it => it.id === r1.itemId);
+  if (!item) return;
+  const set = getTagSetForItem(item, r1.tabId);
+  const list = polarity === 'positive' ? set.positive : set.negative;
+  const selected = new Set(_thState.currentCardTags[polarity]);
+  const renderChips = () => list.map(t => {
+    const on = selected.has(t);
+    return `<button class="th-chip ${on ? 'th-chip--on' : ''}" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</button>`;
+  }).join('');
+  document.getElementById('triage-title').textContent = `Edit ${polarity} tags`;
+  document.getElementById('triage-progress').textContent = '';
+  document.getElementById('triage-card').innerHTML = `
+    <div class="th-chiplist">${renderChips()}</div>
+  `;
+  document.getElementById('triage-actions').innerHTML = `
+    <button class="th-btn th-btn--confirm"  data-edit="ok">Done</button>
+    <button class="th-btn th-btn--close"    data-edit="cancel">Cancel</button>
+  `;
+  document.querySelectorAll('.th-chip').forEach(c => c.addEventListener('click', (e) => {
+    const t = c.dataset.tag;
+    if (selected.has(t)) { selected.delete(t); c.classList.remove('th-chip--on'); }
+    else { selected.add(t); c.classList.add('th-chip--on'); }
+  }));
+  document.querySelector('#triage-actions [data-edit="ok"]').addEventListener('click', () => {
+    _thState.currentCardTags[polarity] = [...selected];
+    thRedrawRound2Card();
+  });
+  document.querySelector('#triage-actions [data-edit="cancel"]').addEventListener('click', () => {
+    thRedrawRound2Card();
+  });
+}
+
+// ---- End of Round 2: disagreed review --------------------------------------
+function thCompleteRound2() {
+  if (_thState.disagreed.length > 0) {
+    _thState.round = 'review';
+    _thState.idx = 0;
+    return thRender();
+  }
+  return thFinish();
+}
+
+function thRenderDisagreed() {
+  const items = _thState.disagreed.map(d => {
+    const cat = catalogs[d.tabId];
+    const item = cat && cat.items && cat.items.find(it => it.id === d.itemId);
+    return item ? { tabId: d.tabId, itemId: d.itemId, title: item.title, year: item.year } : null;
+  }).filter(Boolean);
+  document.getElementById('triage-title').textContent = 'Disagreed items';
+  document.getElementById('triage-progress').textContent = `${items.length} flagged`;
+  document.getElementById('triage-card').innerHTML = `
+    <div class="th-disagreed">
+      ${items.map((x, i) =>
+        `<button class="th-d-row" data-d-idx="${i}">${escapeHtml(x.title)} <span class="th-d-year">${x.year || ''}</span></button>`
+      ).join('')}
+    </div>
+  `;
+  document.getElementById('triage-actions').innerHTML = `
+    <button class="th-btn th-btn--confirm"  data-disagreed="done">Done — archive all</button>
+    <button class="th-btn th-btn--close"    data-disagreed="close">Cancel</button>
+  `;
+  document.querySelectorAll('.th-d-row').forEach(row => row.addEventListener('click', () => {
+    const i = parseInt(row.dataset.dIdx);
+    const r1Idx = _thState.round1.findIndex(r => r.tabId === _thState.disagreed[i].tabId && r.itemId === _thState.disagreed[i].itemId);
+    if (r1Idx < 0) return;
+    // Re-enter Round 2 for this single item
+    _thState.idx = r1Idx;
+    _thState.round = 2;
+    // Remove from disagreed so it doesn't come back
+    _thState.disagreed.splice(i, 1);
+    thRender();
+  }));
+  document.querySelector('#triage-actions [data-disagreed="done"]').addEventListener('click', thFinish);
+  document.querySelector('#triage-actions [data-disagreed="close"]').addEventListener('click', thClose);
+}
+
+function thFinish() {
+  // Archive every item that completed Round 1 (whether confirmed or disagreed-then-resolved)
+  let count = 0;
+  for (const r1 of _thState.round1) {
+    archiveItem(r1.tabId, r1.itemId, 'finished');
+    count += 1;
+  }
+  _thState.archivedCount = count;
+  _thState.round = 'done';
+  thRender();
+}
+
+function thRenderDone() {
+  document.getElementById('triage-title').textContent = 'Triage History — Complete';
+  document.getElementById('triage-progress').textContent = '';
+  document.getElementById('triage-card').innerHTML = `
+    <div class="th-summary">
+      <div class="th-summary-num">${_thState.archivedCount || 0}</div>
+      <div>items archived. Your palate has been updated.</div>
+    </div>
+  `;
+  document.getElementById('triage-actions').innerHTML = `
+    <button class="th-btn th-btn--confirm" data-done="close">Close</button>
+  `;
+  document.querySelector('#triage-actions [data-done="close"]').addEventListener('click', thClose);
+}
+
+// Shared swipe-direction helper used by both rounds. Reuses Pointer Events.
+function thAttachSwipeMap(card, handlers) {
+  if (!card) return;
+  let sx = 0, sy = 0, dragging = false, dx = 0, dy = 0;
+  const T = 70;
+  card.addEventListener('pointerdown', (e) => {
+    sx = e.clientX; sy = e.clientY; dragging = true; dx = 0; dy = 0;
+    try { card.setPointerCapture(e.pointerId); } catch {}
+  });
+  card.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    dx = e.clientX - sx; dy = e.clientY - sy;
+    card.style.transform = `translate(${dx}px, ${dy}px) rotate(${dx * 0.04}deg)`;
+  });
+  const release = (e) => {
+    if (!dragging) return;
+    dragging = false;
+    try { card.releasePointerCapture(e.pointerId); } catch {}
+    const horiz = Math.abs(dx) >= Math.abs(dy);
+    if (horiz && dx <= -T && handlers.left) return handlers.left();
+    if (horiz && dx >=  T && handlers.right) return handlers.right();
+    if (!horiz && dy >=  T && handlers.down)  return handlers.down();
+    if (!horiz && dy <= -T && handlers.up)    return handlers.up();
+    card.style.transform = '';
+  };
+  card.addEventListener('pointerup', release);
+  card.addEventListener('pointercancel', release);
+}
+
 async function sendChatMessage() {
   if (_chatPending) return;
   const input = document.getElementById('chat-input');
@@ -6817,6 +7471,10 @@ function wizardRender() {
         Rating
         <span class="wizard-btn-meta">Mark watched, apply ratings, add tags</span>
       </button>
+      <button class="wizard-btn" data-action="quick-triage">
+        Quick Triage
+        <span class="wizard-btn-meta">Swipe through suggestions — decide fast</span>
+      </button>
     `;
   }
   else if (wizardState.step === 'rate') {
@@ -6825,7 +7483,7 @@ function wizardRender() {
     stepEl.innerHTML = `
       <button class="wizard-btn" data-action="rate-recent">
         Watched but untagged
-        <span class="wizard-btn-meta">All items marked Watched without reaction tags — rate &amp; tag in one flow</span>
+        <span class="wizard-btn-meta">AI-assisted: rate, then confirm predicted tags, then archive</span>
       </button>
       <button class="wizard-btn" data-action="rate-queued">
         Things on my queue
@@ -7025,7 +7683,8 @@ function wizardHandleAction(btn) {
   if (action === 'rate') { wizardState.step = 'rate'; wizardRender(); return; }
   if (action === 'watch') { wizardState.step = 'film-tv'; wizardRender(); return; }
   // Rate substep — goes straight into triage with appropriate filter
-  if (action === 'rate-recent') { wizardLaunchTriage('rate-recent'); return; }
+  // v7.4.0: rate-recent is now the AI-augmented 2-round Triage History flow.
+  if (action === 'rate-recent') { wizardHide(); openTriageHistory(); return; }
   if (action === 'rate-queued') { wizardLaunchTriage('rate-queued'); return; }
   if (action === 'rate-loved-untagged') { wizardLaunchTriage('rate-loved-untagged'); return; }
   if (action === 'rate-tab') {
@@ -7040,6 +7699,8 @@ function wizardHandleAction(btn) {
   if (action === 'watch-new') { wizardState.session = 'new'; wizardState.step = 'time'; wizardRender(); return; }
   if (action === 'watch-continue') { wizardState.session = 'continue'; wizardState.step = 'continue-list'; wizardRender(); return; }
   if (action === 'watch-chat') { wizardHide(); openChatModal(); return; }
+  // v7.3.0: Quick Triage — Tinder-style swipe over chat candidates.
+  if (action === 'quick-triage') { wizardHide(); openQuickTriage(); return; }
   // Legacy compat (old buttons, internal links)
   if (action === 'film') { wizardState.contentType = 'film'; wizardState.step = 'session'; wizardRender(); return; }
   if (action === 'tv') { wizardState.contentType = 'tv'; wizardState.step = 'session'; wizardRender(); return; }
