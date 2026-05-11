@@ -60,14 +60,16 @@
           <rect x="1140" y="618" width="40" height="24" rx="3"/><rect x="1220" y="618" width="40" height="24" rx="3"/>
         </g>
         <!-- wordmark: calligraphic 'Ciné' + geometric 'math' -->
-        <!-- wordmark: Ciné + Math centered as a unit (v7.6.0 fix).
-             Both texts share absolute anchors near the 1280px viewBox center
-             instead of using a relative dx — the script font's varying width
-             across WebView versions previously pushed Math off-center on TV. -->
-        <text x="540" y="380" text-anchor="end"
+        <!-- wordmark: Ciné + Math centered as a unit (v7.6.0 fix, retuned).
+             Anchors measured against the actual rendered glyphs (script fonts
+             carry a ~28px right-side bearing past the advance point), not the
+             font-size estimates the original patch used. Combined visual
+             midpoint lands at viewBox center (x=640) with a clean ~16px seam
+             between the script and the geometric typeface. -->
+        <text x="590" y="380" text-anchor="end"
               font-family="'Cine Script', 'Great Vibes', 'Snell Roundhand', 'Edwardian Script ITC', cursive"
               font-size="240" fill="#d4a843" font-style="italic">Ciné</text>
-        <text x="556" y="380" text-anchor="start"
+        <text x="634" y="380" text-anchor="start"
               font-family="'Futura', 'Avenir Next', 'Avenir', 'Century Gothic', 'Helvetica Neue', sans-serif"
               font-size="170" fill="#f5f1e8" font-weight="300" letter-spacing="6">Math</text>
         <!-- tagline -->
