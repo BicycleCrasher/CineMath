@@ -471,6 +471,7 @@ body.tv-mode .modal-back { width: 56px; height: 56px; font-size: 26px; }
 }
 body.tv-mode .wizard-recs-context { font-size: 13px; }
 body.tv-mode .wizard-recs-coltitle { font-size: 22px; }
+body.tv-mode .wizard-recs-split { grid-template-columns: 1fr; }
 
 /* V5.35.0: defensive — wizard buttons always fill their grid cell so D-pad
    navigation tracks consistent bounding rects regardless of label length. */

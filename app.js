@@ -5431,7 +5431,7 @@ const GENRE_FAMILIES = [
   { id: 'heist',          label: 'Heist',            tabs: ['heist'] },
   { id: 'foreign',        label: 'Foreign',          tabs: ['foreign'] },
   { id: 'auteur',         label: 'Auteur',           tabs: ['auteur'] },
-  { id: 'pre1960',        label: 'Pre-1960',         tabs: ['pre1960'] },
+  { id: 'pre1960',        label: 'Classics',          tabs: ['pre1960'] },
   { id: 'musicals',       label: 'Musicals',         tabs: ['musicals'] },
 ];
 function familyFilmTabs(family) {
@@ -6910,7 +6910,7 @@ function wizardGoBack() {
   if (wizardState.step === 'rate') wizardState.step = 'root';
   else if (wizardState.step === 'film-tv') wizardState.step = 'root';
   else if (wizardState.step === 'session') wizardState.step = 'film-tv';
-  else if (wizardState.step === 'continue-list') wizardState.step = 'session';
+  else if (wizardState.step === 'continue-list') wizardState.step = 'root';
   // V5.35.0: new path goes time → mood → genre → recs (was time → genre → mood → recs)
   else if (wizardState.step === 'time') wizardState.step = 'root';
   else if (wizardState.step === 'mood') wizardState.step = 'time';
