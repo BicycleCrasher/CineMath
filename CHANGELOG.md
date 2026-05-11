@@ -10,6 +10,41 @@ The `service-worker.js` cache name tracks deployments rather than semantic versi
 
 ---
 
+## 7.7.0 — 2026-05-11
+**Service worker cache:** `cinemath-v6` → `cinemath-v7`
+
+### CinéMath-branded install icons + TV banner
+
+Follow-up to the 7.0.0 brand rename: the install icons and Android TV
+launcher tile still carried the old WatchTrack artwork. Replaced all
+three with brand-matching versions; cleaned up obsolete files.
+
+- **`icon-192.png` + `icon-512.png`** — Stacked layout: calligraphic
+  *Ciné* in gold over geometric *Math* in ink, framed by the double
+  filmstrip. Same visual vocabulary as the wizard banner SVG and the
+  header wordmark, adapted to a square aspect. Both lines horizontally
+  centered; the pair is vertically centered between the filmstrip
+  bands. These are PWA install icons (manifest `purpose: any maskable`).
+- **`tv-banner.png`** — 320×180 Android TV launcher tile: full
+  *CinéMath* wordmark with *YOUR PALATE, COMPUTED* tagline beneath,
+  double filmstrip top and bottom. Mirrors the wizard banner SVG so
+  the Bravia home screen and the in-app home screen present the same
+  identity.
+- **Cleanup.** Removed `wizard-banner.png` (replaced by the live SVG
+  in 7.0.0, so the precache reference was already gone) and
+  `tv-banner.png.bak.5.17` (pre-resize backup that had outlived its
+  purpose).
+
+Icons were rendered server-side using URW Chancery L (script) and URW
+Gothic (geometric sans) as fallback proxies for Great Vibes and
+Futura. Visually close to the in-app wordmark — same color palette,
+same stacked composition — but not pixel-identical to the live SVG.
+Once `fonts/great-vibes.woff2` is installed and a Mac-side rendering
+pipeline is available, the icons can be regenerated for an exact font
+match.
+
+---
+
 ## 7.6.0 — 2026-05-11
 **Service worker cache:** bumped by `sw-cache-bump` workflow on push.
 
