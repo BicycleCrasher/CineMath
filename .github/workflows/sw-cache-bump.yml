@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.actor != 'github-actions[bot]'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 2
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -47,7 +47,7 @@ jobs:
 
       - name: Set up Node
         if: steps.changed.outputs.app_js == 'true'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
 
@@ -76,11 +76,21 @@ jobs:
         id: bump
         run: |
           set -eu
-          current=$(grep -oE "scifi-tracker-v[0-9]+" service-worker.js | head -1)
-          n=${current#scifi-tracker-v}
+          # v7.0.0 renamed the cache namespace from `scifi-tracker-vN` to
+          # `cinemath-vN`. Fail loudly if neither prefix is present — better
+          # than silently no-opping the way it did between v7.0.0 and v7.5.0.
+          # The `|| true` keeps grep's no-match (exit 1) from tripping the
+          # default `set -eo pipefail` shell before the empty-result check.
+          current=$(grep -oE "(cinemath|scifi-tracker)-v[0-9]+" service-worker.js | head -1 || true)
+          if [ -z "$current" ]; then
+            echo "::error::No cache prefix found in service-worker.js (expected cinemath-vN or scifi-tracker-vN)"
+            exit 1
+          fi
+          prefix="${current%-v*}-v"
+          n="${current#${prefix}}"
           next=$((n + 1))
-          sed -i "s/scifi-tracker-v${n}/scifi-tracker-v${next}/" service-worker.js
-          echo "Bumped scifi-tracker-v${n} -> scifi-tracker-v${next}"
+          sed -i "s/${prefix}${n}/${prefix}${next}/" service-worker.js
+          echo "Bumped ${prefix}${n} -> ${prefix}${next}"
           echo "next=${next}" >> "$GITHUB_OUTPUT"
 
       - name: Commit and push
