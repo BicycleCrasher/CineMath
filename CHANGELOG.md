@@ -10,6 +10,63 @@ The `service-worker.js` cache name tracks deployments rather than semantic versi
 
 ---
 
+## 7.8.0 — 2026-05-13
+**Service worker cache:** `cinemath-v8` → `cinemath-v9`
+
+### QR pairing + pull-fill on credential receive
+
+The **Pair Another Device** modal now renders a scannable QR code as the
+primary visual element. The long setup URL textarea moves behind a
+"Show setup URL (fallback)" `<details>` disclosure for cases where
+scanning isn't possible (a TV with no camera, paste flows on Google TV
+where URL routing crosses storage boundaries). Pairing a phone drops
+from "copy URL → switch apps → paste field → tap Apply" to "point
+phone camera at TV → tap notification → done."
+
+- **QR library.** Vendored
+  [`kazuhikoarase/qrcode-generator`](https://github.com/kazuhikoarase/qrcode-generator)
+  (MIT, ~13 KB, single file, no dependencies) at `vendor/qrcode.js`.
+  Generates SVG inline from a string; no canvas, no `eval`, no
+  network round-trip. CSP unchanged — `script-src 'self'` covers it.
+- **Rendering.** New `renderPairQr(url, container)` helper in
+  `app.js` near `generatePairUrl()`. Tries `qrcode(0, 'L')` first
+  (smallest auto-sized type, lowest error correction → smallest
+  visual). Falls back to `qrcode(10, 'M')` if the URL overflows
+  type-0 capacity (~2,953 chars at L; the pair URL is normally well
+  under that even with full credentials). The pair-button click
+  handler calls it after the textarea is populated, before
+  `showModal()`.
+- **Pull-fill on receive.** When a fresh device opens the pair URL,
+  `applyConfigFromUrl()` now awaits a one-shot `pullFillFromKV()`
+  before reloading. This GETs the cloud snapshot from `/sync/get` and
+  merges it with **fill-empty** semantics — settings the device
+  doesn't already have (Trakt creds, region, my-subs) get filled in,
+  but nothing the QR just delivered (Worker URL/secret, Plex token)
+  gets clobbered. State items merge by per-item `lastUpdated` so
+  older remote rows can't overwrite freshly-edited local ones. A
+  one-shot `watchtrack-just-paired` flag tells the post-reload
+  `syncOnLaunch()` to skip its own auto-pull (which uses
+  overwrite-from-remote semantics) so the just-set credentials
+  survive boot. Result: the phone wakes up with everything filled in,
+  including state and Trakt creds the QR couldn't carry, and the
+  user sees no manual Pull step.
+- **CSS.** New `.pair-qr` block in `styles.css` — 240×240 phone,
+  320×320 in `body.tv-mode`, centered, white background with 12-16px
+  internal padding to satisfy the QR's quiet-zone requirement. The
+  fallback `<details>` block gets a thin top rule plus dim-text
+  summary that brightens on hover.
+- **Service worker.** Cache bumped from `cinemath-v8` to `cinemath-v9`;
+  the new `./vendor/qrcode.js` asset is added to the precache list so
+  the QR works offline (once the device is online for the first
+  cache load).
+
+The QR is the recommended pair flow. The textarea remains the
+documented fallback path through the modal's disclosure hint and the
+Settings → Plex Webhook Bridge → "Receive setup from another device"
+input.
+
+---
+
 ## 7.7.0 — 2026-05-11
 **Service worker cache:** `cinemath-v6` → `cinemath-v7`
 

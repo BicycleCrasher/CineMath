@@ -3582,7 +3582,11 @@ function setupModals() {
         alert('Nothing to pair yet — configure Worker URL/secret or Plex first.');
         return;
       }
-      document.getElementById('pair-url').value = generatePairUrl();
+      const url = generatePairUrl();
+      document.getElementById('pair-url').value = url;
+      // v7.8.0: render the URL as a QR in the modal. The textarea stays
+      // visible behind a <details> disclosure for paste-based fallback.
+      renderPairQr(url, document.getElementById('pair-qr'));
       document.getElementById('pair-modal').showModal();
     });
     document.getElementById('pair-close').addEventListener('click', () => {
@@ -5784,6 +5788,10 @@ const SYNC_LAST_PULL_KEY = 'watchtrack-sync-last-pull';
 const SYNC_LAST_ERROR_KEY = 'watchtrack-sync-last-error';
 const SYNC_DEBOUNCE_MS = 5000;
 const SYNC_MAX_BYTES = 1024 * 1024 * 2; // 2 MB safety cap (KV value limit is 25 MB)
+// v7.8.0: One-shot flag set by pullFillFromKV() after QR-receive. The
+// subsequent reload's syncOnLaunch checks this flag and skips its
+// auto-pull/overwrite — we already pulled with fill-empty semantics.
+const JUST_PAIRED_KEY = 'watchtrack-just-paired';
 let syncDirty = false;
 let syncDebounceTimer = null;
 let syncBootstrapPromise = null;
@@ -6102,6 +6110,70 @@ function syncApplyRemote(remote) {
   return true;
 }
 
+// v7.8.0: One-shot pull from KV after a QR-pair receive. Fill-empty
+// semantics: only fills settings the device currently doesn't have.
+// State items use the same per-item-lastUpdated merge as syncApplyRemote
+// (older remote items can't clobber newer local edits). Sets
+// JUST_PAIRED_KEY so the subsequent reload's syncOnLaunch skips its
+// own auto-pull (which uses "remote wins" semantics that would overwrite
+// the QR-supplied creds).
+async function pullFillFromKV() {
+  if (!isWebhookConfigured()) return;
+  const remote = await syncFetch();
+  if (!remote) return;
+
+  // Settings — fill-empty only.
+  if (remote.settings) {
+    const s = remote.settings;
+    if (s.plexServerUrl && !getPlexServerUrl()) setPlexServerUrl(s.plexServerUrl);
+    if (s.plexToken && !getPlexToken()) setPlexToken(s.plexToken);
+    if (s.plexClientId && !getPlexClientId()) setPlexClientId(s.plexClientId);
+    if (s.streamingRegion && !getStreamingRegion()) setStreamingRegion(s.streamingRegion);
+    if (s.mySubscriptions && Array.isArray(s.mySubscriptions) && !lsGet(MY_SUBS_KEY)) {
+      setMySubscriptions(s.mySubscriptions);
+    }
+    // displayMode stays per-device; never fill.
+    if (typeof setTraktClientId === 'function') {
+      if (s.traktClientId && !getTraktClientId()) setTraktClientId(s.traktClientId);
+      if (s.traktClientSecret && !getTraktClientSecret()) setTraktClientSecret(s.traktClientSecret);
+      if (s.traktAccessToken && !getTraktAccessToken()) setTraktAccessToken(s.traktAccessToken);
+      if (s.traktRefreshToken && !getTraktRefreshToken()) setTraktRefreshToken(s.traktRefreshToken);
+      if (s.traktUsername && !getTraktUsername()) setTraktUsername(s.traktUsername);
+    }
+  }
+
+  // State — per-item-by-lastUpdated merge. Items present only on remote
+  // are added; items where remote is newer replace local; older remote
+  // never wins. Same algorithm as syncApplyRemote's state branch.
+  if (remote.state && typeof remote.state === 'object') {
+    let merged = 0;
+    for (const tab in remote.state) {
+      if (!state[tab]) state[tab] = {};
+      const remoteTab = remote.state[tab];
+      if (!remoteTab || typeof remoteTab !== 'object') continue;
+      for (const id in remoteTab) {
+        const remoteEntry = remoteTab[id];
+        const localEntry = state[tab][id];
+        if (!localEntry) {
+          state[tab][id] = remoteEntry;
+          merged++;
+          continue;
+        }
+        const remoteTs = remoteEntry.lastUpdated || 0;
+        const localTs = localEntry.lastUpdated || 0;
+        if (remoteTs > localTs) {
+          state[tab][id] = remoteEntry;
+          merged++;
+        }
+      }
+    }
+    if (merged > 0) lsSet(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  // Flag for the post-reload syncOnLaunch to skip its overwrite-pull.
+  lsSet(JUST_PAIRED_KEY, '1');
+}
+
 function syncMarkDirty() {
   syncDirty = true;
   if (syncDebounceTimer) clearTimeout(syncDebounceTimer);
@@ -6117,6 +6189,14 @@ function syncMarkDirty() {
 async function syncOnLaunch() {
   if (!isWebhookConfigured()) return;
   if (!getPlexToken()) return;
+  // v7.8.0: If we just paired via QR, pullFillFromKV already ran with
+  // fill-empty semantics before the reload. Skip the auto-pull this once
+  // so syncApplyRemote's overwrite-from-remote doesn't clobber the
+  // credentials we deliberately set from the QR payload.
+  if (lsGet(JUST_PAIRED_KEY)) {
+    lsDel(JUST_PAIRED_KEY);
+    return;
+  }
   syncBootstrapPromise = (async () => {
     const remote = await syncFetch();
     if (remote) {
@@ -6168,13 +6248,58 @@ function generatePairUrl() {
   const encoded = btoa(JSON.stringify(data));
   return `${window.location.origin}${window.location.pathname}?config=${encoded}`;
 }
+
+// v7.8.0: Render the pair URL as a scannable QR.
+// Library: kazuhikoarase/qrcode-generator (vendored at vendor/qrcode.js).
+// `qrcode(0, 'L')` auto-sizes to the smallest type that fits, error
+// correction level L (smallest dot count). If the URL exceeds type-0
+// capacity (~2,953 chars at L), retry with type 10 + M. Output is
+// inline SVG — no canvas, no eval, no network. cellSize=4 gives a
+// readable image at the CSS-sized container; margin=0 because the
+// CSS .pair-qr padding handles the quiet zone.
+function renderPairQr(url, container) {
+  if (!container) return;
+  if (typeof qrcode !== 'function') {
+    container.innerHTML = '<div style="color:#000;font-size:11px;text-align:center;padding:12px">QR library not loaded.</div>';
+    return;
+  }
+  let qr;
+  try {
+    qr = qrcode(0, 'L');
+    qr.addData(url);
+    qr.make();
+  } catch (e) {
+    try {
+      qr = qrcode(10, 'M');
+      qr.addData(url);
+      qr.make();
+    } catch (e2) {
+      console.warn('QR generation failed:', e2);
+      container.innerHTML = '<div style="color:#000;font-size:11px;text-align:center;padding:12px">Setup URL too long to encode as a QR. Use the "Show setup URL" fallback.</div>';
+      return;
+    }
+  }
+  container.innerHTML = qr.createSvgTag(4, 0);
+}
+
 function applyConfigFromUrl() {
   const params = new URLSearchParams(window.location.search);
   const cfg = params.get('config');
   if (!cfg) return false;
   if (!applyConfigPayload(cfg)) return false;
   history.replaceState(null, '', window.location.pathname);
-  location.reload();
+  // v7.8.0: Before reloading, pull KV state with fill-empty semantics so
+  // the new device wakes up with Trakt creds, ratings, notes, etc. that
+  // weren't carried in the QR payload. The reload still fires even if
+  // the pull fails (network glitch) — credentials are already saved.
+  // The async IIFE here means we keep the synchronous truthy return for
+  // the bootstrap caller at app.js:8383, which short-circuits the rest
+  // of init before our reload fires.
+  (async () => {
+    try { await pullFillFromKV(); }
+    catch (e) { console.warn('pull-fill on pair failed:', e); }
+    location.reload();
+  })();
   return true;
 }
 // V5.22.1: Paste-based config import (for cases where URL routing on Google TV

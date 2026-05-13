@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cinemath-v8';
+const CACHE_NAME = 'cinemath-v9';
 const inflightRevalidations = new Set();
 const ASSETS = [
   './',
@@ -34,7 +34,8 @@ const ASSETS = [
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/header-logo.svg',
-  './fonts/great-vibes.woff2'
+  './fonts/great-vibes.woff2',
+  './vendor/qrcode.js'
 ];
 
 self.addEventListener('install', (event) => {

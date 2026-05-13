@@ -245,23 +245,27 @@
   <div class="modal-content">
     <h3>Pair Another Device</h3>
     <p class="settings-help">
-      The URL below contains your <strong>Worker URL, secret, and Plex token</strong>.
-      Open it on another device (TV, tablet, etc.) and CinéMath will configure itself
-      automatically. <strong>Treat this URL like a password</strong> — anyone with it
-      can talk to your Worker and Plex server.
+      Point the camera on another device at the QR code below. CinéMath will configure
+      itself automatically — Worker URL, secret, and Plex token — then fill in anything
+      else it's missing from your cloud snapshot. <strong>Treat this code like a password</strong> —
+      anyone who scans it can talk to your Worker and Plex server.
     </p>
-    <div class="settings-section">
-      <label>Setup URL</label>
-      <textarea class="modal-input" id="pair-url" rows="4" readonly></textarea>
-    </div>
-    <p class="settings-help" style="font-size:11px">
-      <strong>Recommended path:</strong> Copy this URL, then on the TV — pair a Bluetooth
-      keyboard temporarily, open CinéMath → Settings → Plex Webhook Bridge → paste it
-      into the "Receive setup from another device" field, tap Apply. Avoids URL-routing
-      issues on Google TV (where browser-app and TWA have separate localStorage).
-    </p>
+    <div id="pair-qr" class="pair-qr" aria-label="Pair-with-another-device QR code"></div>
+    <details class="pair-url-disclosure">
+      <summary>Show setup URL (fallback)</summary>
+      <div class="settings-section">
+        <label>Setup URL</label>
+        <textarea class="modal-input" id="pair-url" rows="4" readonly></textarea>
+      </div>
+      <p class="settings-help" style="font-size:11px">
+        Use the URL if scanning isn't possible (e.g. TV without a camera). Pair a
+        Bluetooth keyboard, open CinéMath → Settings → Plex Webhook Bridge → paste it
+        into "Receive setup from another device", tap Apply. Avoids URL-routing issues
+        on Google TV (where browser-app and TWA have separate localStorage).
+      </p>
+    </details>
     <div class="modal-actions">
-      <button class="action-btn" id="pair-copy">Copy</button>
+      <button class="action-btn" id="pair-copy">Copy URL</button>
       <button class="action-btn" id="pair-share">Share…</button>
       <button class="action-btn" id="pair-close">Close</button>
     </div>
@@ -547,6 +551,10 @@
   <button class="sw-update-btn" id="sw-update-reload" type="button">Reload</button>
 </div>
 
+<!-- v7.8.0: QR encoder for the Pair modal. kazuhikoarase/qrcode-generator,
+     MIT, ~13 KB. Exposes a global `qrcode(typeNumber, errorCorrection)`.
+     No deps, no eval, no network — generates SVG inline from a string. -->
+<script src="vendor/qrcode.js"></script>
 <!-- v5.42.0: production loads the minified bundle. Source app.js stays
      in the repo as the readable artifact you edit; app.min.js is built
      via `npm run build:min` and committed alongside. -->

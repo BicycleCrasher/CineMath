@@ -2195,3 +2195,47 @@ body.tv-mode #history-btn { display: none; }
 /* The SVG text layout is fixed in index.html (see patch).
    This rule ensures the banner container doesn't clip on TV. */
 body.tv-mode .wizard-banner { overflow: visible; }
+
+/* ── v7.8.0: QR pair code ─────────────────────────────────── */
+/* The Pair modal renders a kazuhikoarase-encoded QR as inline SVG
+   inside #pair-qr. White background is required so phone scanners
+   read the quiet zone; padding inside the square is the QR's own
+   margin (we pass margin=0 to createSvgTag, so the CSS handles it).
+   Default sizing is phone (240px); body.tv-mode bumps to 320px so
+   the code is readable from sofa distance. */
+.pair-qr {
+  width: 240px;
+  height: 240px;
+  margin: 16px auto;
+  padding: 12px;
+  background: #fff;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.pair-qr svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+body.tv-mode .pair-qr {
+  width: 320px;
+  height: 320px;
+  padding: 16px;
+}
+.pair-url-disclosure {
+  margin-top: 12px;
+  border-top: 1px solid var(--rule);
+  padding-top: 12px;
+}
+.pair-url-disclosure summary {
+  cursor: pointer;
+  color: var(--ink-dim);
+  font-size: 13px;
+  padding: 4px 0;
+  user-select: none;
+}
+.pair-url-disclosure summary:hover { color: var(--ink); }
+.pair-url-disclosure[open] summary { margin-bottom: 8px; }
