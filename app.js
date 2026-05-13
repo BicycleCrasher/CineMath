@@ -7059,8 +7059,14 @@ function thCompleteRound1() {
   _thState.round = 'loading';
   _thState.idx = 0;
   thRender();
-  // Fire prediction request without blocking the render
+  // Fire prediction request without blocking the render; gracefully proceed to Round 2 on failure
   thFetchPredictions().then(() => {
+    if (!_thState) return;
+    _thState.round = 2;
+    _thState.idx = 0;
+    thRender();
+  }).catch(e => {
+    console.warn('[triage] predict-tags failed, continuing without predictions:', e);
     if (!_thState) return;
     _thState.round = 2;
     _thState.idx = 0;
@@ -7158,6 +7164,7 @@ function thRenderRound2() {
   if (idx >= _thState.round1.length) return thCompleteRound2();
   const r1 = _thState.round1[idx];
   const entry = pool.find(p => p.tabId === r1.tabId && p.itemId === r1.itemId) || pool[idx];
+  if (!entry) { _thState.idx += 1; return thRender(); }
   const { item, tabId } = entry;
   const set = getTagSetForItem(item, tabId);
   const pred = _thState.predictions[`${r1.tabId}:${r1.itemId}`];

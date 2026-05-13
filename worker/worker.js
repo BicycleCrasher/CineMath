@@ -1164,7 +1164,7 @@ Only predict tags that are in the provided tag set for that item's content type.
         return jsonResponse(summary);
       } catch (e) {
         console.log('[d1-migrate] uncaught', e.stack || e.message);
-        return jsonResponse({ error: e.message || String(e), stack: (e.stack || '').slice(0, 500) }, 500);
+        return jsonResponse({ error: 'Migration failed — see Worker logs' }, 500);
       }
     }
 
