@@ -1,0 +1,32 @@
+<!doctype html>
+<!--
+  v9.0.0 — Pseudo-redirect to the latest signed APK on GitHub Releases.
+  GitHub Pages serves this file when a TV browser hits
+  bicyclecrasher.github.io/WatchTrack/install.apk. The browser sees
+  text/html (no Content-Disposition), follows the meta refresh / JS
+  redirect, lands on GitHub's CDN, and downloads the actual APK.
+
+  Why an HTML file at install.apk: GitHub Pages can't redirect at the
+  HTTP layer for a static site, but it will happily serve this file
+  with the .apk extension. Most browsers see the meta refresh and go.
+
+  Update the URL when the next signed release ships, or wire a GitHub
+  Action to rewrite it on tag push.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>CinéMath — installer</title>
+  <meta http-equiv="refresh" content="0; url=https://github.com/BicycleCrasher/bicyclecrasher.github.io/releases/latest/download/cinemath.apk">
+  <script>
+    // Belt-and-suspenders: if meta refresh is blocked, fall through to
+    // an explicit navigation. Same URL as the meta refresh above.
+    location.replace('https://github.com/BicycleCrasher/bicyclecrasher.github.io/releases/latest/download/cinemath.apk');
+  </script>
+</head>
+<body style="font-family:sans-serif;padding:24px;background:#0e0d0b;color:#f0eee9">
+  <p>Downloading CinéMath APK…</p>
+  <p>If the download doesn't start, <a style="color:#e2b13a"
+       href="https://github.com/BicycleCrasher/bicyclecrasher.github.io/releases/latest/download/cinemath.apk">tap here</a>.</p>
+</body>
+</html>

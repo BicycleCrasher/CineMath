@@ -1,0 +1,78 @@
+# v9.0.0 — Tag-triggered TWA APK build + GitHub Release attachment.
+#
+# Fires when a `v*` tag is pushed (e.g. v9.0.0, v9.1.0). Uses
+# @bubblewrap/cli to wrap the PWA, signs with a keystore restored from
+# GitHub Actions secrets, and attaches the signed APK as an asset on
+# the corresponding release.
+#
+# Secrets required (set once via GitHub repo Settings → Secrets →
+# Actions):
+#   KEYSTORE_B64    — base64 of your release.keystore file
+#                     (`openssl base64 -in release.keystore | tr -d '\n'`)
+#   KEYSTORE_PASS   — keystore password
+#   KEY_ALIAS       — alias inside the keystore (default: 'android')
+#   KEY_PASS        — alias password
+#
+# Losing the keystore breaks in-place TWA updates for installed users —
+# back it up in your password manager along with the four secrets above.
+
+name: Release APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # for uploading release assets
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Restore keystore from secret
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "::error::KEYSTORE_B64 secret is not set. Generate a keystore with keytool and add the base64 to repo secrets before tagging."
+            exit 1
+          fi
+          mkdir -p $HOME/.android
+          echo "$KEYSTORE_B64" | base64 -d > $HOME/.android/release.keystore
+          chmod 600 $HOME/.android/release.keystore
+
+      - name: Install Bubblewrap CLI
+        run: npm install -g @bubblewrap/cli@latest
+
+      - name: Build signed APK
+        env:
+          KEYSTORE_PASS: ${{ secrets.KEYSTORE_PASS }}
+          KEY_ALIAS:     ${{ secrets.KEY_ALIAS }}
+          KEY_PASS:      ${{ secrets.KEY_PASS }}
+          CI_MODE:       'true'
+        run: |
+          bash ./worker/build-twa.sh
+
+      - name: Upload APK to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            ${{ env.HOME }}/watchtrack-twa/app-release-signed.apk
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -10,6 +10,155 @@ The `service-worker.js` cache name tracks deployments rather than semantic versi
 
 ---
 
+## 8.0.0 — 2026-05-13
+**Service worker cache:** `cinemath-v9` → `cinemath-v10`
+
+### Credential vault — Plex & Trakt move into Cloudflare
+
+Architectural shift. Before this release, every device carried the full
+set of credentials in localStorage: Plex token, Plex server URL, Trakt
+client ID/secret, Trakt access + refresh tokens. Duplicated across the
+TV, phone, and laptop. This release moves long-lived secrets into
+**Worker secrets** (encrypted by Cloudflare, never visible after first
+set), rotating Trakt OAuth tokens into a new D1 **`users`** table, and
+proxies every Plex and Trakt API call through the Worker. Devices keep
+only the Worker URL + shared secret — everything else lives in the
+cloud.
+
+#### Why
+
+- **Less duplication.** Three devices used to hold three copies of the
+  Plex token; rotating Trakt's access token meant three localStorage
+  writes (sometimes out of sync). Now one canonical copy.
+- **Cleaner Settings UI.** New devices don't ask for Plex tokens or
+  Trakt client IDs — they just connect to the Worker.
+- **Server-side OAuth refresh.** Trakt's access token expires every
+  ~90 days. Before, each device had to refresh independently. Now the
+  Worker refreshes on demand inside `getValidTraktToken()`, persisting
+  the new pair to D1.
+- **Watch history in one place.** A new `watch_history` D1 table
+  captures every watch event (Plex webhook, manual mark from device,
+  future "other services") with `pushed_to_trakt` flagged. Pre-v8 the
+  Plex webhook path and the device's manual marks never met.
+
+#### What changed
+
+**Worker secrets (set once via Promote button, then deleted from
+localStorage on each device):**
+- `PLEX_TOKEN` — was in `CONFIG` KV pre-v8; now a real Worker secret.
+- `TRAKT_CLIENT_ID`
+- `TRAKT_CLIENT_SECRET`
+
+**Cloudflare-side prerequisites the user sets manually once:**
+- `ADMIN_API_TOKEN` — Cloudflare API token with `Workers Scripts:Edit`.
+- `CF_ACCOUNT_ID` — Cloudflare account UUID.
+
+Both are needed by `/bootstrap/credentials` to call the Cloudflare API
+and PUT the three secrets above. After the first successful promote,
+the user can delete `ADMIN_API_TOKEN` (the secrets are set; the route
+won't be called again).
+
+**New D1 tables** (`worker/migrations/002_cred_vault.sql`):
+- `users(user_id, plex_server_url, plex_client_id,
+  trakt_access_token, trakt_refresh_token, trakt_expires_at,
+  trakt_username, streaming_region, my_subscriptions, bootstrapped,
+  created_ts)` — one row per user. `user_id = SHA-256(plex_token)`,
+  computed server-side at bootstrap. Backward-compatible with the
+  v5.4 `SYNC_KV` key scheme.
+- `watch_history(id, user_id, item_id, tmdb_id, source, title, year,
+  type, watched_ts, device_id, pushed_to_trakt)` — append-only log
+  of every watch event. Indexed by `(user_id, watched_ts DESC)`,
+  `(user_id, item_id)`, `(user_id, tmdb_id)`.
+
+**New Worker routes** (`worker/worker.js`):
+- `GET /bootstrap/status` — returns `{bootstrapped, plex, trakt}`.
+  Drives the device's "show Promote button" vs "show Connected ✓".
+- `POST /bootstrap/credentials` — the Promote button hits this. Sets
+  the three Worker secrets via the Cloudflare API + INSERTs the users
+  row + caches `webhook_user_id` in CONFIG KV (so the Plex webhook
+  knows which user's `watch_history` to write to).
+- `POST /api/trakt/device-code-init` + `/api/trakt/device-code-poll`
+  — Trakt OAuth without ever exposing the client secret to the
+  device. Worker pretends to be the device against Trakt; device
+  shows the user_code from the response.
+- `POST /api/trakt/scrobble`, `unwatch`, `rate`, `unrate`,
+  `watchlist-add` — all the existing Trakt operations, now proxied.
+  Scrobble also writes a `watch_history` row.
+- `GET /api/trakt/history`, `/api/trakt/ratings`, `/api/trakt/me` —
+  reads for the bulk-sync flow.
+- `POST /api/trakt/disconnect` — clears trakt_* columns in users row.
+- `POST /api/watch/mark` — manual mark from device (when there's no
+  Plex scrobble to piggyback on). Writes `watch_history` and pushes
+  to Trakt if connected.
+- `GET /api/watch/history` — reads from `watch_history` for the
+  Plex History UI to consume in v8.1+.
+- `/webhook/{secret}` — extended: after the existing VIEWED/EVENTS
+  writes, also INSERTs into `watch_history` (source=`'plex'`) and
+  pushes to Trakt if the user has it connected.
+
+**Client (`app.js`):**
+- New helpers: `getUserId()`, `isBootstrapped()`,
+  `refreshBootstrapStatus()`, `bootstrapPromote()`,
+  `wipeLocalSecretsIfBootstrapped()`, `traktProxyCall()`. Cached
+  bootstrap state in `watchtrack-bootstrap-state` localStorage key
+  so the UI doesn't blank during a status refresh.
+- `traktApiCall()` short-circuits to `traktProxyCall()` when
+  bootstrapped — every legacy Trakt operation gets transparently
+  routed through the Worker. Pre-bootstrap devices use the old
+  direct-Trakt path so the migration is forward-compatible.
+- `isTraktConnected()` recognizes the bootstrapped state.
+- `traktDisconnect()` POSTs `/api/trakt/disconnect` then clears
+  local state.
+- The Trakt "Connect" button uses the Worker's device-code init/poll
+  when bootstrapped — no longer needs client_id/secret typed in.
+- New **Promote** button in Settings → Plex Webhook Bridge,
+  visible only when the device has worker creds + a Plex token AND
+  the user hasn't promoted yet. After success, the section collapses
+  to "Credentials live in Cloudflare ✓" and the local Plex/Trakt
+  secrets are wiped from localStorage (`PLEX_TOKEN_KEY`,
+  `TRAKT_CLIENT_ID_KEY`, `TRAKT_CLIENT_SECRET_KEY`,
+  `TRAKT_ACCESS_TOKEN_KEY`, `TRAKT_REFRESH_TOKEN_KEY`). Server URL,
+  client ID, and username stay local — they're not secret.
+- `refreshBootstrapStatus()` fires on init (fire-and-forget after
+  `syncOnLaunch`) so a device that hasn't yet promoted but where
+  another device has gets the news on next launch and wipes its
+  own stale secrets automatically.
+
+**SW cache** bumped from `cinemath-v9` to `cinemath-v10`.
+
+#### Backward compatibility
+
+- Existing `/plex/*` routes (`/plex/library`, `/plex/scrobble`,
+  `/plex/history`, `/plex/identity`, `/plex/configure`) still work
+  unchanged — they now prefer the `PLEX_TOKEN` Worker secret but fall
+  back to `CONFIG.plex_token` if the secret isn't set (e.g. the user
+  hasn't promoted yet).
+- Existing `/sync/get` and `/sync/put` HTTP routes for state blob
+  push/pull continue to work. v9.0.0 will replace those with the
+  Durable Object + WebSocket live channel.
+- Pre-promote devices keep their direct-Trakt code paths (legacy
+  `traktApiCall` body executes when `isBootstrapped()` is false).
+
+#### Deploy steps for this release
+
+1. Set `ADMIN_API_TOKEN` + `CF_ACCOUNT_ID` Worker secrets via the
+   Cloudflare dashboard (Workers & Pages → watchtrack-plex →
+   Settings → Variables and Secrets).
+2. Apply the D1 migration:
+   `wrangler d1 execute watchtrack-viewed --remote --file=worker/migrations/002_cred_vault.sql`
+3. Deploy the Worker: `cd worker && wrangler deploy`.
+4. Open the live site on the device that already has full Plex +
+   Trakt credentials. Settings → Plex Webhook Bridge → tap
+   **Promote ↑**. Wait for "Promoted ✓".
+5. Reload other devices; they fetch `/bootstrap/status`, see
+   `bootstrapped=true`, wipe their local secrets, and become thin
+   clients automatically.
+6. After confirming Trakt scrobble + Plex library still work, delete
+   `ADMIN_API_TOKEN` from Worker secrets (no longer needed; the
+   /bootstrap/credentials route won't run again).
+
+---
+
 ## 7.8.0 — 2026-05-13
 **Service worker cache:** `cinemath-v8` → `cinemath-v9`
 

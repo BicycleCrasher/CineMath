@@ -611,6 +611,783 @@ async function plexMarkWatched(ratingKey) {
   } catch (e) { return false; }
 }
 
+// === v9.0.0 — Multi-user auth state ===
+//
+// Pre-v9, every device authed with the shared CONFIG.secret from
+// localStorage. v9 introduces a per-device bearer authToken plus a
+// deviceId; the worker resolves these to a userId via the USERS KV
+// device:{deviceId} record. We keep the legacy webhook-secret around
+// (some pre-Phase-4 endpoints still take ?secret=) and treat the
+// presence of CINEMATH_AUTH_KEY as the "I've migrated" signal.
+
+const CINEMATH_AUTH_KEY = 'cinemath-auth-v1';
+
+// Shape: { userId, deviceId, authToken, displayName, role }
+// Mutating helpers cache the parsed object in module scope so we don't
+// JSON.parse on every authFetch call.
+let _currentUserCache = undefined;
+
+function getCurrentUser() {
+  if (_currentUserCache !== undefined) return _currentUserCache;
+  const raw = lsGet(CINEMATH_AUTH_KEY);
+  if (!raw) { _currentUserCache = null; return null; }
+  try { _currentUserCache = JSON.parse(raw); }
+  catch { _currentUserCache = null; }
+  return _currentUserCache;
+}
+
+function setCurrentUser(rec) {
+  if (!rec) { lsDel(CINEMATH_AUTH_KEY); _currentUserCache = null; return; }
+  _currentUserCache = rec;
+  lsSet(CINEMATH_AUTH_KEY, JSON.stringify(rec));
+}
+
+function updateCurrentUser(patch) {
+  const cur = getCurrentUser() || {};
+  setCurrentUser({ ...cur, ...patch });
+}
+
+// authFetch is the v9 replacement for `fetch(${workerUrl}/...?secret=...)`.
+// Adds Authorization + X-Device-Id headers from the current user. On
+// 401, signals the caller (and clears local creds, prompting a fresh
+// pair-this-device flow on next boot). Falls back to the legacy
+// secret-in-URL transport when no bearer creds exist — that keeps
+// Lincoln working during the Phase 1 → Phase 4 transition.
+async function authFetch(path, init = {}) {
+  const base = getWebhookUrl();
+  if (!base) throw new Error('Worker URL not configured');
+  const user = getCurrentUser();
+  const headers = { ...(init.headers || {}) };
+  let finalPath = path;
+  if (user && user.authToken && user.deviceId) {
+    headers['Authorization'] = `Bearer ${user.authToken}`;
+    headers['X-Device-Id'] = user.deviceId;
+  } else {
+    // Legacy path — append ?secret= only if the URL doesn't already
+    // carry one. Some callers construct their own URLs with secret
+    // baked in; don't double up.
+    const secret = getWebhookSecret();
+    if (secret && !path.includes('secret=')) {
+      const sep = path.includes('?') ? '&' : '?';
+      finalPath = `${path}${sep}secret=${encodeURIComponent(secret)}`;
+    }
+  }
+  const resp = await fetch(`${base}${finalPath}`, { ...init, headers });
+  if (resp.status === 401 && user) {
+    // Server rejected our bearer — clear so the boot path can recover.
+    console.warn('authFetch: 401, clearing local auth');
+    setCurrentUser(null);
+  }
+  return resp;
+}
+
+// Boot-time bridge for the one-shot legacy → bearer migration. Called
+// from the entrypoint (see boot dispatch below). Returns true if a
+// migration happened (caller should refresh state), false if nothing
+// to do, or throws on hard error.
+async function attemptLegacyMigration() {
+  if (getCurrentUser()) return false;                  // already migrated
+  const secret = getWebhookSecret();
+  const url = getWebhookUrl();
+  if (!secret || !url) return false;                   // no legacy creds → blank device path
+  // POST /migrate with the existing secret. The server promotes
+  // Lincoln's record to a UUID, mints a device row, returns bearer
+  // creds. If the worker is pre-v9 (no /migrate endpoint), the call
+  // returns 404 and we just fall through to the legacy code path.
+  let resp;
+  try {
+    resp = await fetch(`${url}/migrate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        oldSecret: secret,
+        deviceId: null,
+        deviceKind: detectDeviceKind(),
+        userAgent: navigator.userAgent || '',
+        deviceName: detectDeviceName(),
+      }),
+    });
+  } catch (e) {
+    console.warn('attemptLegacyMigration: network error', e);
+    return false;
+  }
+  if (resp.status === 404 || resp.status === 405) {
+    // Worker hasn't been upgraded yet; legacy path is still our story.
+    return false;
+  }
+  if (!resp.ok) {
+    const t = await resp.text().catch(() => '');
+    console.warn('attemptLegacyMigration: server refused', resp.status, t.slice(0, 200));
+    return false;
+  }
+  const data = await resp.json();
+  if (!data || !data.userId || !data.authToken || !data.deviceId) {
+    console.warn('attemptLegacyMigration: malformed response', data);
+    return false;
+  }
+  setCurrentUser({
+    userId: data.userId,
+    deviceId: data.deviceId,
+    authToken: data.authToken,
+    displayName: data.displayName || 'Lincoln',
+    role: data.role || 'admin',
+  });
+  return true;
+}
+
+// Best-effort device classification used for the device list in
+// admin/account UI. Errs on the side of 'phone' because most installs
+// are phones; TV detection is opportunistic.
+function detectDeviceKind() {
+  const ua = navigator.userAgent || '';
+  if (/AndroidTV|GoogleTV|BRAVIA|AFT|SmartTV|Tizen|webOS/i.test(ua)) return 'tv';
+  if (/iPad|Tablet/i.test(ua)) return 'tablet';
+  if (/Mobile|Android|iPhone/i.test(ua)) return 'phone';
+  return 'desktop';
+}
+
+function detectDeviceName() {
+  const kind = detectDeviceKind();
+  const platform = /Android/i.test(navigator.userAgent) ? 'Android'
+    : /iPhone|iPad|iOS/i.test(navigator.userAgent) ? 'iOS'
+    : /Mac/i.test(navigator.userAgent) ? 'Mac'
+    : /Windows/i.test(navigator.userAgent) ? 'Windows'
+    : '';
+  return platform ? `${platform} ${kind}` : kind;
+}
+
+// === v9.0.0 — Onboarding wizard (invite link → user) ===
+//
+// State machine: register → displayName? → trakt → done. Driven by
+// #onboarding-modal in index.html. Each step shows/hides its own
+// [data-step] subview. The wizard is the ONLY UI path until it
+// transitions to done — the rest of the app stays hidden so the new
+// user can't poke at empty state during setup.
+
+const _onboardingState = {
+  step: null,
+  inviteCode: null,
+  needsDisplayName: false,
+  traktPoll: null,
+};
+
+function onboardingShow(step) {
+  const modal = document.getElementById('onboarding-modal');
+  if (!modal) return;
+  _onboardingState.step = step;
+  modal.querySelectorAll('[data-step]').forEach(el => {
+    el.style.display = el.dataset.step === step ? '' : 'none';
+  });
+  if (!modal.open) modal.showModal();
+}
+
+function onboardingError(stepId, msg) {
+  const el = document.getElementById(`onboarding-${stepId}-error`);
+  if (el) { el.textContent = msg; el.style.display = ''; }
+}
+
+async function onboardingStartFromInvite(inviteCode) {
+  _onboardingState.inviteCode = inviteCode;
+  onboardingShow('register');
+  const statusEl = document.getElementById('onboarding-register-status');
+  if (statusEl) statusEl.textContent = 'Setting up your account…';
+  // v9.0.0 invite links embed the worker URL as ?w=. Save it before we
+  // need it so authFetch and subsequent calls find it via getWebhookUrl.
+  const workerFromUrl = new URL(location.href).searchParams.get('w');
+  if (workerFromUrl) setWebhookUrl(workerFromUrl);
+  const url = getWebhookUrl();
+  if (!url) {
+    onboardingError('register', 'Worker URL missing from invite link. Ask the admin to regenerate it.');
+    return;
+  }
+  let resp;
+  try {
+    resp = await fetch(`${url}/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        invite: inviteCode,
+        deviceId: null,
+        deviceKind: detectDeviceKind(),
+        userAgent: navigator.userAgent || '',
+        deviceName: detectDeviceName(),
+      }),
+    });
+  } catch (e) {
+    onboardingError('register', `Network error: ${e.message}`);
+    return;
+  }
+  if (!resp.ok) {
+    const t = await resp.text().catch(() => '');
+    onboardingError('register', `Could not redeem invite (${resp.status}). ${t.slice(0, 200)}`);
+    return;
+  }
+  const data = await resp.json();
+  setCurrentUser({
+    userId: data.userId,
+    deviceId: data.deviceId,
+    authToken: data.authToken,
+    displayName: data.displayName || '',
+    role: 'user',
+  });
+  _onboardingState.needsDisplayName = !!data.needsDisplayName;
+  // Strip ?invite= and ?w= from the URL so a refresh doesn't replay them.
+  try {
+    const cleaned = new URL(location.href);
+    cleaned.searchParams.delete('invite');
+    cleaned.searchParams.delete('w');
+    history.replaceState(null, '', cleaned.toString());
+  } catch {}
+  if (_onboardingState.needsDisplayName) {
+    onboardingShow('displayName');
+  } else {
+    onboardingShow('trakt');
+  }
+}
+
+async function onboardingSaveDisplayName() {
+  const input = document.getElementById('onboarding-display-name-input');
+  if (!input) return;
+  const value = input.value.trim();
+  if (value.length < 1 || value.length > 30) {
+    onboardingError('displayName', 'Pick 1–30 characters.');
+    return;
+  }
+  const resp = await authFetch('/user/settings', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ displayName: value }),
+  });
+  if (!resp.ok) {
+    const t = await resp.text().catch(() => '');
+    onboardingError('displayName', `Server rejected the name: ${t.slice(0, 200)}`);
+    return;
+  }
+  updateCurrentUser({ displayName: value });
+  onboardingShow('trakt');
+}
+
+async function onboardingConnectTrakt() {
+  const codeBox = document.getElementById('onboarding-trakt-code-box');
+  const codeEl = document.getElementById('onboarding-trakt-user-code');
+  const statusEl = document.getElementById('onboarding-trakt-status');
+  const linkEl = document.getElementById('onboarding-trakt-link');
+  // Hit the worker's device-code-init via authFetch (bearer-authed).
+  const initResp = await authFetch('/api/trakt/device-code-init', { method: 'POST' });
+  if (!initResp.ok) {
+    onboardingError('trakt', `Failed to start device code (${initResp.status}).`);
+    return;
+  }
+  const init = await initResp.json();
+  const { user_code, device_code, interval, expires_in, verification_url } = init;
+  if (codeEl) codeEl.textContent = user_code;
+  if (codeBox) codeBox.style.display = '';
+  if (verification_url && linkEl) linkEl.href = verification_url;
+  if (statusEl) statusEl.textContent = 'Waiting for approval at trakt.tv/activate…';
+  const deadline = Date.now() + (expires_in || 600) * 1000;
+  const pollMs = (interval || 5) * 1000;
+  _onboardingState.traktPoll = setInterval(async () => {
+    if (Date.now() > deadline) {
+      clearInterval(_onboardingState.traktPoll);
+      _onboardingState.traktPoll = null;
+      if (codeBox) codeBox.style.display = 'none';
+      onboardingError('trakt', 'Code expired. Tap "Connect Trakt" to try again.');
+      return;
+    }
+    try {
+      const pollResp = await authFetch('/api/trakt/device-code-poll', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ device_code }),
+      });
+      if (pollResp.status === 400) return;
+      if (pollResp.status === 410 || pollResp.status === 418) {
+        clearInterval(_onboardingState.traktPoll);
+        _onboardingState.traktPoll = null;
+        if (codeBox) codeBox.style.display = 'none';
+        onboardingError('trakt', pollResp.status === 418 ? 'Activation denied. Try again.' : 'Code expired. Try again.');
+        return;
+      }
+      if (pollResp.ok) {
+        clearInterval(_onboardingState.traktPoll);
+        _onboardingState.traktPoll = null;
+        onboardingShow('done');
+      }
+    } catch {
+      // Transient — the next poll tries again.
+    }
+  }, pollMs);
+}
+
+function onboardingSkipTrakt() {
+  if (_onboardingState.traktPoll) {
+    clearInterval(_onboardingState.traktPoll);
+    _onboardingState.traktPoll = null;
+  }
+  onboardingShow('done');
+}
+
+function onboardingFinish() {
+  const modal = document.getElementById('onboarding-modal');
+  if (modal && modal.open) modal.close();
+  location.reload();
+}
+
+function wireOnboardingHandlers() {
+  document.getElementById('onboarding-display-name-save')?.addEventListener('click', onboardingSaveDisplayName);
+  document.getElementById('onboarding-trakt-connect')?.addEventListener('click', () => {
+    onboardingConnectTrakt().catch(e => onboardingError('trakt', e.message));
+  });
+  document.getElementById('onboarding-trakt-skip')?.addEventListener('click', onboardingSkipTrakt);
+  document.getElementById('onboarding-done-enter')?.addEventListener('click', onboardingFinish);
+}
+
+// === v9.0.0 — Reconnect-link flow ===
+//
+// Admins issue reconnect codes to users who lost their device. The
+// recipient opens the reconnect URL on a new device → we POST /reconnect
+// with the code, get bearer creds bound to the existing user, and
+// reload. No wizard — they already have an account.
+// === v9.0.0 — QR pairing flows ===
+//
+// Three entry points share the same SSE / confirm plumbing:
+//   1. Blank-device boot (no auth, no invite, no reconnect, no ?p=)
+//      → /pair/begin, render QR, listen for SSE 'paired' event.
+//   2. Phone confirm (URL has ?p=, device is already authed)
+//      → /pair/info to show the target device, /pair/confirm to push.
+//   3. Settings → Add another device (authed phone)
+//      → /pair/begin/owned, render QR for the new device to scan.
+
+async function pairBlankDeviceStart() {
+  // Worker URL has to come from somewhere — for a brand-new TV with
+  // no localStorage and no invite link, we can't know the worker host.
+  // Fall back to prompting the user. For households that distribute
+  // via QR scan from a phone (the common case), the QR contains ?w=.
+  const fromUrl = new URL(location.href).searchParams.get('w');
+  if (fromUrl) setWebhookUrl(fromUrl);
+  let workerUrl = getWebhookUrl();
+  if (!workerUrl) {
+    workerUrl = prompt('Enter your CinéMath worker URL (e.g. https://watchtrack-plex.xyz.workers.dev):');
+    if (!workerUrl) return;
+    setWebhookUrl(workerUrl);
+  }
+  const modal = document.getElementById('pair-blank-modal');
+  const statusEl = document.getElementById('pair-blank-status');
+  const errEl = document.getElementById('pair-blank-error');
+  if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
+  if (modal && !modal.open) modal.showModal();
+  if (statusEl) statusEl.textContent = 'Requesting pair code…';
+  let resp;
+  try {
+    resp = await fetch(`${workerUrl}/pair/begin`, { method: 'POST' });
+  } catch (e) {
+    if (errEl) { errEl.textContent = `Network error: ${e.message}`; errEl.style.display = ''; }
+    return;
+  }
+  if (!resp.ok) {
+    if (errEl) { errEl.textContent = `Server refused (${resp.status}).`; errEl.style.display = ''; }
+    return;
+  }
+  const data = await resp.json();
+  const qrBox = document.getElementById('pair-blank-qr');
+  if (qrBox) renderPairQr(data.qrUrl, qrBox);
+  if (statusEl) statusEl.textContent = 'Scan with a paired device to add this TV.';
+  // Open the SSE stream. If the EventSource fails, the user can also
+  // wait for the session to auto-fulfill via the GET /pair/wait fallback.
+  try {
+    const es = new EventSource(`${workerUrl}/pair/wait?session=${encodeURIComponent(data.pairSessionId)}`);
+    es.addEventListener('paired', (ev) => {
+      try {
+        const payload = JSON.parse(ev.data);
+        setCurrentUser({
+          userId: payload.userId,
+          deviceId: payload.deviceId,
+          authToken: payload.authToken,
+          displayName: payload.displayName,
+          role: 'user',
+        });
+        es.close();
+        location.reload();
+      } catch (e) {
+        console.warn('pair payload parse failed', e);
+      }
+    });
+    es.onerror = () => {
+      if (statusEl) statusEl.textContent = 'Connection dropped. Refresh if the pair stalls.';
+    };
+  } catch (e) {
+    if (errEl) { errEl.textContent = `SSE not supported: ${e.message}`; errEl.style.display = ''; }
+  }
+}
+
+async function pairConfirmStart(pairSessionId) {
+  // The phone is already authed. Show the target device info, then
+  // let the user confirm or cancel.
+  const fromUrl = new URL(location.href).searchParams.get('w');
+  if (fromUrl) setWebhookUrl(fromUrl);
+  const workerUrl = getWebhookUrl();
+  if (!workerUrl) {
+    alert('Worker URL not configured — can\'t confirm pairing.');
+    return;
+  }
+  const modal = document.getElementById('pair-confirm-modal');
+  const detail = document.getElementById('pair-confirm-detail');
+  const errEl = document.getElementById('pair-confirm-error');
+  const statusEl = document.getElementById('pair-confirm-status');
+  if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
+  if (modal && !modal.open) modal.showModal();
+  if (statusEl) statusEl.textContent = 'Looking up pair session…';
+  let resp;
+  try {
+    resp = await fetch(`${workerUrl}/pair/info?session=${encodeURIComponent(pairSessionId)}`);
+  } catch (e) {
+    if (errEl) { errEl.textContent = `Network error: ${e.message}`; errEl.style.display = ''; }
+    return;
+  }
+  if (!resp.ok) {
+    const t = await resp.text().catch(() => '');
+    if (errEl) { errEl.textContent = `Session unavailable (${resp.status}): ${t.slice(0, 200)}`; errEl.style.display = ''; }
+    return;
+  }
+  const info = await resp.json();
+  if (detail) {
+    detail.innerHTML = `
+      <div><strong>Device:</strong> ${info.userAgent || 'Unknown'}</div>
+      <div><strong>IP:</strong> ${info.ip || 'Hidden'}</div>
+      <div><strong>Expires:</strong> ${new Date(info.expiresAt).toLocaleTimeString()}</div>
+    `;
+  }
+  if (statusEl) statusEl.textContent = 'Tap Confirm to grant access.';
+
+  const go = document.getElementById('pair-confirm-go');
+  const cancel = document.getElementById('pair-confirm-cancel');
+  // Bind once — clone+replace to drop any previous listener if this
+  // flow is re-entered (e.g. user backs out and clicks the QR again).
+  const goNew = go?.cloneNode(true);
+  go?.parentNode?.replaceChild(goNew, go);
+  const cancelNew = cancel?.cloneNode(true);
+  cancel?.parentNode?.replaceChild(cancelNew, cancel);
+
+  goNew?.addEventListener('click', async () => {
+    goNew.disabled = true;
+    if (statusEl) statusEl.textContent = 'Confirming…';
+    const r = await authFetch('/pair/confirm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pairSessionId }),
+    });
+    if (!r.ok) {
+      const t = await r.text().catch(() => '');
+      if (errEl) { errEl.textContent = `Confirm refused (${r.status}): ${t.slice(0, 200)}`; errEl.style.display = ''; }
+      goNew.disabled = false;
+      return;
+    }
+    if (statusEl) statusEl.textContent = 'Done. Returning to home…';
+    try {
+      const cleaned = new URL(location.href);
+      cleaned.searchParams.delete('p');
+      cleaned.searchParams.delete('w');
+      history.replaceState(null, '', cleaned.toString());
+    } catch {}
+    setTimeout(() => { modal?.close(); }, 800);
+  });
+  cancelNew?.addEventListener('click', () => {
+    modal?.close();
+    try {
+      const cleaned = new URL(location.href);
+      cleaned.searchParams.delete('p');
+      cleaned.searchParams.delete('w');
+      history.replaceState(null, '', cleaned.toString());
+    } catch {}
+  });
+}
+
+async function pairAddAnotherDevice() {
+  const modal = document.getElementById('pair-add-modal');
+  const statusEl = document.getElementById('pair-add-status');
+  const errEl = document.getElementById('pair-add-error');
+  if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
+  if (modal && !modal.open) modal.showModal();
+  if (statusEl) statusEl.textContent = 'Requesting pair code…';
+  const resp = await authFetch('/pair/begin/owned', { method: 'POST' });
+  if (!resp.ok) {
+    const t = await resp.text().catch(() => '');
+    if (errEl) { errEl.textContent = `Server refused (${resp.status}): ${t.slice(0, 200)}`; errEl.style.display = ''; }
+    return;
+  }
+  const data = await resp.json();
+  const qrBox = document.getElementById('pair-add-qr');
+  if (qrBox) renderPairQr(data.qrUrl, qrBox);
+  if (statusEl) statusEl.textContent = 'Open the URL on the new device and confirm.';
+  // Listen for SSE confirmation so we can update Settings → Devices
+  // immediately after the new device joins.
+  try {
+    const workerUrl = getWebhookUrl();
+    const es = new EventSource(`${workerUrl}/pair/wait?session=${encodeURIComponent(data.pairSessionId)}`);
+    es.addEventListener('paired', () => {
+      es.close();
+      if (statusEl) statusEl.textContent = 'New device paired ✓';
+    });
+  } catch {}
+}
+
+function wirePairingHandlers() {
+  document.getElementById('pair-add-close')?.addEventListener('click', () => {
+    document.getElementById('pair-add-modal')?.close();
+  });
+}
+
+async function reconnectFromUrl(reconnectCode) {
+  const workerFromUrl = new URL(location.href).searchParams.get('w');
+  if (workerFromUrl) setWebhookUrl(workerFromUrl);
+  const url = getWebhookUrl();
+  if (!url) {
+    alert('Reconnect link is missing the worker URL. Ask the admin to regenerate it.');
+    return;
+  }
+  const replacing = confirm('Replace your previous device? (OK = revoke old devices; Cancel = add this as another device alongside.)');
+  let resp;
+  try {
+    resp = await fetch(`${url}/reconnect`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        reconnectCode,
+        deviceId: null,
+        deviceKind: detectDeviceKind(),
+        userAgent: navigator.userAgent || '',
+        deviceName: detectDeviceName(),
+        revokeOthers: replacing,
+      }),
+    });
+  } catch (e) {
+    alert(`Reconnect failed: ${e.message}`);
+    return;
+  }
+  if (!resp.ok) {
+    const t = await resp.text().catch(() => '');
+    alert(`Reconnect refused (${resp.status}): ${t.slice(0, 200)}`);
+    return;
+  }
+  const data = await resp.json();
+  setCurrentUser({
+    userId: data.userId,
+    deviceId: data.deviceId,
+    authToken: data.authToken,
+    displayName: data.displayName || '',
+    role: data.role || 'user',
+  });
+  try {
+    const cleaned = new URL(location.href);
+    cleaned.searchParams.delete('reconnect');
+    cleaned.searchParams.delete('w');
+    history.replaceState(null, '', cleaned.toString());
+  } catch {}
+  location.reload();
+}
+
+// === v9.0.0 — Admin invite management ===
+//
+// Renders only when the current user is admin. Calls /user/me on
+// Settings open to refresh the role flag (also caches in currentUser
+// so subsequent opens don't blink).
+
+async function refreshAdminVisibility() {
+  const section = document.getElementById('admin-invites-section');
+  if (!section) return;
+  let role = getCurrentUser()?.role;
+  if (!role) {
+    try {
+      const resp = await authFetch('/user/me');
+      if (resp.ok) {
+        const me = await resp.json();
+        role = me.role;
+        updateCurrentUser({ role });
+      }
+    } catch {}
+  }
+  section.style.display = role === 'admin' ? '' : 'none';
+}
+
+async function refreshAdminInviteList() {
+  const list = document.getElementById('admin-invite-list');
+  if (!list) return;
+  list.textContent = 'Loading…';
+  const resp = await authFetch('/admin/invites/list');
+  if (!resp.ok) {
+    list.textContent = `Failed to load (${resp.status}).`;
+    return;
+  }
+  const { invites } = await resp.json();
+  list.innerHTML = '';
+  if (!invites?.length) {
+    list.innerHTML = '<li style="opacity:0.7">No invites yet.</li>';
+    return;
+  }
+  for (const inv of invites) {
+    const li = document.createElement('li');
+    li.style.cssText = 'padding:8px 0;border-bottom:1px solid var(--rule)';
+    const status = inv.consumed
+      ? `consumed by user ${inv.consumedBy?.slice(0, 8)}…`
+      : inv.expired ? 'expired' : `expires ${new Date(inv.expiresAt).toLocaleString()}`;
+    li.innerHTML = `
+      <div><strong>${inv.code}</strong> · ${status}</div>
+      <div style="font-size:11px;opacity:0.7">
+        ${inv.suggestedDisplayName ? `for "${inv.suggestedDisplayName}" · ` : ''}
+        ${inv.plexEnabled ? 'plex on · ' : ''}
+        ${new Date(inv.createdAt).toLocaleString()}
+      </div>
+    `;
+    if (!inv.consumed && !inv.expired) {
+      const revoke = document.createElement('button');
+      revoke.className = 'action-btn';
+      revoke.style.cssText = 'margin-top:4px;font-size:11px;padding:4px 8px';
+      revoke.textContent = 'Revoke';
+      revoke.addEventListener('click', async () => {
+        if (!confirm(`Revoke invite ${inv.code}?`)) return;
+        const r = await authFetch(`/admin/invites/${encodeURIComponent(inv.code)}`, { method: 'DELETE' });
+        if (r.ok) refreshAdminInviteList();
+        else alert(`Revoke failed: ${r.status}`);
+      });
+      li.appendChild(revoke);
+    }
+    list.appendChild(li);
+  }
+}
+
+async function adminCreateInvite() {
+  const name = document.getElementById('admin-invite-name')?.value.trim() || null;
+  const expiresInSec = parseInt(document.getElementById('admin-invite-expiry')?.value || '604800', 10);
+  const statusEl = document.getElementById('admin-invite-status');
+  const resultBox = document.getElementById('admin-invite-result');
+  const resultUrl = document.getElementById('admin-invite-result-url');
+  if (statusEl) { statusEl.textContent = 'Creating…'; statusEl.className = 'settings-status'; }
+  if (resultBox) resultBox.style.display = 'none';
+  const resp = await authFetch('/admin/invites/create', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      suggestedDisplayName: name,
+      expiresInSec,
+      plexEnabled: false,
+    }),
+  });
+  if (!resp.ok) {
+    const t = await resp.text().catch(() => '');
+    if (statusEl) { statusEl.textContent = `Failed (${resp.status}): ${t.slice(0, 200)}`; statusEl.className = 'settings-status err'; }
+    return;
+  }
+  const data = await resp.json();
+  if (resultUrl) resultUrl.value = data.url;
+  if (resultBox) resultBox.style.display = '';
+  if (statusEl) { statusEl.textContent = 'Invite ready.'; statusEl.className = 'settings-status ok'; }
+  refreshAdminInviteList();
+}
+
+function wireAdminInviteHandlers() {
+  document.getElementById('admin-invite-create')?.addEventListener('click', () => {
+    adminCreateInvite().catch(e => {
+      const s = document.getElementById('admin-invite-status');
+      if (s) { s.textContent = e.message; s.className = 'settings-status err'; }
+    });
+  });
+  document.getElementById('admin-invite-copy')?.addEventListener('click', () => {
+    const input = document.getElementById('admin-invite-result-url');
+    if (!input) return;
+    input.select();
+    try { navigator.clipboard.writeText(input.value); } catch { document.execCommand('copy'); }
+  });
+}
+
+// === v9.0.0 — Settings → Devices card ===
+
+async function refreshDevicesSection() {
+  const section = document.getElementById('devices-section');
+  const list = document.getElementById('devices-list');
+  if (!section || !list) return;
+  // Only show the card for authenticated v9 users (bearer creds).
+  if (!getCurrentUser()) { section.style.display = 'none'; return; }
+  section.style.display = '';
+  list.textContent = 'Loading…';
+  const resp = await authFetch('/user/me');
+  if (!resp.ok) { list.textContent = `Failed to load (${resp.status}).`; return; }
+  const me = await resp.json();
+  const cur = getCurrentUser();
+  list.innerHTML = '';
+  if (!me.devices?.length) {
+    list.innerHTML = '<li style="opacity:0.7">No devices bound.</li>';
+    return;
+  }
+  for (const d of me.devices) {
+    const li = document.createElement('li');
+    li.style.cssText = 'padding:8px 0;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center;gap:8px';
+    const left = document.createElement('div');
+    left.innerHTML = `
+      <div><strong>${escapeHtml(d.name || d.kind)}</strong>${d.isCurrent ? ' <em style="opacity:0.65">(this device)</em>' : ''}</div>
+      <div style="font-size:11px;opacity:0.7">${d.kind} · ${escapeHtml((d.userAgent || '').slice(0, 50))}${d.lastSeen ? ` · seen ${new Date(d.lastSeen).toLocaleString()}` : ''}</div>
+    `;
+    li.appendChild(left);
+    const actions = document.createElement('div');
+    const rename = document.createElement('button');
+    rename.className = 'action-btn'; rename.textContent = 'Rename';
+    rename.style.cssText = 'font-size:11px;padding:4px 8px;margin-right:4px';
+    rename.addEventListener('click', async () => {
+      const name = prompt('New device name?', d.name);
+      if (!name) return;
+      const r = await authFetch(`/devices/${encodeURIComponent(d.deviceId)}/rename`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      });
+      if (r.ok) refreshDevicesSection();
+      else alert(`Rename failed: ${r.status}`);
+    });
+    actions.appendChild(rename);
+    const revoke = document.createElement('button');
+    revoke.className = 'action-btn'; revoke.textContent = d.isCurrent ? 'Sign out' : 'Revoke';
+    revoke.style.cssText = 'font-size:11px;padding:4px 8px;color:var(--pri-high);border-color:var(--pri-high);background:transparent';
+    revoke.addEventListener('click', async () => {
+      const msg = d.isCurrent ? 'Sign this device out?' : `Revoke "${d.name}"?`;
+      if (!confirm(msg)) return;
+      const r = await authFetch(`/devices/${encodeURIComponent(d.deviceId)}`, { method: 'DELETE' });
+      if (r.ok) {
+        if (d.isCurrent) {
+          setCurrentUser(null);
+          location.reload();
+        } else {
+          refreshDevicesSection();
+        }
+      } else {
+        alert(`Revoke failed: ${r.status}`);
+      }
+    });
+    actions.appendChild(revoke);
+    li.appendChild(actions);
+    list.appendChild(li);
+  }
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+
+function wireDevicesHandlers() {
+  document.getElementById('devices-add')?.addEventListener('click', () => {
+    pairAddAnotherDevice().catch(e => {
+      const s = document.getElementById('devices-status');
+      if (s) { s.textContent = e.message; s.className = 'settings-status err'; }
+    });
+  });
+  document.getElementById('devices-refresh')?.addEventListener('click', () => {
+    refreshDevicesSection();
+  });
+  document.getElementById('devices-signout')?.addEventListener('click', () => {
+    if (!confirm('Sign out of CinéMath on this device?')) return;
+    setCurrentUser(null);
+    location.reload();
+  });
+}
+
 // === Plex webhook bridge (Cloudflare Worker) ===
 const WEBHOOK_URL_KEY = 'watchtrack-webhook-url';
 const WEBHOOK_SECRET_KEY = 'watchtrack-webhook-secret';
@@ -713,7 +1490,13 @@ function getTraktRefreshToken() { return lsGet(TRAKT_REFRESH_TOKEN_KEY) || ''; }
 function setTraktRefreshToken(t){ if (!t) lsDel(TRAKT_REFRESH_TOKEN_KEY); else lsSet(TRAKT_REFRESH_TOKEN_KEY, t); }
 function getTraktUsername()     { return lsGet(TRAKT_USERNAME_KEY) || ''; }
 function setTraktUsername(u)    { if (!u) lsDel(TRAKT_USERNAME_KEY); else lsSet(TRAKT_USERNAME_KEY, u); }
-function isTraktConnected()     { return Boolean(getTraktClientId() && getTraktAccessToken()); }
+function isTraktConnected() {
+  // v8.0.0: post-promote, local Trakt creds are wiped — the Worker holds
+  // them and bootstrapState.trakt tracks the connection state. Fall back
+  // to the legacy local-cred check for pre-promote devices.
+  if (typeof isBootstrapped === 'function' && isBootstrapped() && bootstrapState && bootstrapState.trakt) return true;
+  return Boolean(getTraktClientId() && getTraktAccessToken());
+}
 function isWebhookConfigured() {
   return Boolean(getWebhookUrl() && getWebhookSecret());
 }
@@ -2221,6 +3004,13 @@ function buildTraktMoviePayload(title, year, tab) {
 }
 
 async function traktApiCall(path, method, body, isRetry) {
+  // v8.0.0: once the user has promoted credentials to Cloudflare, every
+  // Trakt operation routes through the Worker. The device never sees the
+  // access token, no direct api.trakt.tv requests, and refresh happens
+  // server-side. Legacy direct path below stays for pre-promote devices.
+  if (isBootstrapped()) {
+    return traktProxyCall(path, method, body);
+  }
   const clientId = getTraktClientId();
   if (!clientId) return { ok: false, status: 0 };
   const headers = {
@@ -2268,7 +3058,24 @@ async function traktRefreshTokens() {
   } catch { return false; }
 }
 
-function traktDisconnect() {
+async function traktDisconnect() {
+  // v8.0.0: when bootstrapped, ask the Worker to clear the D1 row's
+  // trakt_* columns. Fire-and-forget — UI updates regardless.
+  if (typeof isBootstrapped === 'function' && isBootstrapped()) {
+    try {
+      const userId = await getUserId();
+      const url = getWebhookUrl();
+      const secret = getWebhookSecret();
+      if (url && secret && userId) {
+        await fetch(`${url}/api/trakt/disconnect?secret=${encodeURIComponent(secret)}&user=${encodeURIComponent(userId)}`, { method: 'POST' });
+      }
+      bootstrapState.trakt = false;
+      bootstrapState.traktUsername = null;
+      lsSet(BOOTSTRAP_STATE_KEY, JSON.stringify(bootstrapState));
+    } catch (e) {
+      console.warn('Worker trakt disconnect failed:', e);
+    }
+  }
   setTraktAccessToken('');
   setTraktRefreshToken('');
   setTraktUsername('');
@@ -3600,6 +4407,8 @@ function setupModals() {
         btn.textContent = 'Copied!';
         setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
       } catch (e) {
+        const disclosure = document.querySelector('.pair-url-disclosure');
+        if (disclosure) disclosure.open = true;
         const ta = document.getElementById('pair-url');
         ta.focus(); ta.select();
         alert('Clipboard API not available. The URL is selected — use Ctrl+C / Cmd+C.');
@@ -3919,6 +4728,22 @@ function setupModals() {
     updateWebhookStatusLine();
     updateTraktStatusLine();
     updateDisplayModePicker();
+    // v8.0.0: render the promote-button row from cached state, then refresh
+    // from /bootstrap/status async so it reflects any recent server change
+    // (e.g. another device promoted; we want this device to know).
+    if (typeof window.updateBootstrapPromoteRow === 'function') window.updateBootstrapPromoteRow();
+    refreshBootstrapStatus().then(() => {
+      if (typeof window.updateBootstrapPromoteRow === 'function') window.updateBootstrapPromoteRow();
+      // If we just learned we're bootstrapped, wipe the now-stale local secrets.
+      wipeLocalSecretsIfBootstrapped();
+    }).catch(() => {});
+    // v9.0.0: surface the admin invites section iff the current user is admin.
+    // Best-effort role refresh via /user/me; cached value renders immediately.
+    refreshAdminVisibility();
+    refreshDevicesSection().catch(() => {});
+    if (getCurrentUser()?.role === 'admin') {
+      refreshAdminInviteList().catch(() => {});
+    }
     setSettingsView('grid'); // always open at the grid root
     settingsModal.showModal();
   });
@@ -4156,6 +4981,45 @@ function setupModals() {
     }
   });
 
+  // v8.0.0: Promote credentials to Cloudflare. The button is only shown
+  // when the device has worker creds + a Plex token (i.e. it has the
+  // material to promote) AND /bootstrap/status says we haven't yet
+  // promoted. After success, both flags flip and updateBootstrapPromoteRow
+  // collapses the section to a "Credentials live in Cloudflare ✓" notice.
+  window.updateBootstrapPromoteRow = function updateBootstrapPromoteRow() {
+    const row = document.getElementById('bootstrap-promote-row');
+    const okRow = document.getElementById('bootstrap-ok-row');
+    if (!row || !okRow) return;
+    if (isBootstrapped()) {
+      row.style.display = 'none';
+      okRow.style.display = '';
+    } else if (isWebhookConfigured() && getPlexToken()) {
+      row.style.display = '';
+      okRow.style.display = 'none';
+    } else {
+      row.style.display = 'none';
+      okRow.style.display = 'none';
+    }
+  };
+  document.getElementById('bootstrap-promote').addEventListener('click', async () => {
+    const status = document.getElementById('bootstrap-promote-status');
+    const btn = document.getElementById('bootstrap-promote');
+    btn.disabled = true;
+    status.textContent = 'Promoting credentials to Cloudflare…';
+    status.className = 'settings-status';
+    try {
+      const result = await bootstrapPromote();
+      status.textContent = `Promoted ✓ (user_id ${(result.user_id || '').slice(0, 8)}…)`;
+      status.className = 'settings-status ok';
+      window.updateBootstrapPromoteRow();
+      updateTraktStatusLine();
+    } catch (e) {
+      status.textContent = `Promote failed: ${e.message}`;
+      status.className = 'settings-status err';
+      btn.disabled = false;
+    }
+  });
+
   // === Trakt integration ===
   document.getElementById('trakt-client-save').addEventListener('click', () => {
     setTraktClientId(document.getElementById('trakt-client-id').value.trim());
@@ -4166,12 +5030,78 @@ function setupModals() {
   });
 
   document.getElementById('trakt-connect').addEventListener('click', async () => {
-    const clientId = getTraktClientId() || document.getElementById('trakt-client-id').value.trim();
-    const clientSecret = getTraktClientSecret() || document.getElementById('trakt-client-secret').value.trim();
     const status = document.getElementById('trakt-status');
     const codeBlock = document.getElementById('trakt-device-code-block');
     const codeEl = document.getElementById('trakt-user-code');
     const codeStatus = document.getElementById('trakt-code-status');
+
+    // v8.0.0 — bootstrapped path: the Worker holds client_id+secret as
+    // secrets; init+poll the device-code flow through the Worker proxy.
+    // Legacy path below stays intact for pre-promote devices.
+    if (isBootstrapped()) {
+      status.textContent = 'Requesting device code via Worker...';
+      status.className = 'settings-status';
+      const url = getWebhookUrl();
+      const secret = getWebhookSecret();
+      const userId = await getUserId();
+      try {
+        const initResp = await fetch(`${url}/api/trakt/device-code-init?secret=${encodeURIComponent(secret)}`, { method: 'POST' });
+        if (!initResp.ok) {
+          status.textContent = `Worker error: HTTP ${initResp.status} (is TRAKT_CLIENT_ID secret set?)`;
+          status.className = 'settings-status err';
+          return;
+        }
+        const { user_code, device_code, interval, expires_in } = await initResp.json();
+        codeEl.textContent = user_code;
+        codeBlock.style.display = '';
+        codeStatus.textContent = 'Waiting for activation…';
+        status.textContent = '';
+        const deadline = Date.now() + (expires_in || 600) * 1000;
+        const pollInterval = (interval || 5) * 1000;
+        const poll = setInterval(async () => {
+          if (Date.now() > deadline) {
+            clearInterval(poll);
+            codeBlock.style.display = 'none';
+            status.textContent = 'Code expired. Try again.';
+            status.className = 'settings-status err';
+            return;
+          }
+          try {
+            const pollResp = await fetch(`${url}/api/trakt/device-code-poll?secret=${encodeURIComponent(secret)}&user=${encodeURIComponent(userId)}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ device_code }),
+            });
+            if (pollResp.status === 400) return;   // authorization_pending
+            if (pollResp.status === 410 || pollResp.status === 418) {
+              clearInterval(poll);
+              codeBlock.style.display = 'none';
+              status.textContent = pollResp.status === 418 ? 'Activation denied. Try again.' : 'Code expired. Try again.';
+              status.className = 'settings-status err';
+              return;
+            }
+            if (pollResp.ok) {
+              const d = await pollResp.json();
+              clearInterval(poll);
+              codeBlock.style.display = 'none';
+              if (d.username) setTraktUsername(d.username);   // local username cache for display
+              await refreshBootstrapStatus();
+              updateTraktStatusLine();
+            }
+          } catch (e) {
+            // Network blip during poll — let the interval retry until deadline.
+          }
+        }, pollInterval);
+      } catch (e) {
+        status.textContent = `Error: ${e.message}`;
+        status.className = 'settings-status err';
+      }
+      return;
+    }
+
+    // Legacy direct-Trakt flow (pre-v8.0.0 bootstrap).
+    const clientId = getTraktClientId() || document.getElementById('trakt-client-id').value.trim();
+    const clientSecret = getTraktClientSecret() || document.getElementById('trakt-client-secret').value.trim();
     if (!clientId || !clientSecret) {
       status.textContent = 'Enter and save Client ID and Client Secret first.';
       status.className = 'settings-status err';
@@ -4237,8 +5167,10 @@ function setupModals() {
     await traktPullSync();
   });
 
-  document.getElementById('trakt-disconnect').addEventListener('click', () => {
-    traktDisconnect();
+  document.getElementById('trakt-disconnect').addEventListener('click', async () => {
+    const btn = document.getElementById('trakt-disconnect');
+    if (btn) btn.disabled = true;
+    await traktDisconnect();
   });
 
   // === v5.39.0: Streaming-leaving alerts ===
@@ -5792,6 +6724,19 @@ const SYNC_MAX_BYTES = 1024 * 1024 * 2; // 2 MB safety cap (KV value limit is 25
 // subsequent reload's syncOnLaunch checks this flag and skips its
 // auto-pull/overwrite — we already pulled with fill-empty semantics.
 const JUST_PAIRED_KEY = 'watchtrack-just-paired';
+// v8.0.0: Cached user_id (= SHA-256(plex_token) computed server-side at
+// bootstrap). Stored locally so devices don't need the raw Plex token
+// just to authenticate against the Worker's /api/* routes.
+const USER_ID_KEY = 'watchtrack-user-id';
+// v8.0.0: Cached `/bootstrap/status` response. Refreshed on every app
+// init via refreshBootstrapStatus(). Drives whether Trakt/Plex calls
+// route through the Worker proxy or use the legacy direct path.
+const BOOTSTRAP_STATE_KEY = 'watchtrack-bootstrap-state';
+let bootstrapState = { bootstrapped: false, plex: false, trakt: false, traktUsername: null };
+try {
+  const cached = lsGet(BOOTSTRAP_STATE_KEY);
+  if (cached) bootstrapState = JSON.parse(cached);
+} catch {}
 let syncDirty = false;
 let syncDebounceTimer = null;
 let syncBootstrapPromise = null;
@@ -6170,8 +7115,205 @@ async function pullFillFromKV() {
     if (merged > 0) lsSet(STORAGE_KEY, JSON.stringify(state));
   }
 
-  // Flag for the post-reload syncOnLaunch to skip its overwrite-pull.
-  lsSet(JUST_PAIRED_KEY, '1');
+}
+
+// ════════════════════════════════════════════════════════════════════
+// === v8.0.0 — Credential vault client helpers ===
+// ════════════════════════════════════════════════════════════════════
+
+// Cached user_id (= SHA-256(plex_token)). Prefer the cached value so we
+// can authenticate against the Worker even after the local Plex token
+// gets wiped post-promote. Falls back to computing from the Plex token
+// if the cache is empty (legacy / pre-bootstrap).
+async function getUserId() {
+  const cached = lsGet(USER_ID_KEY);
+  if (cached) return cached;
+  const computed = await getUserHash();   // existing helper at app.js:5812
+  if (computed) lsSet(USER_ID_KEY, computed);
+  return computed;
+}
+
+function isBootstrapped() {
+  return !!(bootstrapState && bootstrapState.bootstrapped);
+}
+
+// Refresh the cached /bootstrap/status payload. Called on init and after
+// the promote button succeeds. Stores the result in localStorage so the
+// in-memory `bootstrapState` survives reloads with a sensible default.
+async function refreshBootstrapStatus() {
+  if (!isWebhookConfigured()) return null;
+  const userId = await getUserId();
+  if (!userId) return null;
+  try {
+    const url = `${getWebhookUrl()}/bootstrap/status?user=${encodeURIComponent(userId)}&secret=${encodeURIComponent(getWebhookSecret())}`;
+    const resp = await fetch(url);
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    bootstrapState = {
+      bootstrapped: !!data.bootstrapped,
+      plex: !!data.plex,
+      trakt: !!data.trakt,
+      traktUsername: data.traktUsername || null,
+    };
+    lsSet(BOOTSTRAP_STATE_KEY, JSON.stringify(bootstrapState));
+    return bootstrapState;
+  } catch (e) {
+    console.warn('bootstrap/status failed:', e);
+    return null;
+  }
+}
+
+// One-time promote: collect every local cred and POST to /bootstrap/credentials.
+// On success the Worker has the secrets + D1 row; the device's local Plex/Trakt
+// secrets become redundant and we wipe them via wipeLocalSecretsIfBootstrapped().
+async function bootstrapPromote() {
+  if (!isWebhookConfigured()) throw new Error('Worker URL and secret must be configured first.');
+  const plexToken = getPlexToken();
+  if (!plexToken) throw new Error('Plex token required (it derives your user_id).');
+  const body = {
+    secret: getWebhookSecret(),
+    plexToken,
+    plexServerUrl: getPlexServerUrl() || null,
+    plexClientId: getPlexClientId() || null,
+    traktClientId: getTraktClientId() || null,
+    traktClientSecret: getTraktClientSecret() || null,
+    traktAccessToken: getTraktAccessToken() || null,
+    traktRefreshToken: getTraktRefreshToken() || null,
+    traktUsername: getTraktUsername() || null,
+    streamingRegion: getStreamingRegion() || null,
+    mySubscriptions: getMySubscriptions() || null,
+  };
+  const resp = await fetch(`${getWebhookUrl()}/bootstrap/credentials`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await resp.json().catch(() => ({}));
+  if (!resp.ok || !data.success) {
+    throw new Error(data.error || `HTTP ${resp.status}`);
+  }
+  lsSet(USER_ID_KEY, data.user_id);
+  await refreshBootstrapStatus();
+  wipeLocalSecretsIfBootstrapped();
+  return data;
+}
+
+// Idempotent. Once bootstrapped, the device doesn't need to hold the raw
+// secrets locally — the Worker handles every Plex/Trakt API call. Wipe:
+//   - PLEX_TOKEN_KEY (Worker secret now holds it)
+//   - TRAKT_CLIENT_ID_KEY, TRAKT_CLIENT_SECRET_KEY (Worker secrets)
+//   - TRAKT_ACCESS_TOKEN_KEY, TRAKT_REFRESH_TOKEN_KEY (D1 users row)
+// Keep:
+//   - PLEX_SERVER_URL_KEY (used for plex:// deep link construction client-side)
+//   - PLEX_CLIENT_ID_KEY (same)
+//   - TRAKT_USERNAME_KEY (display name; not a secret)
+//   - WEBHOOK_URL_KEY, WEBHOOK_SECRET_KEY (talk to Worker)
+//   - DISPLAY_MODE_KEY (per-device)
+function wipeLocalSecretsIfBootstrapped() {
+  if (!isBootstrapped()) return;
+  lsDel(PLEX_TOKEN_KEY);
+  lsDel(TRAKT_CLIENT_ID_KEY);
+  lsDel(TRAKT_CLIENT_SECRET_KEY);
+  lsDel(TRAKT_ACCESS_TOKEN_KEY);
+  lsDel(TRAKT_REFRESH_TOKEN_KEY);
+}
+
+// Trakt path → Worker proxy translator. When bootstrapped, traktApiCall()
+// delegates here. Maps the existing api.trakt.tv paths to the Worker's
+// /api/trakt/* routes, translating Trakt's body shapes to the Worker's
+// simpler {tmdbId, type, ...} shape for POSTs. GETs pass through with a
+// type=movies|shows query param. Unknown paths return { ok:false } so
+// the caller can fall through gracefully.
+async function traktProxyCall(traktPath, method, body) {
+  const userId = await getUserId();
+  const url = getWebhookUrl();
+  const secret = getWebhookSecret();
+  if (!url || !secret || !userId) return { ok: false, status: 0, data: {} };
+  const auth = `secret=${encodeURIComponent(secret)}&user=${encodeURIComponent(userId)}`;
+  method = (method || 'GET').toUpperCase();
+
+  // Helper: POST one Trakt-shaped item array through a Worker route that
+  // accepts {tmdbId, type, ...} per call. Returns the worst-case ok flag.
+  async function postEachItem(workerPath, items, type, extra = {}) {
+    if (!items || !items.length) return { ok: true, status: 200, data: {} };
+    const results = await Promise.all(items.map(item => {
+      const tmdbId = item?.ids?.tmdb;
+      if (!tmdbId) return { ok: false };
+      const payload = {
+        tmdbId, type,
+        title: item.title || null,
+        year: item.year || null,
+        ...extra,
+      };
+      if (item.watched_at) payload.watchedTs = new Date(item.watched_at).getTime();
+      if (typeof item.rating === 'number') payload.rating = item.rating;
+      return fetch(`${url}${workerPath}?${auth}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }).then(r => ({ ok: r.ok, status: r.status }));
+    }));
+    return { ok: results.every(r => r.ok), status: 200, data: {} };
+  }
+
+  if (method === 'POST') {
+    const movies = body?.movies || [];
+    const shows = body?.shows || [];
+    if (traktPath === '/sync/history') {
+      const r1 = await postEachItem('/api/trakt/scrobble', movies, 'movie');
+      const r2 = await postEachItem('/api/trakt/scrobble', shows, 'show');
+      return { ok: r1.ok && r2.ok, status: 200, data: {} };
+    }
+    if (traktPath === '/sync/history/remove') {
+      const r1 = await postEachItem('/api/trakt/unwatch', movies, 'movie');
+      const r2 = await postEachItem('/api/trakt/unwatch', shows, 'show');
+      return { ok: r1.ok && r2.ok, status: 200, data: {} };
+    }
+    if (traktPath === '/sync/ratings') {
+      const r1 = await postEachItem('/api/trakt/rate', movies, 'movie');
+      const r2 = await postEachItem('/api/trakt/rate', shows, 'show');
+      return { ok: r1.ok && r2.ok, status: 200, data: {} };
+    }
+    if (traktPath === '/sync/ratings/remove') {
+      const r1 = await postEachItem('/api/trakt/unrate', movies, 'movie');
+      const r2 = await postEachItem('/api/trakt/unrate', shows, 'show');
+      return { ok: r1.ok && r2.ok, status: 200, data: {} };
+    }
+    if (traktPath === '/sync/watchlist') {
+      const r1 = await postEachItem('/api/trakt/watchlist-add', movies, 'movie');
+      const r2 = await postEachItem('/api/trakt/watchlist-add', shows, 'show');
+      return { ok: r1.ok && r2.ok, status: 200, data: {} };
+    }
+  }
+
+  if (method === 'GET') {
+    // /sync/history/movies?limit=N  -or-  /sync/history/shows?limit=N
+    let m = /^\/sync\/history\/(movies|shows)/.exec(traktPath);
+    if (m) {
+      const type = m[1];
+      const limitMatch = /limit=(\d+)/.exec(traktPath);
+      const limit = limitMatch ? limitMatch[1] : '10000';
+      const r = await fetch(`${url}/api/trakt/history?${auth}&type=${type}&limit=${limit}`);
+      const data = r.ok ? await r.json().catch(() => ([])) : [];
+      return { ok: r.ok, status: r.status, data };
+    }
+    m = /^\/sync\/ratings\/(movies|shows)/.exec(traktPath);
+    if (m) {
+      const type = m[1];
+      const r = await fetch(`${url}/api/trakt/ratings?${auth}&type=${type}`);
+      const data = r.ok ? await r.json().catch(() => ([])) : [];
+      return { ok: r.ok, status: r.status, data };
+    }
+    if (traktPath === '/users/me') {
+      const r = await fetch(`${url}/api/trakt/me?${auth}`);
+      const data = r.ok ? await r.json().catch(() => ({})) : {};
+      return { ok: r.ok, status: r.status, data };
+    }
+  }
+
+  // Unknown path — log and signal failure so the caller can decide.
+  console.warn('[traktProxyCall] unhandled', method, traktPath);
+  return { ok: false, status: 0, data: {} };
 }
 
 function syncMarkDirty() {
@@ -6295,6 +7437,9 @@ function applyConfigFromUrl() {
   // The async IIFE here means we keep the synchronous truthy return for
   // the bootstrap caller at app.js:8383, which short-circuits the rest
   // of init before our reload fires.
+  // Set the flag before the network call so syncOnLaunch always skips its
+  // overwrite pull after a QR pair, even if pullFillFromKV() exits early.
+  lsSet(JUST_PAIRED_KEY, '1');
   (async () => {
     try { await pullFillFromKV(); }
     catch (e) { console.warn('pull-fill on pair failed:', e); }
@@ -8507,6 +9652,38 @@ function triageAction(act) {
   // with stale config (the reload will run init fresh).
   if (applyConfigFromUrl()) return;
 
+  // v9.0.0: invite-link / reconnect-link / pair-confirm boot paths take
+  // precedence over normal init. We need hydrate() first so
+  // getWebhookUrl() can read the saved worker URL from IDB.
+  const _urlParams = new URL(location.href).searchParams;
+  const _inviteCode = _urlParams.get('invite');
+  const _reconnectCode = _urlParams.get('reconnect');
+  const _pairSession = _urlParams.get('p');
+  if (_inviteCode || _reconnectCode || _pairSession) {
+    await hydrate();
+    wireOnboardingHandlers();
+    wirePairingHandlers();
+    if (_pairSession && getCurrentUser()) {
+      // Phone confirming a new device — handle and continue normal boot
+      // behind the confirm modal so they can dismiss back to home.
+      pairConfirmStart(_pairSession);
+      // Fall through to normal boot so the home page renders behind the modal.
+    } else if (!getCurrentUser()) {
+      if (_inviteCode) {
+        onboardingStartFromInvite(_inviteCode);
+        return;
+      }
+      if (_reconnectCode) {
+        reconnectFromUrl(_reconnectCode);
+        return;
+      }
+      if (_pairSession) {
+        // Unauthenticated device hit a ?p= URL — they're scanning their
+        // own QR, which can't help. Fall through to blank-device pairing.
+      }
+    }
+  }
+
   await loadCatalogManifest();
   // v6.0.0: hydrate the in-memory KV cache from IndexedDB before any
   // synchronous lsGet runs. Includes the one-shot pre-v6 migration that
@@ -8514,6 +9691,26 @@ function triageAction(act) {
   // localStorage into IDB. After this returns, every persisted key is
   // available synchronously via lsGet/lsSet/lsDel.
   await hydrate();
+  // v9.0.0: opportunistic single-shot upgrade from the v5-era shared
+  // secret to per-device bearer auth. attemptLegacyMigration is a no-op
+  // when there's nothing to migrate (already on bearer, or no webhook
+  // secret stored locally, or the worker is pre-v9). On success it
+  // populates getCurrentUser() and we continue boot with the new creds.
+  try {
+    if (await attemptLegacyMigration()) {
+      console.log('v9 migration completed; running as bearer user', getCurrentUser()?.userId);
+    }
+  } catch (e) {
+    console.warn('legacy migration attempt failed (non-fatal)', e);
+  }
+  // v9.0.0: blank-device pairing. If we still have no auth credentials
+  // and no legacy webhook secret to migrate, this device has nothing
+  // to do. Show the pair-this-device QR so a paired phone can adopt it.
+  if (!getCurrentUser() && !getWebhookSecret()) {
+    wirePairingHandlers();
+    pairBlankDeviceStart();
+    return;
+  }
   loadActiveTab();
   // Legacy v5.41 'state-snapshot' fallback: if the cache somehow lacks
   // STORAGE_KEY but the v5.41 mirror snapshot exists, replay it.
@@ -8526,6 +9723,13 @@ function triageAction(act) {
   // settings/state than our last-push timestamp, applies them silently.
   // syncOnLaunch() short-circuits if Plex/Worker aren't configured.
   await syncOnLaunch();
+  // v8.0.0: refresh credential-vault status so Settings knows whether to
+  // show the Promote button or "Credentials live in Cloudflare ✓". Also
+  // wipes local Plex/Trakt secrets if another device has already promoted
+  // (this device becomes a thin client automatically). Fire-and-forget so
+  // it doesn't block init; cached state from localStorage drives the UI
+  // in the meantime.
+  refreshBootstrapStatus().then(() => wipeLocalSecretsIfBootstrapped()).catch(() => {});
   await loadCatalogs();
   catalogEnrichmentIdx = loadCatalogEnrichment();
   // Fetch + merge promotions (cross-device persistence)
@@ -8536,6 +9740,15 @@ function triageAction(act) {
   applyDisplayMode();
   buildTabs();
   setupModals();
+  // v9.0.0: invite/admin/devices/pairing handlers must attach once before
+  // Settings opens. Onboarding handlers are usually wired in the
+  // ?invite= boot branch, but a user who finishes onboarding then
+  // closes the modal can still open Settings — having the listeners
+  // attached here is harmless.
+  wireAdminInviteHandlers();
+  wireOnboardingHandlers();
+  wireDevicesHandlers();
+  wirePairingHandlers();
   enableSwipeCollapse(); // v7.6.0: comment out to disable swipe-to-collapse
   buildCategoryFilters();
   buildFilters();

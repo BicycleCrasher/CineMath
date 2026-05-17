@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Install CinéMath</title>
+  <style>
+    :root { color-scheme: dark; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+           background: #0e0d0b; color: #f0eee9; margin: 0; padding: 24px;
+           line-height: 1.5; max-width: 720px; margin: 0 auto; }
+    h1 { font-size: 1.6rem; margin: 0 0 8px; }
+    h2 { font-size: 1.1rem; margin-top: 32px; border-bottom: 1px solid #333; padding-bottom: 6px; }
+    .lead { opacity: 0.75; margin-bottom: 24px; }
+    ol { padding-left: 22px; }
+    li { margin-bottom: 10px; }
+    code { background: #1a1916; padding: 1px 6px; border-radius: 3px; font-size: 0.9em; }
+    .pill { display: inline-block; padding: 2px 10px; border: 1px solid #444; border-radius: 99px;
+            font-size: 0.85em; margin-right: 6px; }
+    .cta { display: inline-block; background: #e2b13a; color: #0e0d0b; padding: 10px 18px;
+           border-radius: 6px; text-decoration: none; font-weight: 600; margin: 6px 0; }
+    .footnote { opacity: 0.6; font-size: 0.85em; margin-top: 32px; }
+  </style>
+</head>
+<body>
+  <h1>Install CinéMath</h1>
+  <p class="lead">Two paths: tap the magic link your admin sent (phone) or sideload the APK (TV).</p>
+
+  <h2><span class="pill">Phone</span> Install via magic link</h2>
+  <ol>
+    <li>Open the magic invite link your admin sent (looks like
+        <code>bicyclecrasher.github.io/WatchTrack/?invite=…</code>).</li>
+    <li>Tap <strong>Install</strong> when your browser prompts to add CinéMath to your Home Screen.</li>
+    <li>Complete the in-app setup: pick a display name, then (optionally) connect Trakt.</li>
+  </ol>
+  <p>That's it. The Home Screen icon launches CinéMath as a standalone app.</p>
+
+  <h2><span class="pill">Android TV / Fire TV</span> Sideload the APK</h2>
+  <p>Sony Bravia Google TV and Fire TV don't accept Home Screen installs. Use the signed APK instead.</p>
+  <ol>
+    <li>On your TV: <strong>Settings → Security &amp; Restrictions → Unknown Sources</strong>, toggle on
+        for your TV's web browser or file manager.</li>
+    <li>Open the TV's web browser, navigate to
+        <code>bicyclecrasher.github.io/WatchTrack/install.apk</code>.
+        The browser downloads the latest signed APK from GitHub Releases.</li>
+    <li>Open the downloaded APK and tap <strong>Install</strong>.</li>
+    <li>Launch CinéMath from the TV's app drawer. The "Pair this device" screen appears with a QR.</li>
+    <li>On your already-paired phone, scan the QR. Confirm in the popup. The TV reloads as your account.</li>
+  </ol>
+  <p><a class="cta" href="install.apk">Download latest APK →</a></p>
+
+  <h2>Replacing a lost device</h2>
+  <p>If you've lost access to your old phone, ask your admin for a <strong>reconnect link</strong>.
+     Open it on a new device, confirm "replacing my old phone," and your watchlist + ratings come right back.</p>
+
+  <p class="footnote">Source: <a href="https://github.com/BicycleCrasher" style="color:#e2b13a">github.com/BicycleCrasher</a>.
+     The app itself lives at <a href="./" style="color:#e2b13a">bicyclecrasher.github.io/WatchTrack/</a>.</p>
+</body>
+</html>

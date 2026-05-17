@@ -466,6 +466,28 @@
         <button class="action-btn" id="webhook-pair">Pair Another Device →</button>
       </div>
       <p class="settings-status" id="webhook-status">Not configured.</p>
+      <!-- v8.0.0: Promote credentials to Cloudflare. Pushes the device's
+           local Plex token + Trakt credentials into Worker secrets + a D1
+           users row. After this, all devices get those values from
+           Cloudflare instead of holding their own copies. One-time per
+           user; the button hides itself once /bootstrap/status reports
+           bootstrapped=true. -->
+      <div class="settings-row" id="bootstrap-promote-row" style="margin-top:14px;border-top:1px solid var(--rule);padding-top:12px;display:none">
+        <label>Promote credentials to Cloudflare</label>
+        <p class="settings-help" style="font-size:11px">
+          Pushes your Plex token and Trakt credentials into encrypted Worker
+          secrets + a D1 users row. After this, every device gets those
+          values from Cloudflare — no more re-entering on each new device,
+          and Trakt OAuth refresh happens server-side. One-time action.
+          Requires <code>ADMIN_API_TOKEN</code> and <code>CF_ACCOUNT_ID</code>
+          Worker secrets to be set in the Cloudflare dashboard first.
+        </p>
+        <button class="action-btn" id="bootstrap-promote">Promote ↑</button>
+        <p class="settings-status" id="bootstrap-promote-status"></p>
+      </div>
+      <div class="settings-row" id="bootstrap-ok-row" style="margin-top:14px;border-top:1px solid var(--rule);padding-top:12px;display:none">
+        <p class="settings-status ok">Credentials live in Cloudflare ✓ — this device is a thin client.</p>
+      </div>
       <div class="settings-row" style="margin-top:14px;border-top:1px solid var(--rule);padding-top:12px">
         <label>Receive setup from another device</label>
         <textarea class="modal-input" id="pair-receive-input" rows="3" placeholder="Paste the pair URL (or just the base64 payload) generated on another device" autocomplete="off"></textarea>
@@ -498,6 +520,55 @@
         <p class="settings-status" id="trakt-code-status">Waiting for activation…</p>
       </div>
       <p class="settings-status" id="trakt-status">Not connected.</p>
+    </div>
+    <!-- v9.0.0: Devices card. Shows every device bound to the current
+         user, with rename/revoke per row. The "Add another device"
+         button kicks off owned-pair QR flow so the user can scan from
+         a fresh device. Visible to every authenticated user. -->
+    <div class="settings-section" data-section="devices" id="devices-section" style="display:none">
+      <h4>Devices</h4>
+      <p class="settings-help">Each device bound to your account is listed below. Revoking a device signs it out immediately.</p>
+      <ul id="devices-list" style="list-style:none;padding:0;margin:0 0 12px 0"></ul>
+      <div class="settings-row">
+        <button class="action-btn" id="devices-add">Add another device</button>
+        <button class="action-btn" id="devices-refresh">Refresh</button>
+        <button class="action-btn" id="devices-signout" style="background:transparent;border-color:var(--pri-high);color:var(--pri-high)">Sign out</button>
+      </div>
+      <p class="settings-status" id="devices-status"></p>
+    </div>
+    <!-- v9.0.0: Admin-only invite management. Hidden by app.js when the
+         current user's role !== 'admin'. The Settings → Admin section
+         keeps household-level controls out of the regular user flow. -->
+    <div class="settings-section" data-section="admin-invites" id="admin-invites-section" style="display:none">
+      <h4>Admin · Invites</h4>
+      <p class="settings-help">Each invite is a single-use magic link. Send it to a household member; they tap it and finish setup automatically. Defaults to expire in 7 days.</p>
+      <div class="settings-row">
+        <label>Display name suggestion (optional)</label>
+        <input type="text" class="modal-input" id="admin-invite-name" maxlength="30" autocomplete="off" placeholder="e.g. Dad — leaves blank for the user to choose">
+      </div>
+      <div class="settings-row">
+        <label>Expires in</label>
+        <select class="modal-input" id="admin-invite-expiry">
+          <option value="86400">1 day</option>
+          <option value="259200">3 days</option>
+          <option value="604800" selected>7 days</option>
+          <option value="1209600">14 days</option>
+          <option value="2592000">30 days</option>
+        </select>
+      </div>
+      <div class="settings-row">
+        <button class="action-btn" id="admin-invite-create">Generate invite</button>
+      </div>
+      <p class="settings-status" id="admin-invite-status"></p>
+      <div id="admin-invite-result" style="display:none;margin-top:12px;padding:10px;border:1px solid var(--rule);border-radius:6px">
+        <p class="settings-help">Share this URL with the new household member:</p>
+        <input type="text" class="modal-input" id="admin-invite-result-url" readonly>
+        <div class="settings-row">
+          <button class="action-btn" id="admin-invite-copy">Copy URL</button>
+        </div>
+      </div>
+      <h5 style="margin-top:16px">Current invites</h5>
+      <ul id="admin-invite-list" style="list-style:none;padding:0;margin:0;font-size:13px"></ul>
     </div>
     <div class="settings-section" data-section="alerts">
       <h4>Streaming-leaving alerts</h4>
@@ -542,6 +613,98 @@
     <div class="modal-actions">
       <button class="action-btn" id="reset-confirm-go">Reset tab</button>
       <button class="action-btn" id="reset-confirm-cancel">Cancel</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- v9.0.0: Blank-device QR pairing screen. Shown full-modal on first
+     boot of a device that has no stored auth, invite, or reconnect.
+     The QR encodes a /p/{pairSessionId} URL the user scans on an
+     existing paired device. SSE drains the session and reloads. -->
+<dialog class="modal" id="pair-blank-modal">
+  <div class="modal-content" style="text-align:center">
+    <h3>Pair this device</h3>
+    <p class="settings-help" id="pair-blank-status">Generating pair code…</p>
+    <div id="pair-blank-qr" style="margin:20px auto;max-width:300px"></div>
+    <p class="settings-help">Open CinéMath on a paired phone or computer, then scan this code.</p>
+    <p class="settings-help" id="pair-blank-error" style="color:var(--pri-high);display:none"></p>
+  </div>
+</dialog>
+
+<!-- v9.0.0: Phone-side confirmation card. Shown when the URL has ?p=
+     and the device is already authenticated; lets the user verify the
+     target device's user-agent before granting it access. -->
+<dialog class="modal" id="pair-confirm-modal">
+  <div class="modal-content">
+    <h3>Pair a new device?</h3>
+    <p class="settings-help">A device wants to join your CinéMath account. Confirm to grant access.</p>
+    <div id="pair-confirm-detail" style="margin:12px 0;padding:10px;border:1px solid var(--rule);border-radius:6px;font-size:13px"></div>
+    <p class="settings-help" id="pair-confirm-status"></p>
+    <p class="settings-help" id="pair-confirm-error" style="color:var(--pri-high);display:none"></p>
+    <div class="modal-actions">
+      <button class="action-btn" id="pair-confirm-go">Confirm</button>
+      <button class="action-btn" id="pair-confirm-cancel">Cancel</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- v9.0.0: "Add another device" QR display, used from Settings →
+     Devices on an already-authed phone. Renders a QR encoding a
+     pairSessionId reserved for the caller's user (so a stranger
+     scanning it can't hijack the session). -->
+<dialog class="modal" id="pair-add-modal">
+  <div class="modal-content" style="text-align:center">
+    <h3>Add another device</h3>
+    <p class="settings-help" id="pair-add-status">Generating pair code…</p>
+    <div id="pair-add-qr" style="margin:20px auto;max-width:300px"></div>
+    <p class="settings-help">Open the URL on your new device. This code expires in 5 minutes.</p>
+    <p class="settings-help" id="pair-add-error" style="color:var(--pri-high);display:none"></p>
+    <div class="modal-actions">
+      <button class="action-btn" id="pair-add-close">Done</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- v9.0.0: Onboarding wizard for invite-link registration. Three
+     vertical sub-views (register / displayName / trakt) toggled by
+     [data-step]. Stays open until step='done' or the user closes it
+     and registration was already saved. -->
+<dialog class="modal" id="onboarding-modal">
+  <div class="modal-content">
+    <div id="onboarding-step-register" data-step="register">
+      <h3>Welcome to CinéMath</h3>
+      <p class="settings-help" id="onboarding-register-status">Setting up your account…</p>
+      <p class="settings-help" id="onboarding-register-error" style="color:var(--pri-high);display:none"></p>
+    </div>
+    <div id="onboarding-step-displayName" data-step="displayName" style="display:none">
+      <h3>Pick a display name</h3>
+      <p class="settings-help">This is how you'll appear in the household. 1–30 characters.</p>
+      <input type="text" class="modal-input" id="onboarding-display-name-input" maxlength="30" autocomplete="off" placeholder="e.g. Dad">
+      <p class="settings-help" id="onboarding-display-name-error" style="color:var(--pri-high);display:none"></p>
+      <div class="modal-actions">
+        <button class="action-btn" id="onboarding-display-name-save">Continue</button>
+      </div>
+    </div>
+    <div id="onboarding-step-trakt" data-step="trakt" style="display:none">
+      <h3>Connect Trakt (optional)</h3>
+      <p class="settings-help">Trakt syncs your watchlist, ratings, and history. You can skip and connect later from Settings.</p>
+      <div id="onboarding-trakt-code-box" style="display:none">
+        <p class="settings-help">Enter this code at <a id="onboarding-trakt-link" href="https://trakt.tv/activate" target="_blank" rel="noopener">trakt.tv/activate</a>:</p>
+        <p style="font-family:monospace;font-size:2rem;letter-spacing:0.15em;text-align:center;margin:1rem 0" id="onboarding-trakt-user-code">····-····</p>
+        <p class="settings-help" id="onboarding-trakt-status">Waiting for approval…</p>
+      </div>
+      <p class="settings-help" id="onboarding-trakt-error" style="color:var(--pri-high);display:none"></p>
+      <div class="modal-actions">
+        <button class="action-btn" id="onboarding-trakt-connect">Connect Trakt</button>
+        <button class="action-btn" id="onboarding-trakt-skip">Skip for now</button>
+      </div>
+    </div>
+    <div id="onboarding-step-done" data-step="done" style="display:none">
+      <h3>You're all set</h3>
+      <p class="settings-help" id="onboarding-done-message">Welcome to CinéMath. Tap to enter.</p>
+      <div class="modal-actions">
+        <button class="action-btn" id="onboarding-done-enter">Enter</button>
+      </div>
     </div>
   </div>
 </dialog>

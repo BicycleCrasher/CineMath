@@ -41,7 +41,40 @@ echo ""
 mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
-if [ ! -f "twa-manifest.json" ]; then
+# v9.0.0: CI_MODE=true bypasses bubblewrap's interactive prompts by
+# writing a pre-populated twa-manifest.json and letting bubblewrap
+# pick it up. Keystore + passwords come from env vars that the CI
+# release workflow injects from GitHub secrets.
+if [ "${CI_MODE:-false}" = "true" ]; then
+  if [ ! -f "twa-manifest.json" ]; then
+    cat > twa-manifest.json <<MANIFEST
+{
+  "packageId": "$PACKAGE_NAME",
+  "host": "bicyclecrasher.github.io",
+  "name": "CinéMath",
+  "launcherName": "CinéMath",
+  "themeColor": "#0e0d0b",
+  "navigationColor": "#0e0d0b",
+  "backgroundColor": "#0e0d0b",
+  "enableNotifications": true,
+  "startUrl": "/WatchTrack/",
+  "iconUrl": "https://bicyclecrasher.github.io/WatchTrack/icons/icon-512.png",
+  "maskableIconUrl": "https://bicyclecrasher.github.io/WatchTrack/icons/icon-512.png",
+  "appVersionName": "${GITHUB_REF_NAME:-9.0.0}",
+  "appVersionCode": ${GITHUB_RUN_NUMBER:-1},
+  "signingKey": {
+    "path": "$HOME/.android/release.keystore",
+    "alias": "${KEY_ALIAS:-android}"
+  },
+  "fallbackType": "customtabs",
+  "features": {},
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli"
+}
+MANIFEST
+    bubblewrap init --manifest="$MANIFEST_URL" --directory="$BUILD_DIR" --skipPwaValidation 2>/dev/null || true
+  fi
+elif [ ! -f "twa-manifest.json" ]; then
   bubblewrap init --manifest="$MANIFEST_URL"
 else
   echo "      twa-manifest.json already exists — skipping init."
@@ -120,7 +153,14 @@ fi
 # --- Step 5: Build ---
 echo ""
 echo "[5/5] Building APK..."
-bubblewrap build
+if [ "${CI_MODE:-false}" = "true" ]; then
+  # Non-interactive: feed keystore passwords on stdin. Bubblewrap's
+  # `build` command prompts for "Password for the Key Store" then
+  # "Password for the Key" — two answers separated by newline.
+  printf "%s\n%s\n" "${KEYSTORE_PASS:-}" "${KEY_PASS:-}" | bubblewrap build --skipPwaValidation
+else
+  bubblewrap build
+fi
 
 echo ""
 echo "=== Build complete ==="

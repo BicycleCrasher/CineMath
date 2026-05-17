@@ -50,11 +50,38 @@ const TMDB_BASE = 'https://api.themoviedb.org/3';
 const METADATA_TTL = 30 * 24 * 60 * 60;  // 30 days
 const SYNC_TTL = 365 * 24 * 60 * 60;     // 1 year — auto-GC dormant users
 
+// v9.0.0 — CORS lockdown. Pre-v9 used '*' which let any browser origin
+// read responses. v9 narrows to a single production origin and allows
+// the new auth headers. Server-to-server callers (Plex webhook, curl,
+// background CF cron) don't send Origin and aren't affected.
+//
+// `cors` stays a const because 80+ call sites spread it as
+// `{ ...cors, ... }`; corsHeaders(request) is the request-aware
+// equivalent and is used by the OPTIONS preflight handler so dev
+// origins (localhost) work even though they're not the production
+// default.
+const ALLOWED_ORIGINS = new Set([
+  'https://bicyclecrasher.github.io',
+  'http://localhost:8000',
+  'http://localhost:5173',
+  'http://localhost:8787',
+]);
+const CORS_DEFAULT_ORIGIN = 'https://bicyclecrasher.github.io';
 const cors = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': CORS_DEFAULT_ORIGIN,
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Device-Id',
+  'Vary': 'Origin',
 };
+function corsHeaders(request) {
+  const origin = request?.headers?.get?.('Origin') || '';
+  return {
+    'Access-Control-Allow-Origin': ALLOWED_ORIGINS.has(origin) ? origin : CORS_DEFAULT_ORIGIN,
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Device-Id',
+    'Vary': 'Origin',
+  };
+}
 
 function jsonResponse(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
@@ -75,6 +102,449 @@ function normalizeTitle(title) {
 async function checkSecret(env, providedSecret) {
   const real = await env.CONFIG.get('secret');
   return real && providedSecret === real;
+}
+
+// === v8.0.0 — Credential vault helpers ===
+//
+// SHA-256(plex_token) → user_id. Backward-compatible with the v5.4 sync
+// scheme that uses the same hash as the SYNC_KV key. Stored in D1 users
+// row at bootstrap and reused everywhere as the stable user identity.
+async function sha256Hex(str) {
+  const enc = new TextEncoder().encode(str);
+  const hash = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(hash))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+// Reads Plex creds with v8.0.0-first preference: Worker secret PLEX_TOKEN
+// (set by /bootstrap/credentials via the Cloudflare API) overrides the
+// legacy CONFIG KV value. plex_url stays in CONFIG KV — it's not a secret.
+async function getPlexCreds(env) {
+  const plexToken = (env.PLEX_TOKEN && String(env.PLEX_TOKEN).trim())
+    || await env.CONFIG.get('plex_token');
+  const plexUrl = await env.CONFIG.get('plex_url');
+  return { plexToken, plexUrl };
+}
+
+// Returns a non-expired Trakt access token for user_id. Auto-refreshes if
+// within 60s of expiry and persists the new pair to D1. Throws if the
+// user isn't bootstrapped, isn't connected to Trakt, or refresh fails.
+//
+// v9.0.0: Trakt tokens are AES-GCM encrypted at rest. Rows written
+// before the migration may still hold plaintext — detected by
+// trakt_token_iv being null. The plaintext path stays in place for
+// the (brief) interval between deploying v9.0.0 and Lincoln's device
+// posting /migrate; once the migration runs, every row has an iv.
+async function getValidTraktToken(env, userId) {
+  if (!env.D1_VIEWED) throw new Error('D1_VIEWED binding missing');
+  const row = await env.D1_VIEWED.prepare(
+    'SELECT trakt_access_token, trakt_refresh_token, trakt_expires_at, trakt_token_iv FROM users WHERE user_id=?'
+  ).bind(userId).first();
+  if (!row || !row.trakt_access_token) throw new Error('Trakt not connected for this user');
+
+  const accessToken = row.trakt_token_iv
+    ? await decryptTraktSecret(env, row.trakt_access_token, row.trakt_token_iv)
+    : row.trakt_access_token;
+  const refreshToken = row.trakt_token_iv
+    ? await decryptTraktSecret(env, row.trakt_refresh_token, row.trakt_token_iv)
+    : row.trakt_refresh_token;
+
+  if (row.trakt_expires_at && row.trakt_expires_at > Date.now() + 60_000) {
+    return accessToken;
+  }
+  if (!env.TRAKT_CLIENT_ID || !env.TRAKT_CLIENT_SECRET) {
+    throw new Error('Missing TRAKT_CLIENT_ID / TRAKT_CLIENT_SECRET Worker secrets');
+  }
+  const r = await fetch('https://api.trakt.tv/oauth/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      refresh_token: refreshToken,
+      client_id: env.TRAKT_CLIENT_ID,
+      client_secret: env.TRAKT_CLIENT_SECRET,
+      grant_type: 'refresh_token',
+    }),
+  });
+  if (!r.ok) {
+    const t = await r.text();
+    throw new Error(`Trakt refresh ${r.status}: ${t.slice(0, 200)}`);
+  }
+  const tok = await r.json();
+  const expiresAt = Date.now() + (tok.expires_in || 7776000) * 1000;
+
+  // Always write back encrypted, even if we just decrypted plaintext —
+  // refreshing is a natural opportunity to upgrade legacy rows.
+  const { ct: accessCt, iv: newIv } = await encryptTraktSecret(env, tok.access_token);
+  const { ct: refreshCt } = await encryptTraktSecret(env, tok.refresh_token);
+  await env.D1_VIEWED.prepare(
+    'UPDATE users SET trakt_access_token=?, trakt_refresh_token=?, trakt_expires_at=?, trakt_token_iv=? WHERE user_id=?'
+  ).bind(accessCt, refreshCt, expiresAt, newIv, userId).run();
+  return tok.access_token;
+}
+
+// Wrapper for Trakt API calls — auto-refreshes the token and sets the
+// required headers. Returns the raw Response so callers can decide
+// whether to .json() or just check .ok.
+async function traktFetch(env, userId, path, init = {}) {
+  const token = await getValidTraktToken(env, userId);
+  const headers = {
+    'Authorization': `Bearer ${token}`,
+    'trakt-api-version': '2',
+    'trakt-api-key': env.TRAKT_CLIENT_ID,
+    'Content-Type': 'application/json',
+    ...(init.headers || {}),
+  };
+  return fetch(`https://api.trakt.tv${path}`, { ...init, headers });
+}
+
+// PUT a Worker secret via the Cloudflare API. Used by /bootstrap/credentials
+// to promote local creds (PLEX_TOKEN, TRAKT_CLIENT_ID, TRAKT_CLIENT_SECRET)
+// from the device's localStorage into the Worker's encrypted secret store.
+// Requires env.ADMIN_API_TOKEN (Workers Scripts:Edit) and env.CF_ACCOUNT_ID,
+// both set manually via the Cloudflare dashboard before first promote.
+async function setWorkerSecret(env, name, value) {
+  if (!env.ADMIN_API_TOKEN) throw new Error('ADMIN_API_TOKEN not configured (set via dashboard before promote)');
+  if (!env.CF_ACCOUNT_ID) throw new Error('CF_ACCOUNT_ID not configured (set via dashboard before promote)');
+  const scriptName = (env.CF_WORKER_NAME && String(env.CF_WORKER_NAME)) || 'watchtrack-plex';
+  const url = `https://api.cloudflare.com/client/v4/accounts/${env.CF_ACCOUNT_ID}/workers/scripts/${scriptName}/secrets`;
+  const r = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${env.ADMIN_API_TOKEN}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ name, text: value, type: 'secret_text' }),
+  });
+  if (!r.ok) {
+    const t = await r.text();
+    throw new Error(`CF API secret PUT ${name} failed: ${r.status} ${t.slice(0, 200)}`);
+  }
+  return true;
+}
+
+// Push a watch event to Trakt's /sync/history. tmdbId is the canonical
+// identifier; type is 'movie' or 'show' (Trakt uses 'episode' implicitly
+// when the show has season+episode metadata, but for top-level scrobbles
+// we only need movie vs show). Returns { ok, status } so the caller can
+// decide whether to mark the row pushed_to_trakt=1.
+async function pushScrobbleToTrakt(env, userId, { tmdbId, type, watchedTs }) {
+  const isoTs = new Date(watchedTs || Date.now()).toISOString();
+  const body = type === 'movie'
+    ? { movies: [{ watched_at: isoTs, ids: { tmdb: tmdbId } }] }
+    : { shows:  [{ watched_at: isoTs, ids: { tmdb: tmdbId } }] };
+  const r = await traktFetch(env, userId, '/sync/history', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+  return { ok: r.ok, status: r.status };
+}
+
+// INSERT into watch_history (idempotent on (user_id, tmdb_id, watched_ts)
+// is not enforced by schema; callers should de-dupe upstream if needed).
+async function recordWatch(env, userId, { itemId, tmdbId, source, title, year, type, watchedTs, deviceId, pushedToTrakt }) {
+  if (!env.D1_VIEWED) return false;
+  await env.D1_VIEWED.prepare(
+    `INSERT INTO watch_history
+     (user_id, item_id, tmdb_id, source, title, year, type, watched_ts, device_id, pushed_to_trakt)
+     VALUES (?,?,?,?,?,?,?,?,?,?)`
+  ).bind(
+    userId,
+    itemId || null,
+    tmdbId || null,
+    source,
+    title || null,
+    year || null,
+    type || null,
+    watchedTs,
+    deviceId || null,
+    pushedToTrakt ? 1 : 0
+  ).run();
+  return true;
+}
+
+// ════════════════════════════════════════════════════════════════════
+// === v9.0.0 — Multi-user identity, auth, and crypto helpers ===
+// ════════════════════════════════════════════════════════════════════
+//
+// User identities are UUID v4 (was SHA-256(plex_token) pre-migration).
+// Each device gets a 256-bit random authToken at registration / pair
+// time; we store SHA-256(token) under device:{deviceId} in USERS KV and
+// never persist the plaintext token. Bearer auth resolves
+//   Authorization: Bearer {token} + X-Device-Id: {deviceId}
+// to device record → userId, then scopes every read/write to that
+// userId. The legacy ?secret=CONFIG.secret query param still works
+// (Lincoln backdoor) and resolves to the admin singleton's userId.
+
+function safeJsonParse(str, fallback) {
+  try { return JSON.parse(str); } catch { return fallback; }
+}
+
+function randomUuid() {
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  const b = crypto.getRandomValues(new Uint8Array(16));
+  b[6] = (b[6] & 0x0f) | 0x40;
+  b[8] = (b[8] & 0x3f) | 0x80;
+  const h = Array.from(b).map(x => x.toString(16).padStart(2, '0')).join('');
+  return `${h.slice(0,8)}-${h.slice(8,12)}-${h.slice(12,16)}-${h.slice(16,20)}-${h.slice(20)}`;
+}
+
+// 256-bit random base64url string. Used for bearer authTokens
+// (entropy that survives a leaked KV scan), pair-session IDs, and
+// invite/reconnect codes.
+function genAuthToken() {
+  return b64uEncode(crypto.getRandomValues(new Uint8Array(32)));
+}
+
+// 96-bit base64url — short enough for a copy-paste URL, big enough that
+// guessing an invite or pair code is computationally hopeless.
+function genShortCode() {
+  return b64uEncode(crypto.getRandomValues(new Uint8Array(12)));
+}
+
+// Cached AES-GCM key for Trakt token encryption. Reading the secret on
+// every call is fine (Workers caches env access) but importKey costs a
+// few hundred microseconds — keep the imported key in module scope.
+let _traktAesKey = null;
+async function getTraktAesKey(env) {
+  if (_traktAesKey) return _traktAesKey;
+  const raw = env.TRAKT_ENCRYPTION_KEY;
+  if (!raw) throw new Error('TRAKT_ENCRYPTION_KEY secret not configured');
+  // Accept base64 or base64url. Normalize to base64url before decoding.
+  const normalized = String(raw).trim().replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+  let keyBytes;
+  try { keyBytes = b64uDecode(normalized); }
+  catch { throw new Error('TRAKT_ENCRYPTION_KEY must be base64-encoded'); }
+  if (keyBytes.length !== 32) throw new Error(`TRAKT_ENCRYPTION_KEY must decode to 32 bytes (got ${keyBytes.length})`);
+  _traktAesKey = await crypto.subtle.importKey('raw', keyBytes, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+  return _traktAesKey;
+}
+
+// Encrypt one Trakt token with a fresh per-call IV. Both fields are
+// base64url. Stored side-by-side in D1 (access_token + iv columns;
+// refresh token uses the SAME iv since they're encrypted in pair).
+async function encryptTraktSecret(env, plaintext) {
+  if (plaintext == null || plaintext === '') return { ct: null, iv: null };
+  const key = await getTraktAesKey(env);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ctBuf = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(plaintext));
+  return { ct: b64uEncode(new Uint8Array(ctBuf)), iv: b64uEncode(iv) };
+}
+
+async function decryptTraktSecret(env, ct, iv) {
+  if (!ct || !iv) return null;
+  const key = await getTraktAesKey(env);
+  const ptBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64uDecode(iv) }, key, b64uDecode(ct));
+  return new TextDecoder().decode(ptBuf);
+}
+
+// Resolve the caller's identity for a request. Returns
+//   { userId, deviceId, viaLegacy }   on success
+//   null                              when neither auth path applies
+//
+// Three paths:
+//   A) Authorization: Bearer {token} + X-Device-Id: {deviceId}
+//      → KV device:{deviceId} → { userId, authTokenHash }
+//      → SHA-256(token) must match authTokenHash
+//   B) ?secret=CONFIG.secret (Lincoln pre-migration backdoor)
+//      → resolves to USERS:admin.userId if the singleton exists,
+//        otherwise userId=null so /migrate can still proceed.
+//   C) Neither — return null; route handler decides whether to allow.
+async function resolveAuth(env, request, url) {
+  const u = url || new URL(request.url);
+  const authHeader = request.headers.get('Authorization') || '';
+  const deviceId = request.headers.get('X-Device-Id') || '';
+  if (authHeader.startsWith('Bearer ') && deviceId) {
+    const token = authHeader.slice(7).trim();
+    if (token && env.USERS) {
+      const rec = await env.USERS.get(`device:${deviceId}`, { type: 'json' });
+      if (rec && rec.userId && rec.authTokenHash) {
+        const incoming = await sha256Hex(token);
+        if (incoming === rec.authTokenHash) {
+          // Best-effort lastSeen bump (skip if touched within last 60s).
+          if (!rec.lastSeen || Date.now() - rec.lastSeen > 60_000) {
+            env.USERS.put(`device:${deviceId}`, JSON.stringify({ ...rec, lastSeen: Date.now() })).catch(() => {});
+          }
+          return { userId: rec.userId, deviceId, viaLegacy: false };
+        }
+      }
+    }
+  }
+  const providedSecret = u.searchParams.get('secret');
+  if (providedSecret && await checkSecret(env, providedSecret)) {
+    const admin = env.USERS ? await env.USERS.get('admin', { type: 'json' }) : null;
+    return { userId: admin?.userId || null, deviceId: null, viaLegacy: true };
+  }
+  return null;
+}
+
+// Convenience wrappers — return { error: Response } or { auth }. The
+// route handler can `const r = await requireBearer(...); if (r.error) return r.error;`
+async function requireBearer(env, request, url) {
+  const auth = await resolveAuth(env, request, url);
+  if (!auth || !auth.userId) return { error: jsonResponse({ error: 'unauthorized' }, 401) };
+  return { auth };
+}
+
+async function requireAdmin(env, request, url) {
+  const r = await requireBearer(env, request, url);
+  if (r.error) return r;
+  const row = env.D1_VIEWED
+    ? await env.D1_VIEWED.prepare('SELECT role FROM users WHERE user_id=?').bind(r.auth.userId).first()
+    : null;
+  if (!row || row.role !== 'admin') return { error: jsonResponse({ error: 'admin only' }, 403) };
+  return { auth: r.auth };
+}
+
+// ════════════════════════════════════════════════════════════════════
+// === v9.0.0 — Pair-session SSE plumbing ===
+// ════════════════════════════════════════════════════════════════════
+//
+// QR pairing: a TV opens /pair/begin, gets a pairSessionId, renders a
+// QR encoding ?p={pairSessionId}, and listens on /pair/wait via SSE.
+// A phone scans the QR, POSTs /pair/confirm with bearer auth, and the
+// worker pushes the new device's auth creds to the TV's SSE stream.
+//
+// Constraint: Cloudflare Workers serves multiple requests across
+// isolates. The in-memory Map below only works when /pair/wait and
+// /pair/confirm hit the SAME isolate. For 5–20 users with bursty
+// pairing, the failure case (different isolates) just means the TV's
+// SSE stream times out and the user retries. A Durable Object backing
+// would lift this limit; deferred to v9.1.
+
+const _pairWaiters = new Map(); // sessionId → WritableStreamDefaultWriter
+
+async function pushPairEvent(sessionId, payload) {
+  const writer = _pairWaiters.get(sessionId);
+  if (!writer) return false;
+  try {
+    const line = `event: paired\ndata: ${JSON.stringify(payload)}\n\n`;
+    await writer.write(new TextEncoder().encode(line));
+    await writer.close();
+  } catch {}
+  _pairWaiters.delete(sessionId);
+  return true;
+}
+
+// ════════════════════════════════════════════════════════════════════
+// === v9.0.0 — One-shot migration to UUID v4 user_ids ===
+// ════════════════════════════════════════════════════════════════════
+//
+// Runs at most once per Worker lifetime. Gated by the USERS:admin
+// singleton: if it exists, we've migrated; bail. If it doesn't, walk
+// every data store that's keyed by the old SHA-256(plex_token) user_id
+// and rewrite to a fresh UUID v4.
+//
+// Idempotent at the function level — the singleton write is the LAST
+// step, so any failure mid-migration just means the next call re-runs.
+// All D1 statements are SET to the same lincolnUuid so re-running
+// produces no double-writes (UPDATE is naturally idempotent;
+// INSERT uses ON CONFLICT(user_id) DO NOTHING).
+
+async function ensureMigration(env, displayNameOverride) {
+  if (!env.USERS) throw new Error('USERS KV binding missing — set up the namespace first');
+  if (!env.D1_VIEWED) throw new Error('D1_VIEWED binding missing');
+
+  const existing = await env.USERS.get('admin', { type: 'json' });
+  if (existing && existing.userId) {
+    return { alreadyMigrated: true, lincolnUuid: existing.userId };
+  }
+
+  // Find Lincoln's old user_id (SHA-256 of his plex_token). Tolerate
+  // missing PLEX_TOKEN secret by falling back to the legacy CONFIG KV.
+  const plexToken = (env.PLEX_TOKEN && String(env.PLEX_TOKEN).trim())
+    || await env.CONFIG.get('plex_token');
+  const oldUserId = plexToken ? await sha256Hex(plexToken) : null;
+
+  const lincolnUuid = randomUuid();
+  const now = Date.now();
+  const displayName = displayNameOverride
+    || env.BOOTSTRAP_ADMIN_DISPLAY_NAME
+    || 'Lincoln';
+
+  // Step 1 — read Lincoln's existing D1 row (if any) and create a new
+  // row at lincolnUuid with role=admin, display_name set, Trakt tokens
+  // re-encrypted.
+  let oldRow = null;
+  if (oldUserId) {
+    oldRow = await env.D1_VIEWED.prepare(
+      'SELECT * FROM users WHERE user_id=?'
+    ).bind(oldUserId).first();
+  }
+
+  const { ct: accessCt, iv: accessIv } = await encryptTraktSecret(env, oldRow?.trakt_access_token || null);
+  const { ct: refreshCt } = oldRow?.trakt_refresh_token
+    ? await encryptTraktSecret(env, oldRow.trakt_refresh_token)
+    : { ct: null };
+  // Refresh shares the access IV — both columns rotate together so a
+  // single IV is enough and we save the column.
+
+  await env.D1_VIEWED.prepare(
+    `INSERT INTO users
+       (user_id, plex_server_url, plex_client_id,
+        trakt_access_token, trakt_refresh_token, trakt_expires_at, trakt_username,
+        streaming_region, my_subscriptions, bootstrapped, created_ts,
+        display_name, role, last_seen, settings, trakt_token_iv)
+     VALUES (?,?,?,?,?,?,?,?,?,1,?,?,'admin',?,?,?)
+     ON CONFLICT(user_id) DO NOTHING`
+  ).bind(
+    lincolnUuid,
+    oldRow?.plex_server_url || null,
+    oldRow?.plex_client_id || null,
+    accessCt,
+    refreshCt,
+    oldRow?.trakt_expires_at || null,
+    oldRow?.trakt_username || null,
+    oldRow?.streaming_region || null,
+    oldRow?.my_subscriptions || null,
+    oldRow?.created_ts || now,
+    displayName,
+    now,
+    '{}',
+    accessIv
+  ).run();
+
+  // Step 2 — rewrite the user_id on every dependent table.
+  if (oldUserId) {
+    await env.D1_VIEWED.prepare(
+      'UPDATE watch_history SET user_id=? WHERE user_id=?'
+    ).bind(lincolnUuid, oldUserId).run();
+  }
+  // palate had no user_id before migration 003 — backfill all rows.
+  await env.D1_VIEWED.prepare(
+    'UPDATE palate SET user_id=? WHERE user_id IS NULL'
+  ).bind(lincolnUuid).run();
+
+  // Step 3 — drop Lincoln's old D1 users row. The new lincolnUuid row
+  // is the canonical record from here on.
+  if (oldUserId && oldUserId !== lincolnUuid) {
+    await env.D1_VIEWED.prepare('DELETE FROM users WHERE user_id=?').bind(oldUserId).run();
+  }
+
+  // Step 4 — pointer records. webhook_user_id makes Plex's webhook
+  // attribute incoming events to the new UUID; admin singleton in
+  // USERS KV is what gates all future migration runs.
+  await env.CONFIG.put('webhook_user_id', lincolnUuid);
+  await env.USERS.put('admin', JSON.stringify({ userId: lincolnUuid, migratedAt: now, legacyHash: oldUserId }));
+
+  // SYNC_KV / ALERTS / PROMOTIONS / R2 backups intentionally stay at
+  // their existing `user:{hash}` / `sub:{hash}` / `promo:{tab}:{itemId}`
+  // / `state/{date}/{hash}.json.gz` shapes during Phase 1. Lincoln's
+  // current client code still computes the hash from his plex_token
+  // and references those keys directly; rekeying them now would break
+  // every sync/alert/promotions call until Phase 4 swaps the client
+  // to bearer-scoped endpoints. The legacyHash we stashed in the admin
+  // singleton above tells Phase 4 what the old prefix was.
+
+  const summary = {
+    alreadyMigrated: false,
+    lincolnUuid,
+    oldUserId,
+    displayName,
+    note: 'KV/R2 rekey deferred to Phase 4',
+  };
+  console.log('MIGRATION_COMPLETE', JSON.stringify(summary));
+  return summary;
 }
 
 // === v5.8: Web Push (RFC 8030 + RFC 8291 + RFC 8292) ===
@@ -292,6 +762,55 @@ async function checkRateLimit(env, ip) {
   return { ok: true, count: cur + 1, limit };
 }
 
+// v9.0.0 — per-user rate limit using minute-resolution buckets in
+// USERS KV. Three buckets per user, each separately tunable:
+//
+//   chat     30/hour    /chat
+//   meta    200/hour    /metadata/lookup, /metadata/bulk
+//   default 600/hour    everything else (after a route handler proves
+//                       the caller is authenticated)
+//
+// Sliding window via two adjacent minutes summed — keeps a request
+// that just rolled into a new minute from immediately spending the
+// full quota again. Each minute bucket has a 2-minute TTL so old
+// counts auto-evict.
+const PER_USER_LIMITS = { chat: 30, meta: 200, default: 600 };
+
+function bucketForPath(path) {
+  if (path === '/chat') return 'chat';
+  if (path.startsWith('/metadata/')) return 'meta';
+  return 'default';
+}
+
+async function checkUserRateLimit(env, userId, bucket) {
+  if (!env.USERS || !userId) return { ok: true };
+  const limit = PER_USER_LIMITS[bucket] || PER_USER_LIMITS.default;
+  const now = Date.now();
+  const curMin = Math.floor(now / 60_000);
+  const prevMin = curMin - 1;
+  const keyCur = `ratelimit:${userId}:${bucket}:${curMin}`;
+  const keyPrev = `ratelimit:${userId}:${bucket}:${prevMin}`;
+  // Read both buckets in parallel; treat parse failures as 0.
+  const [rawCur, rawPrev] = await Promise.all([
+    env.USERS.get(keyCur),
+    env.USERS.get(keyPrev),
+  ]);
+  const cur = parseInt(rawCur || '0', 10);
+  const prev = parseInt(rawPrev || '0', 10);
+  // Sliding-window estimate: weight the previous minute by how much
+  // of it has rolled off.
+  const elapsedFrac = (now % 60_000) / 60_000;
+  const estimate = Math.ceil(prev * (1 - elapsedFrac)) + cur;
+  if (estimate >= limit) {
+    // Retry-After: seconds until the previous minute fully rolls off.
+    const retryAfter = Math.max(1, Math.ceil((60_000 - (now % 60_000)) / 1000));
+    return { ok: false, retryAfter, limit, count: estimate };
+  }
+  // Increment current bucket (best-effort; race-tolerant by design).
+  await env.USERS.put(keyCur, String(cur + 1), { expirationTtl: 120 });
+  return { ok: true, count: cur + 1, limit };
+}
+
 async function tmdbLookup(env, title, year, type, tmdbId) {
   // type: 'movie' or 'tv'
   // tmdbId: optional — if provided, fetches that ID directly without searching
@@ -387,23 +906,47 @@ export default {
     const path = url.pathname;
     const method = request.method;
 
-    if (method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
+    if (method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(request) });
 
     // Health (no rate limit, no auth)
     if (path === '/' || path === '/health') {
       return new Response('CinéMath-Plex bridge online (v5.14 — /palate/predict-tags via Claude Sonnet 4.6)', { headers: cors });
     }
 
-    // v5.7: per-IP rate limit. Applies to every other route. Returns 429
-    // with a Retry-After header when the bucket is full.
+    // v9.0.0 — Layered rate limit:
+    //   1. Per-IP (60/min) for everyone, defends unauthenticated routes
+    //      (/register, /pair/*) from a single noisy client.
+    //   2. Per-user (bucket-specific) for authenticated callers, which
+    //      lets us hold AI/Workers-AI spend predictable per family member.
+    //
+    // We resolve auth opportunistically up here (failure is fine — many
+    // routes are unauthenticated) and stash the result on `request` for
+    // downstream handlers via WeakMap-style sidecar to avoid mutating
+    // the immutable Request object.
     const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || '';
     const rl = await checkRateLimit(env, ip);
     if (!rl.ok) {
-      console.log('[rate-limit] 429 for ip', ip, 'on', method, path, '—', rl.count, '/', rl.limit);
+      console.log('[rate-limit/ip] 429 for ip', ip, 'on', method, path, '—', rl.count, '/', rl.limit);
       return new Response(`Rate limit exceeded: ${rl.count}/${rl.limit} per minute`, {
         status: 429,
         headers: { ...cors, 'Retry-After': '60', 'Content-Type': 'text/plain' },
       });
+    }
+
+    // Per-user limit. Only resolves bearer/secret-backed identities; if
+    // resolveAuth returns null (e.g. /register, /pair/begin), we skip
+    // and let the per-IP cap protect us.
+    let preAuth = null;
+    try { preAuth = await resolveAuth(env, request, url); } catch {}
+    if (preAuth?.userId) {
+      const userRl = await checkUserRateLimit(env, preAuth.userId, bucketForPath(path));
+      if (!userRl.ok) {
+        console.log('[rate-limit/user] 429 for', preAuth.userId, 'bucket', bucketForPath(path), 'on', method, path);
+        return new Response(`Rate limit exceeded: ${userRl.count}/${userRl.limit} per hour for this user`, {
+          status: 429,
+          headers: { ...cors, 'Retry-After': String(userRl.retryAfter || 60), 'Content-Type': 'text/plain' },
+        });
+      }
     }
 
     // === Plex webhook receiver ===
@@ -452,6 +995,48 @@ export default {
         if (record.event === 'media.scrobble' || record.event === 'media.rate') {
           await env.EVENTS.put(eventId, JSON.stringify(record), { expirationTtl: 7 * 24 * 60 * 60 });
         }
+
+        // v8.0.0 — Funnel Plex scrobbles into D1 watch_history and push to
+        // Trakt if the user is connected. webhook_user_id is set at
+        // /bootstrap/credentials time; if it's missing the user hasn't
+        // bootstrapped yet — skip silently and leave the existing VIEWED/
+        // EVENTS path as the sole record (preserves pre-v8 behavior).
+        if (record.event === 'media.scrobble') {
+          try {
+            const userId = await env.CONFIG.get('webhook_user_id');
+            if (userId) {
+              // Try to extract a TMDB ID from md.Guid array (Plex Pass populates
+              // this when the agent matches; older agents or unmatched items
+              // leave it null).
+              let tmdbId = null;
+              const guids = Array.isArray(md.Guid) ? md.Guid : [];
+              for (const g of guids) {
+                const m = /^tmdb:\/\/(\d+)/.exec(g?.id || '');
+                if (m) { tmdbId = parseInt(m[1], 10); break; }
+              }
+              const trType = (record.type === 'movie') ? 'movie' : 'show';
+              let pushedOk = false;
+              if (tmdbId) {
+                try {
+                  const { ok } = await pushScrobbleToTrakt(env, userId, {
+                    tmdbId, type: trType, watchedTs: record.ts,
+                  });
+                  pushedOk = ok;
+                } catch (e) {
+                  // Trakt not connected or refresh failed — record locally only.
+                }
+              }
+              await recordWatch(env, userId, {
+                itemId: null, tmdbId, source: 'plex',
+                title: record.title, year: record.year, type: trType,
+                watchedTs: record.ts, deviceId: null, pushedToTrakt: pushedOk,
+              }).catch(e => console.log('[wh] watch_history insert failed', e.message));
+            }
+          } catch (e) {
+            console.log('[wh] v8 watch_history hook failed', e.message);
+          }
+        }
+
         return new Response('OK', { status: 200, headers: cors });
       } catch (e) {
         return new Response('Bad request: ' + e.message, { status: 400, headers: cors });
@@ -944,15 +1529,26 @@ Only predict tags that are in the provided tag set for that item's content type.
     // same hash and reads/writes the same blob. Authorization uses the existing
     // shared secret.
 
-    // GET /sync/get?user=HASH&secret=X — fetch the user's stored blob (or 404)
+    // GET /sync/get — bearer or legacy. Returns the user's blob (or 404).
+    //
+    // v9.0.0: bearer-authed callers read from `state:{userId}`. Legacy
+    // callers (?user=HASH&secret=) keep reading the pre-migration
+    // `user:{HASH}` key shape until Phase 4 client refactor completes.
     if (path === '/sync/get' && method === 'GET') {
-      const userHash = url.searchParams.get('user');
-      const providedSecret = url.searchParams.get('secret');
-      if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
-      if (!userHash || !/^[a-f0-9]{16,64}$/i.test(userHash)) {
-        return new Response('Bad user hash', { status: 400, headers: cors });
+      const auth = await resolveAuth(env, request, url);
+      let key = null;
+      if (auth?.userId && !auth.viaLegacy) {
+        key = `state:${auth.userId}`;
+      } else {
+        const userHash = url.searchParams.get('user');
+        const providedSecret = url.searchParams.get('secret');
+        if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
+        if (!userHash || !/^[a-f0-9]{16,64}$/i.test(userHash)) {
+          return new Response('Bad user hash', { status: 400, headers: cors });
+        }
+        key = `user:${userHash}`;
       }
-      const data = await env.SYNC_KV.get(`user:${userHash}`);
+      const data = await env.SYNC_KV.get(key);
       if (!data) {
         return new Response('null', {
           status: 404,
@@ -964,13 +1560,20 @@ Only predict tags that are in the provided tag set for that item's content type.
       });
     }
 
-    // PUT /sync/put?user=HASH&secret=X — store the user's blob (body = JSON)
+    // PUT /sync/put — bearer or legacy. Stores the user's blob.
     if (path === '/sync/put' && method === 'PUT') {
-      const userHash = url.searchParams.get('user');
-      const providedSecret = url.searchParams.get('secret');
-      if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
-      if (!userHash || !/^[a-f0-9]{16,64}$/i.test(userHash)) {
-        return new Response('Bad user hash', { status: 400, headers: cors });
+      const auth = await resolveAuth(env, request, url);
+      let key = null;
+      if (auth?.userId && !auth.viaLegacy) {
+        key = `state:${auth.userId}`;
+      } else {
+        const userHash = url.searchParams.get('user');
+        const providedSecret = url.searchParams.get('secret');
+        if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
+        if (!userHash || !/^[a-f0-9]{16,64}$/i.test(userHash)) {
+          return new Response('Bad user hash', { status: 400, headers: cors });
+        }
+        key = `user:${userHash}`;
       }
       const bodyText = await request.text();
       // Cloudflare KV per-value cap is 25 MB; reject earlier to avoid wasted compute
@@ -980,7 +1583,7 @@ Only predict tags that are in the provided tag set for that item's content type.
       // Validate parses cleanly so we don't store garbage
       try { JSON.parse(bodyText); }
       catch { return new Response('Invalid JSON', { status: 400, headers: cors }); }
-      await env.SYNC_KV.put(`user:${userHash}`, bodyText, { expirationTtl: SYNC_TTL });
+      await env.SYNC_KV.put(key, bodyText, { expirationTtl: SYNC_TTL });
       return new Response('ok', { headers: cors });
     }
 
@@ -1307,6 +1910,1163 @@ Only predict tags that are in the provided tag set for that item's content type.
       return jsonResponse(summary);
     }
 
+    // ════════════════════════════════════════════════════════════════════
+    // === v9.0.0 — Multi-user identity routes ===
+    // ════════════════════════════════════════════════════════════════════
+
+    // POST /migrate — one-shot upgrade path for Lincoln's pre-v9 devices.
+    // Body: { oldSecret?, deviceId?, deviceKind?, userAgent?, deviceName? }
+    // Validates oldSecret against CONFIG.secret, runs ensureMigration() if
+    // not already done, then mints a fresh device record + authToken bound
+    // to the admin user. Response lets the client swap to bearer auth.
+    if (path === '/migrate' && method === 'POST') {
+      try {
+        const body = await request.json().catch(() => ({}));
+        const providedSecret = body.oldSecret || url.searchParams.get('secret');
+        if (!(await checkSecret(env, providedSecret))) {
+          return new Response('Forbidden', { status: 403, headers: cors });
+        }
+        const migration = await ensureMigration(env, body.displayName || null);
+        const lincolnUuid = migration.lincolnUuid;
+        const deviceId = body.deviceId || randomUuid();
+        const authToken = genAuthToken();
+        const authTokenHash = await sha256Hex(authToken);
+        const deviceRec = {
+          userId: lincolnUuid,
+          kind: body.deviceKind || 'phone',
+          name: body.deviceName || 'Primary device',
+          userAgent: body.userAgent || request.headers.get('User-Agent') || '',
+          createdAt: Date.now(),
+          lastSeen: Date.now(),
+          authTokenHash,
+        };
+        await env.USERS.put(`device:${deviceId}`, JSON.stringify(deviceRec));
+
+        // Hand back the user's display name and role so the client can
+        // skip the GET /user/me round-trip on the very first boot.
+        const userRow = await env.D1_VIEWED.prepare(
+          'SELECT display_name, role FROM users WHERE user_id=?'
+        ).bind(lincolnUuid).first();
+
+        return jsonResponse({
+          ok: true,
+          userId: lincolnUuid,
+          deviceId,
+          authToken,
+          displayName: userRow?.display_name || migration.displayName,
+          role: userRow?.role || 'admin',
+          alreadyMigrated: migration.alreadyMigrated || false,
+        });
+      } catch (e) {
+        console.error('MIGRATE_FAILED', e);
+        return jsonResponse({ error: e.message }, 500);
+      }
+    }
+
+    // GET /user/me — bearer-auth. Returns the caller's user record plus
+    // a list of their bound devices. Powers the Settings → Account and
+    // Devices cards.
+    if (path === '/user/me' && method === 'GET') {
+      const r = await requireBearer(env, request, url);
+      if (r.error) return r.error;
+      const row = await env.D1_VIEWED.prepare(
+        `SELECT user_id, display_name, role, last_seen, settings,
+                bootstrapped, streaming_region, my_subscriptions,
+                plex_server_url, trakt_username,
+                trakt_access_token IS NOT NULL AS has_trakt
+         FROM users WHERE user_id=?`
+      ).bind(r.auth.userId).first();
+      if (!row) return jsonResponse({ error: 'user not found' }, 404);
+
+      // List the user's devices. KV doesn't support secondary indexes so
+      // we walk device:* and filter — fine for 5-20 users * a few devices.
+      const devices = [];
+      let cursor = undefined;
+      do {
+        const page = await env.USERS.list({ prefix: 'device:', cursor });
+        for (const k of page.keys) {
+          const rec = await env.USERS.get(k.name, { type: 'json' });
+          if (rec && rec.userId === r.auth.userId) {
+            const did = k.name.slice('device:'.length);
+            devices.push({
+              deviceId: did,
+              kind: rec.kind,
+              name: rec.name,
+              userAgent: rec.userAgent,
+              createdAt: rec.createdAt,
+              lastSeen: rec.lastSeen,
+              isCurrent: did === r.auth.deviceId,
+            });
+          }
+        }
+        cursor = page.list_complete ? undefined : page.cursor;
+      } while (cursor);
+
+      const adminSingleton = await env.USERS.get('admin', { type: 'json' });
+      const hasPlex = row.role === 'admin'
+        && !!((env.PLEX_TOKEN && String(env.PLEX_TOKEN).trim()) || await env.CONFIG.get('plex_token'));
+
+      return jsonResponse({
+        userId: row.user_id,
+        displayName: row.display_name,
+        role: row.role,
+        lastSeen: row.last_seen,
+        settings: row.settings ? safeJsonParse(row.settings, {}) : {},
+        hasTrakt: !!row.has_trakt,
+        traktUsername: row.trakt_username || null,
+        hasPlex,
+        plexServerUrl: hasPlex ? row.plex_server_url : null,
+        streamingRegion: row.streaming_region || null,
+        mySubscriptions: row.my_subscriptions ? safeJsonParse(row.my_subscriptions, []) : [],
+        devices,
+        isAdmin: row.role === 'admin' && adminSingleton?.userId === row.user_id,
+      });
+    }
+
+    // POST /admin/invites/create — admin-only. Body:
+    //   { suggestedDisplayName?, expiresInSec?, plexEnabled? }
+    // Generates a 96-bit invite code, persists invite:{code} in USERS KV,
+    // returns the shareable URL. Default expiry 7 days; max 30 days.
+    if (path === '/admin/invites/create' && method === 'POST') {
+      const r = await requireAdmin(env, request, url);
+      if (r.error) return r.error;
+      const body = await request.json().catch(() => ({}));
+      const code = genShortCode();
+      const now = Date.now();
+      const expiresInSec = Math.min(
+        Math.max(parseInt(body.expiresInSec || '604800', 10), 60),
+        30 * 24 * 3600
+      );
+      const rec = {
+        createdBy: r.auth.userId,
+        createdAt: now,
+        expiresAt: now + expiresInSec * 1000,
+        consumed: false,
+        consumedBy: null,
+        plexEnabled: !!body.plexEnabled,
+        suggestedDisplayName: body.suggestedDisplayName?.toString().trim().slice(0, 30) || null,
+      };
+      await env.USERS.put(`invite:${code}`, JSON.stringify(rec), { expirationTtl: expiresInSec + 86400 });
+      const origin = request.headers.get('Origin') || 'https://bicyclecrasher.github.io';
+      const base = ALLOWED_ORIGINS.has(origin) ? origin : 'https://bicyclecrasher.github.io';
+      // The worker URL gets encoded in the invite so a brand-new device
+      // can call /register without the user manually entering the host.
+      // We derive it from the inbound request — whatever URL the admin
+      // is hitting is, by definition, the worker URL their family will
+      // need to talk to.
+      const workerBase = `${url.protocol}//${url.host}`;
+      return jsonResponse({
+        ok: true,
+        code,
+        url: `${base}/WatchTrack/?invite=${code}&w=${encodeURIComponent(workerBase)}`,
+        expiresAt: rec.expiresAt,
+      });
+    }
+
+    // GET /admin/invites/list — admin-only. Returns both pending and
+    // consumed invites. KV doesn't have secondary indexes so this
+    // walks every invite:* key; fine for 5–20 users * a handful each.
+    if (path === '/admin/invites/list' && method === 'GET') {
+      const r = await requireAdmin(env, request, url);
+      if (r.error) return r.error;
+      const out = [];
+      let cursor = undefined;
+      do {
+        const page = await env.USERS.list({ prefix: 'invite:', cursor });
+        for (const k of page.keys) {
+          const rec = await env.USERS.get(k.name, { type: 'json' });
+          if (!rec) continue;
+          out.push({
+            code: k.name.slice('invite:'.length),
+            ...rec,
+            expired: rec.expiresAt < Date.now(),
+          });
+        }
+        cursor = page.list_complete ? undefined : page.cursor;
+      } while (cursor);
+      out.sort((a, b) => b.createdAt - a.createdAt);
+      return jsonResponse({ invites: out });
+    }
+
+    // DELETE /admin/invites/{code} — admin-only. Revokes an unconsumed
+    // invite. Consumed invites stay for audit purposes (would orphan
+    // the user record otherwise).
+    if (path.startsWith('/admin/invites/') && method === 'DELETE') {
+      const r = await requireAdmin(env, request, url);
+      if (r.error) return r.error;
+      const code = path.slice('/admin/invites/'.length);
+      if (!code || code.length > 64) return jsonResponse({ error: 'bad code' }, 400);
+      const rec = await env.USERS.get(`invite:${code}`, { type: 'json' });
+      if (!rec) return jsonResponse({ error: 'not found' }, 404);
+      if (rec.consumed) return jsonResponse({ error: 'cannot revoke consumed invite' }, 409);
+      await env.USERS.delete(`invite:${code}`);
+      return jsonResponse({ ok: true });
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // === v9.0.0 — QR pairing routes ===
+    // ════════════════════════════════════════════════════════════════════
+
+    // POST /pair/begin (no auth) — TV side. Creates a pair session,
+    // returns { pairSessionId, qrUrl } for the TV to render and start
+    // listening on /pair/wait. 5-minute TTL.
+    if ((path === '/pair/begin' || path === '/pair/begin/owned') && method === 'POST') {
+      const owned = path === '/pair/begin/owned';
+      let ownerUserId = null;
+      if (owned) {
+        const r = await requireBearer(env, request, url);
+        if (r.error) return r.error;
+        ownerUserId = r.auth.userId;
+      }
+      const sessionId = genShortCode();
+      const now = Date.now();
+      const expiresAt = now + 5 * 60 * 1000;
+      const userAgent = request.headers.get('User-Agent') || '';
+      const ip = request.headers.get('CF-Connecting-IP') || '';
+      const rec = {
+        createdAt: now,
+        expiresAt,
+        consumed: false,
+        fulfillment: null,
+        ownedByUserId: ownerUserId,
+        userAgent,
+        ip,
+      };
+      await env.USERS.put(`pair:${sessionId}`, JSON.stringify(rec), { expirationTtl: 600 });
+      const origin = request.headers.get('Origin') || 'https://bicyclecrasher.github.io';
+      const base = ALLOWED_ORIGINS.has(origin) ? origin : 'https://bicyclecrasher.github.io';
+      const workerBase = `${url.protocol}//${url.host}`;
+      return jsonResponse({
+        ok: true,
+        pairSessionId: sessionId,
+        qrUrl: `${base}/WatchTrack/?p=${sessionId}&w=${encodeURIComponent(workerBase)}`,
+        expiresAt,
+      });
+    }
+
+    // GET /pair/info?session=X (no auth) — phone side. Returns the
+    // pending TV's user-agent and IP so the user can confirm they're
+    // pairing the right device.
+    if (path === '/pair/info' && method === 'GET') {
+      const sessionId = url.searchParams.get('session');
+      if (!sessionId) return jsonResponse({ error: 'session required' }, 400);
+      const rec = await env.USERS.get(`pair:${sessionId}`, { type: 'json' });
+      if (!rec) return jsonResponse({ error: 'session not found or expired' }, 404);
+      if (rec.consumed) return jsonResponse({ error: 'session already used' }, 409);
+      if (rec.expiresAt < Date.now()) return jsonResponse({ error: 'session expired' }, 410);
+      return jsonResponse({
+        ok: true,
+        userAgent: rec.userAgent,
+        ip: rec.ip,
+        owned: !!rec.ownedByUserId,
+        expiresAt: rec.expiresAt,
+      });
+    }
+
+    // POST /pair/confirm — phone side, bearer auth. Body { pairSessionId }.
+    // Mints a new device bound to the caller's user, pushes creds to
+    // the TV's SSE stream, marks session consumed.
+    if (path === '/pair/confirm' && method === 'POST') {
+      const r = await requireBearer(env, request, url);
+      if (r.error) return r.error;
+      const body = await request.json().catch(() => ({}));
+      if (!body.pairSessionId) return jsonResponse({ error: 'pairSessionId required' }, 400);
+      const key = `pair:${body.pairSessionId}`;
+      const rec = await env.USERS.get(key, { type: 'json' });
+      if (!rec) return jsonResponse({ error: 'session not found' }, 404);
+      if (rec.consumed) return jsonResponse({ error: 'session already used' }, 409);
+      if (rec.expiresAt < Date.now()) return jsonResponse({ error: 'session expired' }, 410);
+      // If session was begun as /pair/begin/owned, only the original
+      // owner can confirm it. Defends against a shoulder-scanner.
+      if (rec.ownedByUserId && rec.ownedByUserId !== r.auth.userId) {
+        return jsonResponse({ error: 'session reserved for another user' }, 403);
+      }
+
+      const newDeviceId = randomUuid();
+      const newAuthToken = genAuthToken();
+      const newHash = await sha256Hex(newAuthToken);
+      const now = Date.now();
+      // Kind defaults to 'tv' since blank-device QR pairing is overwhelmingly
+      // for TVs; the user can rename in Settings.
+      const kindFromUA = /AndroidTV|GoogleTV|BRAVIA|AFT|SmartTV|Tizen|webOS/i.test(rec.userAgent) ? 'tv'
+        : /Mobile|Android|iPhone/i.test(rec.userAgent) ? 'phone'
+        : 'tv';
+      const userRow = await env.D1_VIEWED.prepare('SELECT display_name FROM users WHERE user_id=?')
+        .bind(r.auth.userId).first();
+      await env.USERS.put(`device:${newDeviceId}`, JSON.stringify({
+        userId: r.auth.userId,
+        kind: kindFromUA,
+        name: kindFromUA === 'tv' ? 'Paired TV' : 'Paired device',
+        userAgent: rec.userAgent,
+        createdAt: now,
+        lastSeen: now,
+        authTokenHash: newHash,
+      }));
+
+      rec.consumed = true;
+      rec.consumedAt = now;
+      rec.fulfillment = { newDeviceId, userId: r.auth.userId };
+      await env.USERS.put(key, JSON.stringify(rec), { expirationTtl: 120 });
+
+      // Push creds to the TV's SSE stream. If the TV's /pair/wait is in
+      // a different isolate, this is a no-op and the TV will hit the
+      // session-consumed path on its next poll (or timeout). We also
+      // store the fulfillment payload on the session record so the TV
+      // can poll /pair/info as a fallback — it returns the new creds
+      // once consumed.
+      const fulfillmentPayload = {
+        userId: r.auth.userId,
+        deviceId: newDeviceId,
+        authToken: newAuthToken,
+        displayName: userRow?.display_name || 'CinéMath user',
+      };
+      // Store the payload too, gated behind a one-time read flag so
+      // only the TV can pick it up post-confirm.
+      rec.payload = fulfillmentPayload;
+      await env.USERS.put(key, JSON.stringify(rec), { expirationTtl: 120 });
+      await pushPairEvent(body.pairSessionId, fulfillmentPayload);
+
+      return jsonResponse({ ok: true, newDeviceId });
+    }
+
+    // GET /pair/wait?session=X (no auth) — TV side. Server-sent events
+    // stream. Emits a `paired` event with the new creds once the phone
+    // confirms; otherwise stays open until the 5-minute session expires.
+    if (path === '/pair/wait' && method === 'GET') {
+      const sessionId = url.searchParams.get('session');
+      if (!sessionId) return new Response('session required', { status: 400 });
+      const rec = await env.USERS.get(`pair:${sessionId}`, { type: 'json' });
+      if (!rec) return new Response('session not found', { status: 404 });
+      // If already fulfilled (different isolate handled the confirm),
+      // emit the event immediately and close.
+      if (rec.consumed && rec.payload) {
+        const body = `event: paired\ndata: ${JSON.stringify(rec.payload)}\n\n`;
+        return new Response(body, {
+          status: 200,
+          headers: {
+            ...corsHeaders(request),
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache, no-transform',
+            'Connection': 'keep-alive',
+          },
+        });
+      }
+      const { readable, writable } = new TransformStream();
+      const writer = writable.getWriter();
+      _pairWaiters.set(sessionId, writer);
+      // Initial comment so EventSource sees the headers and opens.
+      writer.write(new TextEncoder().encode(': stream open\n\n')).catch(() => {});
+      // Best-effort cleanup after 5 minutes.
+      setTimeout(() => {
+        if (_pairWaiters.get(sessionId) === writer) {
+          _pairWaiters.delete(sessionId);
+          writer.close().catch(() => {});
+        }
+      }, 5 * 60 * 1000);
+      return new Response(readable, {
+        status: 200,
+        headers: {
+          ...corsHeaders(request),
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache, no-transform',
+          'Connection': 'keep-alive',
+        },
+      });
+    }
+
+    // POST /admin/reconnect/create — admin-only. Body:
+    //   { targetUserId, expiresInSec? }
+    // Generates a single-use reconnect code that lets the named user
+    // re-bind a fresh device without consuming an invite. Used when
+    // someone loses their phone or replaces a device.
+    if (path === '/admin/reconnect/create' && method === 'POST') {
+      const r = await requireAdmin(env, request, url);
+      if (r.error) return r.error;
+      const body = await request.json().catch(() => ({}));
+      if (!body.targetUserId) return jsonResponse({ error: 'targetUserId required' }, 400);
+      // Verify the target user exists.
+      const target = await env.D1_VIEWED.prepare('SELECT user_id, display_name FROM users WHERE user_id=?')
+        .bind(body.targetUserId).first();
+      if (!target) return jsonResponse({ error: 'user not found' }, 404);
+      const code = genShortCode();
+      const now = Date.now();
+      const expiresInSec = Math.min(
+        Math.max(parseInt(body.expiresInSec || '86400', 10), 60),
+        7 * 24 * 3600
+      );
+      const rec = {
+        targetUserId: body.targetUserId,
+        createdBy: r.auth.userId,
+        createdAt: now,
+        expiresAt: now + expiresInSec * 1000,
+        consumed: false,
+      };
+      await env.USERS.put(`reconnect:${code}`, JSON.stringify(rec), { expirationTtl: expiresInSec + 86400 });
+      const origin = request.headers.get('Origin') || 'https://bicyclecrasher.github.io';
+      const base = ALLOWED_ORIGINS.has(origin) ? origin : 'https://bicyclecrasher.github.io';
+      const workerBase = `${url.protocol}//${url.host}`;
+      return jsonResponse({
+        ok: true,
+        code,
+        url: `${base}/WatchTrack/?reconnect=${code}&w=${encodeURIComponent(workerBase)}`,
+        targetUserId: body.targetUserId,
+        targetDisplayName: target.display_name,
+        expiresAt: rec.expiresAt,
+      });
+    }
+
+    // POST /reconnect — public, consumes a reconnect code. Body:
+    //   { reconnectCode, deviceId?, deviceKind?, userAgent?, deviceName?,
+    //     revokeOthers? (optional bool — replace lost device by purging all
+    //     existing device:* records for this user) }
+    // Returns bearer creds bound to the existing target user. No new
+    // user row is created; all the user's data (Trakt, palate, history)
+    // is preserved.
+    if (path === '/reconnect' && method === 'POST') {
+      try {
+        const body = await request.json().catch(() => ({}));
+        if (!body.reconnectCode) return jsonResponse({ error: 'reconnectCode required' }, 400);
+        const key = `reconnect:${body.reconnectCode}`;
+        const rec = await env.USERS.get(key, { type: 'json' });
+        if (!rec) return jsonResponse({ error: 'code not found or expired' }, 404);
+        if (rec.consumed) return jsonResponse({ error: 'code already used' }, 409);
+        if (rec.expiresAt < Date.now()) return jsonResponse({ error: 'code expired' }, 410);
+
+        const userId = rec.targetUserId;
+        const userRow = await env.D1_VIEWED.prepare(
+          'SELECT display_name, role FROM users WHERE user_id=?'
+        ).bind(userId).first();
+        if (!userRow) return jsonResponse({ error: 'target user vanished' }, 410);
+
+        const deviceId = body.deviceId || randomUuid();
+        const authToken = genAuthToken();
+        const authTokenHash = await sha256Hex(authToken);
+        const now = Date.now();
+
+        // If the user is replacing a lost device, purge all existing
+        // device:* records for this user first. Otherwise we're just
+        // adding another device alongside whatever they already have.
+        if (body.revokeOthers) {
+          let cursor = undefined;
+          do {
+            const page = await env.USERS.list({ prefix: 'device:', cursor });
+            for (const k of page.keys) {
+              const r2 = await env.USERS.get(k.name, { type: 'json' });
+              if (r2?.userId === userId) await env.USERS.delete(k.name);
+            }
+            cursor = page.list_complete ? undefined : page.cursor;
+          } while (cursor);
+        }
+
+        await env.USERS.put(`device:${deviceId}`, JSON.stringify({
+          userId,
+          kind: body.deviceKind || 'phone',
+          name: body.deviceName || 'Reconnected device',
+          userAgent: body.userAgent || request.headers.get('User-Agent') || '',
+          createdAt: now,
+          lastSeen: now,
+          authTokenHash,
+        }));
+
+        rec.consumed = true;
+        rec.consumedAt = now;
+        await env.USERS.put(key, JSON.stringify(rec));
+
+        return jsonResponse({
+          ok: true,
+          userId,
+          deviceId,
+          authToken,
+          displayName: userRow.display_name,
+          role: userRow.role,
+        });
+      } catch (e) {
+        console.error('RECONNECT_FAILED', e);
+        return jsonResponse({ error: e.message }, 500);
+      }
+    }
+
+    // POST /devices/{deviceId}/rename — bearer auth; user can rename
+    // their own devices. Body: { name }.
+    if (path.startsWith('/devices/') && path.endsWith('/rename') && method === 'POST') {
+      const r = await requireBearer(env, request, url);
+      if (r.error) return r.error;
+      const deviceId = path.slice('/devices/'.length, -'/rename'.length);
+      if (!deviceId) return jsonResponse({ error: 'deviceId required' }, 400);
+      const rec = await env.USERS.get(`device:${deviceId}`, { type: 'json' });
+      if (!rec) return jsonResponse({ error: 'device not found' }, 404);
+      if (rec.userId !== r.auth.userId) return jsonResponse({ error: 'not your device' }, 403);
+      const body = await request.json().catch(() => ({}));
+      const name = String(body.name || '').trim().slice(0, 60);
+      if (!name) return jsonResponse({ error: 'name required' }, 400);
+      await env.USERS.put(`device:${deviceId}`, JSON.stringify({ ...rec, name }));
+      return jsonResponse({ ok: true });
+    }
+
+    // DELETE /devices/{deviceId} — bearer auth; revokes a device. The
+    // calling device can revoke any of the user's own devices, including
+    // itself (the next request from the revoked device returns 401).
+    if (path.startsWith('/devices/') && method === 'DELETE') {
+      const r = await requireBearer(env, request, url);
+      if (r.error) return r.error;
+      const deviceId = path.slice('/devices/'.length);
+      if (!deviceId) return jsonResponse({ error: 'deviceId required' }, 400);
+      const rec = await env.USERS.get(`device:${deviceId}`, { type: 'json' });
+      if (!rec) return jsonResponse({ error: 'device not found' }, 404);
+      if (rec.userId !== r.auth.userId) return jsonResponse({ error: 'not your device' }, 403);
+      await env.USERS.delete(`device:${deviceId}`);
+      return jsonResponse({ ok: true, revoked: deviceId });
+    }
+
+    // POST /admin/users/{userId}/revoke — admin-only. Body { deviceId? }
+    //   - With deviceId: revoke that one device.
+    //   - Without:        revoke ALL devices for the target user.
+    if (path.startsWith('/admin/users/') && path.endsWith('/revoke') && method === 'POST') {
+      const r = await requireAdmin(env, request, url);
+      if (r.error) return r.error;
+      const userId = path.slice('/admin/users/'.length, -'/revoke'.length);
+      if (!userId) return jsonResponse({ error: 'userId required' }, 400);
+      const body = await request.json().catch(() => ({}));
+      if (body.deviceId) {
+        const rec = await env.USERS.get(`device:${body.deviceId}`, { type: 'json' });
+        if (!rec || rec.userId !== userId) return jsonResponse({ error: 'device not owned by target user' }, 404);
+        await env.USERS.delete(`device:${body.deviceId}`);
+        return jsonResponse({ ok: true, revoked: [body.deviceId] });
+      }
+      const revoked = [];
+      let cursor = undefined;
+      do {
+        const page = await env.USERS.list({ prefix: 'device:', cursor });
+        for (const k of page.keys) {
+          const rec = await env.USERS.get(k.name, { type: 'json' });
+          if (rec?.userId === userId) {
+            await env.USERS.delete(k.name);
+            revoked.push(k.name.slice('device:'.length));
+          }
+        }
+        cursor = page.list_complete ? undefined : page.cursor;
+      } while (cursor);
+      return jsonResponse({ ok: true, revoked });
+    }
+
+    // GET /admin/users/list — admin-only. Returns every D1 users row
+    // with a count of bound devices.
+    if (path === '/admin/users/list' && method === 'GET') {
+      const r = await requireAdmin(env, request, url);
+      if (r.error) return r.error;
+      const rows = await env.D1_VIEWED.prepare(
+        `SELECT user_id, display_name, role, last_seen, created_ts,
+                trakt_access_token IS NOT NULL AS has_trakt,
+                trakt_username
+         FROM users
+         ORDER BY role DESC, display_name ASC`
+      ).all();
+
+      // Count devices per user.
+      const deviceCounts = new Map();
+      let cursor = undefined;
+      do {
+        const page = await env.USERS.list({ prefix: 'device:', cursor });
+        for (const k of page.keys) {
+          const rec = await env.USERS.get(k.name, { type: 'json' });
+          if (rec?.userId) deviceCounts.set(rec.userId, (deviceCounts.get(rec.userId) || 0) + 1);
+        }
+        cursor = page.list_complete ? undefined : page.cursor;
+      } while (cursor);
+
+      const adminSingleton = await env.USERS.get('admin', { type: 'json' });
+      return jsonResponse({
+        users: (rows.results || []).map(u => ({
+          userId: u.user_id,
+          displayName: u.display_name,
+          role: u.role,
+          lastSeen: u.last_seen,
+          createdTs: u.created_ts,
+          hasTrakt: !!u.has_trakt,
+          traktUsername: u.trakt_username || null,
+          devices: deviceCounts.get(u.user_id) || 0,
+          isAdmin: u.role === 'admin' && adminSingleton?.userId === u.user_id,
+        })),
+      });
+    }
+
+    // POST /admin/users/{userId}/rename — admin-only. Body { displayName }.
+    if (path.startsWith('/admin/users/') && path.endsWith('/rename') && method === 'POST') {
+      const r = await requireAdmin(env, request, url);
+      if (r.error) return r.error;
+      const userId = path.slice('/admin/users/'.length, -'/rename'.length);
+      const body = await request.json().catch(() => ({}));
+      const displayName = String(body.displayName || '').trim().slice(0, 30);
+      if (!displayName) return jsonResponse({ error: 'displayName required' }, 400);
+      await env.D1_VIEWED.prepare('UPDATE users SET display_name=? WHERE user_id=?').bind(displayName, userId).run();
+      return jsonResponse({ ok: true });
+    }
+
+    // POST /register — public, single-use. Body:
+    //   { invite, deviceId?, deviceKind?, userAgent?, deviceName? }
+    // Validates the invite, mints user_id + device, returns bearer.
+    if (path === '/register' && method === 'POST') {
+      try {
+        const body = await request.json().catch(() => ({}));
+        if (!body.invite) return jsonResponse({ error: 'invite required' }, 400);
+        const inviteKey = `invite:${body.invite}`;
+        const invite = await env.USERS.get(inviteKey, { type: 'json' });
+        if (!invite) return jsonResponse({ error: 'invite not found or expired' }, 404);
+        if (invite.consumed) return jsonResponse({ error: 'invite already used' }, 409);
+        if (invite.expiresAt < Date.now()) return jsonResponse({ error: 'invite expired' }, 410);
+
+        const userId = randomUuid();
+        const deviceId = body.deviceId || randomUuid();
+        const authToken = genAuthToken();
+        const authTokenHash = await sha256Hex(authToken);
+        const now = Date.now();
+        const displayName = invite.suggestedDisplayName || null;
+        const needsDisplayName = !displayName;
+
+        // Insert minimal users row. Trakt and Plex bind later via the
+        // existing /api/trakt/device-code-* and (for admin) Plex routes.
+        await env.D1_VIEWED.prepare(
+          `INSERT INTO users
+             (user_id, display_name, role, last_seen, settings,
+              bootstrapped, created_ts)
+           VALUES (?,?,?,?,?,1,?)`
+        ).bind(userId, displayName, 'user', now, '{}', now).run();
+
+        // Device record in USERS KV.
+        const deviceRec = {
+          userId,
+          kind: body.deviceKind || 'phone',
+          name: body.deviceName || 'New device',
+          userAgent: body.userAgent || request.headers.get('User-Agent') || '',
+          createdAt: now,
+          lastSeen: now,
+          authTokenHash,
+        };
+        await env.USERS.put(`device:${deviceId}`, JSON.stringify(deviceRec));
+
+        // Consume the invite. Keep the record for audit (admin list).
+        invite.consumed = true;
+        invite.consumedBy = userId;
+        invite.consumedAt = now;
+        await env.USERS.put(inviteKey, JSON.stringify(invite));
+
+        return jsonResponse({
+          ok: true,
+          userId,
+          deviceId,
+          authToken,
+          displayName,
+          needsDisplayName,
+          plexEnabled: !!invite.plexEnabled,
+        });
+      } catch (e) {
+        console.error('REGISTER_FAILED', e);
+        return jsonResponse({ error: e.message }, 500);
+      }
+    }
+
+    // PUT /user/settings — bearer-auth. Body { displayName?, settings? }
+    // Updates the caller's own row. settings is merged shallowly into
+    // the existing JSON blob so partial updates don't clobber other keys.
+    if (path === '/user/settings' && method === 'PUT') {
+      const r = await requireBearer(env, request, url);
+      if (r.error) return r.error;
+      const body = await request.json().catch(() => ({}));
+      const updates = [];
+      const binds = [];
+      if (typeof body.displayName === 'string') {
+        const trimmed = body.displayName.trim();
+        if (trimmed.length < 1 || trimmed.length > 30) {
+          return jsonResponse({ error: 'displayName must be 1-30 chars' }, 400);
+        }
+        updates.push('display_name=?');
+        binds.push(trimmed);
+      }
+      if (body.settings && typeof body.settings === 'object') {
+        const existing = await env.D1_VIEWED.prepare('SELECT settings FROM users WHERE user_id=?')
+          .bind(r.auth.userId).first();
+        const merged = { ...safeJsonParse(existing?.settings || '{}', {}), ...body.settings };
+        updates.push('settings=?');
+        binds.push(JSON.stringify(merged));
+      }
+      if (typeof body.streamingRegion === 'string') {
+        updates.push('streaming_region=?');
+        binds.push(body.streamingRegion);
+      }
+      if (Array.isArray(body.mySubscriptions)) {
+        updates.push('my_subscriptions=?');
+        binds.push(JSON.stringify(body.mySubscriptions));
+      }
+      if (!updates.length) return jsonResponse({ ok: true, noop: true });
+      binds.push(r.auth.userId);
+      await env.D1_VIEWED.prepare(
+        `UPDATE users SET ${updates.join(', ')} WHERE user_id=?`
+      ).bind(...binds).run();
+      return jsonResponse({ ok: true });
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // === v8.0.0 — Credential vault routes ===
+    // ════════════════════════════════════════════════════════════════════
+    //
+    // The device-side promote button posts /bootstrap/credentials with all
+    // its local Plex + Trakt creds. The Worker computes user_id from the
+    // Plex token, sets the long-lived keys as Worker secrets via the
+    // Cloudflare API, and INSERTs the rotating + non-secret values into
+    // D1 users. After this, devices never enter creds again — they call
+    // /api/trakt/* and /plex/* proxies and the Worker handles everything.
+
+    // GET /bootstrap/status?secret=X&user=HASH — drives the device's
+    // "show promote button" vs "show Connected ✓" UI decision.
+    if (path === '/bootstrap/status' && method === 'GET') {
+      const providedSecret = url.searchParams.get('secret');
+      if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
+      const userId = url.searchParams.get('user');
+      if (!userId || !/^[a-f0-9]{16,64}$/i.test(userId)) {
+        return jsonResponse({ bootstrapped: false, plex: false, trakt: false });
+      }
+      const plex = !!((env.PLEX_TOKEN && String(env.PLEX_TOKEN).trim()) || await env.CONFIG.get('plex_token'));
+      let trakt = false, bootstrapped = false, traktUsername = null;
+      if (env.D1_VIEWED) {
+        const row = await env.D1_VIEWED.prepare(
+          'SELECT bootstrapped, trakt_access_token, trakt_username FROM users WHERE user_id=?'
+        ).bind(userId).first();
+        if (row) {
+          bootstrapped = !!row.bootstrapped;
+          trakt = !!row.trakt_access_token;
+          traktUsername = row.trakt_username || null;
+        }
+      }
+      return jsonResponse({ bootstrapped, plex, trakt, traktUsername });
+    }
+
+    // POST /bootstrap/credentials  body:
+    //   { secret, plexToken, plexServerUrl?, plexClientId?,
+    //     traktClientId?, traktClientSecret?,
+    //     traktAccessToken?, traktRefreshToken?, traktExpiresAt?, traktUsername?,
+    //     streamingRegion?, mySubscriptions? }
+    //
+    // Computes user_id = SHA-256(plexToken). Sets the immutable keys
+    // (PLEX_TOKEN, TRAKT_CLIENT_ID, TRAKT_CLIENT_SECRET) as Worker secrets
+    // via Cloudflare API (requires ADMIN_API_TOKEN + CF_ACCOUNT_ID env).
+    // INSERTs/UPDATEs the D1 users row with rotating + non-secret values.
+    // Also writes CONFIG.webhook_user_id so the Plex webhook can attribute
+    // events to this user without re-deriving the hash.
+    if (path === '/bootstrap/credentials' && method === 'POST') {
+      try {
+        const body = await request.json();
+        if (!(await checkSecret(env, body.secret))) return new Response('Forbidden', { status: 403, headers: cors });
+        if (!body.plexToken) return jsonResponse({ error: 'plexToken required to derive user_id' }, 400);
+        const userId = await sha256Hex(body.plexToken);
+
+        // Step 1: promote long-lived keys to Worker secrets via CF API.
+        // If any secret promotion fails, abort before touching D1 so the
+        // user can fix the API token and retry.
+        const promotions = [];
+        promotions.push(setWorkerSecret(env, 'PLEX_TOKEN', body.plexToken));
+        if (body.traktClientId) promotions.push(setWorkerSecret(env, 'TRAKT_CLIENT_ID', body.traktClientId));
+        if (body.traktClientSecret) promotions.push(setWorkerSecret(env, 'TRAKT_CLIENT_SECRET', body.traktClientSecret));
+        await Promise.all(promotions);
+
+        // Step 2: write rotating + non-secret values to D1 users row.
+        // ON CONFLICT(user_id) DO UPDATE for re-runs of the same device.
+        // v9.0.0: Trakt tokens written here are AES-GCM ciphertext, with
+        // a single IV stored in trakt_token_iv (access+refresh use the
+        // same IV because they always rotate as a pair).
+        if (!env.D1_VIEWED) return jsonResponse({ error: 'D1_VIEWED binding missing' }, 500);
+        const now = Date.now();
+        const { ct: bcAccessCt, iv: bcIv } = await encryptTraktSecret(env, body.traktAccessToken || null);
+        const { ct: bcRefreshCt } = body.traktRefreshToken
+          ? await encryptTraktSecret(env, body.traktRefreshToken)
+          : { ct: null };
+        await env.D1_VIEWED.prepare(
+          `INSERT INTO users
+           (user_id, plex_server_url, plex_client_id,
+            trakt_access_token, trakt_refresh_token, trakt_expires_at, trakt_username, trakt_token_iv,
+            streaming_region, my_subscriptions, bootstrapped, created_ts)
+           VALUES (?,?,?,?,?,?,?,?,?,?,1,?)
+           ON CONFLICT(user_id) DO UPDATE SET
+             plex_server_url     = COALESCE(excluded.plex_server_url, users.plex_server_url),
+             plex_client_id      = COALESCE(excluded.plex_client_id, users.plex_client_id),
+             trakt_access_token  = COALESCE(excluded.trakt_access_token, users.trakt_access_token),
+             trakt_refresh_token = COALESCE(excluded.trakt_refresh_token, users.trakt_refresh_token),
+             trakt_expires_at    = COALESCE(excluded.trakt_expires_at, users.trakt_expires_at),
+             trakt_username      = COALESCE(excluded.trakt_username, users.trakt_username),
+             trakt_token_iv      = COALESCE(excluded.trakt_token_iv, users.trakt_token_iv),
+             streaming_region    = COALESCE(excluded.streaming_region, users.streaming_region),
+             my_subscriptions    = COALESCE(excluded.my_subscriptions, users.my_subscriptions),
+             bootstrapped        = 1`
+        ).bind(
+          userId,
+          body.plexServerUrl || null,
+          body.plexClientId || null,
+          bcAccessCt,
+          bcRefreshCt,
+          body.traktExpiresAt || null,
+          body.traktUsername || null,
+          bcIv,
+          body.streamingRegion || null,
+          body.mySubscriptions ? (typeof body.mySubscriptions === 'string' ? body.mySubscriptions : JSON.stringify(body.mySubscriptions)) : null,
+          now
+        ).run();
+
+        // Step 3: persist plex_url + plex_token in CONFIG KV for legacy
+        // compat with /plex/* routes that still call env.CONFIG.get(…)
+        // directly. Remove in v8.1.0 once those routes use getPlexCreds().
+        if (body.plexServerUrl) {
+          await env.CONFIG.put('plex_url', body.plexServerUrl.replace(/\/$/, ''));
+        }
+        await env.CONFIG.put('plex_token', body.plexToken);
+        // webhook_user_id lets /webhook/{secret} attribute incoming Plex
+        // events to the right D1 users row without re-hashing the token.
+        await env.CONFIG.put('webhook_user_id', userId);
+
+        return jsonResponse({ success: true, user_id: userId, bootstrapped: true });
+      } catch (e) {
+        return jsonResponse({ error: e.message }, 500);
+      }
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // === v8.0.0 — Trakt proxy routes ===
+    // ════════════════════════════════════════════════════════════════════
+    //
+    // Every Trakt operation that used to happen client-side (with the
+    // device holding the access token) now routes through here. The
+    // Worker holds the rotating token in D1; getValidTraktToken handles
+    // auto-refresh. Devices never see the Trakt token. CSP can drop
+    // api.trakt.tv from connect-src once all devices migrate.
+
+    // POST /api/trakt/device-code-init?secret=X
+    // Returns Trakt's user_code + verification_url for the device-code
+    // OAuth flow. Device shows the code; user enters it at trakt.tv/activate.
+    if (path === '/api/trakt/device-code-init' && method === 'POST') {
+      const providedSecret = url.searchParams.get('secret');
+      if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
+      if (!env.TRAKT_CLIENT_ID) return jsonResponse({ error: 'TRAKT_CLIENT_ID secret not set' }, 500);
+      try {
+        const r = await fetch('https://api.trakt.tv/oauth/device/code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ client_id: env.TRAKT_CLIENT_ID }),
+        });
+        if (!r.ok) return jsonResponse({ error: `Trakt ${r.status}` }, 502);
+        return jsonResponse(await r.json());
+      } catch (e) {
+        return jsonResponse({ error: e.message }, 502);
+      }
+    }
+
+    // POST /api/trakt/device-code-poll?secret=X
+    // body: { device_code, user }
+    // Polls Trakt; on success, writes tokens to the user's D1 row.
+    if (path === '/api/trakt/device-code-poll' && method === 'POST') {
+      try {
+        const body = await request.json();
+        if (!(await checkSecret(env, body.secret || url.searchParams.get('secret')))) {
+          return new Response('Forbidden', { status: 403, headers: cors });
+        }
+        const userId = body.user || url.searchParams.get('user');
+        if (!userId) return jsonResponse({ error: 'user (user_id) required' }, 400);
+        if (!body.device_code) return jsonResponse({ error: 'device_code required' }, 400);
+        if (!env.TRAKT_CLIENT_ID || !env.TRAKT_CLIENT_SECRET) {
+          return jsonResponse({ error: 'TRAKT_CLIENT_ID / TRAKT_CLIENT_SECRET secrets not set' }, 500);
+        }
+        const r = await fetch('https://api.trakt.tv/oauth/device/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            code: body.device_code,
+            client_id: env.TRAKT_CLIENT_ID,
+            client_secret: env.TRAKT_CLIENT_SECRET,
+          }),
+        });
+        // Trakt returns 200 on success, 400 'authorization_pending' while waiting,
+        // 410 expired, 418 denied. Pass through status so the device can poll.
+        if (r.status === 200) {
+          const tok = await r.json();
+          const expiresAt = Date.now() + (tok.expires_in || 7776000) * 1000;
+          // Look up the user's Trakt username via /users/me with the new token.
+          let username = null;
+          try {
+            const meR = await fetch('https://api.trakt.tv/users/me', {
+              headers: {
+                'Authorization': `Bearer ${tok.access_token}`,
+                'trakt-api-version': '2',
+                'trakt-api-key': env.TRAKT_CLIENT_ID,
+              },
+            });
+            if (meR.ok) {
+              const me = await meR.json();
+              username = me?.username || null;
+            }
+          } catch {}
+          if (!env.D1_VIEWED) return jsonResponse({ error: 'D1_VIEWED binding missing' }, 500);
+          // v9.0.0: tokens written here are AES-GCM ciphertext. Both
+          // access and refresh share one IV (they rotate together).
+          const { ct: dcAccessCt, iv: dcIv } = await encryptTraktSecret(env, tok.access_token);
+          const { ct: dcRefreshCt } = await encryptTraktSecret(env, tok.refresh_token);
+          // Ensure a users row exists; if not, INSERT a minimal one so the
+          // UPDATE has something to target.
+          const existing = await env.D1_VIEWED.prepare('SELECT user_id FROM users WHERE user_id=?').bind(userId).first();
+          if (!existing) {
+            await env.D1_VIEWED.prepare(
+              `INSERT INTO users (user_id, trakt_access_token, trakt_refresh_token, trakt_expires_at, trakt_username, trakt_token_iv, bootstrapped, created_ts)
+               VALUES (?,?,?,?,?,?,1,?)`
+            ).bind(userId, dcAccessCt, dcRefreshCt, expiresAt, username, dcIv, Date.now()).run();
+          } else {
+            await env.D1_VIEWED.prepare(
+              `UPDATE users SET trakt_access_token=?, trakt_refresh_token=?, trakt_expires_at=?, trakt_username=COALESCE(?, trakt_username), trakt_token_iv=? WHERE user_id=?`
+            ).bind(dcAccessCt, dcRefreshCt, expiresAt, username, dcIv, userId).run();
+          }
+          return jsonResponse({ success: true, username });
+        }
+        // Pass through Trakt's polling status codes
+        return new Response(JSON.stringify({ status: r.status }), {
+          status: r.status === 400 || r.status === 410 || r.status === 418 ? r.status : 502,
+          headers: { ...cors, 'Content-Type': 'application/json' },
+        });
+      } catch (e) {
+        return jsonResponse({ error: e.message }, 502);
+      }
+    }
+
+    // POST /api/trakt/scrobble?secret=X&user=HASH
+    // body: { tmdbId, type: 'movie'|'show', watchedTs, itemId?, title?, year? }
+    // Pushes to Trakt + records in D1 watch_history.
+    if (path === '/api/trakt/scrobble' && method === 'POST') {
+      const providedSecret = url.searchParams.get('secret');
+      if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
+      const userId = url.searchParams.get('user');
+      if (!userId) return jsonResponse({ error: 'user required' }, 400);
+      try {
+        const body = await request.json();
+        if (!body.tmdbId) return jsonResponse({ error: 'tmdbId required' }, 400);
+        const watchedTs = body.watchedTs || Date.now();
+        const type = body.type === 'movie' ? 'movie' : 'show';
+        const { ok, status } = await pushScrobbleToTrakt(env, userId, { tmdbId: body.tmdbId, type, watchedTs });
+        await recordWatch(env, userId, {
+          itemId: body.itemId, tmdbId: body.tmdbId, source: 'manual',
+          title: body.title, year: body.year, type,
+          watchedTs, deviceId: request.headers.get('X-Device-Id') || null,
+          pushedToTrakt: ok,
+        });
+        return jsonResponse({ ok, status });
+      } catch (e) {
+        return jsonResponse({ error: e.message }, 502);
+      }
+    }
+
+    // POST /api/trakt/unwatch?secret=X&user=HASH  body: {tmdbId, type}
+    if (path === '/api/trakt/unwatch' && method === 'POST') {
+      const providedSecret = url.searchParams.get('secret');
+      if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
+      const userId = url.searchParams.get('user');
+      if (!userId) return jsonResponse({ error: 'user required' }, 400);
+      try {
+        const body = await request.json();
+        if (!body.tmdbId) return jsonResponse({ error: 'tmdbId required' }, 400);
+        const type = body.type === 'movie' ? 'movies' : 'shows';
+        const tBody = { [type]: [{ ids: { tmdb: body.tmdbId } }] };
+        const r = await traktFetch(env, userId, '/sync/history/remove', {
+          method: 'POST', body: JSON.stringify(tBody),
+        });
+        return jsonResponse({ ok: r.ok, status: r.status });
+      } catch (e) {
+        return jsonResponse({ error: e.message }, 502);
+      }
+    }
+
+    // POST /api/trakt/rate?secret=X&user=HASH  body: {tmdbId, type, rating}
+    if (path === '/api/trakt/rate' && method === 'POST') {
+      const providedSecret = url.searchParams.get('secret');
+      if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
+      const userId = url.searchParams.get('user');
+      if (!userId) return jsonResponse({ error: 'user required' }, 400);
+      try {
+        const body = await request.json();
+        if (!body.tmdbId || typeof body.rating !== 'number') return jsonResponse({ error: 'tmdbId + numeric rating required' }, 400);
+        const key = body.type === 'movie' ? 'movies' : 'shows';
+        const tBody = { [key]: [{ rating: body.rating, ids: { tmdb: body.tmdbId } }] };
+        const r = await traktFetch(env, userId, '/sync/ratings', {
+          method: 'POST', body: JSON.stringify(tBody),
+        });
+        return jsonResponse({ ok: r.ok, status: r.status });
+      } catch (e) {
+        return jsonResponse({ error: e.message }, 502);
+      }
+    }
+
+    // POST /api/trakt/unrate?secret=X&user=HASH  body: {tmdbId, type}
+    if (path === '/api/trakt/unrate' && method === 'POST') {
+      const providedSecret = url.searchParams.get('secret');
+      if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
+      const userId = url.searchParams.get('user');
+      if (!userId) return jsonResponse({ error: 'user required' }, 400);
+      try {
+        const body = await request.json();
+        if (!body.tmdbId) return jsonResponse({ error: 'tmdbId required' }, 400);
+        const key = body.type === 'movie' ? 'movies' : 'shows';
+        const tBody = { [key]: [{ ids: { tmdb: body.tmdbId } }] };
+        const r = await traktFetch(env, userId, '/sync/ratings/remove', {
+          method: 'POST', body: JSON.stringify(tBody),
+        });
+        return jsonResponse({ ok: r.ok, status: r.status });
+      } catch (e) {
+        return jsonResponse({ error: e.message }, 502);
+      }
+    }
+
+    // POST /api/trakt/watchlist-add?secret=X&user=HASH  body: {tmdbId, type}
+    if (path === '/api/trakt/watchlist-add' && method === 'POST') {
+      const providedSecret = url.searchParams.get('secret');
+      if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
+      const userId = url.searchParams.get('user');
+      if (!userId) return jsonResponse({ error: 'user required' }, 400);
+      try {
+        const body = await request.json();
+        if (!body.tmdbId) return jsonResponse({ error: 'tmdbId required' }, 400);
+        const key = body.type === 'movie' ? 'movies' : 'shows';
+        const tBody = { [key]: [{ ids: { tmdb: body.tmdbId } }] };
+        const r = await traktFetch(env, userId, '/sync/watchlist', {
+          method: 'POST', body: JSON.stringify(tBody),
+        });
+        return jsonResponse({ ok: r.ok, status: r.status });
+      } catch (e) {
+        return jsonResponse({ error: e.message }, 502);
+      }
+    }
+
+    // GET /api/trakt/history?secret=X&user=HASH&type=movies|shows&limit=N
+    if (path === '/api/trakt/history' && method === 'GET') {
+      const providedSecret = url.searchParams.get('secret');
+      if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
+      const userId = url.searchParams.get('user');
+      if (!userId) return jsonResponse({ error: 'user required' }, 400);
+      const type = url.searchParams.get('type') === 'shows' ? 'shows' : 'movies';
+      const limit = Math.min(parseInt(url.searchParams.get('limit') || '10000'), 10000);
+      try {
+        const r = await traktFetch(env, userId, `/sync/history/${type}?limit=${limit}`);
+        if (!r.ok) return jsonResponse({ error: `Trakt ${r.status}` }, 502);
+        return jsonResponse(await r.json());
+      } catch (e) {
+        return jsonResponse({ error: e.message }, 502);
+      }
+    }
+
+    // GET /api/trakt/ratings?secret=X&user=HASH&type=movies|shows
+    if (path === '/api/trakt/ratings' && method === 'GET') {
+      const providedSecret = url.searchParams.get('secret');
+      if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
+      const userId = url.searchParams.get('user');
+      if (!userId) return jsonResponse({ error: 'user required' }, 400);
+      const type = url.searchParams.get('type') === 'shows' ? 'shows' : 'movies';
+      try {
+        const r = await traktFetch(env, userId, `/sync/ratings/${type}`);
+        if (!r.ok) return jsonResponse({ error: `Trakt ${r.status}` }, 502);
+        return jsonResponse(await r.json());
+      } catch (e) {
+        return jsonResponse({ error: e.message }, 502);
+      }
+    }
+
+    // GET /api/trakt/me?secret=X&user=HASH — returns the Trakt /users/me payload
+    if (path === '/api/trakt/me' && method === 'GET') {
+      const providedSecret = url.searchParams.get('secret');
+      if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
+      const userId = url.searchParams.get('user');
+      if (!userId) return jsonResponse({ error: 'user required' }, 400);
+      try {
+        const r = await traktFetch(env, userId, '/users/me');
+        if (!r.ok) return jsonResponse({ error: `Trakt ${r.status}` }, 502);
+        return jsonResponse(await r.json());
+      } catch (e) {
+        return jsonResponse({ error: e.message }, 502);
+      }
+    }
+
+    // POST /api/trakt/disconnect?secret=X&user=HASH — clears trakt_* in users row
+    if (path === '/api/trakt/disconnect' && method === 'POST') {
+      const providedSecret = url.searchParams.get('secret');
+      if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
+      const userId = url.searchParams.get('user');
+      if (!userId) return jsonResponse({ error: 'user required' }, 400);
+      if (!env.D1_VIEWED) return jsonResponse({ error: 'D1_VIEWED binding missing' }, 500);
+      try {
+        await env.D1_VIEWED.prepare(
+          `UPDATE users SET trakt_access_token=NULL, trakt_refresh_token=NULL,
+                            trakt_expires_at=NULL, trakt_username=NULL,
+                            trakt_token_iv=NULL
+           WHERE user_id=?`
+        ).bind(userId).run();
+        return jsonResponse({ ok: true });
+      } catch (e) {
+        return jsonResponse({ error: e.message }, 500);
+      }
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // === v8.0.0 — Watch history routes ===
+    // ════════════════════════════════════════════════════════════════════
+
+    // POST /api/watch/mark?secret=X&user=HASH
+    // body: { tmdbId, itemId?, type, title?, year?, watchedTs? }
+    // Manual mark-watched from the device. Records to D1 + pushes Trakt
+    // if connected. Falls back gracefully if Trakt isn't set up.
+    if (path === '/api/watch/mark' && method === 'POST') {
+      const providedSecret = url.searchParams.get('secret');
+      if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
+      const userId = url.searchParams.get('user');
+      if (!userId) return jsonResponse({ error: 'user required' }, 400);
+      try {
+        const body = await request.json();
+        const watchedTs = body.watchedTs || Date.now();
+        const type = body.type === 'movie' ? 'movie' : 'show';
+        const deviceId = request.headers.get('X-Device-Id') || null;
+        // Try to push to Trakt; on failure (e.g. user not connected), still record locally.
+        let pushedOk = false;
+        if (body.tmdbId) {
+          try {
+            const { ok } = await pushScrobbleToTrakt(env, userId, { tmdbId: body.tmdbId, type, watchedTs });
+            pushedOk = ok;
+          } catch (e) {
+            // Trakt not connected or refresh failed — record locally only.
+          }
+        }
+        await recordWatch(env, userId, {
+          itemId: body.itemId, tmdbId: body.tmdbId, source: 'manual',
+          title: body.title, year: body.year, type,
+          watchedTs, deviceId, pushedToTrakt: pushedOk,
+        });
+        return jsonResponse({ ok: true, pushedToTrakt: pushedOk });
+      } catch (e) {
+        return jsonResponse({ error: e.message }, 500);
+      }
+    }
+
+    // GET /api/watch/history?secret=X&user=HASH&since=TS&limit=N
+    if (path === '/api/watch/history' && method === 'GET') {
+      const providedSecret = url.searchParams.get('secret');
+      if (!(await checkSecret(env, providedSecret))) return new Response('Forbidden', { status: 403, headers: cors });
+      const userId = url.searchParams.get('user');
+      if (!userId) return jsonResponse({ error: 'user required' }, 400);
+      if (!env.D1_VIEWED) return jsonResponse({ error: 'D1_VIEWED binding missing' }, 500);
+      const since = parseInt(url.searchParams.get('since') || '0');
+      const limit = Math.min(parseInt(url.searchParams.get('limit') || '500'), 5000);
+      try {
+        const rows = await env.D1_VIEWED.prepare(
+          `SELECT id, item_id, tmdb_id, source, title, year, type, watched_ts, device_id, pushed_to_trakt
+           FROM watch_history
+           WHERE user_id=? AND watched_ts >= ?
+           ORDER BY watched_ts DESC
+           LIMIT ?`
+        ).bind(userId, since, limit).all();
+        return jsonResponse({ rows: rows.results || [] });
+      } catch (e) {
+        return jsonResponse({ error: e.message }, 500);
+      }
+    }
+
     return new Response('Not found', { status: 404, headers: cors });
   },
 
@@ -1458,37 +3218,49 @@ async function runStateBackup(env) {
     console.log('[backup] SYNC_KV binding missing — skipping');
     return { skipped: 'no-sync-kv' };
   }
-  const userList = await env.SYNC_KV.list({ prefix: 'user:' });
-  console.log('[backup] backing up', userList.keys.length, 'users');
   const date = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
   let written = 0, bytesIn = 0, bytesOut = 0, errors = 0;
+  const seen = new Set();
 
-  for (const k of userList.keys) {
-    const userHash = k.name.slice('user:'.length);
+  async function backupOne(key, label) {
+    if (seen.has(label)) return;
+    seen.add(label);
     try {
-      const raw = await env.SYNC_KV.get(k.name);
-      if (!raw) continue;
+      const raw = await env.SYNC_KV.get(key);
+      if (!raw) return;
       bytesIn += raw.length;
       const gz = await gzipString(raw);
       bytesOut += gz.byteLength;
-      await env.BACKUPS.put(`state/${date}/${userHash}.json.gz`, gz, {
-        httpMetadata: {
-          contentType: 'application/json',
-          contentEncoding: 'gzip',
-        },
-        customMetadata: {
-          userHash,
-          rawBytes: String(raw.length),
-          ts: String(Date.now()),
-        },
+      await env.BACKUPS.put(`state/${date}/${label}.json.gz`, gz, {
+        httpMetadata: { contentType: 'application/json', contentEncoding: 'gzip' },
+        customMetadata: { userKey: key, rawBytes: String(raw.length), ts: String(Date.now()) },
       });
       written++;
     } catch (e) {
       errors++;
-      console.log('[backup] failed for', userHash.slice(0, 8), e.message);
+      console.log('[backup] failed for', label.slice(0, 8), e.message);
     }
   }
-  const summary = { date, written, errors, bytesIn, bytesOut, compressionRatio: bytesIn ? Math.round((1 - bytesOut / bytesIn) * 100) : 0, ranAt: Date.now() };
+
+  // v9.0.0 user-scoped state: walk every bearer-authed user.
+  const stateList = await env.SYNC_KV.list({ prefix: 'state:' });
+  for (const k of stateList.keys) {
+    const userId = k.name.slice('state:'.length);
+    await backupOne(k.name, userId);
+  }
+  // Legacy user:{hash} keys (Lincoln's pre-migration data). The hash
+  // segment doubles as the label since old backups already used that.
+  const legacyList = await env.SYNC_KV.list({ prefix: 'user:' });
+  for (const k of legacyList.keys) {
+    const userHash = k.name.slice('user:'.length);
+    await backupOne(k.name, userHash);
+  }
+
+  const summary = {
+    date, written, errors, bytesIn, bytesOut,
+    compressionRatio: bytesIn ? Math.round((1 - bytesOut / bytesIn) * 100) : 0,
+    ranAt: Date.now(),
+  };
   console.log('[backup] done', JSON.stringify(summary));
   return summary;
 }

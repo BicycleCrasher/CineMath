@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cinemath-v9';
+const CACHE_NAME = 'cinemath-v11';
 const inflightRevalidations = new Set();
 const ASSETS = [
   './',
@@ -104,6 +104,17 @@ self.addEventListener('fetch', (event) => {
   // proxy and trying to cache opaque cross-origin responses breaks them.
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
+
+  // v9.0.0: invite / reconnect / pair-session URLs need fresh network
+  // every time. They power one-shot onboarding flows; serving a cached
+  // index.html that was generated before the magic-link client logic
+  // shipped would leave new users stuck. Bypass cache entirely.
+  if (url.searchParams.has('invite')
+      || url.searchParams.has('reconnect')
+      || url.searchParams.has('p')
+      || url.pathname.startsWith('/p/')) {
+    return; // Let the browser handle it without SW interception.
+  }
 
   event.respondWith(
     caches.match(event.request).then((cached) => {
