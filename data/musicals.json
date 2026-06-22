@@ -6,7 +6,9 @@
     {
       "name": "I. Animated",
       "desc": "Disney Renaissance, modern Disney, Pixar, non-Disney animated musicals.",
-      "categories": ["animated"],
+      "categories": [
+        "animated"
+      ],
       "items": [
         {
           "title": "The Little Mermaid",
@@ -22,7 +24,17 @@
           "pitch": "First animated film to receive a Best Picture nomination. The Beast's library scene is canon.",
           "priority": "low",
           "whyPriority": "Watched. Cataloged for tracking.",
-          "contentType": "film-musical"
+          "contentType": "film-musical",
+          "critics": [
+            {
+              "who": "CinemaSerf",
+              "quote": "This is a magical animated interpretation of the Jeanne-Marie de Beaumont fairy tale."
+            },
+            {
+              "who": "Andre Gonzales",
+              "quote": "My child hood all time favorite movie. Now my own family loves this movie too."
+            }
+          ]
         },
         {
           "title": "Aladdin",
@@ -30,7 +42,17 @@
           "pitch": "Robin Williams improvising as the Genie redefined what animated voice acting could be.",
           "priority": "low",
           "whyPriority": "Watched. Cataloged for tracking.",
-          "contentType": "film-musical"
+          "contentType": "film-musical",
+          "critics": [
+            {
+              "who": "Manuel São Bento",
+              "quote": "If you enjoy reading my Spoiler-Free reviews, please follow my blog :)\r\n\r\nAladdin is one of Disney‘s most adored classics, being the indisputable favorite of many, many fans."
+            },
+            {
+              "who": "CinemaSerf",
+              "quote": "Certainly one of the better animations from the reinvigorated 1990's Disney Studio."
+            }
+          ]
         },
         {
           "title": "The Lion King",
@@ -38,7 +60,17 @@
           "pitch": "Hamlet on the savanna with Elton John songs. The peak of the Disney Renaissance commercially and arguably artistically.",
           "priority": "low",
           "whyPriority": "Watched. Cataloged for tracking.",
-          "contentType": "film-musical"
+          "contentType": "film-musical",
+          "critics": [
+            {
+              "who": "Manuel São Bento",
+              "quote": "If you enjoy reading my reviews, please follow my blog :)\r\n\r\nFirst of all, this is (obviously) a SPOILER review."
+            },
+            {
+              "who": "CinemaSerf",
+              "quote": "Certainly not one of Disney's better animations from a technical perspective - the artwork lacks the vibrancy and detail of many of their earlier stories; but the combined efforts of Sir Tim Rice, Elton John and Hans Zimmer make this an enjoyable fantasy adventure."
+            }
+          ]
         },
         {
           "title": "Pocahontas",
@@ -46,7 +78,13 @@
           "pitch": "Ambitious historical reimagining with one of Menken's strongest scores. Politics aged complicated.",
           "priority": "low",
           "whyPriority": "Watched. Cataloged for tracking.",
-          "contentType": "film-musical"
+          "contentType": "film-musical",
+          "critics": [
+            {
+              "who": "r96sk",
+              "quote": "Good offering from Disney.\r\n\r\n<em>'Pocahontas'</em> is an enjoyable flick from 1995."
+            }
+          ]
         },
         {
           "title": "The Hunchback of Notre Dame",
@@ -54,7 +92,17 @@
           "pitch": "The darkest Disney Renaissance film by a wide margin. Frollo's 'Hellfire' is the most adult thing in the canon.",
           "priority": "low",
           "whyPriority": "Watched. Cataloged for tracking.",
-          "contentType": "film-musical"
+          "contentType": "film-musical",
+          "critics": [
+            {
+              "who": "r96sk",
+              "quote": "I've always enjoyed Disney's <em>'The Hunchback of Notre Dame'</em>.\r\n\r\nI love the atmosphere of the film, how fairly dark it is in parts and how lovely the animation looks."
+            },
+            {
+              "who": "CinemaSerf",
+              "quote": "This is what you might call a \"free\" adaptation of Victor Hugo's early 19th century tale of 15th Century French evil, bigotry, fear and love."
+            }
+          ]
         },
         {
           "title": "Hercules",
@@ -62,7 +110,13 @@
           "pitch": "The Muses-as-gospel-chorus framing device is the most musically interesting thing Disney did in the 90s.",
           "priority": "low",
           "whyPriority": "Watched. Cataloged for tracking.",
-          "contentType": "film-musical"
+          "contentType": "film-musical",
+          "critics": [
+            {
+              "who": "CinemaSerf",
+              "quote": "Undoubtedly one of the better 1990s Disney films."
+            }
+          ]
         },
         {
           "title": "Mulan",
@@ -70,7 +124,17 @@
           "pitch": "Disney's most action-driven musical and one of its best protagonist arcs. 'I'll Make a Man Out of You' transcends the medium.",
           "priority": "low",
           "whyPriority": "Watched. Cataloged for tracking.",
-          "contentType": "film-musical"
+          "contentType": "film-musical",
+          "critics": [
+            {
+              "who": "r96sk",
+              "quote": "<em>'Mulan'</em> is good Disney.\r\n\r\nThere's a lot to enjoy about this film, it's not without a few less entertaining parts but overall it's one that many will like."
+            },
+            {
+              "who": "Manuel São Bento",
+              "quote": "If you enjoy reading my Spoiler-Free reviews, please follow my blog @\r\nhttps://www.msbreviews.com\r\n\r\n2020 brings us yet another Disney's live-action remake."
+            }
+          ]
         },
         {
           "title": "Tarzan",
@@ -78,7 +142,17 @@
           "pitch": "Phil Collins replaces traditional book-style musical numbers with pop-song scoring. Transitional moment for Disney.",
           "priority": "low",
           "whyPriority": "Watched. Cataloged for tracking.",
-          "contentType": "film-musical"
+          "contentType": "film-musical",
+          "critics": [
+            {
+              "who": "The Movie Diorama",
+              "quote": "Tarzan swings through the iridescent jungle swiftly, ending Disney’s Renaissance era with wild exuberance."
+            },
+            {
+              "who": "r96sk",
+              "quote": "<em>'Tarzan'</em> is one of those films that I had always assumed I had seen, though evidently I hadn't and this was my first time watching."
+            }
+          ]
         },
         {
           "title": "Anastasia",
@@ -86,7 +160,13 @@
           "pitch": "Don Bluth's Fox-produced rival to the Disney Renaissance. Romanov rewrite plus 'Once Upon a December' equals an underrated classic.",
           "priority": "low",
           "whyPriority": "Loved. Cataloged for tracking.",
-          "contentType": "film-musical"
+          "contentType": "film-musical",
+          "critics": [
+            {
+              "who": "CinemaSerf",
+              "quote": "This adaptation is quite similar to the Brynner/Bergman telling of this story from 1956 - only this one features one of Disney's better baddies to liven it up and inject a bit of nasty menace to the proceedings."
+            }
+          ]
         },
         {
           "title": "The Prince of Egypt",
@@ -94,14 +174,26 @@
           "pitch": "DreamWorks' Moses-as-blockbuster. Hans Zimmer score, ambitious animation, takes the source seriously.",
           "priority": "low",
           "whyPriority": "Watched once, didn't rewatch. Cataloged for tracking.",
-          "contentType": "film-musical"
+          "contentType": "film-musical",
+          "critics": [
+            {
+              "who": "CinemaSerf",
+              "quote": "So if you’ve seen Charlton Heston and Yul Brynner have at it in Cecil B."
+            },
+            {
+              "who": "badelf",
+              "quote": "**The Prince of Egypt (1998)**\r\n\r\n_Directed by Brenda Chapman, Steve Hickner, and Simon Wells_\r\n\r\nThe animation in The Prince of Egypt, considering it was last century, was quite amazing and luscious."
+            }
+          ]
         }
       ]
     },
     {
       "name": "II. Stage Adaptations",
       "desc": "Films adapted from stage musicals.",
-      "categories": ["stage-adaptation"],
+      "categories": [
+        "stage-adaptation"
+      ],
       "items": [
         {
           "title": "West Side Story",
@@ -109,7 +201,17 @@
           "pitch": "Spielberg's revisit of Bernstein/Sondheim, with Tony Kushner's revised book. More faithful to the stage than the 1961 version in significant ways.",
           "priority": "low",
           "whyPriority": "Watched. Cataloged for tracking.",
-          "contentType": "film-musical"
+          "contentType": "film-musical",
+          "critics": [
+            {
+              "who": "dfle3",
+              "quote": "West Side story: Gritty morality tale with an emotional punch."
+            },
+            {
+              "who": "beyondthecineramadome",
+              "quote": "Full review: <a>https://www.tinakakadelis.com/beyond-the-cinerama-dome/2021/12/28/it-all-begins-tonight-west-side-story-review<a>\r\n\r\nThis film is a still (sadly) all-too-relevant story about how hatred infiltrates communities and the struggle to find a place to belong."
+            }
+          ]
         },
         {
           "title": "The Sound of Music",
@@ -117,7 +219,17 @@
           "pitch": "Julie Andrews and the Alps. Probably the most-rewatched Western family musical of the 20th century, and the form has not been improved upon.",
           "priority": "low",
           "whyPriority": "Watched. Cataloged for tracking.",
-          "contentType": "film-musical"
+          "contentType": "film-musical",
+          "critics": [
+            {
+              "who": "John Chard",
+              "quote": "One of cinema's most enduring family classics.\r\n\r\nWhat can one say about a film that now, as it gears towards its next anniversary of a 50th birthday, is loved and adored by so many? It feels, to me at least, kind of redundant trying to even write a review of it now."
+            },
+            {
+              "who": "r96sk",
+              "quote": "Heard great things, got great things.\r\n\r\nI've said it before, but musicals aren't my favourite genre - I don't dislike them at all, but if I were to rank my favourite genres they would probably be down low."
+            }
+          ]
         },
         {
           "title": "My Fair Lady",
@@ -125,7 +237,17 @@
           "pitch": "Audrey Hepburn (with Marni Nixon's voice) as Eliza Doolittle. Lerner and Loewe's most enduring score.",
           "priority": "low",
           "whyPriority": "Watched. Cataloged for tracking.",
-          "contentType": "film-musical"
+          "contentType": "film-musical",
+          "critics": [
+            {
+              "who": "John Chard",
+              "quote": "The difference between a lady and a flower girl is not how she behaves, but how she is treated."
+            },
+            {
+              "who": "Filipe Manuel Neto",
+              "quote": "**A film with a lot of quality, but also with some mistakes that are difficult to forgive.**\r\n\r\nThis is one of those films that I heard a lot about before I actually decided to sit down and watch it."
+            }
+          ]
         },
         {
           "title": "Grease",
@@ -133,7 +255,17 @@
           "pitch": "Travolta and Newton-John. The 1950s through a 70s lens, by way of stage musical. 'Summer Nights' is unkillable.",
           "priority": "low",
           "whyPriority": "Watched. Cataloged for tracking.",
-          "contentType": "film-musical"
+          "contentType": "film-musical",
+          "critics": [
+            {
+              "who": "Cat Ellington",
+              "quote": "Grease is definitely the word! ...\r\n\r\nWhen my family (my mother, my brother, and I) went out on our traditional weekly \"Movie Date Night\" (as we so lovingly named it during that time) to see Grease at the Chicago Theater, \"Thank God It's Friday\" had been playing at the old State and Lake Theater rig"
+            },
+            {
+              "who": "John Chard",
+              "quote": "You're a fake and a phony and I wish I never laid eyes on you!\r\n\r\nGrease is directed by Randal Kleiser and stars John Travolta, Olivia Newton-John, Stockard Channing & Jeff Conaway."
+            }
+          ]
         },
         {
           "title": "Sweeney Todd: The Demon Barber of Fleet Street",
@@ -141,7 +273,13 @@
           "pitch": "Tim Burton's Sondheim. Depp and Bonham Carter's vocals are weak by stage standards but the visual register is right.",
           "priority": "low",
           "whyPriority": "Watched. Cataloged for tracking.",
-          "contentType": "film-musical"
+          "contentType": "film-musical",
+          "critics": [
+            {
+              "who": "CinemaSerf",
+              "quote": "The triumvirate of Tim Burton, Johnny Depp and Helena Bonham-Carter returns for this entertaining adaptation of Stephen Sondheim's musical adaptation of the deathly vengeful antics of the eponymous London barber and his pie making accomplice."
+            }
+          ]
         },
         {
           "title": "Les Misérables",
@@ -173,7 +311,17 @@
           "pitch": "ABBA jukebox film with a Greek-island setting and a cast that mostly cannot sing. Streep is committed; Brosnan is not.",
           "priority": "low",
           "whyPriority": "Watched. Did not enjoy at all.",
-          "contentType": "film-musical"
+          "contentType": "film-musical",
+          "critics": [
+            {
+              "who": "LastCaress1972",
+              "quote": "To Mamma Mia! then, a movie easily slipping in past Coyote Ugly as the second-worst film I've ever seen (behind The Rocky Horror Picture Show)."
+            },
+            {
+              "who": "Joe",
+              "quote": "Really enjoyable film, with a lot of funny one-liners, and despite the fact that a lot of them are rubbish singers, that partly adds to the humour, and obviously, Amanda, Meryl, Colin and others do have good voices :)."
+            }
+          ]
         },
         {
           "title": "Annie",
@@ -181,7 +329,13 @@
           "pitch": "John Huston directing a musical, somehow. Carol Burnett as Miss Hannigan is the reason to watch.",
           "priority": "low",
           "whyPriority": "Watched. Cataloged for tracking.",
-          "contentType": "film-musical"
+          "contentType": "film-musical",
+          "critics": [
+            {
+              "who": "CinemaSerf",
+              "quote": "Carol Burnett is wonderful as the conniving, neglectful manager of the orphanage (\"Miss Hannigan\") who cares not a jot for her charges and treats them like skivvies whilst she drinks//smokes and generally misbehaves her way through life."
+            }
+          ]
         },
         {
           "title": "Dreamgirls",
@@ -189,7 +343,13 @@
           "pitch": "Jennifer Hudson's 'And I Am Telling You I'm Not Going' is one of the great single-take musical-film performances. Eddie Murphy got a Best Supporting nomination.",
           "priority": "low",
           "whyPriority": "Watched. Cataloged for tracking.",
-          "contentType": "film-musical"
+          "contentType": "film-musical",
+          "critics": [
+            {
+              "who": "CinemaSerf",
+              "quote": "Jennifer Hudson is simply superb in this musical roller-coaster of a film."
+            }
+          ]
         },
         {
           "title": "The Phantom of the Opera",
@@ -197,7 +357,17 @@
           "pitch": "Joel Schumacher's full-bore Andrew Lloyd Webber. Visually committed, vocally inconsistent. Gerard Butler can't quite carry it.",
           "priority": "low",
           "whyPriority": "Watched. Cataloged for tracking.",
-          "contentType": "film-musical"
+          "contentType": "film-musical",
+          "critics": [
+            {
+              "who": "AusFem",
+              "quote": "**SENSATIONAL**\r\n\r\nGreat cast, fantastic music, beautiful storyline."
+            },
+            {
+              "who": "CinemaSerf",
+              "quote": "I was fortunate enough to see this on stage and this version holds up quite well, by comparison."
+            }
+          ]
         },
         {
           "title": "The Music Man",
@@ -213,14 +383,26 @@
           "pitch": "Jon M. Chu's adaptation of the Stephen Schwartz/Winnie Holzman stage musical, itself a prequel-revisionist take on Oz. Erivo and Grande as Elphaba and Glinda. Part one of two; 'Defying Gravity' lands.",
           "priority": "high",
           "whyPriority": "Loved. Wicked: For Good (Part 2) on the queue.",
-          "contentType": "film-musical"
+          "contentType": "film-musical",
+          "critics": [
+            {
+              "who": "Almando",
+              "quote": "*THIS REVIEW CONTAINS SPOILERS*\r\n\r\nI've been a Wicked fan since 2010."
+            },
+            {
+              "who": "CinemaSerf",
+              "quote": "OK, so I'm going to be swimming against the tide a bit with this, but I didn't love it."
+            }
+          ]
         }
       ]
     },
     {
       "name": "III. Original Screen Musicals",
       "desc": "Musicals written for film, not adapted from stage.",
-      "categories": ["original-screen"],
+      "categories": [
+        "original-screen"
+      ],
       "items": [
         {
           "title": "Singin' in the Rain",
@@ -228,7 +410,17 @@
           "pitch": "The transition-to-talkies film made by people who'd lived it. Donen and Kelly, Comden and Green. Possibly the most perfectly-constructed musical film ever made.",
           "priority": "high",
           "whyPriority": "Personal favorite. Watched countless times. Knows every song, dance, and beat.",
-          "contentType": "film-musical"
+          "contentType": "film-musical",
+          "critics": [
+            {
+              "who": "Andres Gomez",
+              "quote": "Just a masterpiece mixing an interesting background story, great script with good humor, exceptional singers and dancers and a Gene Kelly that is just genial, well sided with Donald O'Connor and Debbie Reynolds.\r\n\r\nA must to be seen.."
+            },
+            {
+              "who": "John Chard",
+              "quote": "I'm happy again!\r\n\r\nSinging In The Rain is to me the greatest musical ever made, sure many others push it close, The Wizard Of Oz for one will always be a 10/10 movie in my opinion, but Singing In The Rain is a film that has no flaws, it is a perfect movie.\r\n\r\nDon Lockwood is a star of silent movies"
+            }
+          ]
         },
         {
           "title": "Mary Poppins",
@@ -236,7 +428,17 @@
           "pitch": "Julie Andrews's screen debut. Disney's high-water mark for live-action live-with-animation. The chimney sweep sequence is still astonishing.",
           "priority": "low",
           "whyPriority": "Watched. Lightyears better than the sequel.",
-          "contentType": "film-musical"
+          "contentType": "film-musical",
+          "critics": [
+            {
+              "who": "Andre Gonzales",
+              "quote": "Of course everyone knows Mary Poppins. Loved it growing up."
+            },
+            {
+              "who": "CinemaSerf",
+              "quote": "I don't think I'd ever actually watched this film all the way through before, but it is well worth it."
+            }
+          ]
         },
         {
           "title": "Mary Poppins Returns",
@@ -244,7 +446,17 @@
           "pitch": "Rob Marshall's belated sequel. Emily Blunt is well-cast but the new songs don't approach the originals. Affectionate at best.",
           "priority": "low",
           "whyPriority": "Watched. Inferior to the original.",
-          "contentType": "film-musical"
+          "contentType": "film-musical",
+          "critics": [
+            {
+              "who": "Dark Jedi",
+              "quote": "The original Mary Poppins was one of my favorite movies when I was a kid and it kind of still is."
+            },
+            {
+              "who": "Peter McGinn",
+              "quote": "I enjoyed this movie just as I love the original Mary Poppins."
+            }
+          ]
         },
         {
           "title": "La La Land",
@@ -252,7 +464,17 @@
           "pitch": "Damien Chazelle's homage to MGM musicals via modern Los Angeles. Polarizing — either you find it earnest and sweeping, or you find Stone and Gosling's voices distracting.",
           "priority": "low",
           "whyPriority": "Watched. Not a fan.",
-          "contentType": "film-musical"
+          "contentType": "film-musical",
+          "critics": [
+            {
+              "who": "🌹 Rose",
+              "quote": "A very special, memorable film that will be iconic in the years to come.."
+            },
+            {
+              "who": "Reno",
+              "quote": "**They'd crossed each others life while chasing their dreams.**\r\n\r\nI am not a big fan of modern musical films."
+            }
+          ]
         },
         {
           "title": "White Christmas",
@@ -260,7 +482,17 @@
           "pitch": "Crosby and Kaye in a Vermont inn. Best known for the title song; everything else is workmanlike Berlin in a holiday wrapper.",
           "priority": "low",
           "whyPriority": "Watched. Not a fan.",
-          "contentType": "film-musical"
+          "contentType": "film-musical",
+          "critics": [
+            {
+              "who": "John Chard",
+              "quote": "Still dreaming after all these years. \r\n\r\nOld Army buddies Bob and Phil become a hugely successful song and dance act once the war is over."
+            },
+            {
+              "who": "Peter McGinn",
+              "quote": "I am not a fan of musicals, but if I am to watch one I prefer this type: where the story is told in dialogue, interrupted and built onto by the songs."
+            }
+          ]
         },
         {
           "title": "Holiday Inn",
@@ -268,7 +500,13 @@
           "pitch": "Where 'White Christmas' was actually introduced. Crosby and Astaire. Dated and slow by modern standards.",
           "priority": "low",
           "whyPriority": "Watched. Bored throughout.",
-          "contentType": "film-musical"
+          "contentType": "film-musical",
+          "critics": [
+            {
+              "who": "Rob",
+              "quote": "Simply a must-watch at Christmas time. An Irving Berlin musical made in the forties."
+            }
+          ]
         },
         {
           "title": "The Wizard of Oz",
@@ -276,7 +514,17 @@
           "pitch": "The original. Foundational to American musical film. Not actually as much a musical as remembered — most songs are front-loaded — but the ones that stick are immortal.",
           "priority": "low",
           "whyPriority": "Watched. Cataloged for tracking.",
-          "contentType": "film-musical"
+          "contentType": "film-musical",
+          "critics": [
+            {
+              "who": "John Chard",
+              "quote": "Timeless classic still entertaining the masses as each new generation comes in.\r\n\r\nDorothy is a young girl living on a Kansas farm, during a tornado, she, along with her dog Toto, is swept up and plonked down in a magical and mysterious land known as Oz."
+            },
+            {
+              "who": "Cat Ellington",
+              "quote": "'Oh, Auntie Em, there's no place like home!'\r\n— Dorothy Gale\r\n\r\nThere were two beloved and highly fabled films that my immediate family and I—while in the comforts of our home—never missed during the Easter holiday weekend of each year: The Ten Commandments (ABC), and The Wizard of Oz (CBS) - an uns"
+            }
+          ]
         },
         {
           "title": "Across the Universe",
@@ -291,7 +539,10 @@
     {
       "name": "IV. Jukebox & Bio-Musical",
       "desc": "Films built around an existing songbook or a musician's life.",
-      "categories": ["jukebox", "bio-musical"],
+      "categories": [
+        "jukebox",
+        "bio-musical"
+      ],
       "items": [
         {
           "title": "Pitch Perfect",
@@ -299,7 +550,17 @@
           "pitch": "Anna Kendrick and Rebel Wilson in a college a cappella film that earned its sequel and then some. The Riff-Off scene works every time.",
           "priority": "med",
           "whyPriority": "Loved.",
-          "contentType": "film-musical"
+          "contentType": "film-musical",
+          "critics": [
+            {
+              "who": "markuspm",
+              "quote": "A modern cult movie (in a good way, of course)."
+            },
+            {
+              "who": "ColinJ",
+              "quote": "A quintessential crowd-pleaser. Exuberant musical numbers and great chemistry between the cast makes this a 'chick flick' everyone can enjoy.."
+            }
+          ]
         },
         {
           "title": "Pitch Perfect 2",
@@ -307,7 +568,17 @@
           "pitch": "Elizabeth Banks's directorial debut. World a cappella championship plot. Sequel that improves on the formula in places, falters in others.",
           "priority": "med",
           "whyPriority": "Loved.",
-          "contentType": "film-musical"
+          "contentType": "film-musical",
+          "critics": [
+            {
+              "who": "signsoflife",
+              "quote": "Weakest of the trilogy? I still have to rewatch PP3 to be completely sure but, compared to the first one, the delusions of grandeur of Pitch Perfect 2 weighs it down."
+            },
+            {
+              "who": "signsoflife",
+              "quote": "Compared to the first one, the delusions of grandeur of Pitch Perfect 2 weighs it down."
+            }
+          ]
         },
         {
           "title": "Pitch Perfect 3",
@@ -315,14 +586,23 @@
           "pitch": "USO tour plot. The trilogy's weakest installment but still charming. The Bellas finale earns the run.",
           "priority": "med",
           "whyPriority": "Loved.",
-          "contentType": "film-musical"
+          "contentType": "film-musical",
+          "critics": [
+            {
+              "who": "The Movie Mob",
+              "quote": "**Pitch Perfect 3 cranks up the crazy for a hilarious send-off that also knows how to appreciate its characters and what made the franchise so fun.**\r\n\r\nThe Pitch Perfect movies are all over the top goofy, but that goofiness reaches new heights - and I loved it! The same outrageous zaniness of all t"
+            }
+          ]
         }
       ]
     },
     {
       "name": "V. Cult & Auteur",
       "desc": "Musicals that broke their molds.",
-      "categories": ["auteur", "cult"],
+      "categories": [
+        "auteur",
+        "cult"
+      ],
       "items": [
         {
           "title": "The Rocky Horror Picture Show",
@@ -330,7 +610,17 @@
           "pitch": "Midnight-movie phenomenon. Tim Curry's Frank-N-Furter is one of the great screen performances regardless of genre. Audience participation tradition is the real text.",
           "priority": "high",
           "whyPriority": "Loved, for non-typical reasons.",
-          "contentType": "film-musical"
+          "contentType": "film-musical",
+          "critics": [
+            {
+              "who": "tricksy",
+              "quote": "Moving on from the riotous cult stage show which was born in a small studio theatre in the early 70s, this movie version is a well-cast, outrageous romp showcasing the absurdity and sci-fi obsession of Richard O'Brien's inventive musical.\r\n\r\nThe small cast - the wonderful Tim Curry as Frank 'n Furte"
+            },
+            {
+              "who": "Filipe Manuel Neto",
+              "quote": "**As a film, it could be better, but it's funny and bizarre enough for us to see it at least once in our lives.**\r\n\r\nThis is one of those films that everyone should see at least once in their life."
+            }
+          ]
         },
         {
           "title": "South Park: Bigger, Longer & Uncut",

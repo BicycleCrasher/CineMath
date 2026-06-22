@@ -4,7 +4,7 @@
   "subtitle": "International cinema, organized by accessibility. Thriller-leaning and structurally rigorous; less deep arthouse.",
   "sections": [
     {
-      "name": "I. High Priority \u2014 International Thriller",
+      "name": "I. High Priority — International Thriller",
       "desc": "Direct fits given your structural-rigor + cons + crime film loves. The international tradition closest to what you've already loved.",
       "items": [
         {
@@ -73,7 +73,7 @@
           "critics": [
             {
               "who": "Reception",
-              "quote": "Won 4 C\u00e9sars including Best Director."
+              "quote": "Won 4 Césars including Best Director."
             }
           ],
           "categories": [
@@ -84,7 +84,7 @@
         {
           "title": "The Secret in Their Eyes",
           "year": 2009,
-          "dir": "Juan Jos\u00e9 Campanella",
+          "dir": "Juan José Campanella",
           "country": "Argentina",
           "runtime": "129 min",
           "priority": "high",
@@ -121,7 +121,7 @@
           "critics": [
             {
               "who": "Academy Awards 1970",
-              "quote": "Won 2 Oscars. Five nominations including Best Picture \u2014 rare for a foreign film at the time."
+              "quote": "Won 2 Oscars. Five nominations including Best Picture — rare for a foreign film at the time."
             }
           ],
           "categories": [
@@ -178,7 +178,7 @@
           ]
         },
         {
-          "title": "Le Samoura\u00ef",
+          "title": "Le Samouraï",
           "year": 1967,
           "dir": "Jean-Pierre Melville",
           "country": "France",
@@ -188,7 +188,7 @@
             "foundational",
             "intl"
           ],
-          "whyPriority": "Alain Delon as a Parisian hitman. Influential on virtually every cool-killer film since (Drive, Ghost Dog, L\u00e9on, John Wick all cite it).",
+          "whyPriority": "Alain Delon as a Parisian hitman. Influential on virtually every cool-killer film since (Drive, Ghost Dog, Léon, John Wick all cite it).",
           "pitch": "A Parisian contract killer tries to evade police after being seen at the scene of his latest hit.",
           "critics": [
             {
@@ -217,7 +217,7 @@
           "critics": [
             {
               "who": "Cannes 2009",
-              "quote": "Grand Prix. Nine C\u00e9sars including Best Film."
+              "quote": "Grand Prix. Nine Césars including Best Film."
             }
           ],
           "categories": [
@@ -237,12 +237,12 @@
             "intl",
             "under"
           ],
-          "whyPriority": "Jo Nesb\u00f8 adaptation. Twisty corporate-espionage thriller from director who later made The Imitation Game.",
+          "whyPriority": "Jo Nesbø adaptation. Twisty corporate-espionage thriller from director who later made The Imitation Game.",
           "pitch": "A Norwegian executive recruiter steals art from his clients to support a lifestyle beyond his means. He picks the wrong target.",
           "critics": [
             {
               "who": "Reception",
-              "quote": "Norway's biggest box office hit at the time. Considered the strongest Nesb\u00f8 adaptation."
+              "quote": "Norway's biggest box office hit at the time. Considered the strongest Nesbø adaptation."
             }
           ],
           "categories": [
@@ -327,7 +327,7 @@
       ]
     },
     {
-      "name": "II. Medium Priority \u2014 Foundational International",
+      "name": "II. Medium Priority — Foundational International",
       "desc": "Major canonical works that fit your sensibility without being deep arthouse.",
       "items": [
         {
@@ -357,7 +357,7 @@
         {
           "title": "The 400 Blows",
           "year": 1959,
-          "dir": "Fran\u00e7ois Truffaut",
+          "dir": "François Truffaut",
           "country": "France",
           "runtime": "99 min",
           "priority": "med",
@@ -388,7 +388,7 @@
             "foundational",
             "intl"
           ],
-          "pitch": "Godard's debut. The film that broke film grammar \u2014 jump cuts, casual delivery, hand-held camera.",
+          "pitch": "Godard's debut. The film that broke film grammar — jump cuts, casual delivery, hand-held camera.",
           "critics": [
             {
               "who": "Reception",
@@ -424,7 +424,7 @@
           ]
         },
         {
-          "title": "8\u00bd",
+          "title": "8½",
           "year": 1963,
           "dir": "Federico Fellini",
           "country": "Italy",
@@ -518,7 +518,7 @@
         {
           "title": "City of God",
           "year": 2002,
-          "dir": "Fernando Meirelles & K\u00e1tia Lund",
+          "dir": "Fernando Meirelles & Kátia Lund",
           "country": "Brazil",
           "runtime": "130 min",
           "priority": "med",
@@ -539,9 +539,9 @@
           ]
         },
         {
-          "title": "Y Tu Mam\u00e1 Tambi\u00e9n",
+          "title": "Y Tu Mamá También",
           "year": 2001,
-          "dir": "Alfonso Cuar\u00f3n",
+          "dir": "Alfonso Cuarón",
           "country": "Mexico",
           "runtime": "106 min",
           "priority": "med",
@@ -549,11 +549,11 @@
             "foundational",
             "intl"
           ],
-          "pitch": "Cuar\u00f3n's road movie. Two teenage boys and an older woman drive across Mexico to a beach.",
+          "pitch": "Cuarón's road movie. Two teenage boys and an older woman drive across Mexico to a beach.",
           "critics": [
             {
               "who": "Reception",
-              "quote": "Oscar-nominated for Original Screenplay. Established Cuar\u00f3n globally."
+              "quote": "Oscar-nominated for Original Screenplay. Established Cuarón globally."
             }
           ],
           "categories": [
@@ -618,14 +618,14 @@
         {
           "title": "Roma",
           "year": 2018,
-          "dir": "Alfonso Cuar\u00f3n",
+          "dir": "Alfonso Cuarón",
           "country": "Mexico",
           "runtime": "135 min",
           "tags": [
             "modern",
             "intl"
           ],
-          "pitch": "Cuar\u00f3n's autobiographical film about the housekeeper who raised him in 1970s Mexico City. Black-and-white, 65mm.",
+          "pitch": "Cuarón's autobiographical film about the housekeeper who raised him in 1970s Mexico City. Black-and-white, 65mm.",
           "critics": [
             {
               "who": "Academy Awards 2019",
@@ -640,7 +640,7 @@
         {
           "title": "Cold War",
           "year": 2018,
-          "dir": "Pawe\u0142 Pawlikowski",
+          "dir": "Paweł Pawlikowski",
           "country": "Poland",
           "runtime": "89 min",
           "tags": [
@@ -662,7 +662,7 @@
         {
           "title": "Ida",
           "year": 2013,
-          "dir": "Pawe\u0142 Pawlikowski",
+          "dir": "Paweł Pawlikowski",
           "country": "Poland",
           "runtime": "82 min",
           "tags": [
@@ -728,7 +728,7 @@
         {
           "title": "Tokyo Story",
           "year": 1953,
-          "dir": "Yasujir\u014d Ozu",
+          "dir": "Yasujirō Ozu",
           "country": "Japan",
           "runtime": "136 min",
           "tags": [
@@ -785,10 +785,18 @@
           "country": "Sweden",
           "runtime": "96 min",
           "priority": "high",
-          "tags": ["foundational", "intl"],
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "whyPriority": "Best entry point. Knight + Death + chess + plague.",
           "pitch": "A medieval knight returning from the Crusades challenges Death to a game of chess as the Black Plague sweeps Sweden — buying time to do one meaningful act before he dies.",
-          "critics": [{ "who": "Cannes 1957", "quote": "Special Jury Prize." }]
+          "critics": [
+            {
+              "who": "Cannes 1957",
+              "quote": "Special Jury Prize."
+            }
+          ]
         },
         {
           "title": "Wild Strawberries",
@@ -797,10 +805,18 @@
           "country": "Sweden",
           "runtime": "91 min",
           "priority": "high",
-          "tags": ["foundational", "intl"],
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "whyPriority": "His most accessible great film. Aging professor confronts his life.",
           "pitch": "An aging professor, driving to receive an honorary degree, is overtaken by memories and dreams of his life and its failures. Bergman's warmest film.",
-          "critics": [{ "who": "Reception", "quote": "Berlin Golden Bear." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Berlin Golden Bear."
+            }
+          ]
         },
         {
           "title": "Persona",
@@ -809,10 +825,18 @@
           "country": "Sweden",
           "runtime": "84 min",
           "priority": "high",
-          "tags": ["foundational", "intl"],
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "whyPriority": "Bergman at his most experimental. Two women — actress and nurse — merge identities. The film school masterclass.",
           "pitch": "An actress stops speaking. Her nurse cares for her at a remote cottage. The boundary between them dissolves.",
-          "critics": [{ "who": "Reception", "quote": "Routinely cited as Bergman's masterpiece. Sight & Sound canonical." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Routinely cited as Bergman's masterpiece. Sight & Sound canonical."
+            }
+          ]
         },
         {
           "title": "Cries and Whispers",
@@ -821,9 +845,17 @@
           "country": "Sweden",
           "runtime": "91 min",
           "priority": "med",
-          "tags": ["foundational", "intl"],
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "pitch": "Three sisters at a country estate as one of them dies. Bergman's most painful film.",
-          "critics": [{ "who": "Academy Awards 1974", "quote": "Five Oscar nominations including Best Picture, Best Director." }]
+          "critics": [
+            {
+              "who": "Academy Awards 1974",
+              "quote": "Five Oscar nominations including Best Picture, Best Director."
+            }
+          ]
         },
         {
           "title": "Fanny and Alexander",
@@ -832,10 +864,18 @@
           "country": "Sweden/France/W. Germany",
           "runtime": "188 min · or 312 min TV cut",
           "priority": "high",
-          "tags": ["foundational", "intl"],
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "whyPriority": "Bergman's farewell. Warmer than most of his catalog. Watch the 312-min TV version if you commit.",
           "pitch": "An early-1900s Swedish family across years. Wealth, marriage, theater, magic, religion.",
-          "critics": [{ "who": "Academy Awards 1984", "quote": "Won 4 Oscars including Best Foreign Language Film, Cinematography, Art Direction, Costume Design." }]
+          "critics": [
+            {
+              "who": "Academy Awards 1984",
+              "quote": "Won 4 Oscars including Best Foreign Language Film, Cinematography, Art Direction, Costume Design."
+            }
+          ]
         },
         {
           "title": "Scenes from a Marriage",
@@ -844,9 +884,17 @@
           "country": "Sweden",
           "runtime": "281 min · TV / 168 min · theatrical",
           "priority": "med",
-          "tags": ["foundational", "intl"],
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "pitch": "A marriage across years, fights, separation, return. The TV version is the one to watch.",
-          "critics": [{ "who": "Reception", "quote": "Cited by many as the most honest depiction of marriage ever filmed." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Cited by many as the most honest depiction of marriage ever filmed."
+            }
+          ]
         },
         {
           "title": "Winter Light",
@@ -854,7 +902,10 @@
           "dir": "Ingmar Bergman",
           "country": "Sweden",
           "runtime": "81 min",
-          "tags": ["foundational", "intl"],
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "pitch": "A pastor losing his faith during one Sunday's services. Sparse, brutal.",
           "critics": []
         },
@@ -864,9 +915,17 @@
           "dir": "Ingmar Bergman",
           "country": "Sweden",
           "runtime": "89 min",
-          "tags": ["foundational", "intl"],
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "pitch": "A young woman recovering from mental illness during a family vacation. Won Best Foreign Language Film.",
-          "critics": [{ "who": "Academy Awards 1962", "quote": "Won Best Foreign Language Film." }]
+          "critics": [
+            {
+              "who": "Academy Awards 1962",
+              "quote": "Won Best Foreign Language Film."
+            }
+          ]
         },
         {
           "title": "Rashomon",
@@ -875,10 +934,18 @@
           "country": "Japan",
           "runtime": "88 min",
           "priority": "high",
-          "tags": ["foundational", "intl"],
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "whyPriority": "His international breakthrough. The film that gave us the word 'rashomon' for contradictory testimonies.",
           "pitch": "A samurai's murder in feudal Japan is recounted by four witnesses, each giving a contradictory account. The foundational film on unreliable narration.",
-          "critics": [{ "who": "Reception", "quote": "Won Golden Lion at Venice." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Won Golden Lion at Venice."
+            }
+          ]
         },
         {
           "title": "Ikiru",
@@ -887,10 +954,18 @@
           "country": "Japan",
           "runtime": "143 min",
           "priority": "high",
-          "tags": ["foundational", "intl"],
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "whyPriority": "A bureaucrat with cancer tries to do one meaningful thing before dying. Many call it Kurosawa's most emotional film.",
           "pitch": "An aging Tokyo civil servant, told he has months to live, tries to make his life mean something.",
-          "critics": [{ "who": "Reception", "quote": "Routinely cited among Kurosawa's masterpieces. Watanabe Takashi's central performance is iconic." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Routinely cited among Kurosawa's masterpieces. Watanabe Takashi's central performance is iconic."
+            }
+          ]
         },
         {
           "title": "Sanjuro",
@@ -899,9 +974,17 @@
           "country": "Japan",
           "runtime": "96 min",
           "priority": "med",
-          "tags": ["foundational", "intl"],
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "pitch": "Yojimbo sequel. Lighter, looser. The blood-spurt at the climax has been imitated for 60 years.",
-          "critics": []
+          "critics": [
+            {
+              "who": "CinemaSerf",
+              "quote": "This is a superb adventure story with Toshirô Mifune reprising his role from \"Yojimbo\" as the wandering samurai warrior."
+            }
+          ]
         },
         {
           "title": "The Hidden Fortress",
@@ -909,9 +992,17 @@
           "dir": "Akira Kurosawa",
           "country": "Japan",
           "runtime": "139 min",
-          "tags": ["foundational", "intl"],
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "pitch": "Adventure film told from peasants' perspective. Lucas cited it as a structural model for Star Wars — R2-D2 and C-3PO are direct descendants.",
-          "critics": [{ "who": "Reception", "quote": "Berlin Silver Bear for Best Director." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Berlin Silver Bear for Best Director."
+            }
+          ]
         },
         {
           "title": "High and Low",
@@ -919,9 +1010,17 @@
           "dir": "Akira Kurosawa",
           "country": "Japan",
           "runtime": "143 min",
-          "tags": ["foundational", "intl"],
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "pitch": "A wealthy executive's chauffeur's son is mistakenly kidnapped. Shifts from boardroom thriller to cops procedural.",
-          "critics": [{ "who": "Reception", "quote": "Routinely cited as one of Kurosawa's greatest non-period films." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Routinely cited as one of Kurosawa's greatest non-period films."
+            }
+          ]
         },
         {
           "title": "La Strada",
@@ -930,10 +1029,18 @@
           "country": "Italy",
           "runtime": "108 min",
           "priority": "high",
-          "tags": ["foundational", "intl"],
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "whyPriority": "Fellini's most heartbreaking. Giulietta Masina as a simple-minded young woman sold to a brutish strongman. Won Best Foreign Language Film.",
           "pitch": "Postwar Italy. A traveling strongman buys a young woman from her impoverished mother. Their road life.",
-          "critics": [{ "who": "Academy Awards 1957", "quote": "Won Best Foreign Language Film." }]
+          "critics": [
+            {
+              "who": "Academy Awards 1957",
+              "quote": "Won Best Foreign Language Film."
+            }
+          ]
         },
         {
           "title": "Nights of Cabiria",
@@ -942,9 +1049,17 @@
           "country": "Italy/France",
           "runtime": "117 min",
           "priority": "high",
-          "tags": ["foundational", "intl"],
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "pitch": "Masina as a Roman prostitute who keeps believing in love. The final shot is one of cinema's most famous.",
-          "critics": [{ "who": "Academy Awards 1958", "quote": "Won Best Foreign Language Film." }]
+          "critics": [
+            {
+              "who": "Academy Awards 1958",
+              "quote": "Won Best Foreign Language Film."
+            }
+          ]
         },
         {
           "title": "La Dolce Vita",
@@ -953,10 +1068,18 @@
           "country": "Italy/France",
           "runtime": "176 min",
           "priority": "high",
-          "tags": ["foundational", "intl"],
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "whyPriority": "Marcello Mastroianni drifting through a week of Roman society. The word 'paparazzi' came from a character's name.",
           "pitch": "A gossip journalist drifts through seven nights of Roman parties, encounters, and emptiness.",
-          "critics": [{ "who": "Cannes 1960", "quote": "Palme d'Or." }]
+          "critics": [
+            {
+              "who": "Cannes 1960",
+              "quote": "Palme d'Or."
+            }
+          ]
         },
         {
           "title": "Amarcord",
@@ -965,9 +1088,17 @@
           "country": "Italy/France",
           "runtime": "123 min",
           "priority": "med",
-          "tags": ["foundational", "intl"],
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "pitch": "Fellini's most autobiographical. A year in 1930s Rimini under Mussolini. Comic, nostalgic, sad.",
-          "critics": [{ "who": "Academy Awards 1975", "quote": "Won Best Foreign Language Film." }]
+          "critics": [
+            {
+              "who": "Academy Awards 1975",
+              "quote": "Won Best Foreign Language Film."
+            }
+          ]
         },
         {
           "title": "Andrei Rublev",
@@ -976,10 +1107,18 @@
           "country": "USSR",
           "runtime": "205 min",
           "priority": "high",
-          "tags": ["foundational", "intl"],
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "whyPriority": "His masterpiece. Three-and-a-half hours.",
           "pitch": "The life of the great Russian icon painter across four decades of medieval Russia — invasion, famine, and spiritual doubt. Tarkovsky's most expansive film.",
-          "critics": []
+          "critics": [
+            {
+              "who": "CinemaSerf",
+              "quote": "Later canonised (in 1988!), this tells the story of the renowned Russian iconographist and fresco painter."
+            }
+          ]
         },
         {
           "title": "Mirror",
@@ -988,10 +1127,18 @@
           "country": "USSR",
           "runtime": "107 min",
           "priority": "med",
-          "tags": ["foundational", "intl"],
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "whyPriority": "His most personal and most difficult. Often cited as his greatest film by other directors.",
           "pitch": "A dying poet's memories of childhood, his mother, war, and Russia.",
-          "critics": [{ "who": "Reception", "quote": "Frequently named the greatest film ever made by other filmmakers." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Frequently named the greatest film ever made by other filmmakers."
+            }
+          ]
         },
         {
           "title": "Nostalghia",
@@ -999,9 +1146,17 @@
           "dir": "Andrei Tarkovsky",
           "country": "Italy/USSR",
           "runtime": "125 min",
-          "tags": ["foundational", "intl"],
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "pitch": "A Russian poet researches an exile in Italy. His own homesickness becomes the film's spiritual subject.",
-          "critics": [{ "who": "Cannes 1983", "quote": "Tarkovsky shared the Best Director prize." }]
+          "critics": [
+            {
+              "who": "Cannes 1983",
+              "quote": "Tarkovsky shared the Best Director prize."
+            }
+          ]
         },
         {
           "title": "The Sacrifice",
@@ -1009,9 +1164,17 @@
           "dir": "Andrei Tarkovsky",
           "country": "Sweden/UK/France",
           "runtime": "149 min",
-          "tags": ["foundational", "intl"],
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "pitch": "Tarkovsky's final film. Made while he was dying. A man bargains with God to prevent nuclear war.",
-          "critics": [{ "who": "Cannes 1986", "quote": "Grand Prix and Critics' Prize." }]
+          "critics": [
+            {
+              "who": "Cannes 1986",
+              "quote": "Grand Prix and Critics' Prize."
+            }
+          ]
         },
         {
           "title": "Incendies",
@@ -1019,12 +1182,23 @@
           "dir": "Denis Villeneuve",
           "country": "Canada/France",
           "runtime": "131 min",
-          "tags": ["modern", "intl"],
+          "tags": [
+            "modern",
+            "intl"
+          ],
           "pitch": "Twins travel to the Middle East to investigate their dead mother's past. Brutal, structurally devastating.",
-          "critics": [{ "who": "Academy Awards 2011", "quote": "Best Foreign Language Film nomination." }]
+          "critics": [
+            {
+              "who": "Academy Awards 2011",
+              "quote": "Best Foreign Language Film nomination."
+            }
+          ]
         }
       ],
-      "categories": ["foreign", "auteur"]
+      "categories": [
+        "foreign",
+        "auteur"
+      ]
     }
   ]
 }

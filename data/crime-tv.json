@@ -12,8 +12,8 @@
           "year": 2014,
           "dir": "Nic Pizzolatto",
           "country": "USA",
-          "runtime": "1 season \u00b7 8 episodes",
-          "seasons": "S1 only \u2014 Loved",
+          "runtime": "1 season · 8 episodes",
+          "seasons": "S1 only — Loved",
           "tags": [
             "foundational"
           ],
@@ -33,7 +33,7 @@
           "year": 2002,
           "dir": "David Simon",
           "country": "USA",
-          "runtime": "5 seasons \u00b7 60 episodes",
+          "runtime": "5 seasons · 60 episodes",
           "seasons": "S1 in progress. S2 polarizing (docks), S3-4 transcendent (politics, schools), S5 weakest (media). Push through S2.",
           "tags": [
             "foundational"
@@ -54,7 +54,7 @@
           "year": 1999,
           "dir": "David Chase",
           "country": "USA",
-          "runtime": "6 seasons \u00b7 86 episodes",
+          "runtime": "6 seasons · 86 episodes",
           "seasons": "All 6 (ended 2007). 2021 prequel film The Many Saints of Newark.",
           "tags": [
             "foundational"
@@ -75,7 +75,7 @@
           "year": 2006,
           "dir": "James Manos Jr.",
           "country": "USA",
-          "runtime": "8 seasons \u00b7 96 episodes + revivals",
+          "runtime": "8 seasons · 96 episodes + revivals",
           "seasons": "S1-S4 are peak (S4 widely considered the best season). S5-8 declined. New Blood (2021) was the closing chapter; Original Sin (2024) is a prequel.",
           "tags": [
             "foundational"
@@ -96,7 +96,7 @@
           "year": 2005,
           "dir": "Jenji Kohan",
           "country": "USA",
-          "runtime": "8 seasons \u00b7 102 episodes",
+          "runtime": "8 seasons · 102 episodes",
           "seasons": "All 8 (ended 2012). S1-3 considered peak.",
           "tags": [
             "foundational"
@@ -117,7 +117,7 @@
           "year": 2003,
           "dir": "Brian Eastman",
           "country": "UK",
-          "runtime": "3 seasons \u00b7 22 episodes",
+          "runtime": "3 seasons · 22 episodes",
           "seasons": "All 3 (ended 2007)",
           "tags": [
             "intl"
@@ -138,7 +138,7 @@
           "year": 1994,
           "dir": "Various",
           "country": "UK",
-          "runtime": "4 seasons \u00b7 13 episodes",
+          "runtime": "4 seasons · 13 episodes",
           "seasons": "All 13 (ended 1998)",
           "tags": [
             "foundational",
@@ -162,7 +162,7 @@
       ]
     },
     {
-      "name": "II. High Priority \u2014 Recommended",
+      "name": "II. High Priority — Recommended",
       "desc": "Strong direct fits. Ended series leaning into your established taste.",
       "items": [
         {
@@ -170,7 +170,7 @@
           "year": 2015,
           "dir": "Vince Gilligan & Peter Gould",
           "country": "USA",
-          "runtime": "6 seasons \u00b7 63 episodes",
+          "runtime": "6 seasons · 63 episodes",
           "seasons": "All 6 (ended 2022)",
           "priority": "high",
           "tags": [
@@ -181,7 +181,7 @@
           "critics": [
             {
               "who": "Reception",
-              "quote": "53 Emmy nominations across run with zero wins \u2014 among the most decorated never-winners. Final season widely considered Breaking Bad's equal."
+              "quote": "53 Emmy nominations across run with zero wins — among the most decorated never-winners. Final season widely considered Breaking Bad's equal."
             }
           ],
           "categories": [
@@ -194,7 +194,7 @@
           "year": 2021,
           "dir": "Brad Ingelsby",
           "country": "USA",
-          "runtime": "1 season \u00b7 7 episodes",
+          "runtime": "1 season · 7 episodes",
           "seasons": "Limited series",
           "priority": "high",
           "tags": [
@@ -218,7 +218,7 @@
           "year": 2016,
           "dir": "Richard Price & Steven Zaillian",
           "country": "USA",
-          "runtime": "1 season \u00b7 8 episodes",
+          "runtime": "1 season · 8 episodes",
           "seasons": "Limited series",
           "priority": "high",
           "tags": [
@@ -241,7 +241,7 @@
           "year": 2013,
           "dir": "Jane Campion",
           "country": "Australia/UK/NZ",
-          "runtime": "2 seasons \u00b7 13 episodes",
+          "runtime": "2 seasons · 13 episodes",
           "seasons": "S1 (2013) + S2 China Girl (2017)",
           "priority": "high",
           "tags": [
@@ -267,8 +267,8 @@
           "year": 2012,
           "dir": "Jed Mercurio",
           "country": "UK",
-          "runtime": "6 seasons \u00b7 36 episodes",
-          "seasons": "All 6 (last 2021); UK pacing \u2014 each season is one investigation",
+          "runtime": "6 seasons · 36 episodes",
+          "seasons": "All 6 (last 2021); UK pacing — each season is one investigation",
           "priority": "high",
           "tags": [
             "modern",
@@ -292,7 +292,7 @@
           "year": 2013,
           "dir": "Chris Chibnall",
           "country": "UK",
-          "runtime": "3 seasons \u00b7 24 episodes",
+          "runtime": "3 seasons · 24 episodes",
           "seasons": "All 3 (ended 2017)",
           "priority": "high",
           "tags": [
@@ -314,7 +314,7 @@
         {
           "title": "The Blacklist",
           "year": 2013,
-          "pitch": "Reformed-criminal-turned-FBI-asset Raymond Reddington gives the bureau a list of the world's worst criminals \u2014 for his own reasons. James Spader carries the entire show on charisma alone.",
+          "pitch": "Reformed-criminal-turned-FBI-asset Raymond Reddington gives the bureau a list of the world's worst criminals — for his own reasons. James Spader carries the entire show on charisma alone.",
           "priority": "med",
           "whyPriority": "You have watched this extensively (66+ episodes per Plex history). Cataloged here for tracking and rating purposes.",
           "commitment": "10 seasons",
@@ -332,7 +332,7 @@
         {
           "title": "Matlock",
           "year": 2024,
-          "pitch": "Kathy Bates as a brilliant attorney returning to the workforce \u2014 but the gentle-procedural premise hides a longer-game revenge plot. Smarter than the Andy Griffith original suggests.",
+          "pitch": "Kathy Bates as a brilliant attorney returning to the workforce — but the gentle-procedural premise hides a longer-game revenge plot. Smarter than the Andy Griffith original suggests.",
           "priority": "low",
           "whyPriority": "You have watched a few episodes per Plex history. Cataloged for tracking.",
           "commitment": "Ongoing",
@@ -362,14 +362,23 @@
           "year": 2010,
           "dir": "Graham Yost",
           "country": "USA",
-          "runtime": "6 seasons \u00b7 78 episodes",
+          "runtime": "6 seasons · 78 episodes",
           "seasons": "All 6 (ended 2015) + Justified: City Primeval (2023)",
           "priority": "med",
           "tags": [
             "modern"
           ],
           "pitch": "Cross-listed Drama TV. Elmore Leonard adaptation. Timothy Olyphant as a US Marshal in eastern Kentucky.",
-          "critics": [],
+          "critics": [
+            {
+              "who": "GenerationofSwine",
+              "quote": "There are a lot of coded reviews about this...mostly based on politics."
+            },
+            {
+              "who": "fdweir",
+              "quote": "This has to be one of the most overlooked TV shows of recent years."
+            }
+          ],
           "categories": [
             "procedural"
           ]
@@ -379,7 +388,7 @@
           "year": 2014,
           "dir": "Noah Hawley",
           "country": "USA",
-          "runtime": "5 seasons \u00b7 51 episodes (anthology)",
+          "runtime": "5 seasons · 51 episodes (anthology)",
           "seasons": "S1, S2, S5 strongest",
           "priority": "med",
           "tags": [
@@ -403,7 +412,7 @@
           "year": 2002,
           "dir": "Shawn Ryan",
           "country": "USA",
-          "runtime": "7 seasons \u00b7 88 episodes",
+          "runtime": "7 seasons · 88 episodes",
           "seasons": "All 7 (ended 2008)",
           "priority": "med",
           "tags": [
@@ -426,7 +435,7 @@
           "year": 2014,
           "dir": "Eric Overmyer",
           "country": "USA",
-          "runtime": "7 seasons \u00b7 68 episodes + Bosch: Legacy spin-off ongoing",
+          "runtime": "7 seasons · 68 episodes + Bosch: Legacy spin-off ongoing",
           "seasons": "All 7 (ended 2021); Legacy continues",
           "priority": "med",
           "tags": [
@@ -449,14 +458,19 @@
           "year": 2017,
           "dir": "Bill Dubuque",
           "country": "USA",
-          "runtime": "4 seasons \u00b7 44 episodes",
+          "runtime": "4 seasons · 44 episodes",
           "seasons": "All 4 (ended 2022)",
           "priority": "med",
           "tags": [
             "modern"
           ],
           "pitch": "Cross-listed Drama TV. Cartel money laundering in the Missouri Ozarks.",
-          "critics": [],
+          "critics": [
+            {
+              "who": "Sudeera Sandaruwan",
+              "quote": "**You know it's a damn good show when even the overused blue color filter can't hide all the incredible performances.**\r\n\r\nSimply put, Ozark is a show that started out with potential for greatness, and then proceeded to deliver on that promise with every subsequent season."
+            }
+          ],
           "categories": [
             "hbo-prestige"
           ]
@@ -466,7 +480,7 @@
           "year": 2013,
           "dir": "Joe Weisberg",
           "country": "USA",
-          "runtime": "6 seasons \u00b7 75 episodes",
+          "runtime": "6 seasons · 75 episodes",
           "seasons": "All 6 (ended 2018)",
           "priority": "med",
           "tags": [
@@ -493,7 +507,7 @@
           "year": 2016,
           "dir": "Miikko Oikkonen",
           "country": "Finland",
-          "runtime": "3 seasons \u00b7 31 episodes",
+          "runtime": "3 seasons · 31 episodes",
           "seasons": "All 3 (ended 2020)",
           "tags": [
             "modern",
@@ -516,9 +530,9 @@
         {
           "title": "The Killing (Forbrydelsen)",
           "year": 2007,
-          "dir": "S\u00f8ren Sveistrup",
+          "dir": "Søren Sveistrup",
           "country": "Denmark",
-          "runtime": "3 seasons \u00b7 40 episodes",
+          "runtime": "3 seasons · 40 episodes",
           "seasons": "All 3 (ended 2012). Danish original; the AMC remake is also strong but Danish version is canonical.",
           "tags": [
             "foundational",
@@ -541,14 +555,14 @@
           "year": 2011,
           "dir": "Hans Rosenfeldt",
           "country": "Sweden/Denmark",
-          "runtime": "4 seasons \u00b7 38 episodes",
+          "runtime": "4 seasons · 38 episodes",
           "seasons": "All 4 (ended 2018). Swedish/Danish original.",
           "tags": [
             "foundational",
             "intl"
           ],
           "priority": "med",
-          "pitch": "A body is found exactly on the border between Sweden and Denmark on the \u00d8resund Bridge. Two detectives \u2014 one Swedish, one Danish \u2014 must investigate together.",
+          "pitch": "A body is found exactly on the border between Sweden and Denmark on the Øresund Bridge. Two detectives — one Swedish, one Danish — must investigate together.",
           "critics": [
             {
               "who": "Reception",
@@ -560,11 +574,11 @@
           ]
         },
         {
-          "title": "Trapped (\u00d3f\u00e6r\u00f0)",
+          "title": "Trapped (Ófærð)",
           "year": 2015,
-          "dir": "Baltasar Korm\u00e1kur",
+          "dir": "Baltasar Kormákur",
           "country": "Iceland",
-          "runtime": "3 seasons \u00b7 20 episodes",
+          "runtime": "3 seasons · 20 episodes",
           "seasons": "All 3 (ended 2022)",
           "tags": [
             "modern",
@@ -588,7 +602,7 @@
           "year": 2017,
           "dir": "Tom Tykwer, Achim von Borries, Henk Handloegten",
           "country": "Germany",
-          "runtime": "5 seasons \u00b7 52 episodes",
+          "runtime": "5 seasons · 52 episodes",
           "seasons": "S1-4 complete; S5 in 2025",
           "tags": [
             "modern",
@@ -610,9 +624,9 @@
         {
           "title": "Money Heist (La Casa de Papel)",
           "year": 2017,
-          "dir": "\u00c1lex Pina",
+          "dir": "Álex Pina",
           "country": "Spain",
-          "runtime": "5 parts \u00b7 41 episodes",
+          "runtime": "5 parts · 41 episodes",
           "seasons": "All 5 (ended 2021)",
           "tags": [
             "modern",
@@ -645,7 +659,7 @@
           "year": 2013,
           "dir": "Rachel Flowerday",
           "country": "UK",
-          "runtime": "11+ seasons \u00b7 130+ episodes",
+          "runtime": "11+ seasons · 130+ episodes",
           "seasons": "Ongoing",
           "tags": [
             "intl"
@@ -666,7 +680,7 @@
           "year": 2012,
           "dir": "Russell Lewis",
           "country": "UK",
-          "runtime": "9 seasons \u00b7 36 episodes",
+          "runtime": "9 seasons · 36 episodes",
           "seasons": "All 9 (ended 2023)",
           "tags": [
             "foundational",
@@ -690,7 +704,7 @@
           "year": 1987,
           "dir": "Various",
           "country": "UK",
-          "runtime": "8 seasons \u00b7 33 episodes",
+          "runtime": "8 seasons · 33 episodes",
           "seasons": "All 33 (ended 2000)",
           "tags": [
             "foundational",
@@ -712,7 +726,7 @@
           "year": 2006,
           "dir": "Russell Lewis",
           "country": "UK",
-          "runtime": "9 seasons \u00b7 33 episodes",
+          "runtime": "9 seasons · 33 episodes",
           "seasons": "Sequel to Inspector Morse",
           "tags": [
             "intl"
@@ -733,7 +747,7 @@
           "year": 2011,
           "dir": "Brenda Blethyn",
           "country": "UK",
-          "runtime": "13+ seasons \u00b7 50+ episodes",
+          "runtime": "13+ seasons · 50+ episodes",
           "seasons": "Ongoing",
           "tags": [
             "intl"

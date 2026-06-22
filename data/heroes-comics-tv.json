@@ -18,7 +18,17 @@
           "categories": [
             "marvel-disney-plus"
           ],
-          "contentType": "tv-limited"
+          "contentType": "tv-limited",
+          "critics": [
+            {
+              "who": "Manuel São Bento",
+              "quote": "If you enjoy reading my Spoiler-Free reviews, please follow my blog @\r\nhttps://www.msbreviews.com\r\n\r\n(Based on the season’s first three episodes handed to press)\r\n\r\nMarvel delivered an unprecedentedly successful superhero universe that culminated in the record-breaking Avengers: Endgame (Spider-Man:"
+            },
+            {
+              "who": "Manuel São Bento",
+              "quote": "If you enjoy reading my Spoiler-Free reviews, please follow my blog @\r\nhttps://www.msbreviews.com\r\n\r\nOriginal Review\r\n(based on the season’s first three episodes handed to press)\r\n\r\nMarvel delivered an unprecedentedly successful superhero universe that culminated in the record-breaking Avengers: End"
+            }
+          ]
         },
         {
           "id": "loki-2021",
@@ -28,7 +38,17 @@
           "categories": [
             "marvel-disney-plus"
           ],
-          "contentType": "tv-limited"
+          "contentType": "tv-limited",
+          "critics": [
+            {
+              "who": "mohammadsi20",
+              "quote": "loki starts strong and keeps you in the fog till the next episode, and it's really recommended because it's going to hit hard and will definitely  surprise you how good a series could be.."
+            },
+            {
+              "who": "Manuel São Bento",
+              "quote": "FULL SPOILER-FREE REVIEW @ https://www.msbreviews.com/tv-reviews/loki-season-1-spoiler-free-review\r\n\r\n\"Loki is yet another extraordinary addition to the MCU, delivering a deep study of the eponymous character while introducing the fandom to the beginning of the Multiverse."
+            }
+          ]
         },
         {
           "id": "x-men-97-2024",
@@ -39,7 +59,13 @@
             "marvel-disney-plus",
             "animated"
           ],
-          "contentType": "tv-limited"
+          "contentType": "tv-limited",
+          "critics": [
+            {
+              "who": "tmdb51616167",
+              "quote": "The nostalgia factor in this animated series is truly remarkable."
+            }
+          ]
         }
       ]
     },
@@ -87,7 +113,13 @@
             "animated",
             "dc"
           ],
-          "contentType": "tv-prestige"
+          "contentType": "tv-prestige",
+          "critics": [
+            {
+              "who": "GenerationofSwine",
+              "quote": "Honestly, I don't think you are going to find a bad review here."
+            }
+          ]
         }
       ]
     },
@@ -106,7 +138,17 @@
           "categories": [
             "deconstructive"
           ],
-          "contentType": "tv-prestige"
+          "contentType": "tv-prestige",
+          "critics": [
+            {
+              "who": "Lenny_H",
+              "quote": "A great series set in a world where superheroes are a real phenomenon.\r\n\r\nCapitalism is omnipresent, profit and money are in everyone's mind.\r\nOf course the 'Sups' abuse their power for their own interests and many more cruel and immoral things.\r\nEvery hero's doing is explained, some more, some less"
+            },
+            {
+              "who": "josalarcon2",
+              "quote": "For me the whole series is a total and effective satire that lets us see what would become of the world if fiction becomes reality: heroes lose interest in saving the world (or take advantage of its status), are forced to do things that are not right, to follow the company's own interests and do not"
+            }
+          ]
         },
         {
           "id": "invincible-2021",
@@ -117,7 +159,13 @@
             "deconstructive",
             "animated"
           ],
-          "contentType": "tv-prestige"
+          "contentType": "tv-prestige",
+          "critics": [
+            {
+              "who": "Chris Sawin",
+              "quote": "Invincible is so freaking good that it’s going to be difficult anticipating new episodes on a week-to-week basis."
+            }
+          ]
         },
         {
           "id": "watchmen-hbo-2019",
@@ -128,7 +176,17 @@
             "deconstructive",
             "indie"
           ],
-          "contentType": "tv-limited"
+          "contentType": "tv-limited",
+          "critics": [
+            {
+              "who": "Luis_989",
+              "quote": "For the comic book ''purists'', it was blasphemy."
+            },
+            {
+              "who": "Manuel São Bento",
+              "quote": "If you enjoy reading my Spoiler-Free reviews, please follow my blog @ https://www.msbreviews.com\r\n\r\n**Original Review (based on the season's first six episodes handed to press):**\r\n\r\nWhen I discovered that a new show based on the world of Watchmen was in the works, I really didn't have any sort of r"
+            }
+          ]
         }
       ]
     },

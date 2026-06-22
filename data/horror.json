@@ -1,7 +1,7 @@
 {
   "type": "horror",
   "title": "Horror",
-  "subtitle": "Slow-burn psychological, folk, cosmic, supernatural \u2014 including vampire films. No gore-for-gore's-sake, no jump-scare-driven slashers.",
+  "subtitle": "Slow-burn psychological, folk, cosmic, supernatural — including vampire films. No gore-for-gore's-sake, no jump-scare-driven slashers.",
   "sections": [
     {
       "name": "I. High Priority",
@@ -78,7 +78,7 @@
           "tags": [
             "foundational"
           ],
-          "whyPriority": "You've seen all of Kubrick \u2014 but listed here because if you haven't revisited it recently, the Steadicam tracking shots and the dread accumulate differently each time. Pre-loaded as Watched in case you have.",
+          "whyPriority": "You've seen all of Kubrick — but listed here because if you haven't revisited it recently, the Steadicam tracking shots and the dread accumulate differently each time. Pre-loaded as Watched in case you have.",
           "pitch": "Writer takes job as winter caretaker of an isolated hotel. Brings his family. Things deteriorate.",
           "critics": [
             {
@@ -179,7 +179,7 @@
         {
           "title": "Possession",
           "year": 1981,
-          "dir": "Andrzej \u017bu\u0142awski",
+          "dir": "Andrzej Żuławski",
           "country": "France/W. Germany",
           "runtime": "124 min",
           "priority": "med",
@@ -187,7 +187,7 @@
             "under",
             "intl"
           ],
-          "whyPriority": "Already on your sci-fi tracker as Watch With Caution. Listed here because in horror context the priority shifts up \u2014 Adjani's performance is genuinely one of the most disturbing on film.",
+          "whyPriority": "Already on your sci-fi tracker as Watch With Caution. Listed here because in horror context the priority shifts up — Adjani's performance is genuinely one of the most disturbing on film.",
           "pitch": "Cold War Berlin. A marriage dissolves while something inhuman moves into the gap. Adjani won Cannes Best Actress.",
           "critics": [
             {
@@ -255,9 +255,18 @@
           "tags": [
             "modern"
           ],
-          "whyPriority": "You've already seen and loved this one \u2014 pre-marked as Watched, Loved.",
+          "whyPriority": "You've already seen and loved this one — pre-marked as Watched, Loved.",
           "pitch": "Eggers' Nosferatu remake.",
-          "critics": []
+          "critics": [
+            {
+              "who": "Narate",
+              "quote": "\"_There is a devil in this world and I have met him._\"\r\n\r\nThere are parts of this movie I really like."
+            },
+            {
+              "who": "r96sk",
+              "quote": "<em>'Nosferatu'</em> didn't quite hook me, but there is enough about it that I can consider it as a good film."
+            }
+          ]
         },
         {
           "title": "Nosferatu the Vampyre",
@@ -401,7 +410,7 @@
           "tags": [
             "modern"
           ],
-          "pitch": "You've seen all six \u2014 pre-marked as Watched. Listed for completeness in the vampire section.",
+          "pitch": "You've seen all six — pre-marked as Watched. Listed for completeness in the vampire section.",
           "critics": []
         }
       ],
@@ -445,7 +454,7 @@
           "critics": [
             {
               "who": "Reception",
-              "quote": "Critical and commercial failure. Cult resurrection \u2014 now widely considered the closest cinema has come to Lovecraft."
+              "quote": "Critical and commercial failure. Cult resurrection — now widely considered the closest cinema has come to Lovecraft."
             }
           ]
         },
@@ -458,8 +467,17 @@
           "tags": [
             "modern"
           ],
-          "pitch": "Already on your sci-fi tracker. Listed here for cross-reference \u2014 the bear sequence is one of the most pure-horror sequences in modern sci-fi.",
-          "critics": []
+          "pitch": "Already on your sci-fi tracker. Listed here for cross-reference — the bear sequence is one of the most pure-horror sequences in modern sci-fi.",
+          "critics": [
+            {
+              "who": "Gimly",
+              "quote": "Critics are by and large on board with _Annihilation_."
+            },
+            {
+              "who": "Repo Jack",
+              "quote": "It helps to have an open mind and just let yourself go with the flow of the story ..."
+            }
+          ]
         },
         {
           "title": "Kill List",
@@ -526,13 +544,13 @@
         {
           "title": "The Blair Witch Project",
           "year": 1999,
-          "dir": "Daniel Myrick & Eduardo S\u00e1nchez",
+          "dir": "Daniel Myrick & Eduardo Sánchez",
           "country": "USA",
           "runtime": "81 min",
           "tags": [
             "foundational"
           ],
-          "pitch": "The found-footage progenitor. Maryland woods, three film students, missing. Whether it lands depends on patience \u2014 which you have.",
+          "pitch": "The found-footage progenitor. Maryland woods, three film students, missing. Whether it lands depends on patience — which you have.",
           "critics": [
             {
               "who": "Reception",
@@ -658,10 +676,17 @@
           "country": "USA/France",
           "runtime": "135 min",
           "priority": "med",
-          "tags": ["modern"],
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "The Twin Peaks prequel film. Booed at Cannes; rehabilitated as one of his masterpieces. Sheryl Lee's central performance is staggering.",
           "pitch": "The last seven days of Laura Palmer's life.",
-          "critics": [{ "who": "Reappraisal", "quote": "Critically reviled in 1992; now widely cited as one of the greatest works of the 1990s." }]
+          "critics": [
+            {
+              "who": "Reappraisal",
+              "quote": "Critically reviled in 1992; now widely cited as one of the greatest works of the 1990s."
+            }
+          ]
         },
         {
           "title": "Eraserhead",
@@ -669,12 +694,21 @@
           "dir": "David Lynch",
           "country": "USA",
           "runtime": "89 min",
-          "tags": ["foundational"],
+          "tags": [
+            "foundational"
+          ],
           "pitch": "His debut. Industrial nightmare, deformed baby, anxiety as form. Watch only when you're ready.",
-          "critics": [{ "who": "Reception", "quote": "Immediate cult phenomenon. Routinely cited as one of cinema's strangest masterpieces." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Immediate cult phenomenon. Routinely cited as one of cinema's strangest masterpieces."
+            }
+          ]
         }
       ],
-      "categories": ["auteur"]
+      "categories": [
+        "auteur"
+      ]
     },
     {
       "name": "Z. Plex History (Auto-Promoted)",
@@ -688,7 +722,17 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "constantine-2005"
+          "id": "constantine-2005",
+          "critics": [
+            {
+              "who": "markuspm",
+              "quote": "Somehow I feel this movie in a way focuses more than others on feet."
+            },
+            {
+              "who": "Rob",
+              "quote": "There are hell things on earth and only Keanu Reeves to give them a good kicking! This is a hugely imaginative vision of a movie, not a direct copy of the comic it was spawned from but still a fantastic creation."
+            }
+          ]
         },
         {
           "title": "The Substance",
@@ -698,7 +742,17 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "the-substance-2024"
+          "id": "the-substance-2024",
+          "critics": [
+            {
+              "who": "Manuel São Bento",
+              "quote": "The Substance delivers an intense, visually mesmerizing commentary on the entertainment industry's obsession with youth and outward beauty."
+            },
+            {
+              "who": "good.film",
+              "quote": "For a film that’s laser-focused on the human body, it’s gloriously on point that THE SUBSTANCE begins with a freshly cracked, bright yellow egg yolk."
+            }
+          ]
         },
         {
           "title": "Underworld",
@@ -708,7 +762,17 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "underworld-2003"
+          "id": "underworld-2003",
+          "critics": [
+            {
+              "who": "Gimly",
+              "quote": "Movies like _Underworld_ just don't end up with the calibre of actor that _Underworld_ has under normal circumstances."
+            },
+            {
+              "who": "The Movie Mob",
+              "quote": "**Overall : Action, horror, monsters, guns, striking practical effects, spectacular creature designs, and a surprisingly proven and fantastic cast led by Kate Beckinsale all get mashed together to create one of the best creature features there is!**\r\n\r\nUnderworld brings a new twist to the vampire an"
+            }
+          ]
         },
         {
           "title": "Underworld: Awakening",
@@ -728,7 +792,17 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "underworld-blood-wars-2016"
+          "id": "underworld-blood-wars-2016",
+          "critics": [
+            {
+              "who": "Frank Ochieng",
+              "quote": "Some things will never change within the tedious and surprisingly long-running sci-fi/horror saga **Underworld** film franchise."
+            },
+            {
+              "who": "Dark Jedi",
+              "quote": "I think it is fairly safe to say that if you did not like any of the other installments in the Underworld movie series then you will not like this one.\r\n\r\nAs usual with these kind of movies it is one where you preferably switch of most higher brain functions before watching and just sit down and enj"
+            }
+          ]
         },
         {
           "title": "Underworld: Evolution",
@@ -738,7 +812,17 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "underworld-evolution-2006"
+          "id": "underworld-evolution-2006",
+          "critics": [
+            {
+              "who": "John Chard",
+              "quote": "Oh Brother!\r\n\r\nThe sequel to cult fave Underworld (2003) finds vampire warrior Selene (Kate Beckinsale) and half werewolf Michael (Scott Speedman) unravelling the truth about their respective blood lines."
+            },
+            {
+              "who": "Gimly",
+              "quote": "I'm sorry but I've denied myself this for far too long."
+            }
+          ]
         },
         {
           "title": "Underworld: Rise of the Lycans",
@@ -748,7 +832,13 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "underworld-rise-of-the-lycans-2009"
+          "id": "underworld-rise-of-the-lycans-2009",
+          "critics": [
+            {
+              "who": "EvilWayz",
+              "quote": "No idea why the rating for this flick is hovering just above 50\"%."
+            }
+          ]
         }
       ],
       "categories": []

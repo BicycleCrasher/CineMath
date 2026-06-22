@@ -246,7 +246,7 @@
           "tags": [
             "modern"
           ],
-          "whyPriority": "Iliad without the gods. Brad Pitt's Achilles, Eric Bana's Hector. Watch the Director's Cut (196 min) \u2014 the theatrical lost the texture. Bana vs. Pitt duel is one of the best in modern cinema.",
+          "whyPriority": "Iliad without the gods. Brad Pitt's Achilles, Eric Bana's Hector. Watch the Director's Cut (196 min) — the theatrical lost the texture. Bana vs. Pitt duel is one of the best in modern cinema.",
           "pitch": "The Trojan War as a humans-only story. Mortals making mortal decisions.",
           "critics": [
             {
@@ -311,7 +311,7 @@
             "foundational",
             "under"
           ],
-          "pitch": "Romantic medieval fantasy. Pfeiffer and Hauer as cursed lovers \u2014 by day she's a hawk, by night he's a wolf. Goldsmith score, again.",
+          "pitch": "Romantic medieval fantasy. Pfeiffer and Hauer as cursed lovers — by day she's a hawk, by night he's a wolf. Goldsmith score, again.",
           "critics": [
             {
               "who": "Reception",
@@ -362,7 +362,7 @@
           "tags": [
             "foundational"
           ],
-          "pitch": "Animated rabbit epic. Adams's novel adapted with full seriousness \u2014 religious mythology, war, exodus, all rabbits. Famously not for children despite the medium.",
+          "pitch": "Animated rabbit epic. Adams's novel adapted with full seriousness — religious mythology, war, exodus, all rabbits. Famously not for children despite the medium.",
           "critics": [
             {
               "who": "Reception",
@@ -384,36 +384,63 @@
           "year": 2001,
           "dir": "Peter Jackson",
           "country": "USA/NZ",
-          "runtime": "228 min \u00b7 Extended",
+          "runtime": "228 min · Extended",
           "tags": [
             "foundational"
           ],
           "pitch": "You've seen the extended editions. Pre-listed.",
-          "critics": []
+          "critics": [
+            {
+              "who": "NeoBrowser",
+              "quote": "Brooking no argument, history should quickly regard Peter Jackson’s The Fellowship Of The Ring as the first instalment of the best fantasy epic in motion picture history."
+            },
+            {
+              "who": "gdeveloper",
+              "quote": "An epic movie if I ever saw one. Captivating and just plain fun to watch."
+            }
+          ]
         },
         {
           "title": "The Lord of the Rings: The Two Towers",
           "year": 2002,
           "dir": "Peter Jackson",
           "country": "USA/NZ",
-          "runtime": "235 min \u00b7 Extended",
+          "runtime": "235 min · Extended",
           "tags": [
             "foundational"
           ],
           "pitch": "You've seen the extended editions. Pre-listed.",
-          "critics": []
+          "critics": [
+            {
+              "who": "NeoBrowser",
+              "quote": "Peter Jackson has always maintained that The Two Towers is \"the second act\" of his epic undertaking, and perhaps the true greatness of the middle chapter will only be clear when viewed in context."
+            },
+            {
+              "who": "JPV852",
+              "quote": "Still probably my favorite of the three, while it's pretty streamlined and far more action centric with little development compared with Fellowship of the Ring and Return of the King, I always find this one really entertaining with the Helm's Deep battle."
+            }
+          ]
         },
         {
           "title": "The Lord of the Rings: The Return of the King",
           "year": 2003,
           "dir": "Peter Jackson",
           "country": "USA/NZ",
-          "runtime": "263 min \u00b7 Extended",
+          "runtime": "263 min · Extended",
           "tags": [
             "foundational"
           ],
           "pitch": "You've seen the extended editions. Pre-listed.",
-          "critics": []
+          "critics": [
+            {
+              "who": "NeoBrowser",
+              "quote": "And so all good things come to an end. For three years in a row, Peter Jackson has banished our winter blues with the individual instalments of his Tolkien trilogy, effectively shifting the focus of our cinematic excitement from the summer months to the end of the year."
+            },
+            {
+              "who": "JPV852",
+              "quote": "Great finale to a great trilogy. The action and battle sequences were amazing and even though I've seen this a few times over the years, still thrilling to the end."
+            }
+          ]
         },
         {
           "title": "The Hobbit trilogy",
@@ -444,13 +471,23 @@
           "country": "USA",
           "runtime": "137 min",
           "priority": "high",
-          "tags": ["modern"],
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "Eggers' Viking revenge epic. The Hamlet source story (Amleth) treated with full mythological commitment. Skarsgård, Kidman, Dafoe, Björk.",
           "pitch": "Tenth-century Iceland. A young prince, exiled, sets out as an adult to avenge his father's murder.",
-          "critics": [{ "who": "Reception", "quote": "Mixed commercial performance; critical reputation has grown. Considered the most committed mainstream Viking film." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Mixed commercial performance; critical reputation has grown. Considered the most committed mainstream Viking film."
+            }
+          ]
         }
       ],
-      "categories": ["auteur", "epic"]
+      "categories": [
+        "auteur",
+        "epic"
+      ]
     }
   ]
 }

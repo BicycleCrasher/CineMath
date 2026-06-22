@@ -55,7 +55,7 @@
           "tags": [
             "foundational"
           ],
-          "whyPriority": "His most influential \u2014 every action thriller since owes it. Cary Grant on the run, the crop-duster, Mount Rushmore.",
+          "whyPriority": "His most influential — every action thriller since owes it. Cary Grant on the run, the crop-duster, Mount Rushmore.",
           "pitch": "An advertising executive is mistaken for a spy and pursued across America.",
           "critics": [
             {
@@ -131,7 +131,16 @@
             "foundational"
           ],
           "pitch": "Two friends murder a third and host a dinner party with the body in the trunk. Famously appears to be one continuous shot.",
-          "critics": []
+          "critics": [
+            {
+              "who": "tmdb47633491",
+              "quote": "Can't believe I'm only seeing this now. It's great."
+            },
+            {
+              "who": "barrymost",
+              "quote": "Rope was the first Alfred Hitchcock/James Stewart collaboration."
+            }
+          ]
         },
         {
           "title": "Shadow of a Doubt",
@@ -161,7 +170,16 @@
             "foundational"
           ],
           "pitch": "Husband plans to kill his wife. The plan goes wrong. Originally shot in 3D.",
-          "critics": []
+          "critics": [
+            {
+              "who": "talisencrw",
+              "quote": "I used to consider this second-tier Hitchcock, but a re-watch proved to me just how excellent the script and directing were, as well as how stellar and underrated both Grace Kelly and Ray Milland tend to be, at least presently, three generations after the fact."
+            },
+            {
+              "who": "John Chard",
+              "quote": "No, I'm afraid my murders would be something like my bridge: I'd make some stupid mistake and never realize it until I found everybody was looking at me."
+            }
+          ]
         },
         {
           "title": "The 39 Steps",
@@ -174,7 +192,12 @@
             "intl"
           ],
           "pitch": "His British-period masterpiece. The model for North by Northwest. An innocent man wrongly accused, on the run.",
-          "critics": []
+          "critics": [
+            {
+              "who": "CinemaSerf",
+              "quote": "A simply wonderful, sophisticated, adaptation of John Buchan's book of wartime espionage and murder."
+            }
+          ]
         }
       ],
       "categories": [
@@ -254,7 +277,16 @@
             "foundational"
           ],
           "pitch": "Cross-listed from crime.",
-          "critics": []
+          "critics": [
+            {
+              "who": "talisencrw",
+              "quote": "It's definitely hard to pin down a personal favourite Wilder film, though I tend towards his earlier masterworks such as 'The Lost Weekend', 'Sunset Boulevard'...and THIS."
+            },
+            {
+              "who": "John Chard",
+              "quote": "A banner movie from film noir's classic era.\r\n\r\nDouble Indemnity is directed by Billy Wilder and Wilder co-adapts the screenplay with Raymond Chandler from the novella written by James M."
+            }
+          ]
         },
         {
           "title": "Witness for the Prosecution",
@@ -369,7 +401,12 @@
             "foundational"
           ],
           "pitch": "Cross-listed from drama.",
-          "critics": []
+          "critics": [
+            {
+              "who": "Andres Gomez",
+              "quote": "Master piece from John Ford picturing the situation in US during the Great Depression and how an Oklahoma family tries to survive looking for jobs to California.\r\n\r\nEverything is perfect: director, performances, script, etc.\r\n\r\nA must to be watched.."
+            }
+          ]
         },
         {
           "title": "The Man Who Shot Liberty Valance",
@@ -419,7 +456,12 @@
             "foundational"
           ],
           "pitch": "Wyatt Earp at the OK Corral. Henry Fonda. The most lyrical Earp film.",
-          "critics": []
+          "critics": [
+            {
+              "who": "CinemaSerf",
+              "quote": "Wyatt Earp (Henry Fonda) and his brothers are driving some cattle near the town of Tombstone when one of them, James, is murdered."
+            }
+          ]
         }
       ],
       "categories": [
@@ -455,13 +497,22 @@
           "year": 1958,
           "dir": "Orson Welles",
           "country": "USA",
-          "runtime": "95 min \u00b7 or 111 min reconstruction",
+          "runtime": "95 min · or 111 min reconstruction",
           "priority": "high",
           "tags": [
             "foundational"
           ],
           "pitch": "Cross-listed from crime. Watch the 1998 reconstruction edit.",
-          "critics": []
+          "critics": [
+            {
+              "who": "CinemaSerf",
+              "quote": "We start with a man putting a bomb in a car on the Mexican side of the border."
+            },
+            {
+              "who": "Filipe Manuel Neto",
+              "quote": "**It's not Orson Welles' best work, and there are some problems and wrong choices, but it's still a worthwhile film.**\r\n\r\nOne crime and two totally different men: this sentence almost sums up the entire film."
+            }
+          ]
         },
         {
           "title": "The Magnificent Ambersons",
@@ -508,7 +559,12 @@
             "intl"
           ],
           "pitch": "Welles's late-period essay-film about art forgers. Non-fiction that may not be non-fiction.",
-          "critics": []
+          "critics": [
+            {
+              "who": "C_Hickcock",
+              "quote": "This movie is a masterpiece -- it is equal parts an insightful essay, a magic trick and a prank."
+            }
+          ]
         },
         {
           "title": "The Trial",
@@ -584,7 +640,16 @@
             "intl"
           ],
           "pitch": "Cross-listed from foreign.",
-          "critics": []
+          "critics": [
+            {
+              "who": "barrymost",
+              "quote": "When in Rome... keep an eye on your bicycle! Or else it might be stolen and you'll find yourself fruitlessly searching the streets of Italy, as the father and son do in this classic Italian film."
+            },
+            {
+              "who": "CinemaSerf",
+              "quote": "In post war Rome, money is very tight for \"Antonio\" (Lamberto Maggiorani) so when he gets a chance to earn some extra cash, he grabs the opportunity."
+            }
+          ]
         },
         {
           "title": "Ikiru",
@@ -598,12 +663,21 @@
             "intl"
           ],
           "pitch": "Cross-listed from auteur (Kurosawa).",
-          "critics": []
+          "critics": [
+            {
+              "who": "CinemaSerf",
+              "quote": "Takashi Shimura is \"Watanabe\", an elderly civil service lifer who is told that he has terminal stomach cancer."
+            },
+            {
+              "who": "Peter McGinn",
+              "quote": "I watched the English follow-up version (Living) before watching this original, and wished I had reversed my order."
+            }
+          ]
         },
         {
           "title": "Tokyo Story",
           "year": 1953,
-          "dir": "Yasujir\u014d Ozu",
+          "dir": "Yasujirō Ozu",
           "country": "Japan",
           "runtime": "136 min",
           "priority": "high",
@@ -612,7 +686,12 @@
             "intl"
           ],
           "pitch": "Cross-listed from foreign.",
-          "critics": []
+          "critics": [
+            {
+              "who": "CinemaSerf",
+              "quote": "An elderly couple leave their small fishing village to travel to Tokyo to visit their children and grandchildren."
+            }
+          ]
         },
         {
           "title": "The Battleship Potemkin",
@@ -627,7 +706,12 @@
           ],
           "whyPriority": "The Odessa Steps sequence is the most analyzed in film history. Soviet propaganda as artistic milestone.",
           "pitch": "1905 mutiny aboard a Russian battleship.",
-          "critics": []
+          "critics": [
+            {
+              "who": "CinemaSerf",
+              "quote": "I'm not going to attempt to find loads of cinematic superlatives about this."
+            }
+          ]
         },
         {
           "title": "M",
@@ -641,21 +725,39 @@
             "intl"
           ],
           "pitch": "Lang's first sound film. Peter Lorre as a child murderer hunted by both police and criminals. The original serial-killer film.",
-          "critics": []
+          "critics": [
+            {
+              "who": "Wiccaburr",
+              "quote": "The movie is classic and yet this is my first time watching this.\r\n\r\nPeter Lorre alone is worth seeing this movie as he always played such the great villain."
+            },
+            {
+              "who": "badelf",
+              "quote": "So you say you want to enroll in film school? Don't bother."
+            }
+          ]
         },
         {
           "title": "Metropolis",
           "year": 1927,
           "dir": "Fritz Lang",
           "country": "Germany",
-          "runtime": "153 min \u00b7 2010 restoration",
+          "runtime": "153 min · 2010 restoration",
           "priority": "med",
           "tags": [
             "foundational",
             "intl"
           ],
           "pitch": "Foundational German Expressionist sci-fi. Watch the 2010 restored version (with rediscovered footage).",
-          "critics": []
+          "critics": [
+            {
+              "who": "Gurre",
+              "quote": "Metropolis is one of the greatest films ever made."
+            },
+            {
+              "who": "CinemaSerf",
+              "quote": "This has got to be the ultimate cinematic illustration of the strata of human existence."
+            }
+          ]
         },
         {
           "title": "The Cabinet of Dr. Caligari",
@@ -668,7 +770,12 @@
             "intl"
           ],
           "pitch": "German Expressionism's defining text. Painted-set unreality. Influence on horror, noir, Lynch.",
-          "critics": []
+          "critics": [
+            {
+              "who": "CinemaSerf",
+              "quote": "This is a seriously creepy affair that follows the story of the young \"Franzis\" (Friedrich Feher) who goes to a fairground one night with his friend \"Alan\" (Hans Heinrich von Twardowski)."
+            }
+          ]
         },
         {
           "title": "The Passion of Joan of Arc",
@@ -787,7 +894,12 @@
             "foundational"
           ],
           "pitch": "Original gangster epic. Loosely based on Al Capone. Influence on every gangster film since (including the De Palma remake).",
-          "critics": []
+          "critics": [
+            {
+              "who": "CinemaSerf",
+              "quote": "Odd to see Howard Hawks on this genre, but he directs this workman-like gangster effort steadily, managing to convey some semblance of the environment of fear and violence without actually turning it into a visual gory bloodbath."
+            }
+          ]
         },
         {
           "title": "Red Dust",

@@ -67,7 +67,7 @@
           "critics": [
             {
               "who": "Reception",
-              "quote": "Mixed reviews \u2014 some critics found the Blade Runner homage too on-the-nose. Genre-press champions appreciated the structural discipline."
+              "quote": "Mixed reviews — some critics found the Blade Runner homage too on-the-nose. Genre-press champions appreciated the structural discipline."
             }
           ]
         },
@@ -85,7 +85,7 @@
           "pitch": "After a brutal breakup, a couple separately undergoes a memory-erasure procedure. Then they meet again. Kaufman's structure is fragmented but always coherent.",
           "critics": [
             {
-              "who": "A.O. Scott \u00b7 NY Times",
+              "who": "A.O. Scott · NY Times",
               "quote": "Highly positive. Called Kaufman's screenplay 'a marvel of construction.'"
             },
             {
@@ -105,8 +105,8 @@
             "foundational",
             "modern"
           ],
-          "whyPriority": "Direct adaptation of La Jet\u00e9e's premise into a feature. Time-travel, paradox, emotional weight. Pairs naturally with watching La Jet\u00e9e first.",
-          "pitch": "A convict from a plague-ravaged future is sent back to gather information. Brad Pitt's breakthrough. Built directly on La Jet\u00e9e's structure but expanded into a full character-driven thriller.",
+          "whyPriority": "Direct adaptation of La Jetée's premise into a feature. Time-travel, paradox, emotional weight. Pairs naturally with watching La Jetée first.",
+          "pitch": "A convict from a plague-ravaged future is sent back to gather information. Brad Pitt's breakthrough. Built directly on La Jetée's structure but expanded into a full character-driven thriller.",
           "critics": [
             {
               "who": "Roger Ebert",
@@ -114,7 +114,7 @@
             },
             {
               "who": "Pitt's Oscar nomination",
-              "quote": "Best Supporting Actor nomination \u2014 rare for a sci-fi film."
+              "quote": "Best Supporting Actor nomination — rare for a sci-fi film."
             }
           ]
         },
@@ -152,7 +152,7 @@
       "desc": "Likely to land but with one or more variables. Watch when high-priority queue is exhausted.",
       "items": [
         {
-          "title": "La Jet\u00e9e",
+          "title": "La Jetée",
           "year": 1962,
           "dir": "Chris Marker",
           "country": "France",
@@ -163,12 +163,12 @@
             "under",
             "intl"
           ],
-          "whyPriority": "28 minutes. Watch before 12 Monkeys. Photo-roman structure may either fascinate or frustrate \u2014 short enough that the risk is minimal.",
+          "whyPriority": "28 minutes. Watch before 12 Monkeys. Photo-roman structure may either fascinate or frustrate — short enough that the risk is minimal.",
           "pitch": "A 28-minute photo-roman about memory, time-travel, and a man haunted by an image from before the apocalypse. The film 12 Monkeys was based on.",
           "critics": [
             {
               "who": "Critical canonization",
-              "quote": "Initially obscure, championed by Cahiers du Cin\u00e9ma; entered the global canon through Sight & Sound polls."
+              "quote": "Initially obscure, championed by Cahiers du Cinéma; entered the global canon through Sight & Sound polls."
             }
           ],
           "categories": [
@@ -208,7 +208,7 @@
             "foundational",
             "intl"
           ],
-          "whyPriority": "The arthouse foundation. Pace may test patience but the emotional core is exactly your wheelhouse \u2014 grief, memory, love. Watch before Soderbergh's.",
+          "whyPriority": "The arthouse foundation. Pace may test patience but the emotional core is exactly your wheelhouse — grief, memory, love. Watch before Soderbergh's.",
           "pitch": "Psychologist sent to a space station orbiting a sentient ocean that manifests his dead wife. Glacial, devastating.",
           "critics": [
             {
@@ -216,7 +216,7 @@
               "quote": "Won the Grand Jury Prize."
             },
             {
-              "who": "Roger Ebert \u00b7 Great Movies",
+              "who": "Roger Ebert · Great Movies",
               "quote": "'A film of substance and ambition.'"
             }
           ],
@@ -322,11 +322,11 @@
           "tags": [
             "foundational"
           ],
-          "whyPriority": "Crichton procedural, scientifically grounded. Closest to Contact in temperament \u2014 adults solving an extraterrestrial problem.",
+          "whyPriority": "Crichton procedural, scientifically grounded. Closest to Contact in temperament — adults solving an extraterrestrial problem.",
           "pitch": "Scientists in an underground lab race to identify an extraterrestrial pathogen. Almost no action; protocol, hypothesis, dread.",
           "critics": [
             {
-              "who": "Vincent Canby \u00b7 NY Times",
+              "who": "Vincent Canby · NY Times",
               "quote": "Praised for its restraint and 'cool intelligence.'"
             }
           ],
@@ -360,7 +360,7 @@
         {
           "title": "Children of Men",
           "year": 2006,
-          "dir": "Alfonso Cuar\u00f3n",
+          "dir": "Alfonso Cuarón",
           "country": "UK/USA",
           "runtime": "109 min",
           "priority": "med",
@@ -371,11 +371,11 @@
           "pitch": "Near-future Britain where humanity has become infertile. Bleakness in service of hope.",
           "critics": [
             {
-              "who": "Anthony Lane \u00b7 The New Yorker",
+              "who": "Anthony Lane · The New Yorker",
               "quote": "Highly positive. Called the cinematography 'astonishing.'"
             },
             {
-              "who": "A.O. Scott \u00b7 NY Times",
+              "who": "A.O. Scott · NY Times",
               "quote": "Listed it among the decade's best films."
             }
           ],
@@ -510,7 +510,7 @@
           "pitch": "Three characters, one location, AI Turing-test thriller.",
           "critics": [
             {
-              "who": "A.O. Scott \u00b7 NY Times",
+              "who": "A.O. Scott · NY Times",
               "quote": "Highly positive. 'A sleek and accessible work of speculative fiction.'"
             }
           ]
@@ -527,7 +527,7 @@
           "pitch": "Five women enter 'The Shimmer,' a zone where biology rewrites itself.",
           "critics": [
             {
-              "who": "Manohla Dargis \u00b7 NY Times",
+              "who": "Manohla Dargis · NY Times",
               "quote": "Strongly positive."
             }
           ]
@@ -544,7 +544,7 @@
           "pitch": "A family's android caretaker breaks down. Quiet, contemplative.",
           "critics": [
             {
-              "who": "A.O. Scott \u00b7 NY Times",
+              "who": "A.O. Scott · NY Times",
               "quote": "'A film of patient, accumulating beauty.'"
             }
           ]
@@ -552,7 +552,7 @@
         {
           "title": "Open Your Eyes",
           "year": 1997,
-          "dir": "Alejandro Amen\u00e1bar",
+          "dir": "Alejandro Amenábar",
           "country": "Spain",
           "runtime": "117 min",
           "tags": [
@@ -563,7 +563,7 @@
           "critics": [
             {
               "who": "European reception",
-              "quote": "Established Amen\u00e1bar's career."
+              "quote": "Established Amenábar's career."
             }
           ]
         },
@@ -589,7 +589,7 @@
         {
           "title": "Europa Report",
           "year": 2013,
-          "dir": "Sebasti\u00e1n Cordero",
+          "dir": "Sebastián Cordero",
           "country": "USA",
           "runtime": "97 min",
           "tags": [
@@ -622,8 +622,17 @@
           "tags": [
             "foundational"
           ],
-          "pitch": "Listed for completeness \u2014 already loved.",
-          "critics": [],
+          "pitch": "Listed for completeness — already loved.",
+          "critics": [
+            {
+              "who": "markuspm",
+              "quote": "There are many great predictions hinting to future (it is from 1968 - can you believe it?) innovations throughout the movie."
+            },
+            {
+              "who": "izgzhen",
+              "quote": "I believe that we should call it a modernism show, albeit exhibited in the form of a movie."
+            }
+          ],
           "categories": [
             "cerebral",
             "foundational"
@@ -639,7 +648,16 @@
             "foundational"
           ],
           "pitch": "Listed for completeness.",
-          "critics": [],
+          "critics": [
+            {
+              "who": "tmdb39513728",
+              "quote": "**Planet Noir**\r\n\r\nI declare _Blade Runner_ the best sci-fi movie of all time."
+            },
+            {
+              "who": "John Chard",
+              "quote": "Retirement - Replicants - Resplendent. \r\n\r\nBlade Runner is one of those glorious films that has gained in popularity the older it has gotten."
+            }
+          ],
           "categories": [
             "cerebral",
             "foundational"
@@ -656,8 +674,17 @@
             "modern",
             "intl"
           ],
-          "pitch": "Listed for completeness \u2014 already loved.",
-          "critics": [],
+          "pitch": "Listed for completeness — already loved.",
+          "critics": [
+            {
+              "who": "dogstir",
+              "quote": "Timecrimes (2007), titled initially Los cronocrímenes, is one of the best time-travel movies available."
+            },
+            {
+              "who": "Peter McGinn",
+              "quote": "Before I say a word about the movie itself, let me advise you that if you haven’t already seen the preview for this movie, do yourself a favor and Don’t Watch It! Never have I known a preview to give so much away, and it it is particularly heinous in this case as it is a time travel movie, with plot"
+            }
+          ],
           "categories": [
             "cerebral"
           ]
@@ -672,7 +699,12 @@
             "foundational"
           ],
           "pitch": "Lynch's polarizing adaptation. You loved it.",
-          "critics": [],
+          "critics": [
+            {
+              "who": "badelf",
+              "quote": "I read Frank Herbert's book, _Dune_, when I was in high school and really don't remember it much except that it was great and a little scary."
+            }
+          ],
           "categories": [
             "mainstream"
           ]
@@ -687,7 +719,16 @@
             "modern"
           ],
           "pitch": "Villeneuve's first half. You loved it.",
-          "critics": [],
+          "critics": [
+            {
+              "who": "RADIO1'S MR. MOVIE!-MAD AMI 🌠",
+              "quote": "**FABULOUS 🥇🥇🥇🥇 . ."
+            },
+            {
+              "who": "tahmid_007",
+              "quote": "Great movie with excellent BG music and visual effects."
+            }
+          ],
           "categories": [
             "mainstream",
             "foundational"
@@ -703,7 +744,16 @@
             "modern"
           ],
           "pitch": "Villeneuve's second half. You loved it.",
-          "critics": [],
+          "critics": [
+            {
+              "who": "Manuel São Bento",
+              "quote": "FULL SPOILER-FREE REVIEW @ https://talkingfilms.net/dune-part-two-review-the-new-generational-epitome-of-sci-fi-epics/\r\n\r\n\"Dune: Part Two surpasses even the highest expectations, establishing itself as an unquestionable technical masterpiece of blockbuster filmmaking.\r\n\r\nWith a narrative that deepen"
+            },
+            {
+              "who": "r96sk",
+              "quote": "As anticipated, a thrilling watch!\r\n\r\nI enjoyed <em>'Dune'</em>, though remember thinking it was obviously a complete set-up to a sequel and that this would only improve upon its predecessor - and that's very much the case."
+            }
+          ],
           "categories": [
             "mainstream",
             "foundational"
@@ -716,7 +766,7 @@
       ]
     },
     {
-      "name": "V. Lower Priority \u2014 Watch With Caution",
+      "name": "V. Lower Priority — Watch With Caution",
       "desc": "Quality films, but your signal suggests they may not land.",
       "items": [
         {
@@ -729,7 +779,7 @@
             "under",
             "modern"
           ],
-          "pitch": "More tone poem than narrative \u2014 flagged for 'style over substance' risk.",
+          "pitch": "More tone poem than narrative — flagged for 'style over substance' risk.",
           "critics": []
         },
         {
@@ -742,8 +792,13 @@
             "under",
             "modern"
           ],
-          "pitch": "Carruth's follow-up to Primer. More elliptical \u2014 like Arrival's emotional approach. Mixed signal for you.",
-          "critics": []
+          "pitch": "Carruth's follow-up to Primer. More elliptical — like Arrival's emotional approach. Mixed signal for you.",
+          "critics": [
+            {
+              "who": "artlawless",
+              "quote": "After almost 9 years since Primer, Shane Carruth returned with his next film, Upstream Color."
+            }
+          ]
         },
         {
           "title": "High Life",
@@ -757,7 +812,16 @@
             "intl"
           ],
           "pitch": "Cold Denis-style. Low fit given character-first preference.",
-          "critics": []
+          "critics": [
+            {
+              "who": "Gill-Man",
+              "quote": "A dazzling sci-fi epic that holds nothing back in its entirety."
+            },
+            {
+              "who": "Stephen Campbell",
+              "quote": "**_Esoteric and poetic, but very singular; certainly not for everyone_**\r\n\r\n> _Imagine a star with a mass 10 times that of the sun."
+            }
+          ]
         },
         {
           "title": "Possessor",
@@ -770,7 +834,16 @@
             "modern"
           ],
           "pitch": "Body horror sci-fi, very bleak. At edge of tolerance.",
-          "critics": []
+          "critics": [
+            {
+              "who": "SWITCH.",
+              "quote": "The Cronenberg name is tightly associated with the body horror genre, and rightfully so."
+            },
+            {
+              "who": "Repo Jack",
+              "quote": "I just wrote a review about how mainstream critics don't \"get\" horror, elevating attempts at filmmaking \"art\" over the basics that horror fans love."
+            }
+          ]
         },
         {
           "title": "Hard to Be a God",
@@ -788,7 +861,7 @@
         {
           "title": "Possession",
           "year": 1981,
-          "dir": "Andrzej \u017bu\u0142awski",
+          "dir": "Andrzej Żuławski",
           "country": "France/W. Germany",
           "runtime": "124 min",
           "tags": [
@@ -809,7 +882,12 @@
             "under"
           ],
           "pitch": "Maximalist body horror with a brain.",
-          "critics": []
+          "critics": [
+            {
+              "who": "Wuchak",
+              "quote": "***“Night of the Apeman” mixed with some pretty heady material***\r\n\r\nIn the late 60s and mid-70s, a psychopathologist (William Hurt) from the New York/New England area honestly seeks ultimate truth and the origins of humanity through dubious experiments with sensory deprivation mixed with drugs, inc"
+            }
+          ]
         },
         {
           "title": "Brazil",
@@ -821,7 +899,16 @@
             "foundational"
           ],
           "pitch": "Bureaucratic dystopia, dream-logic.",
-          "critics": []
+          "critics": [
+            {
+              "who": "chadrico",
+              "quote": "One of my all time favourite sci fi movies."
+            },
+            {
+              "who": "misubisu",
+              "quote": "**Score: 20/10   A Perfect, Unassailable Masterpiece of Dystopian Imagination**\r\n\r\nSome films are not merely watched; they are *inhabited*."
+            }
+          ]
         },
         {
           "title": "Sunshine",
@@ -833,7 +920,16 @@
             "modern"
           ],
           "pitch": "Mission to reignite the dying sun. Third act controversial.",
-          "critics": []
+          "critics": [
+            {
+              "who": "John Chard",
+              "quote": "Are you an angel? Has the time come? I've been waiting so long."
+            },
+            {
+              "who": "CinemaSerf",
+              "quote": "Danny Boyle has assembled a stellar (had to be said) cast for this rather far-fetched story."
+            }
+          ]
         },
         {
           "title": "Triangle",
@@ -846,7 +942,16 @@
             "modern"
           ],
           "pitch": "Yacht caught in a storm; loop begins. Same structural rigor as Timecrimes.",
-          "critics": []
+          "critics": [
+            {
+              "who": "antimony",
+              "quote": "**Fantastic Psychological Thriller!**\r\n\r\nIf you're browsing for movies to watch, go into this movie cold; without watching the trailers or any other reviews."
+            },
+            {
+              "who": "John Chard",
+              "quote": "Loopy Looper!\r\n\r\nTriangle is written and directed by Christopher Smith."
+            }
+          ]
         },
         {
           "title": "The Platform",
@@ -860,7 +965,16 @@
             "intl"
           ],
           "pitch": "Vertical prison. Bleak.",
-          "critics": []
+          "critics": [
+            {
+              "who": "Shumafuk",
+              "quote": "A violent form of demonstration of the problems of capitalist society."
+            },
+            {
+              "who": "Manuel São Bento",
+              "quote": "If you enjoy reading my Spoiler-Free reviews, please follow my blog @\r\nhttps://www.msbreviews.com\r\n\r\nNetflix has been supporting small, independent filmmaking for a while now."
+            }
+          ]
         }
       ],
       "categories": [
@@ -868,7 +982,7 @@
       ]
     },
     {
-      "name": "VI. Adjacent \u2014 Sci-Fi-Tinged",
+      "name": "VI. Adjacent — Sci-Fi-Tinged",
       "desc": "On the edge of the genre. Each tagged so you can decide.",
       "items": [
         {
@@ -926,7 +1040,12 @@
             "adjacent"
           ],
           "pitch": "Y2K-era LA. People trade illegal recordings of others' memories.",
-          "critics": []
+          "critics": [
+            {
+              "who": "Filipe Manuel Neto",
+              "quote": "**A sci-fi dystopia with a good political conspiracy plot in a film that cinema preferred to forget.**\r\n\r\nI think I've seen at least twenty films about the Millennium where times are shown with great pessimism."
+            }
+          ]
         }
       ],
       "categories": [
@@ -944,9 +1063,17 @@
           "country": "USSR",
           "runtime": "166 min",
           "priority": "high",
-          "tags": ["foundational", "intl"],
+          "tags": [
+            "foundational",
+            "intl"
+          ],
           "pitch": "A psychologist is sent to a space station orbiting an ocean planet that materializes the crew's memories and guilt. Tarkovsky's answer to 2001.",
-          "critics": []
+          "critics": [
+            {
+              "who": "CinemaSerf",
+              "quote": "Acclaimed psychologist \"Kelvin\" (Donates Banionis) is despatched to a space station to investigate the mysterious death of one of the three remaining scientists who are working on the surface of a remote moon."
+            }
+          ]
         },
         {
           "title": "Arrival",
@@ -955,10 +1082,17 @@
           "country": "USA",
           "runtime": "116 min",
           "priority": "high",
-          "tags": ["modern"],
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "The film that proved Villeneuve could do thoughtful sci-fi. Adams's career-best.",
           "pitch": "A linguist is recruited to communicate with newly arrived alien spacecraft.",
-          "critics": [{ "who": "Academy Awards 2017", "quote": "Eight Oscar nominations including Best Picture, Best Director." }]
+          "critics": [
+            {
+              "who": "Academy Awards 2017",
+              "quote": "Eight Oscar nominations including Best Picture, Best Director."
+            }
+          ]
         },
         {
           "title": "Blade Runner 2049",
@@ -967,13 +1101,22 @@
           "country": "USA",
           "runtime": "164 min",
           "priority": "high",
-          "tags": ["modern"],
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "Sequel to a film you've watched. Roger Deakins's Oscar-winning cinematography. Slower, more contemplative than the original.",
           "pitch": "Decades after the original. A blade runner uncovers a secret with implications for the entire society.",
-          "critics": [{ "who": "Academy Awards 2018", "quote": "Won 2 Oscars including Best Cinematography (Deakins). Five total nominations." }]
+          "critics": [
+            {
+              "who": "Academy Awards 2018",
+              "quote": "Won 2 Oscars including Best Cinematography (Deakins). Five total nominations."
+            }
+          ]
         }
       ],
-      "categories": ["auteur"]
+      "categories": [
+        "auteur"
+      ]
     },
     {
       "name": "Z. Plex History (Auto-Promoted)",
@@ -987,7 +1130,13 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "a-i-artificial-intelligence-2001"
+          "id": "a-i-artificial-intelligence-2001",
+          "critics": [
+            {
+              "who": "CinemaSerf",
+              "quote": "With their son \"Martin\" supposedly out for the count, \"Henry\" (Sam Robards) procures a solution for his wife \"Monica\" (Frances O'Connor) in the form of \"David\" (Haley Joel Osment)."
+            }
+          ]
         },
         {
           "title": "Alien: Romulus",
@@ -997,7 +1146,17 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "alien-romulus-2024"
+          "id": "alien-romulus-2024",
+          "critics": [
+            {
+              "who": "r96sk",
+              "quote": "<em>'Alien: Romulus'</em> is actually very good.\r\n\r\nOf the more modern day releases from this franchise, this is the one I've enjoyed the most."
+            },
+            {
+              "who": "CinemaSerf",
+              "quote": "I gather director Fede Alvarez made a conscious - and probably expensive - decision to keep the use of CGI to a minimum here and it really does work."
+            }
+          ]
         },
         {
           "title": "Avatar",
@@ -1007,7 +1166,17 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "avatar-2009"
+          "id": "avatar-2009",
+          "critics": [
+            {
+              "who": "Manuel São Bento",
+              "quote": "Rewatching Avatar confirmed my love for Pandora."
+            },
+            {
+              "who": "CinemaSerf",
+              "quote": "This is another of these films for which I didn't get the memo."
+            }
+          ]
         },
         {
           "title": "Avatar: The Way of Water",
@@ -1017,7 +1186,17 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "avatar-the-way-of-water-2022"
+          "id": "avatar-the-way-of-water-2022",
+          "critics": [
+            {
+              "who": "Manuel São Bento",
+              "quote": "FULL SPOILER-FREE REVIEW @ https://www.msbreviews.com/movie-reviews/avatar-the-way-of-water-spoiler-free-review\r\n\r\n\"Avatar: The Way of Water clearly sets itself apart from other blockbusters, building on 13 years of preparation to deliver a memorable CINEMA experience by the one and only James Camer"
+            },
+            {
+              "who": "tmdb45226627",
+              "quote": "An exciting return to Pandora: the world of Na&#39;vi."
+            }
+          ]
         },
         {
           "title": "Battlestar Galactica: Razor",
@@ -1037,7 +1216,17 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "inception-2010"
+          "id": "inception-2010",
+          "critics": [
+            {
+              "who": "ohlalipop",
+              "quote": "When I first saw the trailer for this film, I knew that this would attract a lot of attention."
+            },
+            {
+              "who": "tmdb44006625",
+              "quote": "Whether you watch Inception as a heist movie, a redemption story, or a sci-fi action picture, Christopher Nolan's tour de force of dreams will absolutely work its magic over you."
+            }
+          ]
         },
         {
           "title": "Independence Day",
@@ -1047,7 +1236,17 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "independence-day-1996"
+          "id": "independence-day-1996",
+          "critics": [
+            {
+              "who": "Kamurai",
+              "quote": "Really good watch, would watch again, and can recommend.\r\n\r\nIt's Will Smith fighting invading aliens, and Jeff Goldblum being almost annoyingly smart.\r\n\r\nThe alien aspect of the movie and the story are all great, but there is also a lot of humanizing scenes to keep the audience reminded of for what "
+            },
+            {
+              "who": "The Movie Mob",
+              "quote": "**Disaster or alien movie (possibly even action movie) - it just doesn't get better than Independence Day! This 1996 sci-fi action blockbuster is one of the greatest of all time!**\r\n\r\nWhen you watch the mega-blockbusters of the 1990s and compare them to each other, it is easy to forget how groundbre"
+            }
+          ]
         },
         {
           "title": "Mad Max",
@@ -1057,7 +1256,17 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "mad-max-1979"
+          "id": "mad-max-1979",
+          "critics": [
+            {
+              "who": "John Chard",
+              "quote": "Low budget classic that is now a genre landmark.\r\n\r\nSet somewhere in the future we are privy to a world where the roads are ruled by maniac gangs with souped up cars, and bikers that literally could come from hell."
+            },
+            {
+              "who": "talisencrw",
+              "quote": "Though I had only seen the previous installment, 'Mad Max Beyond Thunderdome', which I enjoyed whilst a great many people didn't, with the present sequel earning ten (!?) Oscar nominations, I wanted to catch up on things before seeing the new film at the Cineplex."
+            }
+          ]
         },
         {
           "title": "Mad Max Beyond Thunderdome",
@@ -1067,7 +1276,17 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "mad-max-beyond-thunderdome-1985"
+          "id": "mad-max-beyond-thunderdome-1985",
+          "critics": [
+            {
+              "who": "Charles Dance",
+              "quote": "**The best of the Mad Max films**\r\n\r\nHigh production values and a compelling story line make this the best of the series."
+            },
+            {
+              "who": "r96sk",
+              "quote": "Feels like a watered down version of <em>'Mad Max'</em>, albeit one that is still worth watching.\r\n\r\n<em>'Mad Max Beyond Thunderdome'</em> turns out to be a problematic title, given the most entertaining moments happen at the Thunderdome - so when events move away from said location, it isn't quite "
+            }
+          ]
         },
         {
           "title": "Mad Max: Fury Road",
@@ -1077,7 +1296,17 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "mad-max-fury-road-2015"
+          "id": "mad-max-fury-road-2015",
+          "critics": [
+            {
+              "who": "Phileas Fogg",
+              "quote": "Fabulous action movie. Lots of interesting characters."
+            },
+            {
+              "who": "Andres Gomez",
+              "quote": "Good action movie with a decent script for the genre."
+            }
+          ]
         },
         {
           "title": "Nope",
@@ -1087,7 +1316,17 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "nope-2022"
+          "id": "nope-2022",
+          "critics": [
+            {
+              "who": "Manuel São Bento",
+              "quote": "FULL SPOILER-FREE REVIEW @ https://www.msbreviews.com/movie-reviews/nope-spoiler-free-review\r\n\r\n\"Nope contains extraordinarily immersive technical elements, but the thematic focus raises narrative issues.\r\n\r\nJordan Peele takes full advantage of Hoyte van Hoytema's phenomenal cinematography and Micha"
+            },
+            {
+              "who": "The Movie Mob",
+              "quote": "**Overall : A big YEP to NOPE!**\r\n\r\nJordan Peele’s creativity is unrivaled! Nothing is typical of anything he does."
+            }
+          ]
         },
         {
           "title": "Serenity",
@@ -1097,7 +1336,17 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "serenity-2005"
+          "id": "serenity-2005",
+          "critics": [
+            {
+              "who": "anthonyryan1",
+              "quote": "A nice wrap-up to Firefly, unfortunately far too condensed."
+            },
+            {
+              "who": "John Chard",
+              "quote": "This is the captain. We have a little problem with our entry sequence, so we may experience some slight turbulence and then - explode.\r\n\r\nSerenity is written and directed by Josh Whedon."
+            }
+          ]
         },
         {
           "title": "Star Trek",
@@ -1107,7 +1356,17 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "star-trek-2009"
+          "id": "star-trek-2009",
+          "critics": [
+            {
+              "who": "John Chard",
+              "quote": "A franchise re-energised-big time! \r\n \r\nIt's not an understatement to say that the news of a new Star Trek movie was met in equal measure by suspicion and pretty low expectations."
+            },
+            {
+              "who": "CinemaSerf",
+              "quote": "I quite enjoyed this. It is a simple, end-to-end action adventure set in space."
+            }
+          ]
         },
         {
           "title": "Stargate",
@@ -1117,7 +1376,17 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "stargate-1994"
+          "id": "stargate-1994",
+          "critics": [
+            {
+              "who": "JPV852",
+              "quote": "I've seen this movie a couple of times over the years and while it's entertaining enough, there was always something holding it back."
+            },
+            {
+              "who": "GenerationofSwine",
+              "quote": "Like so many other movies this one has been politicized in some of the more negative reviews because...well, I really can't say,I honestly have no clue what Stargate has to do with international politics...at all.\r\n\r\nOstensibly it's because it is the American Military meets folks still living like i"
+            }
+          ]
         },
         {
           "title": "The Hitchhiker's Guide to the Galaxy",
@@ -1127,7 +1396,13 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "the-hitchhiker-s-guide-to-the-galaxy-2005"
+          "id": "the-hitchhiker-s-guide-to-the-galaxy-2005",
+          "critics": [
+            {
+              "who": "legoman2000",
+              "quote": "Just read the Book, it's so much better."
+            }
+          ]
         },
         {
           "title": "The Matrix",
@@ -1137,7 +1412,17 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "the-matrix-1999"
+          "id": "the-matrix-1999",
+          "critics": [
+            {
+              "who": "GeekMasher",
+              "quote": "The Martix is a great example of a movie that will live for ever or a very log time."
+            },
+            {
+              "who": "NeoBrowser",
+              "quote": "Get this: what if all we know as reality was, in fact, virtual reality? Reality itself is a ravaged dystopia run by technocrat Artificial Intelligence where humankind vegetates in billions of gloop-filled tanks - mere battery packs for the machineworld - being fed this late '90s VR (known as The Mat"
+            }
+          ]
         },
         {
           "title": "The Road Warrior",
@@ -1147,7 +1432,17 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "the-road-warrior-1981"
+          "id": "the-road-warrior-1981",
+          "critics": [
+            {
+              "who": "John Chard",
+              "quote": "The last of the V8 Interceptors and the battle for gasoline!\r\n\r\nIt's post nuclear war Australia and the precious commodity is gasoline, all the varying degrees of survivors pursue it in anyway they can.\r\n\r\nDirector George Miller is here armed with considerably more cash than was available for the fi"
+            },
+            {
+              "who": "Wuchak",
+              "quote": "***Fighting for fuel in the post-apocalyptic wasteland of the Outback***\r\n\r\nIn the years after a global holocaust, an ex-lawman (Mel Gibson) in remote Australia befriends people at a refinery compound and helps them escape a band of ruthless punk bikers who want their resources."
+            }
+          ]
         },
         {
           "title": "The Terminator",
@@ -1157,7 +1452,17 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "the-terminator-1984"
+          "id": "the-terminator-1984",
+          "critics": [
+            {
+              "who": "John Chard",
+              "quote": "I can't. Nobody goes home."
+            },
+            {
+              "who": "Jodie",
+              "quote": "Writing a review for a movie this old does indeed seem pointless, but since this is one of my favorite films I thought I would review it anyway."
+            }
+          ]
         }
       ],
       "categories": []

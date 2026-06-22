@@ -4,7 +4,7 @@
   "subtitle": "Cerebral, dry, dark, formally inventive comedy. Intelligence over volume.",
   "sections": [
     {
-      "name": "I. High Priority \u2014 Coen Brothers",
+      "name": "I. High Priority — Coen Brothers",
       "desc": "You said yes to Big Lebowski / Burn After Reading / Hail Caesar territory. Here's the comedic Coens canon, prioritized.",
       "items": [
         {
@@ -74,7 +74,7 @@
           "tags": [
             "foundational"
           ],
-          "whyPriority": "Coens at their tonal peak \u2014 comedy and brutality intertwined. McDormand as Marge Gunderson. Won Best Original Screenplay and Best Actress.",
+          "whyPriority": "Coens at their tonal peak — comedy and brutality intertwined. McDormand as Marge Gunderson. Won Best Original Screenplay and Best Actress.",
           "pitch": "A car salesman hires two men to kidnap his wife so he can collect ransom from her father. A pregnant police chief gets involved.",
           "critics": [
             {
@@ -126,8 +126,8 @@
       ]
     },
     {
-      "name": "II. High Priority \u2014 Wes Anderson (the deeper cuts)",
-      "desc": "You've seen 'a lot' \u2014 listed for completeness with priority on the ones often overlooked.",
+      "name": "II. High Priority — Wes Anderson (the deeper cuts)",
+      "desc": "You've seen 'a lot' — listed for completeness with priority on the ones often overlooked.",
       "items": [
         {
           "title": "The Grand Budapest Hotel",
@@ -191,7 +191,7 @@
       ]
     },
     {
-      "name": "III. High Priority \u2014 Satire",
+      "name": "III. High Priority — Satire",
       "desc": "Network, Wag the Dog territory. Where comedy meets political weight.",
       "items": [
         {
@@ -540,7 +540,17 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "beetlejuice-1988"
+          "id": "beetlejuice-1988",
+          "critics": [
+            {
+              "who": "Wuchak",
+              "quote": "Inventive and Fun take on the Afterlife.\r\n\r\nRELEASED IN 1988 and directed by Tim Burton, “Beetlejuice” chronicles the story of a couple (Alec Baldwin & Geena Davis) who accidently perish after moving to a quaint Connecticut town."
+            },
+            {
+              "who": "JPV852",
+              "quote": "Thin on story but the practical effects are good and Michael Keaton is a lot of fun even if he doesn't fully arrive on screen until the 40-minute mark."
+            }
+          ]
         },
         {
           "title": "Extract",
@@ -560,7 +570,17 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "friday-1995"
+          "id": "friday-1995",
+          "critics": [
+            {
+              "who": "Andre Gonzales",
+              "quote": "Damnnnnnnnn! You got knocked the fuck out man! Everyone should know this movie."
+            },
+            {
+              "who": "r96sk",
+              "quote": "<em>'Friday'</em> is decently amusing viewing."
+            }
+          ]
         },
         {
           "title": "Monsters, Inc.",
@@ -570,7 +590,17 @@
           "whyPriority": "Auto-added from TMDB recommendations.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "monsters-inc-2001"
+          "id": "monsters-inc-2001",
+          "critics": [
+            {
+              "who": "r96sk",
+              "quote": "Always a pleasure to revisit this. <em>'Monsters, Inc.'</em> is one of my favourite Disney animated films.\r\n\r\nThe cast and characters are what sets this above the majority of the studio's other work, with so many memorable ones involved."
+            },
+            {
+              "who": "CinemaSerf",
+              "quote": "Talk about renewable energy! An entire city can be powered by the racket make by children when they scream..."
+            }
+          ]
         },
         {
           "title": "The Birdcage",
@@ -580,7 +610,17 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "the-birdcage-1996"
+          "id": "the-birdcage-1996",
+          "critics": [
+            {
+              "who": "CinemaSerf",
+              "quote": "I remember thinking that Dan Futterman was quite attractive in this film as the young \"Val\", but boy does his turn out to be one of the most selfish and thoughtless of characters! He turns up at the eponymous nightclub run by his father \"Armand\" (Robin Williams) and his consort of twenty years \"Albe"
+            },
+            {
+              "who": "badelf",
+              "quote": "The Birdcage (1996) (rewatch)\r\n\r\nDirected by Mike Nichols\r\n\r\nMike Nichols' The Birdcage is the American remake of La Cage aux Folles, with Robin Williams and Nathan Lane as a gay couple running a drag club in South Beach."
+            }
+          ]
         },
         {
           "title": "The Super Mario Bros. Movie",
@@ -590,7 +630,17 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "the-super-mario-bros-movie-2023"
+          "id": "the-super-mario-bros-movie-2023",
+          "critics": [
+            {
+              "who": "Manuel São Bento",
+              "quote": "FULL SPOILER-FREE REVIEW @ https://www.firstshowing.net/2023/review-illuminations-super-mario-bros-movie-left-a-me-so-happy/\r\n\r\n\"The Super Mario Bros."
+            },
+            {
+              "who": "rsanek",
+              "quote": "This and Last of Us are two recent movies-from-games that have really impressed me."
+            }
+          ]
         }
       ],
       "categories": []

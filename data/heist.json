@@ -1,7 +1,7 @@
 {
   "type": "heist",
   "title": "Heist",
-  "subtitle": "Heist mechanics and con-artist character pieces \u2014 the structural rigor of crime done as craft.",
+  "subtitle": "Heist mechanics and con-artist character pieces — the structural rigor of crime done as craft.",
   "sections": [
     {
       "name": "I. High Priority",
@@ -98,7 +98,7 @@
           "critics": [
             {
               "who": "Academy Awards 1974",
-              "quote": "Tatum O'Neal won Best Supporting Actress at age 10 \u2014 youngest competitive Oscar winner ever."
+              "quote": "Tatum O'Neal won Best Supporting Actress at age 10 — youngest competitive Oscar winner ever."
             }
           ]
         }
@@ -278,7 +278,7 @@
           "tags": [
             "modern"
           ],
-          "pitch": "You've seen a lot of Anderson. This is his debut \u2014 three Texan friends plan inept robberies. Worth seeing if you haven't, since it's the smallest and most overlooked.",
+          "pitch": "You've seen a lot of Anderson. This is his debut — three Texan friends plan inept robberies. Worth seeing if you haven't, since it's the smallest and most overlooked.",
           "critics": [
             {
               "who": "Reception",
@@ -295,7 +295,7 @@
           "tags": [
             "foundational"
           ],
-          "pitch": "Heist after heist film \u2014 the actual heist is offscreen. Tarantino's debut. One location, six men, one informant. The launchpad.",
+          "pitch": "Heist after heist film — the actual heist is offscreen. Tarantino's debut. One location, six men, one informant. The launchpad.",
           "critics": [
             {
               "who": "Reception",
@@ -362,7 +362,7 @@
           "critics": [
             {
               "who": "Cannes 2009",
-              "quote": "Grand Prix. Nine C\u00e9sar Awards including Best Film."
+              "quote": "Grand Prix. Nine César Awards including Best Film."
             }
           ]
         },
@@ -384,7 +384,7 @@
           ]
         },
         {
-          "title": "L\u00e9on: The Professional",
+          "title": "Léon: The Professional",
           "year": 1994,
           "dir": "Luc Besson",
           "country": "France/USA",
@@ -393,7 +393,7 @@
             "modern",
             "intl"
           ],
-          "pitch": "Adjacent to heist \u2014 a hitman's character study. Reno's career-defining performance. Young Natalie Portman.",
+          "pitch": "Adjacent to heist — a hitman's character study. Reno's career-defining performance. Young Natalie Portman.",
           "critics": [
             {
               "who": "Reception",
@@ -437,7 +437,17 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "operation-fortune-ruse-de-guerre-2023"
+          "id": "operation-fortune-ruse-de-guerre-2023",
+          "critics": [
+            {
+              "who": "garethmb",
+              "quote": "International intrigue is the name of the game in the latest Action-Caper\r\nfilm from Guy Ritchie and he has delivered a winning mix of action and\r\ncomedy with” Operation Fortune: Ruse de guerre”.\r\n\r\nWhen a secret device known as “The Handle” is taken from a lab by a\r\nprecision combat team, the U.K."
+            },
+            {
+              "who": "MovieGuys",
+              "quote": "In spite of a rather convoluted plot, fall flat comedy and a very minor dash of woke nonsense, I mostly liked Operation Fortune: Ruse De Guerre."
+            }
+          ]
         }
       ],
       "categories": []

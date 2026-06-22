@@ -17,7 +17,16 @@
             "foundational"
           ],
           "pitch": "Cross-listed in Heist. Marked Loved per your record.",
-          "critics": []
+          "critics": [
+            {
+              "who": "TopKek",
+              "quote": "This was an entertaining and fun piece of film making from the ever-reliable Steven Spielberg."
+            },
+            {
+              "who": "The Movie Mob",
+              "quote": "**Catch Me If You Can is an entertaining and amusing film full of Spielberg, Hanks, and DiCaprio charm.**\r\n\r\nWith Tom Hanks and Leonardo DiCaprio as leads and Steven Spielberg directing, I don't think it's possible not to enjoy this movie."
+            }
+          ]
         },
         {
           "title": "Spy Game",
@@ -41,7 +50,16 @@
             "foundational"
           ],
           "pitch": "Cross-listed in Spy. Marked Loved per your record.",
-          "critics": []
+          "critics": [
+            {
+              "who": "CinemaSerf",
+              "quote": "Based on the true, ground-breaking, investigations by the Washington Post into the seemingly innocuous break-in into the Watergate Building; this film produces two of the finest performances ever committed to film."
+            },
+            {
+              "who": "Filipe Manuel Neto",
+              "quote": "**Fifty years after Watergate, what have we learned?**\r\n\r\nThe “Watergate Affair” was fifty years ago."
+            }
+          ]
         },
         {
           "title": "The Departed",
@@ -53,7 +71,16 @@
             "modern"
           ],
           "pitch": "Cross-listed in Crime. Marked Loved per your record.",
-          "critics": []
+          "critics": [
+            {
+              "who": "talisencrw",
+              "quote": "I decided to celebrate the Summer Solstice by watching 'The Departed'."
+            },
+            {
+              "who": "John Chard",
+              "quote": "The only one that can do what I do is me."
+            }
+          ]
         }
       ],
       "categories": [
@@ -218,7 +245,16 @@
             "modern"
           ],
           "pitch": "Cross-listed in Heist. Bank heist that's actually about something else entirely. The architecture of the deception is the appeal.",
-          "critics": []
+          "critics": [
+            {
+              "who": "CinemaSerf",
+              "quote": "As heist films go, this isn't at all bad."
+            },
+            {
+              "who": "The Movie Mob",
+              "quote": "**Inside Man is the most clever and interesting bank robbery film I have ever seen!**\r\n\r\nInside Man is mind-blowing, clever, fast-paced, well-crafted, and downright brilliant."
+            }
+          ]
         },
         {
           "title": "Memento",
@@ -499,7 +535,12 @@
             "modern"
           ],
           "pitch": "Cross-listed in Heist. Marked Queued per your record.",
-          "critics": []
+          "critics": [
+            {
+              "who": "stackkorora",
+              "quote": "A very well acted, directed, filmed movie telling an interesting story about terrible terrible people."
+            }
+          ]
         },
         {
           "title": "Primal Fear",
@@ -559,7 +600,16 @@
             "foundational"
           ],
           "pitch": "Cross-listed Classics. Already loved.",
-          "critics": []
+          "critics": [
+            {
+              "who": "Andres Gomez",
+              "quote": "Great thriller with superb classical interpretations."
+            },
+            {
+              "who": "Shreyance Parakh",
+              "quote": "**Why don't they make THESE movies anymore?**\r\n\r\nApart from being a **GREAT** courtroom drama_(which some people don't think this movie is)_, this movie is so much **FUN** and **ENTERTAINING** to watch.Especially because of the characters of _Charles Laughton_ and _Elsa Lanchester_."
+            }
+          ]
         },
         {
           "title": "Inherit the Wind",
@@ -629,7 +679,17 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "the-devil-s-advocate-1997"
+          "id": "the-devil-s-advocate-1997",
+          "critics": [
+            {
+              "who": "JPV852",
+              "quote": "Apparently I saw this before (had a rating on my computer program) but didn't really remember much of it."
+            },
+            {
+              "who": "GenerationofSwine",
+              "quote": "OK, full disclosure, I have a thing for Al Pacino."
+            }
+          ]
         }
       ],
       "categories": []

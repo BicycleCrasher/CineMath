@@ -20,7 +20,17 @@
           "categories": [
             "marvel-mcu"
           ],
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "izgzhen",
+              "quote": "Imaginative illustration of an epic story."
+            },
+            {
+              "who": "Gimly",
+              "quote": "**A long form review originally posted in 2010:**\r\n\r\nMarking the beginning of the latest Marvel franchise, _The Avengers_, is Jon Favreau's _Iron Man_.\r\n\r\nI'm quite fond of Super Hero movies, I don't love them to the same extent that I do the slasher or psychological thriller genres, but they do hol"
+            }
+          ]
         },
         {
           "id": "the-avengers-2012",
@@ -33,7 +43,17 @@
             "marvel-mcu",
             "team-up"
           ],
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "tmdb87069603",
+              "quote": "With a movie like this you wonder how all of the otherwise, main characters will work together and support the story.\r\n\r\nNo problems here."
+            },
+            {
+              "who": "Gimly",
+              "quote": "**A long format review from 2012**\r\n\r\nMy new favourite Marvel Cinematic Universe film, undoubtedly! Order goes thusly;\r\n\r\n1."
+            }
+          ]
         },
         {
           "id": "guardians-of-the-galaxy-2014",
@@ -46,7 +66,17 @@
             "marvel-mcu",
             "cosmic"
           ],
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "Binawoo",
+              "quote": "This movie was so AWESOME! I loved it all and i had a bad day before watching it but it turned it around."
+            },
+            {
+              "who": "Andres Gomez",
+              "quote": "Really funny and with great spcial effects."
+            }
+          ]
         },
         {
           "id": "captain-america-the-winter-soldier-2014",
@@ -59,7 +89,17 @@
             "marvel-mcu",
             "street-level"
           ],
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "Dark Jedi",
+              "quote": "This is indeed a great piece of superhero entertainment."
+            },
+            {
+              "who": "Andres Gomez",
+              "quote": "Put *a little* bit of brain in a superhero's movie script and you will have everybody talking wonders about it.\r\n\r\nThis is not a bad movie but neither astonishing."
+            }
+          ]
         },
         {
           "id": "doctor-strange-2016",
@@ -72,7 +112,17 @@
             "marvel-mcu",
             "cosmic"
           ],
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "iheardthatmoviewas",
+              "quote": "With each new Marvel film one could expect the studio to push the limits of what a superhero film should consist of."
+            },
+            {
+              "who": "Frank Ochieng",
+              "quote": "All continues to be well in the Marvel Comics Universe as the film adaptation of another mischievous and majestic superhero from Stan Lee’s printed page empire emerges and reigns supreme on the big screen."
+            }
+          ]
         },
         {
           "id": "black-panther-2018",
@@ -85,7 +135,17 @@
             "marvel-mcu",
             "street-level"
           ],
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "Gimly",
+              "quote": "The reviews for _Black Panther_ are all essentially saying the same thing: This is a great movie because it's so different from anything we've seen before, not just in the MCU but in the superhero genre overall, the villain is fantastic and _Black Panther_ is just a new and totally innovative film."
+            },
+            {
+              "who": "Movie Queen41",
+              "quote": "This is definitely one of Marvel's best because the story is compelling and the characters are well developed."
+            }
+          ]
         },
         {
           "id": "avengers-infinity-war-2018",
@@ -99,7 +159,17 @@
             "team-up",
             "cosmic"
           ],
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "Simon Foster",
+              "quote": "\"It is a bold undertaking, to readjust what is expected of the MCU/Avengers formula, and there are moments when the sheer scale and momentum match the narrative ambition...\"\r\n\r\nRead the full review here: http://screen-space.squarespace.com/reviews/2018/4/25/avengers-infinity-war.html."
+            },
+            {
+              "who": "furious_iz",
+              "quote": "Amazing.  Visually stunning."
+            }
+          ]
         },
         {
           "id": "avengers-endgame-2019",
@@ -112,7 +182,17 @@
             "marvel-mcu",
             "team-up"
           ],
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "garethmb",
+              "quote": "The epic Marvel Saga that started over ten years ago has been building up to the inevitable clash with the powerful tyrant Thanos (Josh Brolin)."
+            },
+            {
+              "who": "Gimly",
+              "quote": "Hey, so, just some really quick thoughts I wanna get down, 'cause it's after 1 o'clock in the morning, and I wanna get some sleep so I can wake up well rested to see _Endgame_ again.\r\n\r\nPutting it out there right from the get-go, _Avengers: Endgame_ is my favourite MCU movie."
+            }
+          ]
         }
       ]
     },
@@ -147,7 +227,17 @@
             "marvel-non-mcu",
             "team-up"
           ],
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "tmdb44006625",
+              "quote": "X2: X-Men United is an improvement over its predecessor in just about every way."
+            },
+            {
+              "who": "r96sk",
+              "quote": "Strong sequel.\r\n\r\nI didn't quite enjoy <em>'X2'</em> as much as <em>'X-Men'</em>, though not by much in truth."
+            }
+          ]
         },
         {
           "id": "spider-man-2002",
@@ -160,7 +250,17 @@
             "marvel-non-mcu",
             "street-level"
           ],
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "tmdb44006625",
+              "quote": "Sam Raimi's Spider-Man captures the spirit of the comic book hero and it's still one of my all time favourite superhero movies."
+            },
+            {
+              "who": "Justin Lopez",
+              "quote": "So many Spiderman movies out there but this will always be the original."
+            }
+          ]
         },
         {
           "id": "spider-man-into-the-spider-verse-2018",
@@ -173,7 +273,17 @@
             "marvel-non-mcu",
             "deconstructive"
           ],
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "trineo03",
+              "quote": "First of all, I love the animation style in this film."
+            },
+            {
+              "who": "Gimly",
+              "quote": "It's true I liked it less than perhaps the vast majority of _Spider-Verse's_ audience, but this was still great, the animation enamouring, and the depth of its story and reference totally engaging."
+            }
+          ]
         },
         {
           "id": "spider-man-across-the-spider-verse-2023",
@@ -186,7 +296,17 @@
             "marvel-non-mcu",
             "deconstructive"
           ],
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "garethmb",
+              "quote": "Life as a teenager is never easy and when you are gifted with the superhuman abilities of a spider and lead a double life as a student and crime fighter; life gets even harder.\r\n\r\nMiles Morales (Shameik Moore) is finding it even harder to hide his secret from his family who has grown concerned that "
+            },
+            {
+              "who": "Manuel São Bento",
+              "quote": "FULL SPOILER-FREE REVIEW @ https://www.firstshowing.net/2023/review-spider-man-across-the-spider-verse-is-an-animated-work-of-art/\r\n\r\n\"Spider-Man: Across the Spider-Verse is the epitome of incredibly detailed, gorgeously unique, undeniably epic animation within its medium."
+            }
+          ]
         },
         {
           "id": "deadpool-2016",
@@ -199,7 +319,17 @@
             "marvel-non-mcu",
             "deconstructive"
           ],
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "huy.duc.eastagile",
+              "quote": "A funny movie with a romantic love story.\r\n\r\nWade Wilson (Ryan Reynolds) is a former Special Forces operative who now works as a mercenary."
+            },
+            {
+              "who": "Wong",
+              "quote": "I actually enjoyed the movie so much that i'll recommend it to all my friends, at first i didn't really want to watch it because i'm not into super hero movies at all, but i did anyway, i mean people were talking so much about it i had to see it myself and what an awesome choice i made."
+            }
+          ]
         },
         {
           "id": "logan-2017",
@@ -212,7 +342,17 @@
             "marvel-non-mcu",
             "deconstructive"
           ],
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "anythingbutfifi",
+              "quote": "**LOGAN REVIEW: THE WOLVERINE GETS A SUPER SEND-OFF**\r\n\r\n\"Owing to its agitated hero’s misfortunes through the ages, this is a film that’s acutely aware of the dangers of emotional exploitation, and it spares its audience a similar fate."
+            },
+            {
+              "who": "tmdb16528852",
+              "quote": "One of the best and most mature Marvel movies to date.\r\n\r\nThe first half of this movie is a huge delight and a huge thrill."
+            }
+          ]
         }
       ]
     },
@@ -234,7 +374,17 @@
             "dc",
             "street-level"
           ],
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "tricksy",
+              "quote": "Excellent movie. Best of the trilogy."
+            },
+            {
+              "who": "talisencrw",
+              "quote": "This has no competition. It is the very finest comic-book character movie ever made."
+            }
+          ]
         },
         {
           "id": "joker-2019",
@@ -247,7 +397,17 @@
             "dc",
             "deconstructive"
           ],
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "Manuel São Bento",
+              "quote": "If you enjoy reading my Spoiler-Free reviews, please follow my blog :)\r\n\r\nObviously, Joker is one of my most anticipated movies of 2019."
+            },
+            {
+              "who": "solstafir7",
+              "quote": "Joker. The character that has existed since 1940, has become so heavy with so many different portrayals, different origins, that it feels impossible for any mortal man alive to impersonate the scattered personalities."
+            }
+          ]
         },
         {
           "id": "wonder-woman-2017",
@@ -259,7 +419,17 @@
           "categories": [
             "dc"
           ],
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "Gimly",
+              "quote": "I'd just like to thank Patty Jenkins for making a DCIThoughtSheWasWithUniverse movie that wasn't fucking garbage.\r\n\r\nIf I'm being completely honest, the two people I went to the cinema to watch _Wonder Woman_ with and I did spend the next two hours after coming out of our screening discussing the va"
+            },
+            {
+              "who": "Movie Queen41",
+              "quote": "**The First Great DCEU Film**\r\n\r\nThis film is the origin story of Diana Prince/Wonder Woman (Gal Gadot), who was first introduced in Batman v."
+            }
+          ]
         },
         {
           "id": "the-batman-2022",
@@ -272,7 +442,17 @@
             "dc",
             "street-level"
           ],
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "garethmb",
+              "quote": "“The Batman” Is A Very Engaging And Unforgettable Tale That Is One Of The Best Adaptations Of The Character Ever\r\n\r\nIn 1989 Michael Keaton was seen as a very controversial choice to wear the Cowl of Batman but soon proved his doubters wrong by turning “Batman” and its subsequent sequel “Batman Retur"
+            },
+            {
+              "who": "The Movie Mob",
+              "quote": "The reviews and hype for this movie were massive!  Comparisons to The Dark Knight got my expectations high..."
+            }
+          ]
         },
         {
           "id": "aquaman-2018",
@@ -284,7 +464,17 @@
           "categories": [
             "dc"
           ],
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "Wuchak",
+              "quote": "***Lame-axx butt of a joke no longer*** \r\n\r\nArthur Curry (Jason Momoa) lives with his father on the Maine Coast, a caretaker of a lighthouse."
+            },
+            {
+              "who": "Dark Jedi",
+              "quote": "I just came back home from watching Aquaman on the IMAX theater in Balexert in Geneva and thought that I should write something up while it’s still fresh in my mind."
+            }
+          ]
         },
         {
           "id": "the-suicide-squad-2021",
@@ -298,7 +488,17 @@
             "team-up",
             "deconstructive"
           ],
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "Peter89Spencer",
+              "quote": "The Suicide Squad...\r\n...stayed true to the hype of the anti-hero teams in DC.\r\n\r\nI feel like it wasn't really a sequel but rather a reboot and ignoring the first film.\r\nThe action was insane and BLOODY brilliant, with a stellar cast."
+            },
+            {
+              "who": "JPV852",
+              "quote": "For sure has its moments and also has James Gunn's fingerprints with the dark humor."
+            }
+          ]
         },
         {
           "id": "joker-folie-deux-2024",
@@ -311,7 +511,17 @@
             "dc",
             "deconstructive"
           ],
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "r96sk",
+              "quote": "Great title, great movie.\r\n\r\nI had heard tiny bits about <em>'Joker: Folie à Deux'</em> falling below expectations since its release, though they weren't substantial enough to know if the film was any good or not."
+            },
+            {
+              "who": "Wuchak",
+              "quote": "**_Joker falls in love in prison and goes to trial while singing songs_**\r\n\r\nWhilst the 2019 movie was intended to be a standalone film, Joaquin Phoenix said he felt there was more to explore with the character, which was augmented by his dreams that inspired the idea to make the potential sequel a "
+            }
+          ]
         }
       ]
     },
@@ -333,7 +543,17 @@
             "indie",
             "deconstructive"
           ],
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "John Chard",
+              "quote": "The comic book geek blockbuster for adults only.\r\n\r\nWatchmen is directed by Zack Snyder and adapted to screenplay by David Hayter and Alex Tse from the Alan Moore/David Gibbons graphic novel."
+            },
+            {
+              "who": "Manuel São Bento",
+              "quote": "If you enjoy reading my Spoiler-Free reviews, please follow my blog :)\r\n\r\nFirst of all, this review is based on the theatrical version of Watchmen."
+            }
+          ]
         },
         {
           "id": "v-for-vendetta-2005",
@@ -359,7 +579,17 @@
             "indie",
             "deconstructive"
           ],
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "ohlalipop",
+              "quote": "I thought this movie was a super comedy movie but I was wrong."
+            },
+            {
+              "who": "r96sk",
+              "quote": "A blast!\r\n\r\nWhat a great near two hours this is! <em>'Kick-Ass'</em> is a fantastic superhero movie, one that doesn't take itself seriously and that is actually the biggest compliment I can make."
+            }
+          ]
         },
         {
           "id": "hellboy-2004",
@@ -371,7 +601,17 @@
           "categories": [
             "indie"
           ],
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "Gimly",
+              "quote": "I love the Mike Mignola _Hellboy_ comics, and this movie is a pretty massive deviation from that source material."
+            },
+            {
+              "who": "tmdb44006625",
+              "quote": "Hellboy is not a movie for everyone, no matter how much humour is in the screenplay."
+            }
+          ]
         }
       ]
     },
@@ -401,7 +641,17 @@
             "marvel-mcu",
             "cosmic"
           ],
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "The Movie Mob",
+              "quote": "<b>Guardians of the Galaxy Vol. 3 is the perfect farewell to this quirky group of rogues we never expected to love so much.</b>\r\n\r\nOur faith in the Marvel Cinematic Universe waned throughout Phase 4 with films that felt hollow, rushed, and insincere."
+            },
+            {
+              "who": "Ritesh Mohapatra",
+              "quote": "**A heartfelt & entrancing closure to our favourite band of misfits from marvel **\r\n\r\nGOTG Vol 3 is a fantastic, emotionally immersive product from Marvel which not only made me delighted with the experience but also revived my faith in Marvel Studios."
+            }
+          ]
         }
       ]
     },
@@ -431,7 +681,17 @@
             "marvel-non-mcu",
             "team-up"
           ],
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "r96sk",
+              "quote": "Its story may not be the strongest, but the comedy makes <em>'Deadpool & Wolverine'</em> an excellent watch!\r\n\r\nThere are some top notch gags in there, particularly to do with the recent offscreen changes for Wade Wilson's alter ego."
+            },
+            {
+              "who": "Chris Sawin",
+              "quote": "_Deadpool & Wolverine_ is the best the MCU has been since Guardians of the Galaxy Vol."
+            }
+          ]
         },
         {
           "id": "thunderbolts-2025",
@@ -444,7 +704,17 @@
             "marvel-mcu",
             "team-up"
           ],
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "Chris Sawin",
+              "quote": "Directed by Jake Schreier (Netflix’s Beef, Showtime’s Kidding) and written by Eric Pearson (Transformers One, Black Widow) and Joanna Calo (The Bear, Bojack Horseman), Thunderbolts* documents the emptiness surrounding Yelena Belova (Florence Pugh) as she goes through the motions while working for th"
+            },
+            {
+              "who": "jarry90",
+              "quote": "Thunderbolts genuinely surprised me. I went in expecting a fun Marvel team up but got something even better: a fresh story, fantastic humor, and well-rounded characters that made it stand out in the MCU.\r\n\r\nThe Vault escape sequence was funny and memorable, capturing the chaotic spirit and humorous "
+            }
+          ]
         }
       ]
     },
@@ -466,7 +736,17 @@
             "indie",
             "team-up"
           ],
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "r96sk",
+              "quote": "I don't like this as much as most do, but <em>'The Incredibles'</em> is definitely a fun watch.\r\n\r\nI enjoy how the film starts out, as it introduces the characters and tells some backstories."
+            },
+            {
+              "who": "GenerationofSwine",
+              "quote": "I sort of watched them out of order. I wasn't really privy to the existence of The Incredibles until my fiance wanted to rent the sequel...and then I went back and watched the first one.\r\n\r\nI have to say that I liked 2 more, but only because it looked like a period pop art piece and the first one yo"
+            }
+          ]
         },
         {
           "id": "unbreakable-2000",
@@ -479,7 +759,17 @@
             "indie",
             "deconstructive"
           ],
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "John Chard",
+              "quote": "Soon found out had a heart of glass.\r\n\r\nIt often gets forgotten just what an exciting talent M."
+            },
+            {
+              "who": "Manuel São Bento",
+              "quote": "If you enjoy reading my Spoiler-Free reviews, please follow my blog :)\r\n\r\nWhat a movie! This is one of the most underrated films out there, and it was unfairly compared to The Sixth Sense at the time the former was released."
+            }
+          ]
         },
         {
           "id": "chronicle-2012",
@@ -491,7 +781,17 @@
           "categories": [
             "indie"
           ],
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "LastCaress1972",
+              "quote": "Awkward loner Andrew (Dane DeHaan, soon to appear as Harry Osborn in The Amazing Spider-Man 2) is invited by his more affable cousin Matt (Alex Russell, Bait, Carrie) to go to a party, to help cheer him up."
+            },
+            {
+              "who": "Kamurai",
+              "quote": "Great watch, will watch again, and can recommend.\r\n\r\nI am partial to found footage style of shooting, so I understand if that's not for you.\r\n\r\nDane DeHaan does a lot of the heavy lifting in this movie, but Michael B."
+            }
+          ]
         },
         {
           "id": "brightburn-2019",
@@ -504,7 +804,17 @@
             "indie",
             "deconstructive"
           ],
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "MovieGuys",
+              "quote": "Bad Superman\r\n\r\nWhat if superman was a bad guy? That's the premise Brightburn is built upon."
+            },
+            {
+              "who": "EgorSushko",
+              "quote": "Greatful film with good special effects, interesting story and cool cast."
+            }
+          ]
         },
         {
           "id": "glass-2019",
@@ -517,7 +827,17 @@
             "indie",
             "deconstructive"
           ],
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "garethmb",
+              "quote": "It is hard to believe it has been 19 years since “Unbreakable” arrived in cinemas as the film seemed to setup a sequel but it did not look like it would come to fruition."
+            },
+            {
+              "who": "Manuel São Bento",
+              "quote": "If you enjoy reading my Spoiler-Free reviews, please follow my blog :)\r\n\r\nYou all know how anxious I was about this movie."
+            }
+          ]
         }
       ]
     },
@@ -532,7 +852,17 @@
           "year": 2017,
           "pitch": "Kingsman sequel — Eggsy, Statesman crossover, Julianne Moore's candy-coated villain.",
           "priority": "low",
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "Dark Jedi",
+              "quote": "This is indeed a silly, even childish at time, movie but to me it was also a really really fun movie to watch.\n\nThe movie starts by the Kingsman organisation getting screwed over royally by the psychopathic Poppy Adams which forces what remains of the organisation, all two people, to work with their"
+            },
+            {
+              "who": "CinemaSerf",
+              "quote": "Picking up from the first story, \"Eggsy\" (Taron Egerton) is now working for a new team of agents led by Sir Michael Gambon (\"Arthur\") and living, happily, with \"Princess Tilde\" (Hanna Alström)."
+            }
+          ]
         },
         {
           "id": "the-league-of-extraordinary-gentlemen-2003",
@@ -540,7 +870,17 @@
           "year": 2003,
           "pitch": "Alan Moore adaptation universally hated by Moore. Sean Connery's last film.",
           "priority": "low",
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "Anton2k",
+              "quote": "This movie was amazing! Went to see it at the cinema when it first got released back in 2003."
+            },
+            {
+              "who": "r96sk",
+              "quote": "Enjoyed it.\r\n\r\n<em>'The League of Extraordinary Gentlemen'</em> does nothing all that extraordinary but produces a fun time nevertheless."
+            }
+          ]
         },
         {
           "id": "the-new-mutants-2020",
@@ -548,7 +888,13 @@
           "year": 2020,
           "pitch": "Fox X-Men spinoff buried by Disney transition. Horror-coded mutant teens.",
           "priority": "low",
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "Kamurai",
+              "quote": "Surprisingly great watch, will likely watch again, and do recommend.\r\n\r\nMy expectations of this one were rock bottom: I honestly didn't think much of the trailer."
+            }
+          ]
         },
         {
           "id": "x-men-apocalypse-2016",
@@ -556,7 +902,17 @@
           "year": 2016,
           "pitch": "Singer's Apocalypse-era X-Men. Generally regarded as the weakest of the modern X-Men trilogy.",
           "priority": "low",
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "Austin Singleton",
+              "quote": "Not really a step forward in the X-Men franchise."
+            },
+            {
+              "who": "Dark Jedi",
+              "quote": "X-Men Apocalypse is typical of what you would expect from a Marvel X-Men movie."
+            }
+          ]
         },
         {
           "id": "x-men-dark-phoenix-2019",
@@ -564,7 +920,17 @@
           "year": 2019,
           "pitch": "Disjointed Dark Phoenix adaptation. Final pre-Disney Fox X-Men film.",
           "priority": "low",
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "Wuchak",
+              "quote": "***A fuller rendition of the Jean Grey Plot of “X-Men 3” with Sophie Turner***\r\n\r\nThis is another take on the Jean Grey story of “X-Men: The Last Stand” (2006)."
+            },
+            {
+              "who": "Dr_Nostromo",
+              "quote": "65/100\r\n\r\nJean Grey (Phoenix) absorbs a cosmic force that may force her to save the world or destroy it."
+            }
+          ]
         },
         {
           "id": "x-men-first-class-2011",
@@ -573,7 +939,17 @@
           "dir": "Matthew Vaughn",
           "pitch": "Vaughn-directed 60s-set X-Men prequel. McAvoy/Fassbender as Charles/Erik. Critical reset for the Fox era.",
           "priority": "low",
-          "contentType": "film-narrative"
+          "contentType": "film-narrative",
+          "critics": [
+            {
+              "who": "GeekMasher",
+              "quote": "A very good movie!\r\nI'm not a massive comic book reader/fan and when I watched the first couple of the X-men movies I always wondered how it all begin and this movie do it justice! The actors where great (there no Patrick Stewart or Ian McKellen), Kevin Bacon played the baddie very well and was well"
+            },
+            {
+              "who": "Travis Bell",
+              "quote": "I didn't love this movie. There were aspects about it from the perspective of an origin story that were interesting but something about the pacing and acting just felt… off."
+            }
+          ]
         }
       ]
     }

@@ -1,10 +1,10 @@
 {
   "type": "crime",
   "title": "Crime",
-  "subtitle": "Crime, noir, and detective films \u2014 cerebral over violent. No gore for gore's sake.",
+  "subtitle": "Crime, noir, and detective films — cerebral over violent. No gore for gore's sake.",
   "sections": [
     {
-      "name": "I. High Priority \u2014 Best Entry Points",
+      "name": "I. High Priority — Best Entry Points",
       "desc": "Given your love of structurally rigorous thrillers (All the President's Men, Hunt for Red October), these will land.",
       "items": [
         {
@@ -59,7 +59,7 @@
           "tags": [
             "modern"
           ],
-          "whyPriority": "Fincher's procedural masterpiece. The Zodiac killer investigation across decades. All the President's Men is its DNA \u2014 patient, evidence-driven, character-grounded. Gyllenhaal, Downey Jr., Ruffalo. Slow-burn and richly rewarding.",
+          "whyPriority": "Fincher's procedural masterpiece. The Zodiac killer investigation across decades. All the President's Men is its DNA — patient, evidence-driven, character-grounded. Gyllenhaal, Downey Jr., Ruffalo. Slow-burn and richly rewarding.",
           "pitch": "A San Francisco newspaper cartoonist, a reporter, and an SFPD detective spend decades chasing the Zodiac killer. The case is never officially solved.",
           "critics": [
             {
@@ -114,7 +114,7 @@
       ]
     },
     {
-      "name": "II. Medium Priority \u2014 Strong Probable Fits",
+      "name": "II. Medium Priority — Strong Probable Fits",
       "desc": "Likely to land. The detective character pieces and procedurals.",
       "items": [
         {
@@ -127,7 +127,7 @@
           "tags": [
             "foundational"
           ],
-          "whyPriority": "Altman's Marlowe \u2014 anachronistic, mumbling, cat-loving. Elliott Gould as Chandler's detective dropped into 1970s LA. Polarizing then, beloved now. The most idiosyncratic detective film of its era.",
+          "whyPriority": "Altman's Marlowe — anachronistic, mumbling, cat-loving. Elliott Gould as Chandler's detective dropped into 1970s LA. Polarizing then, beloved now. The most idiosyncratic detective film of its era.",
           "pitch": "Philip Marlowe drives a friend to Tijuana. The friend's wife is found dead. Marlowe is a suspect. Improvisation and cigarettes follow.",
           "critics": [
             {
@@ -184,7 +184,7 @@
           "tags": [
             "foundational"
           ],
-          "whyPriority": "Listed on heist tracker too. Mann's procedural about parallel professionals \u2014 De Niro's career thief and Pacino's career detective. The downtown LA shootout reset action cinema.",
+          "whyPriority": "Listed on heist tracker too. Mann's procedural about parallel professionals — De Niro's career thief and Pacino's career detective. The downtown LA shootout reset action cinema.",
           "pitch": "Cross-listed with the heist tracker. Three hours of professional crime and professional detection.",
           "critics": [
             {
@@ -238,7 +238,7 @@
         {
           "title": "The Secret in Their Eyes",
           "year": 2009,
-          "dir": "Juan Jos\u00e9 Campanella",
+          "dir": "Juan José Campanella",
           "country": "Argentina",
           "runtime": "129 min",
           "priority": "med",
@@ -261,7 +261,7 @@
       ]
     },
     {
-      "name": "III. Standard \u2014 Foundational",
+      "name": "III. Standard — Foundational",
       "desc": "Important entries to know.",
       "items": [
         {
@@ -273,7 +273,7 @@
           "tags": [
             "modern"
           ],
-          "pitch": "Lynch's masterpiece \u2014 also lives on the auteur tracker. Detective story dissolved into dream-logic about Hollywood. Regularly tops 21st-century best-of polls.",
+          "pitch": "Lynch's masterpiece — also lives on the auteur tracker. Detective story dissolved into dream-logic about Hollywood. Regularly tops 21st-century best-of polls.",
           "critics": [
             {
               "who": "Sight & Sound 2022",
@@ -369,18 +369,18 @@
         {
           "title": "Insomnia (1997)",
           "year": 1997,
-          "dir": "Erik Skjoldbj\u00e6rg",
+          "dir": "Erik Skjoldbjærg",
           "country": "Norway",
           "runtime": "97 min",
           "tags": [
             "foundational",
             "intl"
           ],
-          "pitch": "The Norwegian original. Stellan Skarsg\u00e5rd. Generally considered superior to Nolan's remake.",
+          "pitch": "The Norwegian original. Stellan Skarsgård. Generally considered superior to Nolan's remake.",
           "critics": [
             {
               "who": "Reception",
-              "quote": "Critically beloved on release; established Skjoldbj\u00e6rg as a major Nordic filmmaker."
+              "quote": "Critically beloved on release; established Skjoldbjærg as a major Nordic filmmaker."
             }
           ]
         },
@@ -437,8 +437,17 @@
           "tags": [
             "foundational"
           ],
-          "pitch": "Cross-listed from comedy where you've already loved it. Belongs here too \u2014 it's a detective story (kidnapping, ransom, severed toe) wrapped in stoner comedy.",
-          "critics": []
+          "pitch": "Cross-listed from comedy where you've already loved it. Belongs here too — it's a detective story (kidnapping, ransom, severed toe) wrapped in stoner comedy.",
+          "critics": [
+            {
+              "who": "Film.Viewer.999",
+              "quote": "Fun, clever and engaging. Joel & Eitan Cohen's most iconic creation."
+            },
+            {
+              "who": "r96sk",
+              "quote": "<em>'The Big Lebowski'</em> is entertaining.\r\n\r\nJeff Bridges and John Goodman are a fun duo, I even would've enjoyed this 1998 flick more if it was just those two for the whole near 2 hours."
+            }
+          ]
         },
         {
           "title": "Inherent Vice",
@@ -512,7 +521,7 @@
             "modern",
             "intl"
           ],
-          "pitch": "Korean revenge masterpiece. Vengeance trilogy middle film. Stylized, brutal, structurally clever. The hammer hallway sequence is famous. Some violence intensity \u2014 but never gratuitous.",
+          "pitch": "Korean revenge masterpiece. Vengeance trilogy middle film. Stylized, brutal, structurally clever. The hammer hallway sequence is famous. Some violence intensity — but never gratuitous.",
           "critics": [
             {
               "who": "Cannes 2004",
@@ -543,7 +552,7 @@
             "modern",
             "intl"
           ],
-          "pitch": "Korean revenge film. Secret agent hunts the serial killer who murdered his fianc\u00e9e. Considerably more violent than most on this list \u2014 flagged accordingly.",
+          "pitch": "Korean revenge film. Secret agent hunts the serial killer who murdered his fiancée. Considerably more violent than most on this list — flagged accordingly.",
           "critics": [
             {
               "who": "Reception",
@@ -562,7 +571,16 @@
             "intl"
           ],
           "pitch": "Cross-listed from heist. Six years in a French prison. Slow-build crime epic.",
-          "critics": []
+          "critics": [
+            {
+              "who": "Andres Gomez",
+              "quote": "Great movie in all aspects; great story and script, great cast and great performances.\r\n\r\nOne of the best movies I've watched lately.."
+            },
+            {
+              "who": "CinemaSerf",
+              "quote": "Tahar Rahim is really good in the dark, gritty and vicious prison drama."
+            }
+          ]
         }
       ],
       "categories": [
@@ -580,10 +598,17 @@
           "country": "USA",
           "runtime": "121 min",
           "priority": "high",
-          "tags": ["modern"],
+          "tags": [
+            "modern"
+          ],
           "whyPriority": "Cartel thriller that's smarter than the genre. Blunt, Del Toro, Brolin. Deakins again. Taylor Sheridan screenplay.",
           "pitch": "An idealistic FBI agent is recruited into a black-ops task force on the Mexican border.",
-          "critics": [{ "who": "Academy Awards 2016", "quote": "Three Oscar nominations." }]
+          "critics": [
+            {
+              "who": "Academy Awards 2016",
+              "quote": "Three Oscar nominations."
+            }
+          ]
         },
         {
           "title": "Blue Velvet",
@@ -592,10 +617,17 @@
           "country": "USA",
           "runtime": "120 min",
           "priority": "high",
-          "tags": ["foundational"],
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "His breakthrough. American suburb's underbelly. Hopper at his most terrifying.",
           "pitch": "A young man finds a severed ear in a field. The investigation reveals what's underneath his small town.",
-          "critics": [{ "who": "Academy Awards 1987", "quote": "Best Director nomination." }]
+          "critics": [
+            {
+              "who": "Academy Awards 1987",
+              "quote": "Best Director nomination."
+            }
+          ]
         },
         {
           "title": "Lost Highway",
@@ -603,9 +635,20 @@
           "dir": "David Lynch",
           "country": "USA/France",
           "runtime": "134 min",
-          "tags": ["modern"],
+          "tags": [
+            "modern"
+          ],
           "pitch": "A jazz musician is accused of murdering his wife. Then becomes someone else. Lynch at his most fragmented.",
-          "critics": []
+          "critics": [
+            {
+              "who": "Jeff_34",
+              "quote": "**Lynch's Masterpiece.**\r\n\r\nThis is my favorite Lynch films, hands down."
+            },
+            {
+              "who": "JPV852",
+              "quote": "Another mindf*** from David Lynch has some great visuals and once I did some research afterward, some of it actually makes sense, though while watching there plenty wtf moments."
+            }
+          ]
         },
         {
           "title": "Miller's Crossing",
@@ -614,10 +657,17 @@
           "country": "USA",
           "runtime": "115 min",
           "priority": "high",
-          "tags": ["foundational"],
+          "tags": [
+            "foundational"
+          ],
           "whyPriority": "Their best gangster film. Prohibition-era Irish/Italian war. Gabriel Byrne's career-best.",
           "pitch": "An advisor to an Irish mob boss navigates a war with the Italians. Loyalty, betrayal, ethics.",
-          "critics": [{ "who": "Reception", "quote": "Initially modest performance; critical reputation has grown enormously." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Initially modest performance; critical reputation has grown enormously."
+            }
+          ]
         },
         {
           "title": "Blood Simple",
@@ -626,12 +676,21 @@
           "country": "USA",
           "runtime": "99 min",
           "priority": "med",
-          "tags": ["foundational"],
+          "tags": [
+            "foundational"
+          ],
           "pitch": "Their debut. Texas noir. A husband, his wife's affair, a hired killer who has his own ideas.",
-          "critics": [{ "who": "Reception", "quote": "Sundance Grand Jury Prize. Established their career immediately." }]
+          "critics": [
+            {
+              "who": "Reception",
+              "quote": "Sundance Grand Jury Prize. Established their career immediately."
+            }
+          ]
         }
       ],
-      "categories": ["auteur"]
+      "categories": [
+        "auteur"
+      ]
     },
     {
       "name": "Z. Plex History (Auto-Promoted)",
@@ -645,7 +704,17 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "cruella-2021"
+          "id": "cruella-2021",
+          "critics": [
+            {
+              "who": "Manuel São Bento",
+              "quote": "If you enjoy reading my Spoiler-Free reviews, please follow my blog @\r\nhttps://www.msbreviews.com\r\n\r\nThe 101 Dalmatians franchise is one of those Disney properties that is always broadcasted across all main television networks during holidays in my country, usually during Christmas."
+            },
+            {
+              "who": "Mahnoor Khan",
+              "quote": "It is one of the best villain origin stories."
+            }
+          ]
         },
         {
           "title": "Django Unchained",
@@ -655,7 +724,17 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "django-unchained-2012"
+          "id": "django-unchained-2012",
+          "critics": [
+            {
+              "who": "LastCaress1972",
+              "quote": "America, mid-nineteenth century, just prior to the Civil War."
+            },
+            {
+              "who": "iamyenz",
+              "quote": "A highly entertaining yet disturbing film with superb cast and performances for an audience who would likely never consider watching a film fundamentally about slavery, where Tarantino is masterfully and emphatically navigating and exposing the complex layers of the violent and dehumanizing system o"
+            }
+          ]
         },
         {
           "title": "Murder on the Orient Express",
@@ -665,7 +744,13 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "murder-on-the-orient-express-2017"
+          "id": "murder-on-the-orient-express-2017",
+          "critics": [
+            {
+              "who": "DocTerminus",
+              "quote": "Beginning with Kenneth Branagh's second decade as a filmmaker, I suggest he became an industry workhorse."
+            }
+          ]
         }
       ],
       "categories": []

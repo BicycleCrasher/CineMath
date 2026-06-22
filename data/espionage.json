@@ -1,7 +1,7 @@
 {
   "type": "espionage",
   "title": "Spy",
-  "subtitle": "Espionage and political thrillers \u2014 Cold War paranoia through modern surveillance.",
+  "subtitle": "Espionage and political thrillers — Cold War paranoia through modern surveillance.",
   "sections": [
     {
       "name": "I. High Priority",
@@ -18,16 +18,16 @@
             "modern",
             "intl"
           ],
-          "whyPriority": "The most cerebral espionage film of the modern era. Le Carr\u00e9's masterwork, with Gary Oldman as Smiley. Slow, dense, demands attention. Exact fit for your taste.",
+          "whyPriority": "The most cerebral espionage film of the modern era. Le Carré's masterwork, with Gary Oldman as Smiley. Slow, dense, demands attention. Exact fit for your taste.",
           "pitch": "Retired British intelligence officer is brought back to find a Soviet mole at the top of MI6. Performances by Oldman, Hardy, Cumberbatch, Firth, Strong. Patience required and rewarded.",
           "critics": [
             {
-              "who": "Manohla Dargis \u00b7 NY Times",
+              "who": "Manohla Dargis · NY Times",
               "quote": "Strongly positive. 'A sumptuously detailed period piece.'"
             },
             {
               "who": "Critical consensus",
-              "quote": "Multiple Oscar nominations. Widely considered the best Le Carr\u00e9 adaptation."
+              "quote": "Multiple Oscar nominations. Widely considered the best Le Carré adaptation."
             }
           ]
         },
@@ -65,16 +65,16 @@
             "foundational",
             "intl"
           ],
-          "whyPriority": "The first Le Carr\u00e9 film, in glorious black and white. Burton's career-best. Where modern spy fiction's moral complexity was born \u2014 no glamour, only bleakness and sacrifice.",
+          "whyPriority": "The first Le Carré film, in glorious black and white. Burton's career-best. Where modern spy fiction's moral complexity was born — no glamour, only bleakness and sacrifice.",
           "pitch": "An aging British spy is sent on one final mission across the Berlin Wall. The mission is not what he was told. Betrayal upon betrayal.",
           "critics": [
             {
-              "who": "Roger Ebert \u00b7 Great Movies",
-              "quote": "Wrote a Great Movies essay. 'The film that established the Le Carr\u00e9 school.'"
+              "who": "Roger Ebert · Great Movies",
+              "quote": "Wrote a Great Movies essay. 'The film that established the Le Carré school.'"
             },
             {
               "who": "Burton's performance",
-              "quote": "Oscar nomination. Widely considered the definitive Le Carr\u00e9 protagonist on screen."
+              "quote": "Oscar nomination. Widely considered the definitive Le Carré protagonist on screen."
             }
           ]
         },
@@ -161,7 +161,7 @@
           "pitch": "New Orleans DA Jim Garrison investigates the JFK assassination. Costner anchors a vast ensemble. Stone treats history as a kaleidoscope.",
           "critics": [
             {
-              "who": "Roger Ebert \u00b7 Great Movies",
+              "who": "Roger Ebert · Great Movies",
               "quote": "Wrote a Great Movies essay. 'A masterpiece of insinuation and hypothesis.'"
             }
           ]
@@ -178,7 +178,7 @@
             "intl"
           ],
           "whyPriority": "East German Stasi officer surveils a writer and his lover. Won Best Foreign Language Film. Quiet, devastating character work.",
-          "pitch": "1984 East Berlin. A Stasi officer monitors a playwright and discovers his own conscience. Ulrich M\u00fche's final great performance before his death.",
+          "pitch": "1984 East Berlin. A Stasi officer monitors a playwright and discovers his own conscience. Ulrich Mühe's final great performance before his death.",
           "critics": [
             {
               "who": "Academy Awards 2007",
@@ -293,7 +293,7 @@
           "tags": [
             "foundational"
           ],
-          "pitch": "Michael Caine's anti-Bond. Working-class British spy in horn-rimmed glasses. The book Le Carr\u00e9 read.",
+          "pitch": "Michael Caine's anti-Bond. Working-class British spy in horn-rimmed glasses. The book Le Carré read.",
           "critics": [
             {
               "who": "Reception",
@@ -409,16 +409,16 @@
           "year": 1979,
           "dir": "John Irvin",
           "country": "UK",
-          "runtime": "315 min \u00b7 7 episodes",
+          "runtime": "315 min · 7 episodes",
           "tags": [
             "foundational",
             "intl"
           ],
-          "pitch": "Note: this is TV but listed here for comparison with the 2011 film. Alec Guinness as Smiley. The most faithful Le Carr\u00e9 adaptation. ~5 hours total.",
+          "pitch": "Note: this is TV but listed here for comparison with the 2011 film. Alec Guinness as Smiley. The most faithful Le Carré adaptation. ~5 hours total.",
           "critics": [
             {
               "who": "Reception",
-              "quote": "Considered by many Le Carr\u00e9 devotees as superior to the 2011 film due to length allowing full novel coverage."
+              "quote": "Considered by many Le Carré devotees as superior to the 2011 film due to length allowing full novel coverage."
             }
           ]
         },
@@ -450,7 +450,7 @@
             "modern",
             "intl"
           ],
-          "pitch": "Le Carr\u00e9 adaptation. British diplomat in Kenya investigates his wife's murder, uncovers pharma conspiracy. Rachel Weisz won Best Supporting Actress.",
+          "pitch": "Le Carré adaptation. British diplomat in Kenya investigates his wife's murder, uncovers pharma conspiracy. Rachel Weisz won Best Supporting Actress.",
           "critics": [
             {
               "who": "Academy Awards",
@@ -475,7 +475,17 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "casino-royale-2006"
+          "id": "casino-royale-2006",
+          "critics": [
+            {
+              "who": "John Chard",
+              "quote": "Arrogance and self-awareness seldom go hand in hand.\r\n\r\nCasino Royale is directed by Martin Campbell and adapted by Neil Purvis, Robert Wade & Paul Haggis from a story written by Ian Fleming."
+            },
+            {
+              "who": "krismdb",
+              "quote": "i liked Daniel Craig more as the right bond with action, charm, cunning all in one."
+            }
+          ]
         },
         {
           "title": "GoldenEye",
@@ -485,7 +495,17 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "film-narrative",
           "tvCompletionMode": "flexible",
-          "id": "goldeneye-1995"
+          "id": "goldeneye-1995",
+          "critics": [
+            {
+              "who": "JPV852",
+              "quote": "Really solid entry into the series with Brosnan, who is personally my favorite Bond, is great."
+            },
+            {
+              "who": "Wuchak",
+              "quote": "_**The Russia installment, plus Pierce Brosnan’s debut**_\r\n\r\nAgent 007 (Pierce Brosnan) returns to Russia to investigate the theft of a space-based electromagnetic pulse weapon, which destroyed a radar facility in Siberia with only one survivor (Izabella Scorupco)."
+            }
+          ]
         }
       ],
       "categories": []

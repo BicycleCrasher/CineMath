@@ -851,7 +851,13 @@
           "whyPriority": "Auto-added from your Plex viewing history.",
           "contentType": "tv-prestige",
           "tvCompletionMode": "flexible",
-          "id": "dune-null"
+          "id": "dune-null",
+          "critics": [
+            {
+              "who": "Rarkh",
+              "quote": "I had pretty high expectation on this series.\r\n\r\nHoped we would get a glimps on the AI-Wars and how Bene Gesserit, Mentat and Navigators came into play.\r\n\r\nWe got a glimpse of the AI-Wars...like 30sec.....that's it.\r\nThe Rest of the series evolves around some kind of boarding school / coming of age "
+            }
+          ]
         }
       ],
       "categories": []

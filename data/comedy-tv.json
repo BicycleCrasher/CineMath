@@ -12,7 +12,7 @@
           "year": 2015,
           "dir": "Dan & Eugene Levy",
           "country": "Canada",
-          "runtime": "6 seasons \u00b7 80 episodes",
+          "runtime": "6 seasons · 80 episodes",
           "seasons": "6 seasons (ended 2020)",
           "tags": [
             "modern",
@@ -22,7 +22,7 @@
           "critics": [
             {
               "who": "Reception",
-              "quote": "Won 9 Emmys in 2020 \u2014 the first comedy to sweep all four acting categories in a single year."
+              "quote": "Won 9 Emmys in 2020 — the first comedy to sweep all four acting categories in a single year."
             }
           ]
         },
@@ -31,7 +31,7 @@
           "year": 2003,
           "dir": "Mitchell Hurwitz",
           "country": "USA",
-          "runtime": "5 seasons \u00b7 84 episodes",
+          "runtime": "5 seasons · 84 episodes",
           "seasons": "Seasons 1-3 are the canonical run; 4-5 on Netflix considered weaker",
           "tags": [
             "foundational"
@@ -49,7 +49,7 @@
           "year": 2006,
           "dir": "Tina Fey",
           "country": "USA",
-          "runtime": "7 seasons \u00b7 138 episodes",
+          "runtime": "7 seasons · 138 episodes",
           "seasons": "All 7 seasons",
           "tags": [
             "foundational"
@@ -61,7 +61,7 @@
           "year": 2009,
           "dir": "Greg Daniels & Michael Schur",
           "country": "USA",
-          "runtime": "7 seasons \u00b7 125 episodes",
+          "runtime": "7 seasons · 125 episodes",
           "seasons": "Skip S1, start S2",
           "tags": [
             "foundational"
@@ -79,16 +79,26 @@
           "year": 2013,
           "dir": "Dan Goor & Michael Schur",
           "country": "USA",
-          "runtime": "8 seasons \u00b7 153 episodes",
+          "runtime": "8 seasons · 153 episodes",
           "seasons": "All 8 seasons (ended 2021)",
-          "pitch": "NYPD precinct comedy with a deeply diverse ensemble. Schur's third great workplace comedy after The Office and Parks."
+          "pitch": "NYPD precinct comedy with a deeply diverse ensemble. Schur's third great workplace comedy after The Office and Parks.",
+          "critics": [
+            {
+              "who": "seking",
+              "quote": "Not sure what the \"canned laughter\" means in the previous (and only) review."
+            },
+            {
+              "who": "nick_012",
+              "quote": "There's only two reviews and they're mostly negative, so I though I might post mine."
+            }
+          ]
         },
         {
           "title": "It's Always Sunny in Philadelphia",
           "year": 2005,
           "dir": "Rob McElhenney",
           "country": "USA",
-          "runtime": "16+ seasons \u00b7 170+ episodes",
+          "runtime": "16+ seasons · 170+ episodes",
           "seasons": "Still going; consensus best stretch is roughly S2-S9",
           "pitch": "Five terrible people run a Philadelphia bar. Now one of the longest-running live-action sitcoms in American TV history.",
           "critics": [
@@ -103,7 +113,7 @@
           "year": 2006,
           "dir": "Aaron Sorkin",
           "country": "USA",
-          "runtime": "1 season \u00b7 22 episodes",
+          "runtime": "1 season · 22 episodes",
           "seasons": "1 season (cancelled)",
           "tags": [
             "under"
@@ -126,7 +136,7 @@
           "year": 1995,
           "dir": "Paul Simms",
           "country": "USA",
-          "runtime": "5 seasons \u00b7 97 episodes",
+          "runtime": "5 seasons · 97 episodes",
           "seasons": "S1-4 best; S5 post-Hartman",
           "tags": [
             "foundational",
@@ -139,7 +149,7 @@
           "year": 1986,
           "dir": "Linda Bloodworth-Thomason",
           "country": "USA",
-          "runtime": "7 seasons \u00b7 163 episodes",
+          "runtime": "7 seasons · 163 episodes",
           "seasons": "All 7 (ended 1993)",
           "tags": [
             "foundational"
@@ -151,7 +161,7 @@
           "year": 2003,
           "dir": "John Lloyd",
           "country": "UK",
-          "runtime": "Ongoing \u00b7 20+ series",
+          "runtime": "Ongoing · 20+ series",
           "seasons": "Stephen Fry hosted A-M (Series 1-13); Sandi Toksvig from N onward",
           "tags": [
             "intl"
@@ -163,7 +173,7 @@
           "year": 2002,
           "dir": "Andy Wilman",
           "country": "UK",
-          "runtime": "BBC \u00b7 22 series \u00b7 175 episodes",
+          "runtime": "BBC · 22 series · 175 episodes",
           "seasons": "Clarkson/Hammond/May 2002-2015 only",
           "tags": [
             "intl"
@@ -185,7 +195,7 @@
           "year": 2016,
           "dir": "Andy Wilman",
           "country": "UK",
-          "runtime": "Amazon \u00b7 5 seasons + specials",
+          "runtime": "Amazon · 5 seasons + specials",
           "seasons": "2016-2024, all ended",
           "tags": [
             "modern",
@@ -208,7 +218,7 @@
           "year": 2019,
           "dir": "Steve Lemme & Kevin Heffernan",
           "country": "USA",
-          "runtime": "4 seasons \u00b7 56 episodes",
+          "runtime": "4 seasons · 56 episodes",
           "seasons": "All 4 (ended 2023)",
           "tags": [
             "modern"
@@ -220,7 +230,7 @@
           "year": 2009,
           "dir": "Jeff & Jackie Schaffer",
           "country": "USA",
-          "runtime": "7 seasons \u00b7 84 episodes",
+          "runtime": "7 seasons · 84 episodes",
           "seasons": "All 7 (ended 2015)",
           "tags": [
             "modern"
@@ -232,7 +242,7 @@
           "year": 2007,
           "dir": "Bryan Fuller",
           "country": "USA",
-          "runtime": "2 seasons \u00b7 22 episodes",
+          "runtime": "2 seasons · 22 episodes",
           "seasons": "Cut short by 2007 writers strike",
           "tags": [
             "under"
@@ -250,19 +260,25 @@
           "year": 2014,
           "dir": "Mike Judge",
           "country": "USA",
-          "runtime": "6 seasons \u00b7 53 episodes",
+          "runtime": "6 seasons · 53 episodes",
           "seasons": "All 6 (ended 2019)",
           "tags": [
             "modern"
           ],
-          "pitch": "Mike Judge's tech-startup satire. The middle-out compression algorithm and the dick joke math sequence are TV history."
+          "pitch": "Mike Judge's tech-startup satire. The middle-out compression algorithm and the dick joke math sequence are TV history.",
+          "critics": [
+            {
+              "who": "Dean",
+              "quote": "Silicon Valley is an absolute masterpiece of modern television and arguably the sharpest satire ever written about tech culture."
+            }
+          ]
         },
         {
           "title": "Alpha House",
           "year": 2013,
           "dir": "Garry Trudeau",
           "country": "USA",
-          "runtime": "2 seasons \u00b7 21 episodes",
+          "runtime": "2 seasons · 21 episodes",
           "seasons": "Cancelled after S2",
           "tags": [
             "modern",
@@ -275,7 +291,7 @@
           "year": 2001,
           "dir": "Bill Lawrence",
           "country": "USA",
-          "runtime": "9 seasons \u00b7 184 episodes",
+          "runtime": "9 seasons · 184 episodes",
           "seasons": "S1-S8 are the canonical run; S9 (Med School) is widely disowned",
           "tags": [
             "foundational"
@@ -296,13 +312,23 @@
           "year": 2020,
           "dir": "Bill Lawrence & Jason Sudeikis",
           "country": "USA/UK",
-          "runtime": "3 seasons \u00b7 34 episodes",
+          "runtime": "3 seasons · 34 episodes",
           "seasons": "Original 3-season arc complete; S4 announced",
           "tags": [
             "modern",
             "intl"
           ],
-          "pitch": "American football coach takes over an English Premier League club. The kindness-as-strategy show became the COVID-era prestige comedy hit."
+          "pitch": "American football coach takes over an English Premier League club. The kindness-as-strategy show became the COVID-era prestige comedy hit.",
+          "critics": [
+            {
+              "who": "TopCatUK",
+              "quote": "An amazingly original, funny and lively show."
+            },
+            {
+              "who": "willhess17",
+              "quote": "I started watching this show as someone who doesn't care at all about football (soccer) and had no expectations for the series."
+            }
+          ]
         }
       ],
       "categories": [
@@ -310,7 +336,7 @@
       ]
     },
     {
-      "name": "III. High Priority \u2014 Sorkin & Sorkin-adjacent half-hour",
+      "name": "III. High Priority — Sorkin & Sorkin-adjacent half-hour",
       "desc": "Workplace ensemble, dense dialogue, idealistic protagonists. Direct fits given your Sorkin loves.",
       "items": [
         {
@@ -318,13 +344,13 @@
           "year": 1998,
           "dir": "Aaron Sorkin",
           "country": "USA",
-          "runtime": "2 seasons \u00b7 45 episodes",
+          "runtime": "2 seasons · 45 episodes",
           "seasons": "All 45 (cancelled 2000)",
           "priority": "high",
           "tags": [
             "foundational"
           ],
-          "whyPriority": "Sorkin's first TV show. Sports center-style cable news ensemble. The half-hour Sorkin you haven't seen yet \u2014 direct fit given West Wing/Newsroom loves.",
+          "whyPriority": "Sorkin's first TV show. Sports center-style cable news ensemble. The half-hour Sorkin you haven't seen yet — direct fit given West Wing/Newsroom loves.",
           "pitch": "Behind-the-scenes of a SportsCenter-like nightly show. Felicity Huffman, Peter Krause, Josh Charles. Sorkin's dialogue at its tightest because he had less time per episode.",
           "critics": [
             {
@@ -339,7 +365,7 @@
       ]
     },
     {
-      "name": "IV. High Priority \u2014 Warm Ensemble Lane",
+      "name": "IV. High Priority — Warm Ensemble Lane",
       "desc": "The 30 Rock / Parks / Brooklyn 99 / Schitt's Creek family. Workplace or found-family, dense writing, warmth toward characters.",
       "items": [
         {
@@ -347,7 +373,7 @@
           "year": 2009,
           "dir": "Dan Harmon",
           "country": "USA",
-          "runtime": "6 seasons \u00b7 110 episodes",
+          "runtime": "6 seasons · 110 episodes",
           "seasons": "S1-S3 are peak; S4 widely panned (Harmon fired); S5-S6 recovered. Movie announced.",
           "priority": "high",
           "tags": [
@@ -367,13 +393,13 @@
           "year": 2016,
           "dir": "Michael Schur",
           "country": "USA",
-          "runtime": "4 seasons \u00b7 53 episodes",
+          "runtime": "4 seasons · 53 episodes",
           "seasons": "All 4 (ended 2020)",
           "priority": "high",
           "tags": [
             "modern"
           ],
-          "whyPriority": "Schur's metaphysical comedy \u2014 same warm-ensemble DNA as Parks/Brooklyn 99 but applied to philosophy and the afterlife. The Season 1 finale twist is one of TV's best.",
+          "whyPriority": "Schur's metaphysical comedy — same warm-ensemble DNA as Parks/Brooklyn 99 but applied to philosophy and the afterlife. The Season 1 finale twist is one of TV's best.",
           "pitch": "A morally questionable woman dies and ends up in heaven by mistake. She tries to become a good person before they figure out.",
           "critics": [
             {
@@ -387,7 +413,7 @@
           "year": 2014,
           "dir": "Mackenzie Crook",
           "country": "UK",
-          "runtime": "3 seasons \u00b7 19 episodes + 2022 special",
+          "runtime": "3 seasons · 19 episodes + 2022 special",
           "seasons": "All ended; 2022 special is closure",
           "tags": [
             "modern",
@@ -409,14 +435,14 @@
           "year": 2021,
           "dir": "Lucia Aniello, Paul W. Downs, Jen Statsky",
           "country": "USA",
-          "runtime": "4 seasons \u00b7 38 episodes",
+          "runtime": "4 seasons · 38 episodes",
           "seasons": "Still airing (S4 aired 2025)",
           "priority": "high",
           "tags": [
             "modern"
           ],
           "whyPriority": "Jean Smart as a legacy Vegas comedian paired with a young writer. Crackling dialogue, warm-ensemble core, sharp on the comedy industry. The Hacks/Schitt's Creek/Ted Lasso sweet-spot.",
-          "pitch": "Aging Vegas comedy headliner is forced to work with a fired Gen-Z writer. Generational collision becomes mentor-prot\u00e9g\u00e9 bond.",
+          "pitch": "Aging Vegas comedy headliner is forced to work with a fired Gen-Z writer. Generational collision becomes mentor-protégé bond.",
           "critics": [
             {
               "who": "Reception",
@@ -429,7 +455,7 @@
           "year": 2021,
           "dir": "Steve Martin & John Hoffman",
           "country": "USA",
-          "runtime": "4 seasons \u00b7 40 episodes",
+          "runtime": "4 seasons · 40 episodes",
           "seasons": "Still airing",
           "priority": "high",
           "tags": [
@@ -449,13 +475,13 @@
           "year": 2015,
           "dir": "Bill Hader, Fred Armisen, Seth Meyers",
           "country": "USA",
-          "runtime": "4 seasons \u00b7 28 episodes",
+          "runtime": "4 seasons · 28 episodes",
           "seasons": "All released; 5th season uncertain",
           "priority": "high",
           "tags": [
             "modern"
           ],
-          "whyPriority": "Hader/Armisen mockumentary parodies \u2014 each episode a precise pastiche of a real famous documentary. Rachel Dratch in the Stop Making Sense parody alone is worth the price of entry.",
+          "whyPriority": "Hader/Armisen mockumentary parodies — each episode a precise pastiche of a real famous documentary. Rachel Dratch in the Stop Making Sense parody alone is worth the price of entry.",
           "pitch": "Each episode loving parodies a specific real documentary or genre. The Grey Gardens, Salesman, and Talking Heads parodies are the standouts.",
           "critics": [
             {
@@ -473,7 +499,7 @@
           "year": 2019,
           "dir": "Jemaine Clement",
           "country": "USA",
-          "runtime": "6 seasons \u00b7 61 episodes",
+          "runtime": "6 seasons · 61 episodes",
           "seasons": "All 6 (ended 2024)",
           "priority": "high",
           "tags": [
@@ -502,7 +528,7 @@
           "year": 2012,
           "dir": "Armando Iannucci",
           "country": "USA",
-          "runtime": "7 seasons \u00b7 65 episodes",
+          "runtime": "7 seasons · 65 episodes",
           "seasons": "All 7 (ended 2019)",
           "priority": "med",
           "tags": [
@@ -522,7 +548,7 @@
           "year": 2009,
           "dir": "Victor Fresco",
           "country": "USA",
-          "runtime": "2 seasons \u00b7 26 episodes",
+          "runtime": "2 seasons · 26 episodes",
           "seasons": "Cancelled 2010",
           "tags": [
             "under"
@@ -542,7 +568,7 @@
           "year": 2016,
           "dir": "Jo Brand",
           "country": "UK",
-          "runtime": "2 seasons \u00b7 12 episodes",
+          "runtime": "2 seasons · 12 episodes",
           "seasons": "Cancelled 2018",
           "tags": [
             "modern",
@@ -558,7 +584,7 @@
           "year": 2022,
           "dir": "Christopher Storer",
           "country": "USA",
-          "runtime": "4 seasons \u00b7 38 episodes",
+          "runtime": "4 seasons · 38 episodes",
           "seasons": "Still airing",
           "priority": "med",
           "tags": [
@@ -578,7 +604,7 @@
           "year": 2000,
           "dir": "Graham Linehan & Dylan Moran",
           "country": "UK",
-          "runtime": "3 seasons \u00b7 18 episodes",
+          "runtime": "3 seasons · 18 episodes",
           "seasons": "Complete (ended 2004)",
           "priority": "med",
           "tags": [
@@ -599,7 +625,7 @@
           "year": 1999,
           "dir": "Edgar Wright",
           "country": "UK",
-          "runtime": "2 seasons \u00b7 14 episodes",
+          "runtime": "2 seasons · 14 episodes",
           "seasons": "Complete (ended 2001)",
           "priority": "med",
           "tags": [
@@ -631,7 +657,7 @@
           "year": 2016,
           "dir": "Phoebe Waller-Bridge",
           "country": "UK",
-          "runtime": "2 seasons \u00b7 12 episodes",
+          "runtime": "2 seasons · 12 episodes",
           "seasons": "Complete (ended 2019)",
           "tags": [
             "modern",
@@ -650,7 +676,7 @@
           "year": 1992,
           "dir": "Garry Shandling",
           "country": "USA",
-          "runtime": "6 seasons \u00b7 89 episodes",
+          "runtime": "6 seasons · 89 episodes",
           "seasons": "All 6 (ended 1998)",
           "tags": [
             "foundational"
@@ -668,7 +694,7 @@
           "year": 1993,
           "dir": "David Angell, Peter Casey, David Lee",
           "country": "USA",
-          "runtime": "11 seasons \u00b7 264 episodes",
+          "runtime": "11 seasons · 264 episodes",
           "seasons": "Original run only; ignore 2023 revival",
           "tags": [
             "foundational"
@@ -677,7 +703,7 @@
           "critics": [
             {
               "who": "Reception",
-              "quote": "Won 37 Emmys including five consecutive Outstanding Comedy Series \u2014 a record only recently approached."
+              "quote": "Won 37 Emmys including five consecutive Outstanding Comedy Series — a record only recently approached."
             }
           ]
         },
@@ -686,7 +712,7 @@
           "year": 2011,
           "dir": "David Crane & Jeffrey Klarik",
           "country": "USA/UK",
-          "runtime": "5 seasons \u00b7 41 episodes",
+          "runtime": "5 seasons · 41 episodes",
           "seasons": "Complete (ended 2017)",
           "tags": [
             "modern",
