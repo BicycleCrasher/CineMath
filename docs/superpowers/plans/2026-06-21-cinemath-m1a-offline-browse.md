@@ -13,7 +13,8 @@
 - **Module layout (spec §2):** `:shared` (commonMain + androidMain + commonTest), `:app-phone`. `:app-tv` / `:app-ios` are NOT created in M1a.
 - **Package root:** `com.cinemath` (shared: `com.cinemath.shared`; phone app: `com.cinemath.phone`).
 - **Android applicationId:** `com.cinemath.phone` (distinct from the legacy TWA `com.watchtrack.tv` — do not collide).
-- **minSdk = 26, targetSdk = 34, compileSdk = 34, JDK 17.**
+- **minSdk = 26, targetSdk = 35, compileSdk = 35, JDK 17.** (compileSdk 35 requires AGP 8.6+; the catalog pins AGP 8.7.2, which requires Gradle 8.9 — the wrapper Task 0 generates. `android-35` is already installed on this machine.)
+- **Device for Tasks 10 & 12:** `installDebug` and `connectedDebugAndroidTest` require an attached device/emulator — connect a phone with USB debugging before those steps. Tasks 0–9 are pure JVM/host steps needing no device.
 - **Catalog data is the source of truth (spec §2 "What stays untouched"):** the 24 `/data/*.json` files are copied verbatim into `:app-phone` assets. Do NOT hand-edit catalog content.
 - **Item-state storage key = `"tab:itemId"` (spec §4.1)** where `itemId` is the catalog item's stable slug.
 - **Reaction tags are open-ended validated strings, NOT a sealed enum.** (Deviation from spec §4.1 — see "Deviations" below. The production blob in `app.js` uses per-catalog free-text tags like `"Score is the engine"`.)
@@ -25,6 +26,72 @@
 1. **Reaction tags = `List<String>`**, not a sealed enum. The spec §4.1 listed reaction-tag values among "sealed enums", but the live `app.js` blob shows open-ended, per-catalog vocabularies (musicals use `"Score is the engine"`, thrillers use `"Smart structure"`). A closed enum would reject real data. Status/Rating remain sealed (genuinely closed vocabularies).
 2. **M1a writes are local-only — no `/sync/put`.** The Worker's `/sync/put` stores the blob *verbatim* with no server-side merge (`worker/worker.js:1586`); the merge is client-side. Pushing from a half-migrated native app would clobber the still-running PWA's state. M1a therefore never pushes. Pull + client-side merge + push all land in M1b/M5.
 3. **Catalogs bundled as assets in M1a** (offline by design). Remote etag-refresh from GitHub Pages (`catalog_cache.etag`/`fetched_at`) lands in M1b with the network layer; the columns exist now but `etag` is `NULL` and `fetched_at` is the seed time until then.
+
+---
+
+### Task 0: Toolchain bootstrap (Gradle wrapper + SDK location)
+
+The machine has JDK 17, the Android SDK (`platforms/android-35`, build-tools, platform-tools, emulator), but **no system Gradle, no committed wrapper**, and `ANDROID_HOME` is unset. This task makes `./gradlew` runnable before any module exists. Run it once; no module code yet.
+
+**Files:**
+- Create: `cinemath-native/` (project root dir)
+- Create (generated): `cinemath-native/gradle/wrapper/gradle-wrapper.properties`, `gradle/wrapper/gradle-wrapper.jar`, `gradlew`, `gradlew.bat`
+- Create: `cinemath-native/local.properties` (git-ignored — machine-specific SDK path)
+- Create: `cinemath-native/.gitignore`
+
+**Interfaces:**
+- Consumes: nothing (first task).
+- Produces: a working `./gradlew` (Gradle 8.9) in `cinemath-native/` that every later task's build/test step invokes.
+
+- [ ] **Step 1: Make a bootstrap Gradle available (used once to emit the wrapper)**
+
+```bash
+brew install gradle      # any 8.7+ can emit an 8.9 wrapper
+gradle --version
+```
+Fallback without Homebrew:
+```bash
+curl -L https://services.gradle.org/distributions/gradle-8.9-bin.zip -o /tmp/gradle-8.9.zip
+unzip -q /tmp/gradle-8.9.zip -d /tmp/gradle-dist
+export PATH="/tmp/gradle-dist/gradle-8.9/bin:$PATH"
+gradle --version
+```
+
+- [ ] **Step 2: Generate the wrapper into the project root**
+
+```bash
+mkdir -p cinemath-native && cd cinemath-native
+gradle wrapper --gradle-version 8.9 --distribution-type bin
+ls gradle/wrapper/gradle-wrapper.jar gradlew    # both must exist
+```
+
+- [ ] **Step 3: Point the build at the Android SDK + ignore scratch**
+
+`cinemath-native/local.properties`:
+```properties
+sdk.dir=/Users/lincolncrowder/Library/Android/sdk
+```
+`cinemath-native/.gitignore`:
+```gitignore
+local.properties
+.gradle/
+build/
+*.iml
+.idea/
+```
+
+- [ ] **Step 4: Verify the wrapper runs**
+
+Run: `cd cinemath-native && ./gradlew --version`
+Expected: `Gradle 8.9`.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add cinemath-native/gradle cinemath-native/gradlew cinemath-native/gradlew.bat cinemath-native/.gitignore
+git commit -m "chore(native): Gradle 8.9 wrapper + SDK location"
+```
+(`local.properties` is intentionally git-ignored.)
 
 ---
 
@@ -53,7 +120,7 @@ Stand up a buildable, empty multi-module KMP project. No app logic yet — this 
 ```toml
 [versions]
 kotlin = "2.0.21"
-agp = "8.5.2"
+agp = "8.7.2"
 sqldelight = "2.0.2"
 koin = "3.5.6"
 coroutines = "1.9.0"
@@ -168,7 +235,7 @@ kotlin {
 
 android {
     namespace = "com.cinemath.shared"
-    compileSdk = 34
+    compileSdk = 35
     defaultConfig { minSdk = 26 }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -217,11 +284,11 @@ kotlin {
 
 android {
     namespace = "com.cinemath.phone"
-    compileSdk = 34
+    compileSdk = 35
     defaultConfig {
         applicationId = "com.cinemath.phone"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0.0-m1a"
     }
