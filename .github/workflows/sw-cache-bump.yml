@@ -54,7 +54,7 @@ jobs:
 
       - name: Install esbuild
         if: steps.changed.outputs.app_js == 'true'
-        run: npm install --silent --no-audit --no-fund
+        run: rm -rf node_modules && npm install --silent --no-audit --no-fund
 
       - name: Rebuild app.min.js
         if: steps.changed.outputs.app_js == 'true'
