@@ -1,8 +1,13 @@
-function escapeHtml(s) {
-  return String(s ?? '').replace(/[&<>"']/g, c => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-  })[c]);
-}
+// Pure logic lives in lib/ as ES modules (shared with the node:test suite and
+// any future Kotlin Multiplatform port). app.js is the esbuild bundle entry —
+// index.html loads only the bundled app.min.js, never these files directly.
+import { plexNormalizeKey, plexNormalizeKeyTitleOnly } from './lib/normalize.js';
+
+// NOTE: escapeHtml used to be declared twice (here and before
+// wireDevicesHandlers). Function hoisting meant the LATER declaration won
+// everywhere, so the duplicate here was removed when app.js became a module
+// (duplicate lexical declarations are a SyntaxError in ESM); behavior is
+// unchanged. The surviving definition lives near wireDevicesHandlers.
 
 // === Reaction tag taxonomy by content type ===
 // Each item resolves to ONE content type. The UI shows the matching set.
@@ -513,29 +518,8 @@ function isPlexConfigured() {
 // Map: normalized "title|year" -> { ratingKey, title, year, type }
 let plexLibrary = new Map();
 let plexLibraryLoadedAt = 0;
-function plexNormalizeKey(title, year) {
-  if (!title) return '';
-  let t = title.toLowerCase();
-  // Strip parenthetical disambiguators like "(BBC, 1979)" or "(2024)"
-  t = t.replace(/\s*\([^)]*\)\s*/g, ' ');
-  // Replace & with "and"
-  t = t.replace(/&/g, ' and ');
-  // Strip apostrophes (curly + straight + backtick)
-  t = t.replace(/[\u2019\u2018'`]/g, '');
-  // Collapse all non-alphanumeric to nothing
-  t = t.replace(/[^a-z0-9]+/g, '');
-  return t.slice(0, 60) + '|' + (year || '');
-}
-// TV shows: match by title only, no year — Plex history has no series year
-function plexNormalizeKeyTitleOnly(title) {
-  if (!title) return '';
-  let t = title.toLowerCase();
-  t = t.replace(/\s*\([^)]*\)\s*/g, ' ');
-  t = t.replace(/&/g, ' and ');
-  t = t.replace(/[\u2019\u2018'`]/g, '');
-  t = t.replace(/[^a-z0-9]+/g, '');
-  return t.slice(0, 60);
-}
+// plexNormalizeKey / plexNormalizeKeyTitleOnly moved to lib/normalize.js
+// (imported at the top of this file). Same functions, same behavior.
 async function fetchPlexLibrary() {
   if (!isPlexConfigured()) return;
   if (!isWebhookConfigured()) return;
