@@ -2,6 +2,7 @@
 // any future Kotlin Multiplatform port). app.js is the esbuild bundle entry —
 // index.html loads only the bundled app.min.js, never these files directly.
 import { plexNormalizeKey, plexNormalizeKeyTitleOnly } from './lib/normalize.js';
+import { findCatalogMatchForScrobble } from './lib/plex-match.js';
 
 // NOTE: escapeHtml used to be declared twice (here and before
 // wireDevicesHandlers). Function hoisting meant the LATER declaration won
@@ -1525,51 +1526,19 @@ async function pollPlexWebhookEvents() {
   }
 }
 
-// Apply a single webhook event to CinéMath state.
+// Apply a single webhook event to CinéMath state. The pure matching walk
+// lives in lib/plex-match.js (findCatalogMatchForScrobble); this wrapper
+// applies the resulting status mutation.
 function applyPlexEvent(evt) {
-  if (evt.event !== 'media.scrobble') return false;
-  if (evt.type !== 'movie' && evt.type !== 'episode' && evt.type !== 'show') return false;
-
-  // For movies, match title+year exactly. For TV, match title only since Plex
-  // history doesn't carry the series first-aired year on episode events.
-  const isMovie = evt.type === 'movie';
-  const matchTitle = isMovie ? evt.title : (evt.grandparentTitle || evt.title);
-  const matchYear = isMovie ? evt.year : null;
-  if (!matchTitle) return false;
-
-  const movieKey = isMovie ? plexNormalizeKey(matchTitle, matchYear) : null;
-  const tvKey = isMovie ? null : plexNormalizeKeyTitleOnly(matchTitle);
-
-  // Search every loaded catalog for a matching item (primary title or alias)
-  for (const tabId in catalogs) {
-    const cat = catalogs[tabId];
-    for (const item of cat.items) {
-      const titlesToCheck = [item.title].concat(Array.isArray(item.aliases) ? item.aliases : []);
-      let matched = false;
-      for (const t of titlesToCheck) {
-        if (isMovie) {
-          if (plexNormalizeKey(t, item.year) === movieKey) { matched = true; break; }
-          // year-fuzz tolerance
-          for (const dy of [-1, 1]) {
-            if (plexNormalizeKey(t, item.year ? item.year + dy : null) === movieKey) { matched = true; break; }
-          }
-          if (matched) break;
-        } else {
-          if (plexNormalizeKeyTitleOnly(t) === tvKey) { matched = true; break; }
-        }
-      }
-      if (matched) {
-        if (isMovie) {
-          setStatus(item.id, 'watched', tabId);
-        } else {
-          const cur = getStatus(item.id, tabId);
-          if (cur !== 'watched') setStatus(item.id, 'watching', tabId);
-        }
-        return true;
-      }
-    }
+  const hit = findCatalogMatchForScrobble(catalogs, evt);
+  if (!hit) return false;
+  if (hit.isMovie) {
+    setStatus(hit.item.id, 'watched', hit.tabId);
+  } else {
+    const cur = getStatus(hit.item.id, hit.tabId);
+    if (cur !== 'watched') setStatus(hit.item.id, 'watching', hit.tabId);
   }
-  return false;
+  return true;
 }
 
 // =====================================================================
