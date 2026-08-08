@@ -22,7 +22,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: '20'
-      - run: npm install --silent --no-audit --no-fund
+      - run: rm -rf node_modules && npm install --silent --no-audit --no-fund
 
       - name: Build minified
         run: npx esbuild app.js --minify --target=es2020 --outfile=app.min.js --legal-comments=none
