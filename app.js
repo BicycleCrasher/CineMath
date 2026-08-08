@@ -2929,6 +2929,9 @@ function touchEntry(tab, id) {
   if (!state[tab]) state[tab] = {};
   if (!state[tab][id]) state[tab][id] = {};
   state[tab][id].lastUpdated = Date.now();
+  // D1 item_state dual-write: remember which items changed so the next
+  // flush (tab close / card collapse) can batch-POST them. No network here.
+  if (typeof stateD1MarkDirty === 'function') stateD1MarkDirty(tab, id);
 }
 
 function setStatus(id, status, tab) {
@@ -3954,6 +3957,9 @@ function _attachItemDelegation() {
       if (expandedIds.has(id)) {
         expandedIds.delete(id);
         itemEl.classList.remove('expanded');
+        // D1 item_state dual-write: item detail closed — flush any SRR
+        // edits made while the card was open. Fire-and-forget.
+        if (typeof stateD1PushDirty === 'function') stateD1PushDirty('item-close').catch(() => {});
       } else {
         expandedIds.add(id);
         itemEl.classList.add('expanded');
@@ -4305,6 +4311,9 @@ function switchTab(tab) {
     buildFilters();
     buildTagPills();
     render();
+    // D1 item_state dual-write: flush dirty items from the tab we left,
+    // shadow-read the tab we opened. Fire-and-forget; failures are silent.
+    if (typeof stateD1OnTabSwitch === 'function') stateD1OnTabSwitch(previousTab, tab);
   };
   if (document.startViewTransition) {
     document.startViewTransition(body);
@@ -7352,6 +7361,114 @@ async function syncOnLaunch() {
   await syncBootstrapPromise;
 }
 
+// === D1 item_state dual-write (shadow) ===
+// Mirrors per-item Status/Rating/Reaction changes into the Worker's D1
+// `item_state` table (worker/migrations/004_item_state.sql) alongside
+// the SYNC_KV blob sync above, which REMAINS canonical. Reads here are
+// shadow-only: fetched, cached for inspection, never applied to state.
+// Cutover to D1-as-canonical is a human decision — steps in
+// docs/SRR-D1-CUTOVER.md. Every function swallows failures (log +
+// return), matching how syncPush treats worker errors: the app must
+// behave identically with the Worker unreachable.
+const _stateD1Dirty = new Set();  // entries: `${tab} ${itemId}`
+let _stateD1Counts = null;        // last /state/counts payload (for banner aggregates / debugging)
+
+function stateD1MarkDirty(tab, id) {
+  if (!tab || !id) return;
+  _stateD1Dirty.add(tab + ' ' + id);
+}
+
+// Batch-POST every dirty item's current SRR fields to /state/upsert.
+// Called on tab close and item-card collapse. On failure the keys are
+// re-marked dirty so the next flush retries them.
+async function stateD1PushDirty(reason) {
+  try {
+    if (!isWebhookConfigured() || _stateD1Dirty.size === 0) return false;
+    const userHash = await getUserHash();
+    if (!userHash) return false;
+    const keys = Array.from(_stateD1Dirty);
+    _stateD1Dirty.clear();
+    const items = keys.map(k => {
+      const sep = k.indexOf(' ');
+      const tab = k.slice(0, sep);
+      const id = k.slice(sep + 1);
+      const e = (state[tab] && state[tab][id]) || {};
+      const catItem = catalogs[tab] && catalogs[tab].items && catalogs[tab].items.find(it => it.id === id);
+      return {
+        itemId: id, tab,
+        title: catItem ? catItem.title : null,
+        year: catItem ? catItem.year : null,
+        status: e.status || null,
+        rating: e.rating || null,
+        reactionTags: e.reactionTags || null,
+        notes: e.notes || null,
+        lastUpdated: e.lastUpdated || Date.now(),
+      };
+    });
+    const resp = await fetch(`${getWebhookUrl()}/state/upsert`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ secret: getWebhookSecret(), userHash, source: 'app-' + (reason || 'auto'), items }),
+    });
+    if (!resp.ok) {
+      keys.forEach(k => _stateD1Dirty.add(k));
+      console.log('[state-d1] upsert HTTP', resp.status, '(non-fatal, will retry)');
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.log('[state-d1] push failed (non-fatal):', e.message);
+    return false;
+  }
+}
+
+// Shadow read of one tab's D1 rows. Result is returned + logged, not
+// applied — during dual-write the SYNC_KV merge remains authoritative.
+async function stateD1FetchTab(tab) {
+  try {
+    if (!isWebhookConfigured() || !tab) return null;
+    const userHash = await getUserHash();
+    if (!userHash) return null;
+    const url = `${getWebhookUrl()}/state/tab?secret=${encodeURIComponent(getWebhookSecret())}&user=${userHash}&tab=${encodeURIComponent(tab)}`;
+    const resp = await fetch(url);
+    if (!resp.ok) return null;
+    return await resp.json();
+  } catch (e) {
+    console.log('[state-d1] tab fetch failed (non-fatal):', e.message);
+    return null;
+  }
+}
+
+// Banner aggregates from D1, fetched once on app open. Cached on
+// _stateD1Counts; consumers read it opportunistically.
+async function stateD1FetchCounts() {
+  try {
+    if (!isWebhookConfigured()) return null;
+    const userHash = await getUserHash();
+    if (!userHash) return null;
+    const url = `${getWebhookUrl()}/state/counts?secret=${encodeURIComponent(getWebhookSecret())}&user=${userHash}`;
+    const resp = await fetch(url);
+    if (!resp.ok) return null;
+    _stateD1Counts = await resp.json();
+    return _stateD1Counts;
+  } catch (e) {
+    console.log('[state-d1] counts fetch failed (non-fatal):', e.message);
+    return null;
+  }
+}
+
+// Hook (a)+(b): called from switchTab — flush dirty items for the tab
+// being left, shadow-read the tab being opened. Fire-and-forget.
+function stateD1OnTabSwitch(previousTab, tab) {
+  stateD1PushDirty('tab-close').catch(() => {});
+  stateD1FetchTab(tab).catch(() => {});
+}
+
+// Hook (c): called once from the boot IIFE after syncOnLaunch.
+function stateD1OnAppOpen() {
+  stateD1FetchCounts().catch(() => {});
+}
+
 function updateSyncStatusUI() {
   const el = document.getElementById('sync-status-line');
   if (!el) return;
@@ -9723,6 +9840,9 @@ function triageAction(act) {
   // settings/state than our last-push timestamp, applies them silently.
   // syncOnLaunch() short-circuits if Plex/Worker aren't configured.
   await syncOnLaunch();
+  // D1 item_state dual-write: fetch banner aggregates from D1 on app
+  // open. Fire-and-forget shadow read — never blocks or fails boot.
+  if (typeof stateD1OnAppOpen === 'function') stateD1OnAppOpen();
   // v8.0.0: refresh credential-vault status so Settings knows whether to
   // show the Promote button or "Credentials live in Cloudflare ✓". Also
   // wipes local Plex/Trakt secrets if another device has already promoted
