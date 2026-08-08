@@ -3,6 +3,7 @@
 // index.html loads only the bundled app.min.js, never these files directly.
 import { plexNormalizeKey, plexNormalizeKeyTitleOnly } from './lib/normalize.js';
 import { findCatalogMatchForScrobble } from './lib/plex-match.js';
+import { applyBulkSyncRules as applyBulkSyncRulesCore } from './lib/bulk-sync.js';
 
 // NOTE: escapeHtml used to be declared twice (here and before
 // wireDevicesHandlers). Function hoisting meant the LATER declaration won
@@ -1545,8 +1546,7 @@ function applyPlexEvent(evt) {
 // BULK SYNC: fetch full Plex history → apply rules → log to Worker KV
 // =====================================================================
 
-// Library whitelist (hardcoded — matches Worker config).
-const PLEX_BULK_LIBRARY_WHITELIST = new Set(['1', '2']);
+// Library whitelist moved to lib/bulk-sync.js (PLEX_BULK_LIBRARY_WHITELIST).
 
 // Fetch the full Plex history in pages. Returns array of raw entry objects.
 async function fetchFullPlexHistory(progressCb) {
@@ -1614,150 +1614,12 @@ async function postViewedIngest(entries) {
 }
 
 // Apply bulk-sync rules to CinéMath state given the full filtered history.
-// Returns a structured report.
+// Returns a structured report. The pure rule engine lives in lib/bulk-sync.js;
+// this wrapper wires it to live app state.
 function applyBulkSyncRules(entries, episodeCounts) {
-  // Filter to whitelisted libraries first
-  const filtered = entries.filter(e => PLEX_BULK_LIBRARY_WHITELIST.has(String(e.librarySectionID || '')));
-
-  // Group: movies by (norm_title, year); episodes by show
-  const movieMap = new Map();   // norm_title|year -> { entries: [], title, year }
-  const showMap = new Map();    // norm_title -> { episodes: Set('s_e'), title, latestPlay, totalPlays }
-
-  filtered.forEach(e => {
-    if (e.type === 'movie') {
-      const yearVal = e.year || (e.originallyAvailableAt ? parseInt(String(e.originallyAvailableAt).slice(0, 4)) : null);
-      const key = plexNormalizeKey(e.title, yearVal);
-      if (!movieMap.has(key)) movieMap.set(key, { entries: [], title: e.title, year: yearVal });
-      movieMap.get(key).entries.push(e);
-    } else if (e.type === 'episode') {
-      const show = e.grandparentTitle || e.title;
-      if (!show) return;
-      const key = plexNormalizeKeyTitleOnly(show);
-      if (!showMap.has(key)) showMap.set(key, { episodes: new Set(), title: show, latestPlay: 0, totalPlays: 0 });
-      const epId = `${e.parentIndex || '0'}_${e.index || '0'}`;
-      const data = showMap.get(key);
-      data.episodes.add(epId);
-      data.totalPlays++;
-      const ts = (e.viewedAt ? parseInt(e.viewedAt) * 1000 : 0);
-      if (ts > data.latestPlay) data.latestPlay = ts;
-    }
+  return applyBulkSyncRulesCore(entries, episodeCounts, {
+    catalogs, getStatus, setStatus, getRating, setRating,
   });
-
-  const report = {
-    moviesProcessed: 0,
-    moviesMatchedToCatalog: 0,
-    moviesOrphan: 0,
-    moviesMarkedWatched: 0,
-    showsProcessed: 0,
-    showsMatchedToCatalog: 0,
-    showsOrphan: 0,
-    showsMarkedWatched: 0,
-    showsMarkedWatching: 0,
-    showsMarkedLoved: 0,
-    movieMatches: [],     // [{title, year, tab}]
-    movieOrphans: [],     // [{title, year, plays}]
-    showMatches: [],      // [{show, distinct, tab, finalStatus, finalRating}]
-    showOrphans: [],      // [{show, distinct, plays}]
-  };
-
-  // === MOVIES: each match → mark watched in source tab ===
-  for (const [key, data] of movieMap.entries()) {
-    report.moviesProcessed++;
-    let matched = false;
-    for (const tabId in catalogs) {
-      const cat = catalogs[tabId];
-      for (const item of cat.items) {
-        const titlesToCheck = [item.title].concat(Array.isArray(item.aliases) ? item.aliases : []);
-        let thisMatch = false;
-        for (const t of titlesToCheck) {
-          if (plexNormalizeKey(t, item.year) === key) { thisMatch = true; break; }
-          for (const dy of [-1, 1]) {
-            if (plexNormalizeKey(t, item.year ? item.year + dy : null) === key) { thisMatch = true; break; }
-          }
-          if (thisMatch) break;
-        }
-        if (thisMatch) {
-          // Skip if already watched
-          if (getStatus(item.id, tabId) !== 'watched') {
-            setStatus(item.id, 'watched', tabId);
-            report.moviesMarkedWatched++;
-          }
-          report.moviesMatchedToCatalog++;
-          report.movieMatches.push({ title: data.title, year: data.year, tab: tabId });
-          matched = true;
-          break;
-        }
-      }
-      if (matched) break;
-    }
-    if (!matched) {
-      report.moviesOrphan++;
-      report.movieOrphans.push({ title: data.title, year: data.year, plays: data.entries.length });
-    }
-  }
-
-  // === TV SHOWS: distinct-episode rule + completion-mode rule ===
-  for (const [key, data] of showMap.entries()) {
-    report.showsProcessed++;
-    const distinctCount = data.episodes.size;
-    let matched = false;
-    for (const tabId in catalogs) {
-      const cat = catalogs[tabId];
-      for (const item of cat.items) {
-        const titlesToCheck = [item.title].concat(Array.isArray(item.aliases) ? item.aliases : []);
-        let thisMatch = false;
-        for (const t of titlesToCheck) {
-          if (plexNormalizeKeyTitleOnly(t) === key) { thisMatch = true; break; }
-        }
-        if (thisMatch) {
-          report.showsMatchedToCatalog++;
-          const mode = item.tvCompletionMode || 'strict';
-          let setWatched = false;
-          if (mode !== 'episodic') {
-            // Look up total episode count for this show (passed in from TMDB pre-fetch)
-            const tmdb = (episodeCounts || {})[plexNormalizeKeyTitleOnly(item.title)] ||
-                         (episodeCounts || {})[plexNormalizeKeyTitleOnly(data.title)];
-            if (tmdb && tmdb > 0) {
-              const ratio = distinctCount / tmdb;
-              const threshold = mode === 'flexible' ? 0.80 : 0.95;
-              if (ratio >= threshold) setWatched = true;
-            }
-          }
-          // Apply status
-          const cur = getStatus(item.id, tabId);
-          if (cur !== 'watched') {
-            if (setWatched) {
-              setStatus(item.id, 'watched', tabId);
-              report.showsMarkedWatched++;
-            } else {
-              if (cur !== 'watching') {
-                setStatus(item.id, 'watching', tabId);
-                report.showsMarkedWatching++;
-              }
-            }
-          }
-          // Loved rule: 5+ distinct episodes
-          if (distinctCount >= 5 && getRating(item.id, tabId) !== 'loved') {
-            setRating(item.id, 'loved', tabId);
-            report.showsMarkedLoved++;
-          }
-          report.showMatches.push({
-            show: data.title, distinct: distinctCount, tab: tabId,
-            finalStatus: getStatus(item.id, tabId), finalRating: getRating(item.id, tabId),
-          });
-          matched = true;
-          break;
-        }
-      }
-      if (matched) break;
-    }
-    if (!matched) {
-      report.showsOrphan++;
-      report.showOrphans.push({ show: data.title, distinct: distinctCount, plays: data.totalPlays });
-    }
-  }
-
-  return report;
 }
 
 // Top-level orchestrator — runs the full bulk-sync. Calls progressCb at each phase.
