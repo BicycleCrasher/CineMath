@@ -1,0 +1,77 @@
+{
+  "description": "Golden scenario for lib/recs.js computeRecsForTab. enrichment maps itemId -> { tmdbId, type, recommendations, similar }; state maps tab -> itemId -> { status, rating, reactionTags }.",
+  "catalogs": {
+    "scifi": {
+      "items": [
+        { "id": "arrival", "title": "Arrival", "year": 2016 },
+        { "id": "moon", "title": "Moon", "year": 2009, "runtime": "97 min" },
+        { "id": "primer", "title": "Primer", "year": 2004, "runtime": "77 min" },
+        { "id": "stalker", "title": "Stalker", "year": 1979, "runtime": "161 min" }
+      ]
+    },
+    "crime": {
+      "items": [
+        { "id": "heat", "title": "Heat", "year": 1995 }
+      ]
+    },
+    "watchlist": {
+      "items": [
+        { "id": "ghost", "title": "Ghost Entry", "year": 2000 }
+      ]
+    }
+  },
+  "state": {
+    "scifi": {
+      "arrival": { "status": "watched", "rating": "loved", "reactionTags": ["Mind-bending", "Stayed with me"] },
+      "moon": { "status": "watched", "rating": "liked" }
+    },
+    "crime": {
+      "heat": { "status": "watched", "rating": "loved" }
+    }
+  },
+  "enrichment": {
+    "arrival": {
+      "tmdbId": 100, "type": "movie",
+      "recommendations": [
+        { "id": 200, "title": "Annihilation", "year": 2018 },
+        { "id": 300, "title": "Coherence", "year": 2013 },
+        { "id": 100, "title": "Arrival", "year": 2016 }
+      ],
+      "similar": [
+        { "id": 200, "title": "Annihilation", "year": 2018 },
+        { "id": 400, "title": "Solaris", "year": 1972 }
+      ]
+    },
+    "moon": {
+      "tmdbId": 101, "type": "movie",
+      "recommendations": [
+        { "id": 200, "title": "Annihilation", "year": 2018 },
+        { "id": 500, "title": "Primer", "year": 2004 }
+      ],
+      "similar": []
+    },
+    "primer": { "tmdbId": 500, "type": "movie", "recommendations": [], "similar": [] },
+    "stalker": { "tmdbId": 400, "type": "movie", "recommendations": [], "similar": [] },
+    "heat": {
+      "tmdbId": 700, "type": "movie",
+      "recommendations": [ { "id": 800, "title": "Collateral", "year": 2004 } ],
+      "similar": []
+    }
+  },
+  "expectations": {
+    "sourceCount": 2,
+    "anyEnriched": true,
+    "discoverIdsByScore": [
+      { "tmdbId": 200, "score": 3, "title": "Annihilation" },
+      { "tmdbId": 300, "score": 2, "title": "Coherence" }
+    ],
+    "notes": [
+      "tmdbId 200 (Annihilation): weight 2 from loved Arrival (deduped across recommendations+similar) + 1 from liked Moon = 3; no catalog item has tmdbId 200 so it goes to Discover.",
+      "tmdbId 300 (Coherence): weight 2 from Arrival only.",
+      "tmdbId 100 self-recommendation from Arrival is excluded.",
+      "tmdbId 400 (Solaris) matches catalog item stalker (untouched) but the rating-truthiness quirk skips it from Recommended, and matches.length > 0 keeps it out of Discover — it vanishes.",
+      "tmdbId 500 (Primer) matches the untouched catalog item primer — also skipped from Recommended by the quirk and absent from Discover.",
+      "Heat (crime tab) is not in tabIds so contributes no sources; sourceCount counts only scifi loved/liked items with enrichment."
+    ]
+  }
+}

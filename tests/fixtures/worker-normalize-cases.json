@@ -1,0 +1,18 @@
+{
+  "description": "Golden cases for worker/worker.js normalizeTitle. This function intentionally duplicates lib/normalize.js plexNormalizeKeyTitleOnly (the Worker deploys standalone); the parity test asserts both stay in lockstep.",
+  "cases": [
+    { "title": "The Bourne Identity", "expected": "thebourneidentity" },
+    { "title": "Amélie", "expected": "amlie" },
+    { "title": "Cinéma Paradiso", "expected": "cinmaparadiso" },
+    { "title": "Tinker Tailor Soldier Spy (2011)", "expected": "tinkertailorsoldierspy" },
+    { "title": "Traffik (BBC, 1989)", "expected": "traffik" },
+    { "title": "Fast & Furious", "expected": "fastandfurious" },
+    { "title": "Don't Look Up", "expected": "dontlookup" },
+    { "title": "Don’t Look Up", "expected": "dontlookup" },
+    { "title": "M*A*S*H", "expected": "mash" },
+    { "title": "QI (XL)", "expected": "qi" },
+    { "title": "", "expected": "" },
+    { "title": null, "expected": "" },
+    { "title": "AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEFFFFFFFFFFGGGGGGGGGG", "expected": "aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeeeffffffffff" }
+  ]
+}

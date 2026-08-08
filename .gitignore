@@ -1,2 +1,5 @@
 docs/HANDOFF-NEXT.md
 docs/HANDOFF-LIVE-SYNC.md
+node_modules/
+.DS_Store
+*.log
