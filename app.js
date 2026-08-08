@@ -5,6 +5,10 @@ import { plexNormalizeKey, plexNormalizeKeyTitleOnly } from './lib/normalize.js'
 import { findCatalogMatchForScrobble } from './lib/plex-match.js';
 import { applyBulkSyncRules as applyBulkSyncRulesCore } from './lib/bulk-sync.js';
 import { sortItems as sortItemsCore } from './lib/sort.js';
+import {
+  TAB_DEFAULT_CONTENT_TYPE, CATEGORY_TO_CONTENT_TYPE,
+  resolveContentType as resolveContentTypeCore,
+} from './lib/content-type.js';
 
 // NOTE: escapeHtml used to be declared twice (here and before
 // wireDevicesHandlers). Function hoisting meant the LATER declaration won
@@ -150,61 +154,11 @@ Object.keys(TAG_SETS).forEach(k => {
 const POSITIVE_TAGS = TAG_SETS['film-narrative'].positive;
 const NEGATIVE_TAGS = TAG_SETS['film-narrative'].negative;
 
-// Default content type per tab. Items in British Comedy resolve via category.
-// Items can override at the catalog level via `contentType` on the item or section.
-const TAB_DEFAULT_CONTENT_TYPE = {
-  'scifi': 'film-scifi',
-  'scifi-tv': 'tv-scifi',
-  'espionage': 'film-espionage',
-  'spy-tv': 'tv-espionage',
-  'crime': 'film-crime',
-  'crime-tv': 'tv-crime',
-  'cons-courtroom': 'film-cons-courtroom',
-  'cons-courtroom-tv': 'tv-cons-courtroom',
-  'horror': 'film-horror',
-  'horror-tv': 'tv-horror',
-  'fantasy': 'film-fantasy',
-  'fantasy-tv': 'tv-fantasy',
-  'heist': 'film-heist',
-  'comedy': 'film-comedy',
-  'comedy-tv': 'tv-sitcom',
-  'british-comedy': 'tv-sitcom',
-  'drama': 'film-drama',
-  'drama-tv': 'tv-drama',
-  'foreign': 'film-foreign',
-  'auteur': 'film-auteur',
-  'pre1960': 'film-pre1960',
-  'musicals': 'film-musical',
-  'heroes-comics': 'film-heroes',
-  'heroes-comics-tv': 'tv-heroes'
-};
-
-// British-comedy category → content type mapping (when item has categories[]).
-// `specials` is intentionally absent so it falls through to the OTHER category in the array.
-const CATEGORY_TO_CONTENT_TYPE = {
-  'panel': 'tv-panel',
-  'news-comedy': 'tv-panel',
-  'game': 'tv-game',
-  'sitcom': 'tv-sitcom'
-};
-
-// V5.26.6: resolveContentType now accepts an optional sourceTab parameter so
-// items being rendered outside their home tab (e.g. in the watchlist or
-// triage queue) still fall back to the right per-tab default. Without this,
-// activeTab would be 'watchlist' for triage and items without categories
-// would resolve to 'film-narrative' regardless of source.
+// TAB_DEFAULT_CONTENT_TYPE / CATEGORY_TO_CONTENT_TYPE and the pure
+// resolveContentType live in lib/content-type.js (imported at the top of
+// this file). This wrapper injects the live activeTab fallback.
 function resolveContentType(item, sourceTab) {
-  // 1. Explicit item override wins
-  if (item && item.contentType) return item.contentType;
-  // 2. British Comedy: look at item categories
-  if (item && Array.isArray(item.categories) && item.categories.length > 0) {
-    for (const cat of item.categories) {
-      if (CATEGORY_TO_CONTENT_TYPE[cat]) return CATEGORY_TO_CONTENT_TYPE[cat];
-    }
-  }
-  // 3. Source tab default (preferred), then activeTab default, then film-narrative
-  const tab = sourceTab || (item && (item._watchlist_source_tab || item._auteur_source_tab)) || activeTab;
-  return TAB_DEFAULT_CONTENT_TYPE[tab] || 'film-narrative';
+  return resolveContentTypeCore(item, sourceTab, activeTab);
 }
 
 function getTagSetForItem(item, sourceTab) {
