@@ -1052,8 +1052,8 @@ async function pairConfirmStart(pairSessionId) {
   const info = await resp.json();
   if (detail) {
     detail.innerHTML = `
-      <div><strong>Device:</strong> ${info.userAgent || 'Unknown'}</div>
-      <div><strong>IP:</strong> ${info.ip || 'Hidden'}</div>
+      <div><strong>Device:</strong> ${escapeHtml(info.userAgent || 'Unknown')}</div>
+      <div><strong>IP:</strong> ${escapeHtml(info.ip || 'Hidden')}</div>
       <div><strong>Expires:</strong> ${new Date(info.expiresAt).toLocaleTimeString()}</div>
     `;
   }
@@ -1231,9 +1231,9 @@ async function refreshAdminInviteList() {
       ? `consumed by user ${inv.consumedBy?.slice(0, 8)}…`
       : inv.expired ? 'expired' : `expires ${new Date(inv.expiresAt).toLocaleString()}`;
     li.innerHTML = `
-      <div><strong>${inv.code}</strong> · ${status}</div>
+      <div><strong>${escapeHtml(inv.code)}</strong> · ${escapeHtml(status)}</div>
       <div style="font-size:11px;opacity:0.7">
-        ${inv.suggestedDisplayName ? `for "${inv.suggestedDisplayName}" · ` : ''}
+        ${inv.suggestedDisplayName ? `for "${escapeHtml(inv.suggestedDisplayName)}" · ` : ''}
         ${inv.plexEnabled ? 'plex on · ' : ''}
         ${new Date(inv.createdAt).toLocaleString()}
       </div>
@@ -1324,7 +1324,7 @@ async function refreshDevicesSection() {
     const left = document.createElement('div');
     left.innerHTML = `
       <div><strong>${escapeHtml(d.name || d.kind)}</strong>${d.isCurrent ? ' <em style="opacity:0.65">(this device)</em>' : ''}</div>
-      <div style="font-size:11px;opacity:0.7">${d.kind} · ${escapeHtml((d.userAgent || '').slice(0, 50))}${d.lastSeen ? ` · seen ${new Date(d.lastSeen).toLocaleString()}` : ''}</div>
+      <div style="font-size:11px;opacity:0.7">${escapeHtml(d.kind)} · ${escapeHtml((d.userAgent || '').slice(0, 50))}${d.lastSeen ? ` · seen ${new Date(d.lastSeen).toLocaleString()}` : ''}</div>
     `;
     li.appendChild(left);
     const actions = document.createElement('div');
@@ -2372,7 +2372,7 @@ function renderStreamingProviders(slot, tmdbData, title) {
   </div>`;
 
   if (!regionData) {
-    html += `<div class="streaming-none">Not available in ${region}</div>`;
+    html += `<div class="streaming-none">Not available in ${escapeHtml(region)}</div>`;
   } else {
     const tiers = [
       { key: 'flatrate', label: 'Subscription' },
@@ -2388,11 +2388,11 @@ function renderStreamingProviders(slot, tmdbData, title) {
       any = true;
       const buttons = provs.map(p => {
         const search = streamingSearchUrl(p.provider_name, title);
-        return `<a class="streaming-btn" href="${search}" target="_blank" rel="noopener">${p.provider_name}</a>`;
+        return `<a class="streaming-btn" href="${search}" target="_blank" rel="noopener">${escapeHtml(p.provider_name)}</a>`;
       }).join('');
       html += `<div class="streaming-tier"><span class="streaming-tier-label">${t.label}:</span> ${buttons}</div>`;
     });
-    if (!any) html += `<div class="streaming-none">Not available in ${region}</div>`;
+    if (!any) html += `<div class="streaming-none">Not available in ${escapeHtml(region)}</div>`;
   }
   slot.innerHTML = html;
 
@@ -3393,7 +3393,7 @@ function buildTabs() {
     activeTab = visible[0].id;
   }
   nav.innerHTML = visible.map(c =>
-    `<button class="tab-btn ${activeTab === c.id ? 'active' : ''}" data-tab="${c.id}">${c.label}</button>`
+    `<button class="tab-btn ${activeTab === c.id ? 'active' : ''}" data-tab="${escapeHtml(c.id)}">${escapeHtml(c.label)}</button>`
   ).join('');
   nav.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => switchTab(btn.dataset.tab));
@@ -3439,7 +3439,7 @@ function buildCategoryFilters() {
     categories.map(k => ({ key: k, label: prettyCategory(k) }))
   );
   container.innerHTML = pills.map(p =>
-    `<button class="category-btn ${active === p.key ? 'active' : ''}" data-category="${p.key}">${p.label}</button>`
+    `<button class="category-btn ${active === p.key ? 'active' : ''}" data-category="${escapeHtml(p.key)}">${escapeHtml(p.label)}</button>`
   ).join('');
   container.querySelectorAll('.category-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -3792,7 +3792,7 @@ function renderWatchingNowBanner() {
   banner.innerHTML = `
     <span class="now-banner-label">Now watching</span>
     <div class="now-banner-items">
-      ${watching.map(w => `<button class="now-banner-item" data-tab="${w.tabId}" data-id="${w.id}">
+      ${watching.map(w => `<button class="now-banner-item" data-tab="${escapeHtml(w.tabId)}" data-id="${escapeHtml(w.id)}">
         ${escapeHtml(w.title)}<span class="now-banner-source">${escapeHtml(w.tabLabel)}</span>
       </button>`).join('')}
     </div>`;
@@ -4034,9 +4034,9 @@ function _renderImpl() {
         const parts = item.section.split('.');
         sectionEl.innerHTML = `
           <div class="ornament">· · ·</div>
-          <div class="section-num">${parts[0]}</div>
-          <h2 class="section-title">${parts.slice(1).join('.').trim()}</h2>
-          <p class="section-desc">${item.sectionDesc}</p>
+          <div class="section-num">${escapeHtml(parts[0])}</div>
+          <h2 class="section-title">${escapeHtml(parts.slice(1).join('.').trim())}</h2>
+          <p class="section-desc">${escapeHtml(item.sectionDesc)}</p>
         `;
         container.appendChild(sectionEl);
       }
@@ -4076,20 +4076,20 @@ function _renderImpl() {
 
     const criticsHtml = (item.critics || []).map(c => `
       <div class="critic-block">
-        <div class="critic-label"><span class="crit">${c.who}</span></div>
-        <p>${c.quote}</p>
+        <div class="critic-label"><span class="crit">${escapeHtml(c.who)}</span></div>
+        <p>${escapeHtml(c.quote)}</p>
       </div>
     `).join('');
 
     const priorityBadge = item.priority ? `<span class="priority-badge ${item.priority}">${priorityLabel(item.priority)}</span>` : '';
     const ratingBadge = rating !== 'none' ? `<span class="rating-badge ${rating}">${ratingLabel(rating)}</span>` : '';
-    const commitmentBadge = item.commitment ? `<span class="commitment">${item.commitment}</span>` : '';
+    const commitmentBadge = item.commitment ? `<span class="commitment">${escapeHtml(item.commitment)}</span>` : '';
     const sourceLabel = item._watchlist_source_label || item._auteur_source_label || '';
-    const sourceBadge = (sourceLabel && (activeTab === 'watchlist' || activeTab === 'auteur')) ? `<span class="source-badge">${sourceLabel}</span>` : '';
+    const sourceBadge = (sourceLabel && (activeTab === 'watchlist' || activeTab === 'auteur')) ? `<span class="source-badge">${escapeHtml(sourceLabel)}</span>` : '';
     const auteurBadge = auteurDirectorSet.has(item.dir) ? `<span class="auteur-badge">Auteur</span>` : '';
     const plexMatch = isPlexConfigured() ? plexHasItem(item) : null;
     const plexBadge = plexMatch ? `<span class="plex-badge" title="In your Plex library">⊕ Plex</span>` : '';
-    const whyHtml = item.whyPriority ? `<div class="why-priority"><strong>Why this priority:</strong> ${item.whyPriority}</div>` : '';
+    const whyHtml = item.whyPriority ? `<div class="why-priority"><strong>Why this priority:</strong> ${escapeHtml(item.whyPriority)}</div>` : '';
 
     // A5: getTagSetForItem(item) and getTagSetForItem(item, itemTab) resolve to
     // the same set — resolveContentType falls through to the same source-tab
@@ -4107,18 +4107,18 @@ function _renderImpl() {
       return `<button class="tag-btn ${active ? 'active-neg' : ''}" data-tag="${t}">${t}</button>`;
     }).join('');
 
-    let metaLine = `${item.year}`;
-    if (item.dir) metaLine += `<span class="dot">·</span>${item.dir}`;
-    if (item.network) metaLine += `<span class="dot">·</span>${item.network}`;
-    if (item.country) metaLine += `<span class="dot">·</span>${item.country}`;
-    if (item.runtime) metaLine += `<span class="dot">·</span>${item.runtime}`;
-    const seasonsLine = item.seasons ? `<div class="item-meta" style="margin-top:2px">${item.seasons}</div>` : '';
+    let metaLine = `${escapeHtml(item.year)}`;
+    if (item.dir) metaLine += `<span class="dot">·</span>${escapeHtml(item.dir)}`;
+    if (item.network) metaLine += `<span class="dot">·</span>${escapeHtml(item.network)}`;
+    if (item.country) metaLine += `<span class="dot">·</span>${escapeHtml(item.country)}`;
+    if (item.runtime) metaLine += `<span class="dot">·</span>${escapeHtml(item.runtime)}`;
+    const seasonsLine = item.seasons ? `<div class="item-meta" style="margin-top:2px">${escapeHtml(item.seasons)}</div>` : '';
 
     itemEl.innerHTML = `
       <div class="item-head">
         <div class="order-num">${String(item.order).padStart(2, '0')}</div>
         <div class="item-info">
-          <h3 class="item-title">${item.title}</h3>
+          <h3 class="item-title">${escapeHtml(item.title)}</h3>
           <div class="item-meta">${metaLine}</div>
           ${seasonsLine}
           <div class="badge-row">${sourceBadge}${auteurBadge}${plexBadge}${commitmentBadge}${priorityBadge}${ratingBadge}${reactionIndicator}</div>
@@ -4127,7 +4127,7 @@ function _renderImpl() {
       </div>
       <div class="item-body">
         ${whyHtml}
-        <p class="pitch">${item.pitch || ''}</p>
+        <p class="pitch">${escapeHtml(item.pitch || '')}</p>
         ${criticsHtml}
         <div class="streaming-providers" data-streaming-loaded="false"></div>
         <div class="actions">
@@ -4137,7 +4137,7 @@ function _renderImpl() {
           <button class="action-btn ${status === 'watched' ? 'active-watched' : ''}" data-action="watched">Watched</button>
           <button class="action-btn ${status === 'skip' ? 'active-skip' : ''}" data-action="skip">Pass</button>
           <button class="action-btn" data-action="none">Clear</button>
-          ${plexMatch ? `<button class="plex-play-btn" data-plex-key="${plexMatch.ratingKey}">▶ Play on Plex</button>` : ''}
+          ${plexMatch ? `<button class="plex-play-btn" data-plex-key="${escapeHtml(plexMatch.ratingKey)}">▶ Play on Plex</button>` : ''}
         </div>
         <div class="rating-section">
           <div class="rating-label">Your reaction</div>
@@ -4153,7 +4153,7 @@ function _renderImpl() {
           <div class="tag-cloud">${negTagsHtml}</div>
         </div>
         ${status === 'watched' ? `<button class="finished-btn${reactionTags.length > 0 ? ' finished-btn--ready' : ''}" data-action="finished">Finished</button>` : ''}
-        <textarea class="notes-input" placeholder="Notes after viewing..." data-id="${item.id}">${escapeHtml(notes)}</textarea>
+        <textarea class="notes-input" placeholder="Notes after viewing..." data-id="${escapeHtml(item.id)}">${escapeHtml(notes)}</textarea>
         <div class="notes-tv-display">${escapeHtml(notes)}</div>
         <button class="voice-dictate-btn" type="button">🎤 Dictate notes</button>
       </div>
@@ -5391,15 +5391,15 @@ function renderHistoryList() {
       : `${it.distinct} ep · ${it.plays} play${it.plays === 1 ? '' : 's'}${dateStr ? ' · ' + dateStr : ''}`;
     let badges = '';
     if (it.inCatalog) {
-      badges = `<span class="source-badge">${it.inCatalog.tabId}</span>`;
+      badges = `<span class="source-badge">${escapeHtml(it.inCatalog.tabId)}</span>`;
     }
     const promoteBtn = !it.inCatalog
-      ? `<button class="history-promote-btn" data-type="${it.type}" data-title="${escapeHtml(it.title)}" data-year="${it.year || ''}" data-plays="${it.plays}" data-distinct="${it.distinct}">Promote</button>`
+      ? `<button class="history-promote-btn" data-type="${it.type}" data-title="${escapeHtml(it.title)}" data-year="${escapeHtml(it.year || '')}" data-plays="${it.plays}" data-distinct="${it.distinct}">Promote</button>`
       : '';
     return `<div class="history-row">
       <div class="history-row-info">
         <div class="history-row-title">${escapeHtml(it.title)}</div>
-        <div class="history-row-meta">${meta}</div>
+        <div class="history-row-meta">${escapeHtml(meta)}</div>
       </div>
       <div class="badge-row">${badges}</div>
       ${promoteBtn}
@@ -5450,7 +5450,7 @@ function openPromoteModal(btn) {
   select.innerHTML = catalogManifest
     .filter(c => !c.virtual)
     .filter(c => pendingPromote.type === 'movie' ? !tvTabs.has(c.id) : tvTabs.has(c.id))
-    .map(c => `<option value="${c.id}">${c.label}</option>`).join('');
+    .map(c => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.label)}</option>`).join('');
   document.getElementById('promote-modal').showModal();
 }
 
@@ -5603,7 +5603,7 @@ function renderPromotionsManager() {
     const dateStr = p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '';
     const tabLabel = (catalogs[p.tab] && catalogs[p.tab].title) || p.tab;
     const isInCanon = inCanonical.has(p.key);
-    const meta = `${p.item.year || '?'} · ${tabLabel}${dateStr ? ' · added ' + dateStr : ''}`;
+    const meta = `${escapeHtml(p.item.year || '?')} · ${escapeHtml(tabLabel)}${dateStr ? ' · added ' + dateStr : ''}`;
     return `<div class="history-row" data-key="${escapeHtml(p.key)}" data-tab="${escapeHtml(p.tab)}" data-itemid="${escapeHtml(p.item.id)}">
       <div class="history-row-info">
         <div class="history-row-title">${escapeHtml(p.item.title)}${isInCanon ? ' <span class="plex-badge" style="margin-left:6px">In repo</span>' : ''}</div>
@@ -6153,7 +6153,7 @@ function doSearch(query) {
   out.innerHTML = matches.slice(0, 50).map(m => {
     const it = m.item;
     const meta = [it.year, it.dir, m.tabLabel].filter(Boolean).join(' · ');
-    return `<div class="search-result" data-tab="${m.tabId}" data-id="${it.id}">
+    return `<div class="search-result" data-tab="${escapeHtml(m.tabId)}" data-id="${escapeHtml(it.id)}">
       <div class="search-result-title">${highlightMatch(it.title, q)}</div>
       <div class="search-result-meta">${highlightMatch(meta, q)}</div>
     </div>`;
@@ -6177,10 +6177,12 @@ function doSearch(query) {
   });
 }
 function highlightMatch(text, q) {
-  if (!text || !q) return text;
+  // XSS audit: escape the text on either side of the <mark> so external
+  // strings (titles, notes, tab labels) can never inject markup here.
+  if (!text || !q) return escapeHtml(text || '');
   const idx = text.toLowerCase().indexOf(q);
-  if (idx === -1) return text;
-  return text.slice(0, idx) + '<mark>' + text.slice(idx, idx + q.length) + '</mark>' + text.slice(idx + q.length);
+  if (idx === -1) return escapeHtml(text);
+  return escapeHtml(text.slice(0, idx)) + '<mark>' + escapeHtml(text.slice(idx, idx + q.length)) + '</mark>' + escapeHtml(text.slice(idx + q.length));
 }
 
 // === Notes search ===
@@ -6208,8 +6210,8 @@ function doNotesSearch(query) {
   if (matches.length === 0) { out.innerHTML = '<div class="search-result-empty">No matches in your notes.</div>'; return; }
 
   out.innerHTML = matches.map(m => {
-    return `<div class="search-result" data-tab="${m.tab}" data-id="${m.item.id}">
-      <div class="search-result-title">${m.item.title} <span class="source-badge">${m.tabLabel}</span></div>
+    return `<div class="search-result" data-tab="${escapeHtml(m.tab)}" data-id="${escapeHtml(m.item.id)}">
+      <div class="search-result-title">${escapeHtml(m.item.title)} <span class="source-badge">${escapeHtml(m.tabLabel)}</span></div>
       <div class="search-result-meta" style="margin-top:4px;font-style:italic">"${highlightMatch(m.snippet, q)}"</div>
     </div>`;
   }).join('');
@@ -6399,7 +6401,7 @@ function renderStats() {
   html += statsLineChart(months);
   html += `<div class="stat-line"><span>Updated last 7 days</span><strong>${updated7}</strong></div>`;
   html += `<div class="stat-line"><span>Updated last 30 days</span><strong>${updated30}</strong></div>`;
-  html += `<div class="stat-line"><span>Longest queue</span><strong>${longestQueue.tab} (${longestQueue.count})</strong></div>`;
+  html += `<div class="stat-line"><span>Longest queue</span><strong>${escapeHtml(longestQueue.tab)} (${longestQueue.count})</strong></div>`;
 
   const decadeArr = Object.entries(decadeCounts).sort((a, b) => +a[0] - +b[0]).map(([d, n]) => ({ label: `${(d % 100).toString().padStart(2, '0')}s`, value: n }));
   if (decadeArr.length > 0) {
@@ -6410,7 +6412,7 @@ function renderStats() {
   if (topTags.length) {
     html += '<h4>Top reaction tags</h4>';
     topTags.forEach(([tag, n]) => {
-      html += `<div class="stat-line"><span>${tag}</span><strong>${n}</strong></div>`;
+      html += `<div class="stat-line"><span>${escapeHtml(tag)}</span><strong>${n}</strong></div>`;
     });
   }
 
@@ -6499,11 +6501,11 @@ function renderCatalogHealth() {
     const shown = items.slice(0, max || 10);
     const rest = items.slice(max || 10);
     let html = '<div class="health-list">';
-    shown.forEach(x => { html += `<div class="health-item">${x.label} <span class="health-tab">${x.tab}</span></div>`; });
+    shown.forEach(x => { html += `<div class="health-item">${escapeHtml(x.label)} <span class="health-tab">${escapeHtml(x.tab)}</span></div>`; });
     if (rest.length) {
       html += `<div class="health-expand" data-target="${id}">+ ${rest.length} more</div>`;
       html += `<div class="health-extra" id="${id}" style="display:none">`;
-      rest.forEach(x => { html += `<div class="health-item">${x.label} <span class="health-tab">${x.tab}</span></div>`; });
+      rest.forEach(x => { html += `<div class="health-item">${escapeHtml(x.label)} <span class="health-tab">${escapeHtml(x.tab)}</span></div>`; });
       html += '</div>';
     }
     html += '</div>';
@@ -6561,7 +6563,7 @@ function renderCatalogHealth() {
   const uniqueCountries = topCountries.length;
   html += `<div class="stat-line"><span>Unique origins</span><strong>${uniqueCountries}</strong></div>`;
   topCountries.slice(0, 12).forEach(([c, n]) => {
-    html += `<div class="stat-line"><span>${c}</span><strong>${n}</strong></div>`;
+    html += `<div class="stat-line"><span>${escapeHtml(c)}</span><strong>${n}</strong></div>`;
   });
 
   // --- Tab balance ---
@@ -6569,14 +6571,14 @@ function renderCatalogHealth() {
   const sorted = Object.entries(tabSizes).sort((a, b) => a[1].count - b[1].count);
   sorted.forEach(([tab, info]) => {
     const cls = info.count < 15 ? 'health-warn' : '';
-    html += `<div class="stat-line"><span>${info.title}</span><strong class="${cls}">${info.count}</strong></div>`;
+    html += `<div class="stat-line"><span>${escapeHtml(info.title)}</span><strong class="${cls}">${info.count}</strong></div>`;
   });
 
   // --- Director concentration ---
   html += '<h4>Most represented directors</h4>';
   const topDirs = Object.entries(directorCounts).sort((a, b) => b[1] - a[1]).slice(0, 12);
   topDirs.forEach(([d, n]) => {
-    html += `<div class="stat-line"><span>${d}</span><strong>${n}</strong></div>`;
+    html += `<div class="stat-line"><span>${escapeHtml(d)}</span><strong>${n}</strong></div>`;
   });
   const singleDirs = Object.values(directorCounts).filter(n => n === 1).length;
   const totalDirs = Object.keys(directorCounts).length;
@@ -7502,7 +7504,7 @@ async function openWatchModal(item, sourceTab) {
       <div class="watch-section watch-plex-section">
         <h5>On your Plex server</h5>
         <div class="watch-buttons">
-          <a href="${plexUrl}" class="watch-btn-large plex-btn" data-watch-launch>Open in Plex</a>
+          <a href="${escapeHtml(plexUrl)}" class="watch-btn-large plex-btn" data-watch-launch>Open in Plex</a>
         </div>
       </div>
       <details class="watch-others">
@@ -7565,9 +7567,9 @@ async function renderWatchProviders(item, container, opts) {
 
   let html = '';
   if (mySubsHtml) {
-    html += `<div class="watch-section"><h5>On your subscriptions — ${region}</h5><div class="watch-buttons">${mySubsHtml}</div></div>`;
+    html += `<div class="watch-section"><h5>On your subscriptions — ${escapeHtml(region)}</h5><div class="watch-buttons">${mySubsHtml}</div></div>`;
   } else {
-    html += `<div class="streaming-none">Not on your subscriptions in ${region}.</div>`;
+    html += `<div class="streaming-none">Not on your subscriptions in ${escapeHtml(region)}.</div>`;
   }
 
   // VPN section: other regions where user's own subscriptions carry it on flatrate.
@@ -7593,7 +7595,7 @@ async function renderWatchProviders(item, container, opts) {
       <details class="watch-vpn-section">
         <summary>Available on your subs abroad — ${label} (VPN)</summary>
         ${rows}
-        <div class="watch-vpn-tip">Your home region is <strong>${region}</strong>. Set PIA to any listed country and open the service normally.</div>
+        <div class="watch-vpn-tip">Your home region is <strong>${escapeHtml(region)}</strong>. Set PIA to any listed country and open the service normally.</div>
       </details>`;
   }
   container.innerHTML = html;
@@ -7918,7 +7920,9 @@ function appendWatchCard(pick) {
   if (plexMatch && typeof plexDeepLinkUrl === 'function') {
     playUrl = plexDeepLinkUrl(plexMatch.ratingKey);
     playLabel = '▶ Play on Plex';
-  } else if (providers && providers.link) {
+  } else if (providers && typeof providers.link === 'string' && /^https:\/\//i.test(providers.link)) {
+    // XSS audit: providers.link is a TMDB-supplied URL — only accept https
+    // so a poisoned enrichment cache can't smuggle a javascript: URL.
     playUrl = providers.link;
     playLabel = `▶ Play Now${flatrate[0] ? ' on ' + flatrate[0].provider_name : ''}`;
   }
@@ -7927,14 +7931,14 @@ function appendWatchCard(pick) {
   card.className = 'watch-card';
   const metaParts = [item.year, item.dir, item.runtime, item.country].filter(Boolean);
   card.innerHTML = `
-    <div class="watch-card-title">${escapeHtml(item.title)} <span class="watch-card-year">(${item.year || '?'})</span></div>
+    <div class="watch-card-title">${escapeHtml(item.title)} <span class="watch-card-year">(${escapeHtml(item.year || '?')})</span></div>
     <div class="watch-card-meta">${escapeHtml(metaParts.join(' · '))}</div>
     ${item.pitch ? `<p class="watch-card-pitch">${escapeHtml(item.pitch)}</p>` : ''}
     <div class="watch-card-why"><strong>Why:</strong> ${escapeHtml(pick.why || '')}</div>
-    ${flatrate.length ? `<div class="watch-card-providers"><strong>Streaming in ${region}:</strong> ${flatrate.map(p => escapeHtml(p.provider_name)).join(', ')}</div>` : ''}
+    ${flatrate.length ? `<div class="watch-card-providers"><strong>Streaming in ${escapeHtml(region)}:</strong> ${flatrate.map(p => escapeHtml(p.provider_name)).join(', ')}</div>` : ''}
     <div class="watch-card-actions">
-      ${trailerKey ? `<a class="action-btn trailer-btn" href="https://www.youtube.com/watch?v=${trailerKey}" target="_blank" rel="noopener">▶ Watch Trailer</a>` : ''}
-      ${playUrl ? `<a class="action-btn watch-card-play" href="${playUrl}" target="_blank" rel="noopener">${escapeHtml(playLabel)}</a>` : ''}
+      ${trailerKey ? `<a class="action-btn trailer-btn" href="${trailerYouTubeUrl(trailerKey)}" target="_blank" rel="noopener">▶ Watch Trailer</a>` : ''}
+      ${playUrl ? `<a class="action-btn watch-card-play" href="${escapeHtml(playUrl)}" target="_blank" rel="noopener">${escapeHtml(playLabel)}</a>` : ''}
       <button class="action-btn" data-card-action="pass">Pass</button>
     </div>
   `;
@@ -8086,11 +8090,11 @@ function qtRenderStack() {
 function qtBuildCard(pick, isTop) {
   const enrich = getEnrichmentForItem(pick.itemId);
   const poster = enrich && enrich.posterPath
-    ? `<img class="qt-poster" src="https://image.tmdb.org/t/p/w300${enrich.posterPath}" alt="" />`
+    ? `<img class="qt-poster" src="https://image.tmdb.org/t/p/w300${escapeHtml(enrich.posterPath)}" alt="" />`
     : `<div class="qt-poster qt-poster--placeholder">${escapeHtml((pick.title || '?')[0])}</div>`;
   const tabLabel = (catalogs[pick.tabId] && catalogs[pick.tabId].title) || pick.tabId;
   const catItem = catalogs[pick.tabId] && catalogs[pick.tabId].items && catalogs[pick.tabId].items.find(it => it.id === pick.itemId);
-  const priority = catItem && catItem.priority ? `<span class="qt-pri qt-pri--${catItem.priority}">${priorityLabel(catItem.priority)}</span>` : '';
+  const priority = catItem && catItem.priority ? `<span class="qt-pri qt-pri--${escapeHtml(catItem.priority)}">${priorityLabel(catItem.priority)}</span>` : '';
   const meta = [pick.dir, pick.runtime].filter(Boolean).map(escapeHtml).join(' · ');
   const card = document.createElement('div');
   card.className = 'qt-card' + (isTop ? ' qt-card--top' : ' qt-card--peek');
@@ -8099,7 +8103,7 @@ function qtBuildCard(pick, isTop) {
   card.innerHTML = `
     ${poster}
     <div class="qt-body">
-      <h4 class="qt-title">${escapeHtml(pick.title)} <span class="qt-year">${pick.year || ''}</span></h4>
+      <h4 class="qt-title">${escapeHtml(pick.title)} <span class="qt-year">${escapeHtml(pick.year || '')}</span></h4>
       <div class="qt-badges"><span class="qt-tab">${escapeHtml(tabLabel)}</span>${priority}</div>
       <p class="qt-pitch">${escapeHtml(pick.pitch || '')}</p>
       ${meta ? `<div class="qt-meta">${meta}</div>` : ''}
@@ -8272,16 +8276,16 @@ function thRenderRound1() {
   const { item, enrich, tabId } = entry;
   const tabLabel = (catalogs[tabId] && catalogs[tabId].title) || tabId;
   const poster = enrich && enrich.posterPath
-    ? `<img class="th-poster" src="https://image.tmdb.org/t/p/w300${enrich.posterPath}" alt="" />`
+    ? `<img class="th-poster" src="https://image.tmdb.org/t/p/w300${escapeHtml(enrich.posterPath)}" alt="" />`
     : `<div class="th-poster th-poster--placeholder">${escapeHtml((item.title || '?')[0])}</div>`;
   const currentRating = getRating(item.id, tabId);
-  const ratingBadge = currentRating !== 'none' ? `<span class="rating-badge ${currentRating}">${ratingLabel(currentRating)}</span>` : '';
+  const ratingBadge = currentRating !== 'none' ? `<span class="rating-badge ${escapeHtml(currentRating)}">${ratingLabel(currentRating)}</span>` : '';
   document.getElementById('triage-title').textContent = 'Triage History — Rate';
   document.getElementById('triage-progress').textContent = `${idx + 1} / ${pool.length}`;
   document.getElementById('triage-card').innerHTML = `
     <div class="th-card" id="th-card">
       ${poster}
-      <h4 class="th-title">${escapeHtml(item.title)} <span class="th-year">${item.year || ''}</span></h4>
+      <h4 class="th-title">${escapeHtml(item.title)} <span class="th-year">${escapeHtml(item.year || '')}</span></h4>
       <div class="th-meta"><span class="th-tab">${escapeHtml(tabLabel)}</span> ${ratingBadge}</div>
     </div>
   `;
@@ -8458,7 +8462,7 @@ function thRedrawRound2Card() {
   }
   const ratingLabelText = ratingLabel(r1.rating) + (r1.isHoF ? ' · Hall of Fame' : '');
   const pred = _thState.predictions[`${r1.tabId}:${r1.itemId}`];
-  const confBadge = pred && pred.confidence ? `<span class="th-conf th-conf--${pred.confidence}">${pred.confidence}</span>` : '';
+  const confBadge = pred && pred.confidence ? `<span class="th-conf th-conf--${escapeHtml(pred.confidence)}">${escapeHtml(pred.confidence)}</span>` : '';
   const posList = currentCardTags.positive.map(t => `<span class="th-tag th-tag--pos">+ ${escapeHtml(t)}</span>`).join('');
   const negList = currentCardTags.negative.map(t => `<span class="th-tag th-tag--neg">− ${escapeHtml(t)}</span>`).join('');
   const empty = (currentCardTags.positive.length + currentCardTags.negative.length) === 0
@@ -8467,7 +8471,7 @@ function thRedrawRound2Card() {
   document.getElementById('triage-progress').textContent = `${idx + 1} / ${_thState.round1.length}`;
   document.getElementById('triage-card').innerHTML = `
     <div class="th-card" id="th-card">
-      <h4 class="th-title">${escapeHtml(item.title)} <span class="th-year">${item.year || ''}</span></h4>
+      <h4 class="th-title">${escapeHtml(item.title)} <span class="th-year">${escapeHtml(item.year || '')}</span></h4>
       <div class="th-meta"><span class="th-tab">${escapeHtml(ratingLabelText)}</span> ${confBadge}</div>
       <div class="th-tag-list">${posList}${negList}${empty}</div>
       <div class="th-hint">↑ edit positives · ↓ edit negatives</div>
@@ -8575,7 +8579,7 @@ function thRenderDisagreed() {
   document.getElementById('triage-card').innerHTML = `
     <div class="th-disagreed">
       ${items.map((x, i) =>
-        `<button class="th-d-row" data-d-idx="${i}">${escapeHtml(x.title)} <span class="th-d-year">${x.year || ''}</span></button>`
+        `<button class="th-d-row" data-d-idx="${i}">${escapeHtml(x.title)} <span class="th-d-year">${escapeHtml(x.year || '')}</span></button>`
       ).join('')}
     </div>
   `;
@@ -8728,12 +8732,12 @@ function renderFindGaps() {
   list.innerHTML = result.candidates.map(c => {
     const sources = c.sourceTitles.join(', ');
     const meta = `${c.year || '?'} · ${c.type === 'tv' ? 'TV' : 'Film'} · score ${c.score} · sources: ${sources}`;
-    return `<div class="search-result" data-tmdb-id="${c.tmdbId}">
+    return `<div class="search-result" data-tmdb-id="${escapeHtml(c.tmdbId)}">
       <div class="search-result-title">${escapeHtml(c.title || '?')}</div>
       <div class="search-result-meta">${escapeHtml(meta)}</div>
       <div style="display:flex;gap:6px;margin-top:6px">
-        <button class="action-btn" data-gap-action="promote" data-tmdb-id="${c.tmdbId}">Promote</button>
-        <button class="action-btn" data-gap-action="skip" data-tmdb-id="${c.tmdbId}">Skip</button>
+        <button class="action-btn" data-gap-action="promote" data-tmdb-id="${escapeHtml(c.tmdbId)}">Promote</button>
+        <button class="action-btn" data-gap-action="skip" data-tmdb-id="${escapeHtml(c.tmdbId)}">Skip</button>
       </div>
     </div>`;
   }).join('');
@@ -8766,7 +8770,7 @@ function renderFindGaps() {
         select.innerHTML = catalogManifest
           .filter(c => c.id !== 'watchlist' && c.id !== 'auteur')
           .filter(c => pendingPromote.type === 'movie' ? !tvTabs.has(c.id) : tvTabs.has(c.id))
-          .map(c => `<option value="${c.id}">${c.label}</option>`).join('');
+          .map(c => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.label)}</option>`).join('');
         document.getElementById('promote-modal').showModal();
       }
     });
@@ -8980,10 +8984,10 @@ function wizardRender() {
     } else {
       stepEl.innerHTML = items.slice(0, 30).map(x => {
         const tabLabel = (catalogs[x.tab] && catalogs[x.tab].title) || x.tab;
-        return `<button class="wizard-btn" data-action="goto-item" data-tab="${x.tab}" data-id="${x.item.id}">
+        return `<button class="wizard-btn" data-action="goto-item" data-tab="${escapeHtml(x.tab)}" data-id="${escapeHtml(x.item.id)}">
           <div class="wizard-list-row">
             <span class="wizard-list-title">${escapeHtml(x.item.title)}</span>
-            <span class="wizard-list-meta">${tabLabel}</span>
+            <span class="wizard-list-meta">${escapeHtml(tabLabel)}</span>
           </div>
         </button>`;
       }).join('');
@@ -9031,7 +9035,7 @@ function wizardRender() {
       if (recs.recommended.length > 0) {
         h += `<div class="wizard-recs-heading">Recommended · ${recs.recommended.length}</div>`;
         h += recs.recommended.map(r => {
-          const yearStr = r.year ? ` (${r.year})` : '';
+          const yearStr = r.year ? ` (${escapeHtml(r.year)})` : '';
           const sources = r.sourceTitles.slice(0, 2).join(', ');
           const tkey = getTrailerKey(r.catalogItemId);
           const trailerBtn = tkey
@@ -9049,9 +9053,9 @@ function wizardRender() {
       if (recs.discover.length > 0) {
         h += `<div class="wizard-recs-heading">Discover · ${recs.discover.length}</div>`;
         h += recs.discover.map(r => {
-          const yearStr = r.year ? ` (${r.year})` : '';
+          const yearStr = r.year ? ` (${escapeHtml(r.year)})` : '';
           const sources = r.sourceTitles.slice(0, 2).join(', ');
-          return `<button class="wizard-btn" data-action="recs-promote" data-tmdb-id="${r.tmdbId}" data-type="${escapeHtml(r.type || 'movie')}" data-title="${escapeHtml(r.title || '')}" data-year="${r.year || ''}" data-source="${escapeHtml(r.sourceTitles[0] || '')}">
+          return `<button class="wizard-btn" data-action="recs-promote" data-tmdb-id="${escapeHtml(r.tmdbId)}" data-type="${escapeHtml(r.type || 'movie')}" data-title="${escapeHtml(r.title || '')}" data-year="${escapeHtml(r.year || '')}" data-source="${escapeHtml(r.sourceTitles[0] || '')}">
             ${escapeHtml(r.title || 'Unknown')}${yearStr}
             <span class="wizard-btn-meta">like ${escapeHtml(sources)}</span>
           </button>`;
@@ -9208,7 +9212,7 @@ function wizardHandleAction(btn) {
     select.innerHTML = catalogManifest
       .filter(c => !c.virtual)
       .filter(c => pendingPromote.type === 'movie' ? !tvTabs.has(c.id) : tvTabs.has(c.id))
-      .map(c => `<option value="${c.id}">${c.label}</option>`).join('');
+      .map(c => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.label)}</option>`).join('');
     if (wizardState.genre && wizardState.genre !== 'not-sure' && catalogs[wizardState.genre]) {
       select.value = wizardState.genre;
     }
@@ -9474,7 +9478,7 @@ function renderRateTagTriage(item, sourceTab) {
   document.getElementById('triage-title').innerHTML = `
     <div class="triage-header-item">
       <span class="source-badge">${escapeHtml(item._watchlist_source_label || '')}</span>
-      <span class="triage-item-title">${escapeHtml(item.title)}${item.year ? ` <span class="triage-year">(${item.year})</span>` : ''}</span>
+      <span class="triage-item-title">${escapeHtml(item.title)}${item.year ? ` <span class="triage-year">(${escapeHtml(item.year)})</span>` : ''}</span>
     </div>
     <div class="triage-header-mode">${modeLabel}</div>
   `;
