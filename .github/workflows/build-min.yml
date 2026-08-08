@@ -10,6 +10,7 @@ on:
   pull_request:
     paths:
       - 'app.js'
+      - 'lib/**'
 
 permissions:
   pull-requests: write
@@ -25,7 +26,7 @@ jobs:
       - run: npm install --silent --no-audit --no-fund
 
       - name: Build minified
-        run: npx esbuild app.js --minify --target=es2020 --outfile=app.min.js --legal-comments=none
+        run: npx esbuild app.js --bundle --format=iife --minify --target=es2020 --outfile=app.min.js --legal-comments=none
 
       - name: Compute sizes
         id: sizes
