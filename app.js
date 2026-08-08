@@ -4,6 +4,7 @@
 import { plexNormalizeKey, plexNormalizeKeyTitleOnly } from './lib/normalize.js';
 import { findCatalogMatchForScrobble } from './lib/plex-match.js';
 import { applyBulkSyncRules as applyBulkSyncRulesCore } from './lib/bulk-sync.js';
+import { sortItems as sortItemsCore } from './lib/sort.js';
 
 // NOTE: escapeHtml used to be declared twice (here and before
 // wireDevicesHandlers). Function hoisting meant the LATER declaration won
@@ -2238,30 +2239,9 @@ function setActiveSort(tab, sort) {
   else activeSortByTab[tab] = sort;
 }
 function sortItems(items) {
-  const sort = getActiveSort(activeTab);
-  if (sort === 'default') return items;  // catalog/section order preserved
-  const arr = items.slice();
-  if (sort === 'year') {
-    arr.sort((a, b) => (b.year || 0) - (a.year || 0) || a.title.localeCompare(b.title));
-  } else if (sort === 'title') {
-    arr.sort((a, b) => a.title.localeCompare(b.title));
-  } else if (sort === 'rating') {
-    const rorder = { 'loved': 0, 'liked': 1, 'mixed': 2, 'disliked': 3, 'none': 4 };
-    arr.sort((a, b) => {
-      const ta = a._watchlist_source_tab || activeTab;
-      const tb = b._watchlist_source_tab || activeTab;
-      const ra = rorder[getRating(a.id, ta)] ?? 4;
-      const rb = rorder[getRating(b.id, tb)] ?? 4;
-      return ra - rb || a.title.localeCompare(b.title);
-    });
-  } else if (sort === 'updated') {
-    arr.sort((a, b) => {
-      const ta = a._watchlist_source_tab || activeTab;
-      const tb = b._watchlist_source_tab || activeTab;
-      return (getLastUpdated(b.id, tb) || 0) - (getLastUpdated(a.id, ta) || 0) || a.title.localeCompare(b.title);
-    });
-  }
-  return arr;
+  // Pure comparator logic lives in lib/sort.js; this wrapper supplies the
+  // in-memory sort selection and live state accessors.
+  return sortItemsCore(items, getActiveSort(activeTab), { activeTab, getRating, getLastUpdated });
 }
 const CATEGORY_LABELS = {
   // British Comedy

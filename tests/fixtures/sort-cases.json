@@ -1,0 +1,30 @@
+{
+  "description": "Golden cases for lib/sort.js sortItems. state maps tab -> itemId -> { rating, lastUpdated }; activeTab is 'scifi'. Items may override their tab via _watchlist_source_tab.",
+  "activeTab": "scifi",
+  "state": {
+    "scifi": {
+      "a": { "rating": "liked", "lastUpdated": 300 },
+      "b": { "rating": "loved", "lastUpdated": 100 },
+      "c": { "lastUpdated": 200 },
+      "d": { "rating": "disliked" },
+      "e": { "rating": "mixed", "lastUpdated": 400 }
+    },
+    "crime": {
+      "f": { "rating": "loved", "lastUpdated": 999 }
+    }
+  },
+  "items": [
+    { "id": "a", "title": "Zulu Dawn", "year": 1979 },
+    { "id": "b", "title": "Arrival", "year": 2016 },
+    { "id": "c", "title": "Moon", "year": 2009 },
+    { "id": "d", "title": "Alien", "year": 1979 },
+    { "id": "e", "title": "Élan", "year": 2016 },
+    { "id": "f", "title": "Heat", "year": 1995, "_watchlist_source_tab": "crime" }
+  ],
+  "expected": {
+    "year": ["b", "e", "c", "f", "d", "a"],
+    "title": ["d", "b", "e", "f", "c", "a"],
+    "rating": ["b", "f", "a", "e", "d", "c"],
+    "updated": ["f", "e", "a", "c", "b", "d"]
+  }
+}
