@@ -26,6 +26,10 @@
 //   GET  /cron/check-alerts             v5.6: internal — fired by Cloudflare Cron Trigger
 //   GET  /cron/backup-state?secret=X    v5.10: manual trigger of the daily R2 backup walk
 //   GET  /cron/migrate-viewed-to-d1?secret=X    v5.11: one-time backfill of VIEWED KV into D1
+//   GET  /state/tab?secret=X&user=HASH&tab=T    item_state rows for one tab (dual-write phase shadow read)
+//   POST /state/upsert                  batch upsert of per-item SRR rows into D1 item_state
+//   GET  /state/counts?secret=X&user=HASH       per-tab/status aggregates from item_state
+//   POST /cron/migrate-state-to-d1?secret=X     one-time backfill of SYNC_KV blobs into item_state (idempotent)
 //   GET  /alerts/test-fire?secret=X&user=HASH   v5.9: send a test push to verify delivery
 //   POST /chat                                  v5.12: natural-language watch concierge
 //   GET  /                              health check
@@ -3035,6 +3039,112 @@ async function handleWatchHistory(request, env, url, ctx) {
 //   'admin'             — device bearer auth + admin role (requireAdmin)
 //   'custom'            — handler does its own auth (documented on the
 //                          handler: /sync/*, /migrate)
+
+// === Per-item SRR state routes (dual-write phase; see docs/SRR-D1-CUTOVER.md) ===
+//
+// The blob at /sync/* remains canonical; the client shadow-reads these
+// routes but does not apply results. Schema: migrations/004_item_state.sql.
+// Auth matches the legacy /sync routes: shared secret + SHA-256(plex_token)
+// user hash (validated in-handler).
+
+// GET /state/tab?secret=X&user=HASH&tab=T — all rows for one tab.
+async function handleStateTab(request, env, url, ctx) {
+  const userHash = url.searchParams.get('user');
+  if (!userHash || !/^[a-f0-9]{16,64}$/i.test(userHash)) {
+    return new Response('Bad user hash', { status: 400, headers: cors });
+  }
+  const tab = url.searchParams.get('tab');
+  if (!tab) return new Response('Missing tab', { status: 400, headers: cors });
+  if (!env.D1_VIEWED) return jsonResponse({ items: [] });
+  try {
+    const r = await env.D1_VIEWED.prepare(
+      `SELECT item_id, title, year, tab, status, rating, reaction_tags, notes, last_updated, source
+         FROM item_state WHERE user_hash=? AND tab=? ORDER BY last_updated DESC`
+    ).bind(userHash, tab).all();
+    return jsonResponse({ tab, items: r.results || [] });
+  } catch (e) {
+    console.log('[item-state] /state/tab failed', e.message);
+    return jsonResponse({ error: e.message }, 500);
+  }
+}
+
+// POST /state/upsert — body { secret, userHash, source?, items: [...] }.
+// Each item: { itemId, tab, title?, year?, status?, rating?,
+// reactionTags?, notes?, lastUpdated }. Batch-capped at 200 rows.
+// Per-item newest-wins: a row only changes when the incoming
+// lastUpdated is strictly newer than the stored one.
+async function handleStateUpsert(request, env, url, ctx) {
+  try {
+    const body = ctx.body;
+    if (!body.userHash || !/^[a-f0-9]{16,64}$/i.test(body.userHash)) {
+      return new Response('Bad user hash', { status: 400, headers: cors });
+    }
+    if (!Array.isArray(body.items) || body.items.length === 0) {
+      return new Response('Missing items', { status: 400, headers: cors });
+    }
+    if (!env.D1_VIEWED) return jsonResponse({ error: 'D1 not configured' }, 500);
+    const items = body.items.slice(0, 200);
+    let upserted = 0, skippedStale = 0, errors = 0;
+    for (const it of items) {
+      if (!it || !it.itemId || !it.tab) { errors++; continue; }
+      try {
+        const changes = await upsertItemStateRow(env, body.userHash, it, body.source || 'app');
+        if (changes > 0) upserted++; else skippedStale++;
+      } catch (e) {
+        errors++;
+        console.log('[item-state] upsert failed for', it.itemId, e.message);
+      }
+    }
+    return jsonResponse({ ok: true, received: items.length, upserted, skippedStale, errors });
+  } catch (e) {
+    return jsonResponse({ error: e.message }, 500);
+  }
+}
+
+// GET /state/counts?secret=X&user=HASH — banner aggregates: row
+// count per (tab, status) plus totals. Cheap GROUP BY, no blob parse.
+async function handleStateCounts(request, env, url, ctx) {
+  const userHash = url.searchParams.get('user');
+  if (!userHash || !/^[a-f0-9]{16,64}$/i.test(userHash)) {
+    return new Response('Bad user hash', { status: 400, headers: cors });
+  }
+  if (!env.D1_VIEWED) return jsonResponse({ total: 0, tabs: {} });
+  try {
+    const r = await env.D1_VIEWED.prepare(
+      `SELECT tab, status, COUNT(*) AS n FROM item_state
+        WHERE user_hash=? GROUP BY tab, status`
+    ).bind(userHash).all();
+    const tabs = {};
+    let total = 0;
+    for (const row of (r.results || [])) {
+      const tab = row.tab || '(none)';
+      if (!tabs[tab]) tabs[tab] = {};
+      tabs[tab][row.status || 'none'] = row.n;
+      total += row.n;
+    }
+    return jsonResponse({ total, tabs });
+  } catch (e) {
+    console.log('[item-state] /state/counts failed', e.message);
+    return jsonResponse({ error: e.message }, 500);
+  }
+}
+
+// POST /cron/migrate-state-to-d1?secret=X — manual one-time backfill
+// of the SYNC_KV blobs (legacy `user:{hash}` and v9 `state:{userId}`)
+// into item_state. Idempotent: the shared ON CONFLICT ... WHERE
+// excluded.last_updated > item_state.last_updated upsert means
+// re-running changes nothing unless a blob item is newer than the
+// stored row. Safe to run while dual-write is live.
+async function handleCronMigrateStateToD1(request, env, url, ctx) {
+  try {
+    const summary = await migrateStateToD1(env);
+    return jsonResponse(summary);
+  } catch (e) {
+    console.log('[state-migrate] uncaught', e.stack || e.message);
+    return jsonResponse({ error: 'Migration failed — see Worker logs' }, 500);
+  }
+}
+
 const ROUTES = [
   { method: 'POST',   prefix: '/webhook/',                          auth: 'webhook',           handler: handleWebhook },
   { method: 'GET',    path: '/events',                              auth: 'secret',            handler: handleEventsList },
@@ -3102,6 +3212,10 @@ const ROUTES = [
   { method: 'POST',   path: '/api/trakt/disconnect',                auth: 'secret',            handler: handleTraktDisconnect },
   { method: 'POST',   path: '/api/watch/mark',                      auth: 'secret',            handler: handleWatchMark },
   { method: 'GET',    path: '/api/watch/history',                   auth: 'secret',            handler: handleWatchHistory },
+  { method: 'GET',    path: '/state/tab',                           auth: 'secret',            handler: handleStateTab },
+  { method: 'POST',   path: '/state/upsert',                        auth: 'secret-body',       handler: handleStateUpsert, badJson: 'json500' },
+  { method: 'GET',    path: '/state/counts',                        auth: 'secret',            handler: handleStateCounts },
+  { method: 'POST',   path: '/cron/migrate-state-to-d1',            auth: 'secret',            handler: handleCronMigrateStateToD1 },
 ];
 
 function routeMatches(route, method, path) {
@@ -3495,6 +3609,104 @@ async function migrateViewedToD1(env, opts) {
     ranAt: Date.now(),
   };
   console.log('[d1-migrate] chunk done', JSON.stringify(summary));
+  return summary;
+}
+
+// === Per-item SRR state helpers (see /state/* routes) ===
+//
+// Single upsert statement shared by /state/upsert and the SYNC_KV
+// backfill. The WHERE clause on DO UPDATE is what makes both callers
+// idempotent AND per-item newest-wins: an incoming row with
+// last_updated <= the stored row's value produces zero changes.
+const ITEM_STATE_UPSERT_SQL =
+  `INSERT INTO item_state
+     (item_id, user_hash, title, year, tab, status, rating, reaction_tags, notes, last_updated, source)
+   VALUES (?,?,?,?,?,?,?,?,?,?,?)
+   ON CONFLICT(user_hash, item_id) DO UPDATE SET
+     title=excluded.title, year=excluded.year, tab=excluded.tab,
+     status=excluded.status, rating=excluded.rating,
+     reaction_tags=excluded.reaction_tags, notes=excluded.notes,
+     last_updated=excluded.last_updated, source=excluded.source
+   WHERE excluded.last_updated > item_state.last_updated`;
+
+// Upsert one row. `row` uses the client wire shape ({ itemId, tab,
+// title?, year?, status?, rating?, reactionTags?, notes?, lastUpdated }).
+// Returns the number of changed rows (0 = stale, skipped).
+async function upsertItemStateRow(env, userHash, row, source) {
+  const res = await env.D1_VIEWED.prepare(ITEM_STATE_UPSERT_SQL).bind(
+    row.itemId, userHash,
+    row.title || null,
+    row.year || null,
+    row.tab || null,
+    row.status || null,
+    row.rating || null,
+    Array.isArray(row.reactionTags) ? JSON.stringify(row.reactionTags) : null,
+    row.notes || null,
+    row.lastUpdated || Date.now(),
+    source || row.source || null
+  ).run();
+  return (res && res.meta && typeof res.meta.changes === 'number') ? res.meta.changes : 1;
+}
+
+// One-time backfill of the SYNC_KV state blobs into item_state. Walks
+// both key shapes (legacy `user:{hash}`, v9 `state:{userId}`), parses
+// each blob's `state` map ({ tab: { itemId: entry } }), and upserts
+// every entry. Blob entries carry no title/year (only SRR fields +
+// lastUpdated), so those columns stay NULL until the client dual-write
+// path refreshes the row. Not chunked: unlike VIEWED (thousands of
+// keys), SYNC_KV holds one blob per user — single-digit key count.
+async function migrateStateToD1(env) {
+  if (!env.D1_VIEWED || !env.SYNC_KV) {
+    return { error: 'D1_VIEWED or SYNC_KV binding missing' };
+  }
+  const summary = {
+    blobs: 0, itemsScanned: 0, upserted: 0, skippedStale: 0,
+    parseErrors: 0, rowErrors: 0, ranAt: Date.now(),
+  };
+  for (const prefix of ['user:', 'state:']) {
+    const list = await env.SYNC_KV.list({ prefix });
+    for (const k of list.keys) {
+      const userHash = k.name.slice(prefix.length);
+      const raw = await env.SYNC_KV.get(k.name);
+      if (!raw) continue;
+      let blob;
+      try { blob = JSON.parse(raw); } catch (e) {
+        summary.parseErrors++;
+        console.log('[state-migrate] blob parse failed', k.name, e.message);
+        continue;
+      }
+      summary.blobs++;
+      const st = blob && blob.state;
+      if (!st || typeof st !== 'object') continue;
+      // Entries written before touchEntry existed may lack lastUpdated;
+      // fall back to the blob's pushedAt so they migrate deterministically.
+      const fallbackTs = blob.pushedAt || Date.now();
+      for (const tab in st) {
+        const tabState = st[tab];
+        if (!tabState || typeof tabState !== 'object') continue;
+        for (const id in tabState) {
+          const e = tabState[id];
+          if (!e || typeof e !== 'object') continue;
+          summary.itemsScanned++;
+          try {
+            const changes = await upsertItemStateRow(env, userHash, {
+              itemId: id, tab,
+              status: e.status || null,
+              rating: e.rating || null,
+              reactionTags: e.reactionTags,
+              notes: e.notes || null,
+              lastUpdated: e.lastUpdated || fallbackTs,
+            }, 'kv-migration');
+            if (changes > 0) summary.upserted++; else summary.skippedStale++;
+          } catch (err) {
+            summary.rowErrors++;
+            console.log('[state-migrate] upsert failed', tab, id, err.message);
+          }
+        }
+      }
+    }
+  }
+  console.log('[state-migrate] done', JSON.stringify(summary));
   return summary;
 }
 
