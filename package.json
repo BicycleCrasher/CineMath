@@ -6,7 +6,8 @@
   "scripts": {
     "lint:catalogs": "python3 scripts/lint-catalogs.py",
     "build:min": "esbuild app.js --minify --target=es2020 --outfile=app.min.js --legal-comments=none",
-    "size": "esbuild app.js --minify --target=es2020 --outfile=/dev/null --analyze=verbose"
+    "size": "esbuild app.js --minify --target=es2020 --outfile=/dev/null --analyze=verbose",
+    "test": "node --test tests/"
   },
   "devDependencies": {
     "esbuild": "^0.20.0"
