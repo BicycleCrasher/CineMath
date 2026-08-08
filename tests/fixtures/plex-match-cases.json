@@ -1,0 +1,100 @@
+{
+  "description": "Golden cases for lib/plex-match.js findCatalogMatchForScrobble. catalogs is the app-shaped { tabId: { items } } map; each event asserts which tab/item matches (or null).",
+  "catalogs": {
+    "scifi": {
+      "items": [
+        { "id": "moon-2009", "title": "Moon", "year": 2009 },
+        { "id": "amelie-2001", "title": "Amélie", "year": 2001 },
+        { "id": "solaris-tarkovsky-1972", "title": "Solaris (Tarkovsky)", "year": 1972 }
+      ]
+    },
+    "scifi-tv": {
+      "items": [
+        { "id": "the-expanse-2015", "title": "The Expanse", "year": 2015 },
+        { "id": "qi-2003", "title": "QI", "year": 2003, "aliases": ["QI XL"] }
+      ]
+    },
+    "crime": {
+      "items": [
+        { "id": "heat-1995", "title": "Heat", "year": 1995, "aliases": ["Heat (Director's Definitive Edition)"] }
+      ]
+    }
+  },
+  "events": [
+    {
+      "name": "movie exact title+year",
+      "event": { "event": "media.scrobble", "type": "movie", "title": "Moon", "year": 2009 },
+      "expected": { "tabId": "scifi", "itemId": "moon-2009", "isMovie": true }
+    },
+    {
+      "name": "movie year off by plus one (Plex says 2010, catalog 2009)",
+      "event": { "event": "media.scrobble", "type": "movie", "title": "Moon", "year": 2010 },
+      "expected": { "tabId": "scifi", "itemId": "moon-2009", "isMovie": true }
+    },
+    {
+      "name": "movie year off by minus one",
+      "event": { "event": "media.scrobble", "type": "movie", "title": "Moon", "year": 2008 },
+      "expected": { "tabId": "scifi", "itemId": "moon-2009", "isMovie": true }
+    },
+    {
+      "name": "movie year off by two does NOT match",
+      "event": { "event": "media.scrobble", "type": "movie", "title": "Moon", "year": 2011 },
+      "expected": null
+    },
+    {
+      "name": "movie with identical diacritics on both sides matches",
+      "event": { "event": "media.scrobble", "type": "movie", "title": "Amélie", "year": 2001 },
+      "expected": { "tabId": "scifi", "itemId": "amelie-2001", "isMovie": true }
+    },
+    {
+      "name": "documented quirk: diacritics are STRIPPED not ASCII-folded, so an ASCII-folded Plex title ('Amelie') does NOT match the catalog's 'Amélie' ('amelie' vs 'amlie')",
+      "event": { "event": "media.scrobble", "type": "movie", "title": "Amelie", "year": 2001 },
+      "expected": null
+    },
+    {
+      "name": "movie whose catalog title has a parenthetical disambiguator",
+      "event": { "event": "media.scrobble", "type": "movie", "title": "Solaris", "year": 1972 },
+      "expected": { "tabId": "scifi", "itemId": "solaris-tarkovsky-1972", "isMovie": true }
+    },
+    {
+      "name": "movie matched via alias",
+      "event": { "event": "media.scrobble", "type": "movie", "title": "Heat (Director's Definitive Edition)", "year": 1995 },
+      "expected": { "tabId": "crime", "itemId": "heat-1995", "isMovie": true }
+    },
+    {
+      "name": "episode matches show by grandparentTitle, title-only (no year)",
+      "event": { "event": "media.scrobble", "type": "episode", "title": "Dulcinea", "grandparentTitle": "The Expanse", "year": 2015 },
+      "expected": { "tabId": "scifi-tv", "itemId": "the-expanse-2015", "isMovie": false }
+    },
+    {
+      "name": "episode matched via show alias (QI XL -> QI)",
+      "event": { "event": "media.scrobble", "type": "episode", "title": "Some Episode", "grandparentTitle": "QI XL" },
+      "expected": { "tabId": "scifi-tv", "itemId": "qi-2003", "isMovie": false }
+    },
+    {
+      "name": "episode without grandparentTitle falls back to its own title and matches title-only across ALL tabs (documented quirk: can hit a film item)",
+      "event": { "event": "media.scrobble", "type": "episode", "title": "Moon" },
+      "expected": { "tabId": "scifi", "itemId": "moon-2009", "isMovie": false }
+    },
+    {
+      "name": "non-scrobble event ignored",
+      "event": { "event": "media.play", "type": "movie", "title": "Moon", "year": 2009 },
+      "expected": null
+    },
+    {
+      "name": "unsupported type ignored",
+      "event": { "event": "media.scrobble", "type": "track", "title": "Moon", "year": 2009 },
+      "expected": null
+    },
+    {
+      "name": "missing title returns null",
+      "event": { "event": "media.scrobble", "type": "movie", "year": 2009 },
+      "expected": null
+    },
+    {
+      "name": "show-type event matches title-only like an episode",
+      "event": { "event": "media.scrobble", "type": "show", "title": "The Expanse" },
+      "expected": { "tabId": "scifi-tv", "itemId": "the-expanse-2015", "isMovie": false }
+    }
+  ]
+}

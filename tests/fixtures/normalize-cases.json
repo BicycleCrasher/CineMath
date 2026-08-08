@@ -1,0 +1,29 @@
+{
+  "description": "Golden cases for lib/normalize.js (plexNormalizeKey / plexNormalizeKeyTitleOnly) and worker normalizeTitle. A KMP port must reproduce these outputs exactly.",
+  "movieKey": [
+    { "title": "The Bourne Identity", "year": 2002, "expected": "thebourneidentity|2002" },
+    { "title": "Amélie", "year": 2001, "expected": "amlie|2001" },
+    { "title": "Cinéma Paradiso", "year": 1988, "expected": "cinmaparadiso|1988" },
+    { "title": "Tinker Tailor Soldier Spy (2011)", "year": 2011, "expected": "tinkertailorsoldierspy|2011" },
+    { "title": "Traffik (BBC, 1989)", "year": 1989, "expected": "traffik|1989" },
+    { "title": "Fast & Furious", "year": 2009, "expected": "fastandfurious|2009" },
+    { "title": "Don't Look Up", "year": 2021, "expected": "dontlookup|2021" },
+    { "title": "Don’t Look Up", "year": 2021, "expected": "dontlookup|2021" },
+    { "title": "M*A*S*H", "year": 1970, "expected": "mash|1970" },
+    { "title": "Moon", "year": null, "expected": "moon|" },
+    { "title": "Moon", "year": 0, "expected": "moon|" },
+    { "title": "", "year": 1999, "expected": "" },
+    { "title": null, "year": 1999, "expected": "" },
+    { "title": "Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb", "year": 1964, "expected": "drstrangeloveorhowilearnedtostopworryingandlovethebomb|1964" },
+    { "title": "AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEFFFFFFFFFFGGGGGGGGGG", "year": 2000, "expected": "aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeeeffffffffff|2000" }
+  ],
+  "titleOnly": [
+    { "title": "QI (XL)", "expected": "qi" },
+    { "title": "Amélie", "expected": "amlie" },
+    { "title": "Sharpe’s Rifles", "expected": "sharpesrifles" },
+    { "title": "Law & Order", "expected": "lawandorder" },
+    { "title": "The Expanse", "expected": "theexpanse" },
+    { "title": "", "expected": "" },
+    { "title": null, "expected": "" }
+  ]
+}
