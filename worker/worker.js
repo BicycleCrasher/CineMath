@@ -3355,3 +3355,9 @@ async function migrateViewedToD1(env, opts) {
   console.log('[d1-migrate] chunk done', JSON.stringify(summary));
   return summary;
 }
+
+// === Named exports for the node:test suite (tests/worker-helpers.test.mjs) ===
+// Wrangler consumes only the default export above; these are inert in
+// production and exist so pure helpers can be tested (and ported) without
+// spinning up a Workers runtime.
+export { normalizeTitle, gzipString, safeJsonParse, b64uEncode, b64uDecode };

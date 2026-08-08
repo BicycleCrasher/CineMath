@@ -1,0 +1,99 @@
+{
+  "description": "Golden scenario for lib/bulk-sync.js applyBulkSyncRules. History entries + TMDB episodeCounts + a mini catalog; expectations assert the report counters and final state. episodeCounts keys are plexNormalizeKeyTitleOnly(title).",
+  "catalogs": {
+    "scifi": {
+      "items": [
+        { "id": "moon-2009", "title": "Moon", "year": 2009 },
+        { "id": "primer-2004", "title": "Primer", "year": 2004 },
+        { "id": "amelie-2001", "title": "Amélie", "year": 2001 }
+      ]
+    },
+    "scifi-tv": {
+      "items": [
+        { "id": "the-expanse-2015", "title": "The Expanse", "year": 2015 },
+        { "id": "firefly-2002", "title": "Firefly", "year": 2002, "tvCompletionMode": "flexible" },
+        { "id": "qi-2003", "title": "QI", "year": 2003, "tvCompletionMode": "episodic" },
+        { "id": "devs-2020", "title": "Devs", "year": 2020 }
+      ]
+    }
+  },
+  "initialState": {
+    "scifi": { "primer-2004": { "status": "watched" } },
+    "scifi-tv": {}
+  },
+  "episodeCounts": {
+    "theexpanse": 62,
+    "firefly": 14,
+    "qi": 300,
+    "devs": 8
+  },
+  "entries": [
+    { "librarySectionID": "1", "type": "movie", "title": "Moon", "year": 2010 },
+    { "librarySectionID": "1", "type": "movie", "title": "Primer", "year": 2004 },
+    { "librarySectionID": "1", "type": "movie", "title": "Amélie", "year": 2001 },
+    { "librarySectionID": "1", "type": "movie", "title": "Unknown Indie Film", "year": 2015 },
+    { "librarySectionID": "1", "type": "movie", "title": "Unknown Indie Film", "year": 2015 },
+    { "librarySectionID": "9", "type": "movie", "title": "Moon", "year": 2009 },
+
+    { "librarySectionID": "2", "type": "episode", "grandparentTitle": "The Expanse", "parentIndex": 1, "index": 1, "viewedAt": 1700000000 },
+    { "librarySectionID": "2", "type": "episode", "grandparentTitle": "The Expanse", "parentIndex": 1, "index": 2, "viewedAt": 1700000100 },
+    { "librarySectionID": "2", "type": "episode", "grandparentTitle": "The Expanse", "parentIndex": 1, "index": 2, "viewedAt": 1700000200 },
+
+    { "librarySectionID": "2", "type": "episode", "grandparentTitle": "Firefly", "parentIndex": 1, "index": 1 },
+    { "librarySectionID": "2", "type": "episode", "grandparentTitle": "Firefly", "parentIndex": 1, "index": 2 },
+    { "librarySectionID": "2", "type": "episode", "grandparentTitle": "Firefly", "parentIndex": 1, "index": 3 },
+    { "librarySectionID": "2", "type": "episode", "grandparentTitle": "Firefly", "parentIndex": 1, "index": 4 },
+    { "librarySectionID": "2", "type": "episode", "grandparentTitle": "Firefly", "parentIndex": 1, "index": 5 },
+    { "librarySectionID": "2", "type": "episode", "grandparentTitle": "Firefly", "parentIndex": 1, "index": 6 },
+    { "librarySectionID": "2", "type": "episode", "grandparentTitle": "Firefly", "parentIndex": 1, "index": 7 },
+    { "librarySectionID": "2", "type": "episode", "grandparentTitle": "Firefly", "parentIndex": 1, "index": 8 },
+    { "librarySectionID": "2", "type": "episode", "grandparentTitle": "Firefly", "parentIndex": 1, "index": 9 },
+    { "librarySectionID": "2", "type": "episode", "grandparentTitle": "Firefly", "parentIndex": 1, "index": 10 },
+    { "librarySectionID": "2", "type": "episode", "grandparentTitle": "Firefly", "parentIndex": 1, "index": 11 },
+    { "librarySectionID": "2", "type": "episode", "grandparentTitle": "Firefly", "parentIndex": 1, "index": 12 },
+
+    { "librarySectionID": "2", "type": "episode", "grandparentTitle": "QI", "parentIndex": 3, "index": 1 },
+    { "librarySectionID": "2", "type": "episode", "grandparentTitle": "QI", "parentIndex": 3, "index": 2 },
+    { "librarySectionID": "2", "type": "episode", "grandparentTitle": "QI", "parentIndex": 3, "index": 3 },
+    { "librarySectionID": "2", "type": "episode", "grandparentTitle": "QI", "parentIndex": 3, "index": 4 },
+    { "librarySectionID": "2", "type": "episode", "grandparentTitle": "QI", "parentIndex": 3, "index": 5 },
+    { "librarySectionID": "2", "type": "episode", "grandparentTitle": "QI", "parentIndex": 3, "index": 6 },
+
+    { "librarySectionID": "2", "type": "episode", "grandparentTitle": "Devs", "parentIndex": 1, "index": 1 },
+    { "librarySectionID": "2", "type": "episode", "grandparentTitle": "Devs", "parentIndex": 1, "index": 2 },
+    { "librarySectionID": "2", "type": "episode", "grandparentTitle": "Devs", "parentIndex": 1, "index": 3 },
+    { "librarySectionID": "2", "type": "episode", "grandparentTitle": "Devs", "parentIndex": 1, "index": 4 },
+    { "librarySectionID": "2", "type": "episode", "grandparentTitle": "Devs", "parentIndex": 1, "index": 5 },
+    { "librarySectionID": "2", "type": "episode", "grandparentTitle": "Devs", "parentIndex": 1, "index": 6 },
+    { "librarySectionID": "2", "type": "episode", "grandparentTitle": "Devs", "parentIndex": 1, "index": 7 },
+    { "librarySectionID": "2", "type": "episode", "grandparentTitle": "Devs", "parentIndex": 1, "index": 8 },
+
+    { "librarySectionID": "2", "type": "episode", "grandparentTitle": "Some Unknown Show", "parentIndex": 1, "index": 1 },
+    { "librarySectionID": "2", "type": "episode", "grandparentTitle": "Some Unknown Show", "parentIndex": 1, "index": 2 }
+  ],
+  "expectedReport": {
+    "moviesProcessed": 4,
+    "moviesMatchedToCatalog": 3,
+    "moviesOrphan": 1,
+    "moviesMarkedWatched": 2,
+    "showsProcessed": 5,
+    "showsMatchedToCatalog": 4,
+    "showsOrphan": 1,
+    "showsMarkedWatched": 2,
+    "showsMarkedWatching": 2,
+    "showsMarkedLoved": 3
+  },
+  "expectedFinalState": {
+    "scifi": {
+      "moon-2009": { "status": "watched" },
+      "primer-2004": { "status": "watched" },
+      "amelie-2001": { "status": "watched" }
+    },
+    "scifi-tv": {
+      "the-expanse-2015": { "status": "watching", "rating": "none" },
+      "firefly-2002": { "status": "watched", "rating": "loved" },
+      "qi-2003": { "status": "watching", "rating": "loved" },
+      "devs-2020": { "status": "watched", "rating": "loved" }
+    }
+  }
+}

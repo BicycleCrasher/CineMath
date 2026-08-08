@@ -2,11 +2,13 @@
   "name": "watchtrack",
   "version": "5.36.0",
   "private": true,
+  "type": "module",
   "description": "Personal film/TV tracker PWA. No runtime deps; this file exists only so CI can run esbuild for size checks.",
   "scripts": {
     "lint:catalogs": "python3 scripts/lint-catalogs.py",
-    "build:min": "esbuild app.js --minify --target=es2020 --outfile=app.min.js --legal-comments=none",
-    "size": "esbuild app.js --minify --target=es2020 --outfile=/dev/null --analyze=verbose"
+    "build:min": "esbuild app.js --bundle --format=iife --minify --target=es2020 --outfile=app.min.js --legal-comments=none",
+    "size": "esbuild app.js --bundle --format=iife --minify --target=es2020 --outfile=/dev/null --analyze=verbose",
+    "test": "node --test \"tests/*.test.mjs\""
   },
   "devDependencies": {
     "esbuild": "^0.20.0"
