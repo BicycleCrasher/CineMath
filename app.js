@@ -1,8 +1,22 @@
-function escapeHtml(s) {
-  return String(s ?? '').replace(/[&<>"']/g, c => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-  })[c]);
-}
+// Pure logic lives in lib/ as ES modules (shared with the node:test suite and
+// any future Kotlin Multiplatform port). app.js is the esbuild bundle entry —
+// index.html loads only the bundled app.min.js, never these files directly.
+import { plexNormalizeKey, plexNormalizeKeyTitleOnly } from './lib/normalize.js';
+import { findCatalogMatchForScrobble } from './lib/plex-match.js';
+import { applyBulkSyncRules as applyBulkSyncRulesCore } from './lib/bulk-sync.js';
+import { sortItems as sortItemsCore } from './lib/sort.js';
+import {
+  TAB_DEFAULT_CONTENT_TYPE, CATEGORY_TO_CONTENT_TYPE,
+  resolveContentType as resolveContentTypeCore,
+} from './lib/content-type.js';
+import { TIME_BUDGETS, parseRuntimeMin, fitsTimeBudget } from './lib/runtime.js';
+import { computeRecsForTab as computeRecsForTabCore, moodScoreFromTags } from './lib/recs.js';
+
+// NOTE: escapeHtml used to be declared twice (here and before
+// wireDevicesHandlers). Function hoisting meant the LATER declaration won
+// everywhere, so the duplicate here was removed when app.js became a module
+// (duplicate lexical declarations are a SyntaxError in ESM); behavior is
+// unchanged. The surviving definition lives near wireDevicesHandlers.
 
 // === Reaction tag taxonomy by content type ===
 // Each item resolves to ONE content type. The UI shows the matching set.
@@ -142,61 +156,11 @@ Object.keys(TAG_SETS).forEach(k => {
 const POSITIVE_TAGS = TAG_SETS['film-narrative'].positive;
 const NEGATIVE_TAGS = TAG_SETS['film-narrative'].negative;
 
-// Default content type per tab. Items in British Comedy resolve via category.
-// Items can override at the catalog level via `contentType` on the item or section.
-const TAB_DEFAULT_CONTENT_TYPE = {
-  'scifi': 'film-scifi',
-  'scifi-tv': 'tv-scifi',
-  'espionage': 'film-espionage',
-  'spy-tv': 'tv-espionage',
-  'crime': 'film-crime',
-  'crime-tv': 'tv-crime',
-  'cons-courtroom': 'film-cons-courtroom',
-  'cons-courtroom-tv': 'tv-cons-courtroom',
-  'horror': 'film-horror',
-  'horror-tv': 'tv-horror',
-  'fantasy': 'film-fantasy',
-  'fantasy-tv': 'tv-fantasy',
-  'heist': 'film-heist',
-  'comedy': 'film-comedy',
-  'comedy-tv': 'tv-sitcom',
-  'british-comedy': 'tv-sitcom',
-  'drama': 'film-drama',
-  'drama-tv': 'tv-drama',
-  'foreign': 'film-foreign',
-  'auteur': 'film-auteur',
-  'pre1960': 'film-pre1960',
-  'musicals': 'film-musical',
-  'heroes-comics': 'film-heroes',
-  'heroes-comics-tv': 'tv-heroes'
-};
-
-// British-comedy category → content type mapping (when item has categories[]).
-// `specials` is intentionally absent so it falls through to the OTHER category in the array.
-const CATEGORY_TO_CONTENT_TYPE = {
-  'panel': 'tv-panel',
-  'news-comedy': 'tv-panel',
-  'game': 'tv-game',
-  'sitcom': 'tv-sitcom'
-};
-
-// V5.26.6: resolveContentType now accepts an optional sourceTab parameter so
-// items being rendered outside their home tab (e.g. in the watchlist or
-// triage queue) still fall back to the right per-tab default. Without this,
-// activeTab would be 'watchlist' for triage and items without categories
-// would resolve to 'film-narrative' regardless of source.
+// TAB_DEFAULT_CONTENT_TYPE / CATEGORY_TO_CONTENT_TYPE and the pure
+// resolveContentType live in lib/content-type.js (imported at the top of
+// this file). This wrapper injects the live activeTab fallback.
 function resolveContentType(item, sourceTab) {
-  // 1. Explicit item override wins
-  if (item && item.contentType) return item.contentType;
-  // 2. British Comedy: look at item categories
-  if (item && Array.isArray(item.categories) && item.categories.length > 0) {
-    for (const cat of item.categories) {
-      if (CATEGORY_TO_CONTENT_TYPE[cat]) return CATEGORY_TO_CONTENT_TYPE[cat];
-    }
-  }
-  // 3. Source tab default (preferred), then activeTab default, then film-narrative
-  const tab = sourceTab || (item && (item._watchlist_source_tab || item._auteur_source_tab)) || activeTab;
-  return TAB_DEFAULT_CONTENT_TYPE[tab] || 'film-narrative';
+  return resolveContentTypeCore(item, sourceTab, activeTab);
 }
 
 function getTagSetForItem(item, sourceTab) {
@@ -513,29 +477,8 @@ function isPlexConfigured() {
 // Map: normalized "title|year" -> { ratingKey, title, year, type }
 let plexLibrary = new Map();
 let plexLibraryLoadedAt = 0;
-function plexNormalizeKey(title, year) {
-  if (!title) return '';
-  let t = title.toLowerCase();
-  // Strip parenthetical disambiguators like "(BBC, 1979)" or "(2024)"
-  t = t.replace(/\s*\([^)]*\)\s*/g, ' ');
-  // Replace & with "and"
-  t = t.replace(/&/g, ' and ');
-  // Strip apostrophes (curly + straight + backtick)
-  t = t.replace(/[\u2019\u2018'`]/g, '');
-  // Collapse all non-alphanumeric to nothing
-  t = t.replace(/[^a-z0-9]+/g, '');
-  return t.slice(0, 60) + '|' + (year || '');
-}
-// TV shows: match by title only, no year — Plex history has no series year
-function plexNormalizeKeyTitleOnly(title) {
-  if (!title) return '';
-  let t = title.toLowerCase();
-  t = t.replace(/\s*\([^)]*\)\s*/g, ' ');
-  t = t.replace(/&/g, ' and ');
-  t = t.replace(/[\u2019\u2018'`]/g, '');
-  t = t.replace(/[^a-z0-9]+/g, '');
-  return t.slice(0, 60);
-}
+// plexNormalizeKey / plexNormalizeKeyTitleOnly moved to lib/normalize.js
+// (imported at the top of this file). Same functions, same behavior.
 async function fetchPlexLibrary() {
   if (!isPlexConfigured()) return;
   if (!isWebhookConfigured()) return;
@@ -1541,59 +1484,26 @@ async function pollPlexWebhookEvents() {
   }
 }
 
-// Apply a single webhook event to CinéMath state.
+// Apply a single webhook event to CinéMath state. The pure matching walk
+// lives in lib/plex-match.js (findCatalogMatchForScrobble); this wrapper
+// applies the resulting status mutation.
 function applyPlexEvent(evt) {
-  if (evt.event !== 'media.scrobble') return false;
-  if (evt.type !== 'movie' && evt.type !== 'episode' && evt.type !== 'show') return false;
-
-  // For movies, match title+year exactly. For TV, match title only since Plex
-  // history doesn't carry the series first-aired year on episode events.
-  const isMovie = evt.type === 'movie';
-  const matchTitle = isMovie ? evt.title : (evt.grandparentTitle || evt.title);
-  const matchYear = isMovie ? evt.year : null;
-  if (!matchTitle) return false;
-
-  const movieKey = isMovie ? plexNormalizeKey(matchTitle, matchYear) : null;
-  const tvKey = isMovie ? null : plexNormalizeKeyTitleOnly(matchTitle);
-
-  // Search every loaded catalog for a matching item (primary title or alias)
-  for (const tabId in catalogs) {
-    const cat = catalogs[tabId];
-    for (const item of cat.items) {
-      const titlesToCheck = [item.title].concat(Array.isArray(item.aliases) ? item.aliases : []);
-      let matched = false;
-      for (const t of titlesToCheck) {
-        if (isMovie) {
-          if (plexNormalizeKey(t, item.year) === movieKey) { matched = true; break; }
-          // year-fuzz tolerance
-          for (const dy of [-1, 1]) {
-            if (plexNormalizeKey(t, item.year ? item.year + dy : null) === movieKey) { matched = true; break; }
-          }
-          if (matched) break;
-        } else {
-          if (plexNormalizeKeyTitleOnly(t) === tvKey) { matched = true; break; }
-        }
-      }
-      if (matched) {
-        if (isMovie) {
-          setStatus(item.id, 'watched', tabId);
-        } else {
-          const cur = getStatus(item.id, tabId);
-          if (cur !== 'watched') setStatus(item.id, 'watching', tabId);
-        }
-        return true;
-      }
-    }
+  const hit = findCatalogMatchForScrobble(catalogs, evt);
+  if (!hit) return false;
+  if (hit.isMovie) {
+    setStatus(hit.item.id, 'watched', hit.tabId);
+  } else {
+    const cur = getStatus(hit.item.id, hit.tabId);
+    if (cur !== 'watched') setStatus(hit.item.id, 'watching', hit.tabId);
   }
-  return false;
+  return true;
 }
 
 // =====================================================================
 // BULK SYNC: fetch full Plex history → apply rules → log to Worker KV
 // =====================================================================
 
-// Library whitelist (hardcoded — matches Worker config).
-const PLEX_BULK_LIBRARY_WHITELIST = new Set(['1', '2']);
+// Library whitelist moved to lib/bulk-sync.js (PLEX_BULK_LIBRARY_WHITELIST).
 
 // Fetch the full Plex history in pages. Returns array of raw entry objects.
 async function fetchFullPlexHistory(progressCb) {
@@ -1661,150 +1571,12 @@ async function postViewedIngest(entries) {
 }
 
 // Apply bulk-sync rules to CinéMath state given the full filtered history.
-// Returns a structured report.
+// Returns a structured report. The pure rule engine lives in lib/bulk-sync.js;
+// this wrapper wires it to live app state.
 function applyBulkSyncRules(entries, episodeCounts) {
-  // Filter to whitelisted libraries first
-  const filtered = entries.filter(e => PLEX_BULK_LIBRARY_WHITELIST.has(String(e.librarySectionID || '')));
-
-  // Group: movies by (norm_title, year); episodes by show
-  const movieMap = new Map();   // norm_title|year -> { entries: [], title, year }
-  const showMap = new Map();    // norm_title -> { episodes: Set('s_e'), title, latestPlay, totalPlays }
-
-  filtered.forEach(e => {
-    if (e.type === 'movie') {
-      const yearVal = e.year || (e.originallyAvailableAt ? parseInt(String(e.originallyAvailableAt).slice(0, 4)) : null);
-      const key = plexNormalizeKey(e.title, yearVal);
-      if (!movieMap.has(key)) movieMap.set(key, { entries: [], title: e.title, year: yearVal });
-      movieMap.get(key).entries.push(e);
-    } else if (e.type === 'episode') {
-      const show = e.grandparentTitle || e.title;
-      if (!show) return;
-      const key = plexNormalizeKeyTitleOnly(show);
-      if (!showMap.has(key)) showMap.set(key, { episodes: new Set(), title: show, latestPlay: 0, totalPlays: 0 });
-      const epId = `${e.parentIndex || '0'}_${e.index || '0'}`;
-      const data = showMap.get(key);
-      data.episodes.add(epId);
-      data.totalPlays++;
-      const ts = (e.viewedAt ? parseInt(e.viewedAt) * 1000 : 0);
-      if (ts > data.latestPlay) data.latestPlay = ts;
-    }
+  return applyBulkSyncRulesCore(entries, episodeCounts, {
+    catalogs, getStatus, setStatus, getRating, setRating,
   });
-
-  const report = {
-    moviesProcessed: 0,
-    moviesMatchedToCatalog: 0,
-    moviesOrphan: 0,
-    moviesMarkedWatched: 0,
-    showsProcessed: 0,
-    showsMatchedToCatalog: 0,
-    showsOrphan: 0,
-    showsMarkedWatched: 0,
-    showsMarkedWatching: 0,
-    showsMarkedLoved: 0,
-    movieMatches: [],     // [{title, year, tab}]
-    movieOrphans: [],     // [{title, year, plays}]
-    showMatches: [],      // [{show, distinct, tab, finalStatus, finalRating}]
-    showOrphans: [],      // [{show, distinct, plays}]
-  };
-
-  // === MOVIES: each match → mark watched in source tab ===
-  for (const [key, data] of movieMap.entries()) {
-    report.moviesProcessed++;
-    let matched = false;
-    for (const tabId in catalogs) {
-      const cat = catalogs[tabId];
-      for (const item of cat.items) {
-        const titlesToCheck = [item.title].concat(Array.isArray(item.aliases) ? item.aliases : []);
-        let thisMatch = false;
-        for (const t of titlesToCheck) {
-          if (plexNormalizeKey(t, item.year) === key) { thisMatch = true; break; }
-          for (const dy of [-1, 1]) {
-            if (plexNormalizeKey(t, item.year ? item.year + dy : null) === key) { thisMatch = true; break; }
-          }
-          if (thisMatch) break;
-        }
-        if (thisMatch) {
-          // Skip if already watched
-          if (getStatus(item.id, tabId) !== 'watched') {
-            setStatus(item.id, 'watched', tabId);
-            report.moviesMarkedWatched++;
-          }
-          report.moviesMatchedToCatalog++;
-          report.movieMatches.push({ title: data.title, year: data.year, tab: tabId });
-          matched = true;
-          break;
-        }
-      }
-      if (matched) break;
-    }
-    if (!matched) {
-      report.moviesOrphan++;
-      report.movieOrphans.push({ title: data.title, year: data.year, plays: data.entries.length });
-    }
-  }
-
-  // === TV SHOWS: distinct-episode rule + completion-mode rule ===
-  for (const [key, data] of showMap.entries()) {
-    report.showsProcessed++;
-    const distinctCount = data.episodes.size;
-    let matched = false;
-    for (const tabId in catalogs) {
-      const cat = catalogs[tabId];
-      for (const item of cat.items) {
-        const titlesToCheck = [item.title].concat(Array.isArray(item.aliases) ? item.aliases : []);
-        let thisMatch = false;
-        for (const t of titlesToCheck) {
-          if (plexNormalizeKeyTitleOnly(t) === key) { thisMatch = true; break; }
-        }
-        if (thisMatch) {
-          report.showsMatchedToCatalog++;
-          const mode = item.tvCompletionMode || 'strict';
-          let setWatched = false;
-          if (mode !== 'episodic') {
-            // Look up total episode count for this show (passed in from TMDB pre-fetch)
-            const tmdb = (episodeCounts || {})[plexNormalizeKeyTitleOnly(item.title)] ||
-                         (episodeCounts || {})[plexNormalizeKeyTitleOnly(data.title)];
-            if (tmdb && tmdb > 0) {
-              const ratio = distinctCount / tmdb;
-              const threshold = mode === 'flexible' ? 0.80 : 0.95;
-              if (ratio >= threshold) setWatched = true;
-            }
-          }
-          // Apply status
-          const cur = getStatus(item.id, tabId);
-          if (cur !== 'watched') {
-            if (setWatched) {
-              setStatus(item.id, 'watched', tabId);
-              report.showsMarkedWatched++;
-            } else {
-              if (cur !== 'watching') {
-                setStatus(item.id, 'watching', tabId);
-                report.showsMarkedWatching++;
-              }
-            }
-          }
-          // Loved rule: 5+ distinct episodes
-          if (distinctCount >= 5 && getRating(item.id, tabId) !== 'loved') {
-            setRating(item.id, 'loved', tabId);
-            report.showsMarkedLoved++;
-          }
-          report.showMatches.push({
-            show: data.title, distinct: distinctCount, tab: tabId,
-            finalStatus: getStatus(item.id, tabId), finalRating: getRating(item.id, tabId),
-          });
-          matched = true;
-          break;
-        }
-      }
-      if (matched) break;
-    }
-    if (!matched) {
-      report.showsOrphan++;
-      report.showOrphans.push({ show: data.title, distinct: distinctCount, plays: data.totalPlays });
-    }
-  }
-
-  return report;
 }
 
 // Top-level orchestrator — runs the full bulk-sync. Calls progressCb at each phase.
@@ -2423,30 +2195,9 @@ function setActiveSort(tab, sort) {
   else activeSortByTab[tab] = sort;
 }
 function sortItems(items) {
-  const sort = getActiveSort(activeTab);
-  if (sort === 'default') return items;  // catalog/section order preserved
-  const arr = items.slice();
-  if (sort === 'year') {
-    arr.sort((a, b) => (b.year || 0) - (a.year || 0) || a.title.localeCompare(b.title));
-  } else if (sort === 'title') {
-    arr.sort((a, b) => a.title.localeCompare(b.title));
-  } else if (sort === 'rating') {
-    const rorder = { 'loved': 0, 'liked': 1, 'mixed': 2, 'disliked': 3, 'none': 4 };
-    arr.sort((a, b) => {
-      const ta = a._watchlist_source_tab || activeTab;
-      const tb = b._watchlist_source_tab || activeTab;
-      const ra = rorder[getRating(a.id, ta)] ?? 4;
-      const rb = rorder[getRating(b.id, tb)] ?? 4;
-      return ra - rb || a.title.localeCompare(b.title);
-    });
-  } else if (sort === 'updated') {
-    arr.sort((a, b) => {
-      const ta = a._watchlist_source_tab || activeTab;
-      const tb = b._watchlist_source_tab || activeTab;
-      return (getLastUpdated(b.id, tb) || 0) - (getLastUpdated(a.id, ta) || 0) || a.title.localeCompare(b.title);
-    });
-  }
-  return arr;
+  // Pure comparator logic lives in lib/sort.js; this wrapper supplies the
+  // in-memory sort selection and live state accessors.
+  return sortItemsCore(items, getActiveSort(activeTab), { activeTab, getRating, getLastUpdated });
 }
 const CATEGORY_LABELS = {
   // British Comedy
@@ -6660,63 +6411,16 @@ const MOOD_ARCHETYPES = {
 };
 
 function moodScore(item, sourceTab, mood) {
+  // Overlap counting lives in lib/recs.js (moodScoreFromTags); this wrapper
+  // resolves the mood archetype and the item's stored reaction tags.
   if (!mood || mood === 'any') return 0;
   const cfg = MOOD_ARCHETYPES[mood];
   if (!cfg || !cfg.tags.length) return 0;
-  const itemTags = getTags(item.id, sourceTab) || [];
-  if (itemTags.length === 0) return 0;
-  const moodTagSet = new Set(cfg.tags);
-  let score = 0;
-  for (const t of itemTags) {
-    if (moodTagSet.has(t)) score++;
-  }
-  return score;
+  return moodScoreFromTags(getTags(item.id, sourceTab) || [], cfg.tags);
 }
 
-// === V5.32.0: Time budget filter (Phase 3a of decision-helper roadmap) ===
-// Five buckets, escalating. parseRuntimeMin handles the various string
-// formats stored across catalogs ("126 min", "1h 47m", "47", "5 series + 14
-// episodes"). For TV the runtime field is per-episode by convention so the
-// budget compares per-episode, not series total. Items with unparseable
-// runtime are kept (don't filter out the unknown).
-const TIME_BUDGETS = {
-  quick:    { max: 30,       label: 'Quick',    sub: '≤ 30 min' },
-  short:    { max: 90,       label: 'Short',    sub: '≤ 90 min' },
-  standard: { max: 120,      label: 'Standard', sub: '≤ 2 hours' },
-  long:     { max: 180,      label: 'Long',     sub: '≤ 3 hours' },
-  any:      { max: Infinity, label: 'All evening', sub: 'No limit' },
-};
-
-function parseRuntimeMin(item) {
-  if (!item) return null;
-  const r = item.runtime;
-  if (r == null) return null;
-  if (typeof r === 'number') return r > 0 ? r : null;
-  if (typeof r !== 'string') return null;
-  const s = r.toLowerCase().trim();
-  // "1h 47m" / "1 hr 47 min" / "1h47m" / "2 hours 6 minutes"
-  const hm = s.match(/(\d+)\s*(?:h(?:r|our|ours)?)\s*(?:(\d+)\s*(?:m(?:in|inutes)?))?/);
-  if (hm) {
-    return parseInt(hm[1], 10) * 60 + (hm[2] ? parseInt(hm[2], 10) : 0);
-  }
-  // "47 min" / "47 minutes" / "47m" / leading "47" before non-numeric
-  const m = s.match(/^(\d+)\s*(?:m(?:in|inutes)?)?(?:\s|$)/);
-  if (m) {
-    const v = parseInt(m[1], 10);
-    return v > 0 ? v : null;
-  }
-  return null;
-}
-
-function fitsTimeBudget(item, budget) {
-  if (!budget || budget === 'any') return true;
-  const cfg = TIME_BUDGETS[budget];
-  if (!cfg || cfg.max === Infinity) return true;
-  const mins = parseRuntimeMin(item);
-  // Unparseable / unknown runtime → don't filter out (better false-positive than dropping items)
-  if (mins == null) return true;
-  return mins <= cfg.max;
-}
+// TIME_BUDGETS / parseRuntimeMin / fitsTimeBudget moved to lib/runtime.js
+// (imported at the top of this file). Same behavior.
 
 // === V5.28.0: Cross-platform sync via Cloudflare Worker ===
 // Identity: SHA-256 of the user's Plex token, hex-encoded. Stable across devices.
@@ -7755,118 +7459,11 @@ let triageState = null;  // { mode, queue, idx }
 // rating weight, classifies candidates as catalog-matched (Recommended)
 // or TMDB-orphan (Discover), and returns the top of each.
 function computeRecsForTab(tabIds, opts) {
-  // V5.32.0: optional `opts.timeBudget` filters recommended results by item runtime.
-  // V5.33.0: optional `opts.mood` sorts recommended by reaction-tag overlap with the mood.
-  opts = opts || {};
-  const budget = opts.timeBudget || null;
-  const mood = opts.mood || null;
-  const tabSet = new Set(tabIds);
-
-  // Sources: loved/liked items in the requested tabs that have enrichment.
-  const sources = [];
-  tabSet.forEach(tabId => {
-    const cat = catalogs[tabId];
-    if (!cat) return;
-    cat.items.forEach(item => {
-      const r = getRating(item.id, tabId);
-      if (r !== 'loved' && r !== 'liked') return;
-      const enrich = getEnrichmentForItem(item.id);
-      if (!enrich) return;
-      sources.push({
-        srcId: item.id,
-        srcTitle: item.title,
-        srcTab: tabId,
-        weight: r === 'loved' ? 2 : 1,
-        enrich,
-      });
-    });
+  // The pure engine lives in lib/recs.js; this wrapper injects live catalogs,
+  // state accessors, enrichment lookup, and mood scoring.
+  return computeRecsForTabCore(tabIds, opts, {
+    catalogs, getRating, getStatus, getEnrichmentForItem, moodScore,
   });
-
-  // tmdbId → [{ tabId, item }] across every loaded catalog (incl. promotions).
-  const tmdbToCatalog = new Map();
-  Object.keys(catalogs).forEach(tabId => {
-    if (tabId === 'watchlist') return;
-    catalogs[tabId].items.forEach(item => {
-      const e = getEnrichmentForItem(item.id);
-      if (!e || !e.tmdbId) return;
-      const list = tmdbToCatalog.get(e.tmdbId) || [];
-      list.push({ tabId, item });
-      tmdbToCatalog.set(e.tmdbId, list);
-    });
-  });
-
-  // Aggregate candidates: tmdbId → { tmdbId, title, year, type, score, sourceTitles }
-  const candidates = new Map();
-  let anyEnriched = false;
-  sources.forEach(src => {
-    const recs = src.enrich.recommendations || [];
-    const sims = src.enrich.similar || [];
-    if (recs.length || sims.length) anyEnriched = true;
-    const seen = new Set();
-    [...recs, ...sims].forEach(rec => {
-      if (!rec || !rec.id) return;
-      if (seen.has(rec.id)) return;
-      seen.add(rec.id);
-      if (src.enrich.tmdbId === rec.id) return;
-      const ex = candidates.get(rec.id) || {
-        tmdbId: rec.id,
-        title: rec.title,
-        year: rec.year,
-        type: src.enrich.type,
-        score: 0,
-        sourceTitles: [],
-      };
-      ex.score += src.weight;
-      if (ex.sourceTitles.length < 3) ex.sourceTitles.push(src.srcTitle);
-      candidates.set(rec.id, ex);
-    });
-  });
-
-  // Classify into Recommended (catalog match in selected tabs, untouched)
-  // vs Discover (no catalog match anywhere).
-  const recommended = [];
-  const discover = [];
-  candidates.forEach(c => {
-    const matches = tmdbToCatalog.get(c.tmdbId) || [];
-    let recHit = null;
-    for (const m of matches) {
-      if (!tabSet.has(m.tabId)) continue;
-      const status = getStatus(m.item.id, m.tabId);
-      const rating = getRating(m.item.id, m.tabId);
-      if (status !== 'none' || rating) continue;
-      recHit = m;
-      break;
-    }
-    if (recHit) {
-      // V5.32.0: drop recommended items that don't fit the time budget
-      if (!fitsTimeBudget(recHit.item, budget)) return;
-      recommended.push({ ...c, catalogTab: recHit.tabId, catalogItemId: recHit.item.id });
-    } else if (matches.length === 0) {
-      discover.push(c);
-    }
-  });
-
-  // V5.33.0: blend mood overlap into the score so mood-aligned recs surface first.
-  // Mood scoring uses the matched catalog item's user-applied reactionTags.
-  const moodWeight = mood && mood !== 'any' ? 5 : 0; // mood overlap counts ~5x a single rec match
-  if (moodWeight > 0) {
-    recommended.forEach(r => {
-      // Find the matched catalog item to read its tags
-      const matches = tmdbToCatalog.get(r.tmdbId) || [];
-      const m = matches.find(mm => mm.tabId === r.catalogTab && mm.item.id === r.catalogItemId);
-      if (m) r.score += moodWeight * moodScore(m.item, m.tabId, mood);
-    });
-  }
-  const byScore = (a, b) => b.score - a.score || (a.title || '').localeCompare(b.title || '');
-  recommended.sort(byScore);
-  discover.sort(byScore);
-
-  return {
-    recommended: recommended.slice(0, 12),
-    discover: discover.slice(0, 8),
-    sourceCount: sources.length,
-    anyEnriched,
-  };
 }
 
 // =====================================================================
