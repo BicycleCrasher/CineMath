@@ -1,6 +1,6 @@
 {
   "name": "watchtrack",
-  "version": "5.36.0",
+  "version": "8.1.0",
   "private": true,
   "type": "module",
   "description": "Personal film/TV tracker PWA. No runtime deps; this file exists only so CI can run esbuild for size checks.",

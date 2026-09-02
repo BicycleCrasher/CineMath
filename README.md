@@ -123,7 +123,7 @@ Category filters remember your selection per tab as you switch between tabs. The
 - **Stats** — read-only dashboard with status counts, rating distribution, activity, top tags, per-tab progress
 - **Triage Queue** — focused single-item review of your queued items
 - **Triage Suggested** — focused review of system suggestions
-- **Settings** — display mode (Auto / Phone / TV) and Plex Media Server connection
+- **Settings** — display mode (Auto / Phone / TV), streaming services and regions, and the Plex Media Server connection
 - **Reset** — restores seed data for the active tab on this device. Cross-device sync from another device will overwrite the reset on next pull unless you push from this device afterward.
 
 State durability is now handled automatically: cross-device sync mirrors state across every device with the same Plex token, IndexedDB keeps a local snapshot independent of localStorage clears, and (as of v6.3.0) the Worker writes a daily compressed backup to R2 keyed by date.
@@ -133,6 +133,8 @@ State durability is now handled automatically: cross-device sync mirrors state a
 CinéMath auto-detects TV displays (Sony Bravia, Google TV, Chromecast) and switches to a TV-optimized layout with larger fonts, focus rings, and D-pad navigation. Use the arrow keys (or TV remote D-pad) to move between items, Enter to select, Backspace/Escape to close modals. Notes editing is hidden in TV mode since D-pad typing is impractical — edit notes from the phone.
 
 You can override auto-detection in Settings → Display. Choose Auto, Phone, or TV.
+
+On Android TV the **Tonight** row is the first thing on the home screen: your queued and in-progress titles that are playable right now, ranked so the top card is the easiest thing to start. Pressing a card opens the streaming app straight to that service.
 
 ### Plex integration
 
@@ -145,6 +147,32 @@ Settings → Plex Integration accepts your Plex auth token, server URL, and (opt
 Your token is stored only in localStorage on the device that accepts it. It never goes through GitHub Pages or any third party.
 
 To get a Plex auth token: log in to app.plex.tv on a desktop, open dev tools console (F12), and paste `localStorage.getItem('myPlexAccessToken')`.
+
+### Streaming services
+
+Settings → **Streaming services** is where you tell CinéMath which platforms you pay for. Toggle each service on or off; the list is drawn from TMDB's provider catalogue for every region you have selected, so it stays current without an app update.
+
+**Regions.** The first region in the row (marked ★) is home. Add more if you use a VPN or hold a multi-region account. Availability is checked in every selected region, and anything playable only outside home is grouped under "Available on your subs abroad".
+
+**Where it shows up:**
+- Item cards carry a chip for each of your services that currently streams the title
+- The status filter row gains an **On my services** pill
+- The Watch sheet ranks Plex first, then your subscriptions at home, then abroad, then free, rent, and buy
+- **Tonight** on the home screen lists your queued and in-progress titles that are playable right now, each a single button that opens the service
+
+**Opening other apps.** On Android and Android TV a Watch button opens the streaming app itself rather than a browser tab. If the app is not installed, the site opens instead. Turn this off with "Open titles in installed apps" in the same settings section.
+
+Streaming availability data comes from JustWatch by way of TMDB.
+
+### Plex Watchlist sync
+
+Settings → Plex Integration → **Sync Plex Watchlist** mirrors your Plex Universal Watchlist and the app's queue in both directions. Queue something here and it appears in Plex; add it in Plex and it arrives as queued here. Watchlist titles that are not in any CinéMath catalogue show up in a **Plex Watchlist** section on the Watchlist tab with their own Watch buttons.
+
+Removing a title from your Plex watchlist un-queues it here. Only titles this app pushed are affected, and the behaviour can be disabled.
+
+### Streaming alerts
+
+Settings → **Streaming alerts** watches your queued and in-progress titles once a day and notifies you both when something is about to leave a service and when it newly arrives on one of yours. New arrivals also appear in a strip at the top of the Watchlist tab.
 
 ### Reaction tags
 

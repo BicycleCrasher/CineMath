@@ -541,13 +541,8 @@ function plexHasItem(item) {
   }
   return null;
 }
-function plexDeepLinkUrl(ratingKey) {
-  // plex:// URL scheme launches the Plex Android TV app (or Plex desktop) with a specific item
-  const clientId = getPlexClientId();
-  const serverUrl = getPlexServerUrl();
-  // The standard deep link format
-  return `plex://play?metadataKey=/library/metadata/${ratingKey}&server=${encodeURIComponent(serverUrl)}`;
-}
+// The plex:// deep link is built by buildLaunchCandidates() in lib/launch.js,
+// which also supplies the app.plex.tv and local-server web fallbacks.
 
 // =====================================================================
 // Launch ladder runtime (v8.1.0)
@@ -1966,16 +1961,6 @@ function getEnabledProviderSet() {
 function getEnabledTmdbIds() {
   return Array.from(resolveEnabled(getMySubscriptions()).tmdbIds).sort((a, b) => a - b);
 }
-// True when a TMDB-returned provider name is one of the user's own services.
-function isMySub(providerName) {
-  const name = String(providerName == null ? '' : providerName).trim();
-  if (!name) return false;
-  const enabled = resolveEnabled(getMySubscriptions());
-  if (enabled.names.has(name.toLowerCase())) return true;
-  const entry = matchTmdbProvider({ provider_name: name });
-  return Boolean(entry && enabled.curated.has(entry.id));
-}
-
 function streamingSearchUrl(providerName, title) {
   return webSearchUrl(matchTmdbProvider({ provider_name: providerName }), title, providerName);
 }
@@ -2508,9 +2493,15 @@ async function tmdbLookupById(tmdbId, type) {
   } catch { return null; }
 }
 
+// v8.1.0: browsing regions on an expanded card is VIEW-ONLY. setStreamingRegion()
+// now promotes a region to home, which invalidates every stored availability
+// snapshot — far too destructive for "let me peek at what's on in Germany".
+// This override lives here and is read by nothing else.
+let _cardRegionOverride = null;
+
 function renderStreamingProviders(slot, tmdbData, title) {
   const providers = tmdbData.watchProviders || {};
-  const region = getStreamingRegion();
+  const region = _cardRegionOverride || getStreamingRegion();
   const regionData = providers[region];
   const enabledProviders = resolveEnabled(getMySubscriptions());
 
@@ -2585,7 +2576,9 @@ function renderStreamingProviders(slot, tmdbData, title) {
   if (select) {
     select.addEventListener('change', (e) => {
       e.stopPropagation();
-      setStreamingRegion(e.target.value);
+      const code = String(e.target.value || '').trim().toUpperCase();
+      // Display only — the home region is changed in Settings, not from a card.
+      _cardRegionOverride = /^[A-Z]{2}$/.test(code) ? code : null;
       renderStreamingProviders(slot, tmdbData, title);
     });
     select.addEventListener('click', (e) => e.stopPropagation());
@@ -3122,6 +3115,19 @@ function setStatus(id, status, tab) {
   if (wasMonitored !== isMonitored && typeof alertsRefreshSubscription === 'function') {
     alertsRefreshSubscription();
   }
+  // v8.1.0: Plex Universal Watchlist mirror. Queueing a title pushes it onto
+  // the remote watchlist; leaving the queue for watched/none/skip takes it
+  // back off (only when we know the ratingKey we pushed). Fire-and-forget,
+  // exactly like the Trakt pushes above, and never while
+  // plexWatchlistSyncNow() is applying its own plan.
+  if (isPlexWatchlistSyncEnabled() && !_plexSyncing) {
+    if (status === 'queued' && prevStatus !== 'queued') {
+      if (catItem) plexWatchlistPush(catItem, tab);
+    } else if (wasMonitored && (status === 'watched' || status === 'none' || status === 'skip')) {
+      const mirrored = getPlexWatchlistMirror()[`${tab}|${id}`];
+      if (mirrored && mirrored.ratingKey) plexWatchlistRemove(mirrored.ratingKey);
+    }
+  }
   // v7.2.0: Skip 2.5s auto-archive. Cycling through skip via cycleStatus
   // cancels the timer on the next change; landing on skip deliberately and
   // staying lets it fire. Stored on window so the Map survives function calls
@@ -3307,6 +3313,509 @@ async function traktPushWatchlist(title, year, tabId) {
   try {
     await traktApiCall('/sync/watchlist', 'POST', { [listKey]: [payload] });
   } catch (e) { /* fire-and-forget */ }
+}
+
+// =====================================================================
+// Plex Universal Watchlist sync (v8.1.0)
+// =====================================================================
+// The Worker proxies discover.provider.plex.tv; this half owns the local
+// half of the mirror: which catalog refs we pushed, which rating keys they
+// map to, and the "orphans" (watchlist titles that live in no catalog here).
+// Everything is fire-and-forget — a Plex outage must never break a status
+// write, a card render or the wizard.
+const PLEX_WL_SYNC_KEY = 'watchtrack-plex-watchlist-sync';
+const PLEX_WL_TWO_WAY_KEY = 'watchtrack-plex-watchlist-two-way';
+const PLEX_WL_MIRROR_KEY = 'watchtrack-plex-watchlist-mirror';
+const PLEX_DISCOVER_MAP_KEY = 'watchtrack-plex-discover-map';
+const PLEX_WL_ORPHANS_KEY = 'watchtrack-plex-watchlist-orphans';
+const PLEX_DISCOVER_MAP_TTL_MS = 30 * 24 * 60 * 60 * 1000;   // cached rating keys
+const PLEX_DISCOVER_MISS_TTL_MS = 7 * 24 * 60 * 60 * 1000;   // "no hit" retry window
+const PLEX_DISCOVER_AVAIL_TTL_MS = 24 * 60 * 60 * 1000;      // per-title availability
+const PLEX_DISCOVER_TIMEOUT_MS = 4000;                       // Watch modal must not hang
+const PLEX_WL_SYNC_THROTTLE_MS = 15 * 60 * 1000;
+const PLEX_WL_ORPHAN_MAX = 60;
+
+// True while plexWatchlistSyncNow() is applying its own plan, so the
+// setStatus() hook below doesn't push the same change straight back.
+let _plexSyncing = false;
+let _plexWlSyncStartedAt = 0;   // throttle clock
+let _plexWlLastOkAt = 0;        // last successful sync (status line)
+let _plexWlLastSummary = null;
+let _plexWlSyncInFlight = null;
+
+function isPlexWatchlistSyncEnabled() { return lsGet(PLEX_WL_SYNC_KEY) === '1'; }
+function setPlexWatchlistSyncEnabled(on) {
+  if (on) lsSet(PLEX_WL_SYNC_KEY, '1');
+  else lsDel(PLEX_WL_SYNC_KEY);
+}
+// Remote removal → local un-queue. On unless the user opts out.
+function isPlexWatchlistTwoWay() { return lsGet(PLEX_WL_TWO_WAY_KEY) !== '0'; }
+
+function _plexWlReadJson(key, fallback) {
+  try {
+    const raw = lsGet(key);
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw);
+    return parsed == null ? fallback : parsed;
+  } catch { return fallback; }
+}
+function _plexWlWriteJson(key, value) {
+  try { lsSet(key, JSON.stringify(value)); } catch (e) { console.warn('Plex watchlist store write failed:', e); }
+}
+
+// Watchlist titles that matched no catalog item — rendered as the ephemeral
+// "D. Plex Watchlist" section. Empty whenever sync is off so turning the
+// toggle off makes the section disappear immediately.
+function getPlexWatchlistOrphans() {
+  if (!isPlexWatchlistSyncEnabled()) return [];
+  const list = _plexWlReadJson(PLEX_WL_ORPHANS_KEY, []);
+  return Array.isArray(list) ? list.filter(o => o && o.ratingKey) : [];
+}
+function setPlexWatchlistOrphans(list) {
+  _plexWlWriteJson(PLEX_WL_ORPHANS_KEY, Array.isArray(list) ? list.slice(0, PLEX_WL_ORPHAN_MAX) : []);
+}
+
+// { "<tab>|<id>": { ratingKey, syncedAt, origin } }. An entry with an empty
+// ratingKey is a remembered Discover miss — it stops us re-searching for the
+// same title on every sync, and planWatchlistSync() treats it as "not
+// mirrored" so a remote removal can never un-queue it.
+function getPlexWatchlistMirror() {
+  const obj = _plexWlReadJson(PLEX_WL_MIRROR_KEY, {});
+  return (obj && typeof obj === 'object' && !Array.isArray(obj)) ? obj : {};
+}
+function setPlexWatchlistMirror(obj) {
+  _plexWlWriteJson(PLEX_WL_MIRROR_KEY, (obj && typeof obj === 'object') ? obj : {});
+}
+
+// { "<tmdbId>" | "<normalized title|year>": { ratingKey, at } }. A null
+// ratingKey is a cached miss; entries older than the TTL are dropped on read.
+function getPlexDiscoverMap() {
+  const obj = _plexWlReadJson(PLEX_DISCOVER_MAP_KEY, {});
+  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return {};
+  const cutoff = Date.now() - PLEX_DISCOVER_MAP_TTL_MS;
+  const out = {};
+  for (const key of Object.keys(obj)) {
+    const rec = obj[key];
+    if (rec && Number(rec.at) >= cutoff) out[key] = rec;
+  }
+  return out;
+}
+function setPlexDiscoverMap(obj) {
+  _plexWlWriteJson(PLEX_DISCOVER_MAP_KEY, (obj && typeof obj === 'object') ? obj : {});
+}
+
+// Same TV/film split the Trakt push and the alerts manifest use.
+function plexDiscoverTypeForTab(tabId) {
+  const t = String(tabId || '');
+  return (t.endsWith('-tv') || t === 'british-comedy') ? 'tv' : 'movie';
+}
+function plexDiscoverCacheKey(tmdbId, item) {
+  if (tmdbId != null && tmdbId !== '') return String(tmdbId);
+  return plexNormalizeKey(item && item.title, item && item.year);
+}
+
+// Resolve a catalog item to a Plex Discover ratingKey. Checks the local map
+// first (including remembered misses), then hits /plex/discover/search and
+// picks the best hit by tmdb guid, then normalized title+year. Never throws;
+// returns null when there is no confident match.
+async function plexDiscoverResolveRatingKey(item, tabId, opts) {
+  try {
+    if (!item || !item.title) return null;
+    if (!isWebhookConfigured()) return null;
+    const enrich = item.id ? getEnrichmentForItem(item.id) : null;
+    const tmdbId = (enrich && enrich.tmdbId) || item._tmdbId || null;
+    const type = plexDiscoverTypeForTab(tabId || item._watchlist_source_tab || activeTab);
+    const key = plexDiscoverCacheKey(tmdbId, item);
+    if (!key) return null;
+    const map = getPlexDiscoverMap();
+    const cached = map[key];
+    if (cached) {
+      if (cached.ratingKey) return String(cached.ratingKey);
+      // Remembered miss — don't search again until the retry window is up.
+      if (Date.now() - (Number(cached.at) || 0) < PLEX_DISCOVER_MISS_TTL_MS) return null;
+    }
+    const params = new URLSearchParams({
+      secret: getWebhookSecret(),
+      query: item.title,
+      type,
+    });
+    if (item.year) params.set('year', String(item.year));
+    const init = (opts && opts.signal) ? { signal: opts.signal } : undefined;
+    const resp = await fetch(`${getWebhookUrl()}/plex/discover/search?${params}`, init);
+    if (!resp.ok) return null;   // transport failure — don't cache it as a miss
+    const data = await resp.json();
+    const best = pickBestSearchHit(
+      Array.isArray(data.hits) ? data.hits : [],
+      { tmdbId, title: item.title, year: item.year, type },
+      plexNormalizeKey
+    );
+    const ratingKey = (best && best.ratingKey) ? String(best.ratingKey) : null;
+    map[key] = { ratingKey, at: Date.now() };
+    setPlexDiscoverMap(map);
+    return ratingKey;
+  } catch (e) { return null; }
+}
+
+// Per-title streaming availability (with deep URLs) from Plex Discover.
+// Returns { availability: [...] } or null. Cached on the enrichment record
+// for 24h; hard 4s timeout so the Watch modal can await it safely.
+async function getPlexDiscoverAvailability(item) {
+  try {
+    if (!item) return null;
+    if (!isPlexWatchlistSyncEnabled()) return null;
+    if (!isWebhookConfigured()) return null;
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) return null;
+    const enrich = item.id ? getEnrichmentForItem(item.id) : null;
+    const cached = enrich && enrich.plexDiscover;
+    if (cached && Date.now() - (Number(cached.at) || 0) < PLEX_DISCOVER_AVAIL_TTL_MS) {
+      return { availability: Array.isArray(cached.availability) ? cached.availability : [] };
+    }
+    const ctrl = (typeof AbortController === 'function') ? new AbortController() : null;
+    const timer = ctrl ? setTimeout(() => { try { ctrl.abort(); } catch {} }, PLEX_DISCOVER_TIMEOUT_MS) : null;
+    try {
+      const tab = item._watchlist_source_tab || activeTab;
+      const ratingKey = await plexDiscoverResolveRatingKey(item, tab, ctrl ? { signal: ctrl.signal } : null);
+      if (!ratingKey) return null;
+      const resp = await fetch(
+        `${getWebhookUrl()}/plex/discover/metadata?secret=${encodeURIComponent(getWebhookSecret())}&ratingKey=${encodeURIComponent(ratingKey)}`,
+        ctrl ? { signal: ctrl.signal } : undefined
+      );
+      if (!resp.ok) return null;
+      const data = await resp.json();
+      const availability = Array.isArray(data.availability) ? data.availability : [];
+      if (item.id) mergeEnrichmentForItem(item.id, { plexDiscover: { ratingKey, at: Date.now(), availability } });
+      return { availability };
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+  } catch (e) { return null; }
+}
+
+// PUT /plex/watchlist/add|remove. Resolves true only when Plex accepted it.
+async function _plexWatchlistPut(action, ratingKey) {
+  if (!ratingKey) return false;
+  const url = `${getWebhookUrl()}/plex/watchlist/${action}`
+    + `?secret=${encodeURIComponent(getWebhookSecret())}`
+    + `&ratingKey=${encodeURIComponent(ratingKey)}`;
+  const resp = await fetch(url, { method: 'PUT' });
+  if (!resp.ok) return false;
+  let data = null;
+  try { data = await resp.json(); } catch {}
+  return !data || data.ok !== false;
+}
+
+// Add one catalog item to the remote watchlist and mirror the ratingKey.
+// Fire-and-forget: returns null on any failure.
+async function plexWatchlistPush(item, tabId) {
+  try {
+    if (!item || !item.id || item._ephemeral) return null;
+    if (!isPlexWatchlistSyncEnabled() || !isWebhookConfigured()) return null;
+    const tab = tabId || activeTab;
+    const ratingKey = await plexDiscoverResolveRatingKey(item, tab);
+    if (!ratingKey) return null;
+    const ok = await _plexWatchlistPut('add', ratingKey);
+    if (!ok) return null;
+    const mirror = getPlexWatchlistMirror();
+    mirror[`${tab}|${item.id}`] = { ratingKey, syncedAt: Date.now(), origin: 'local' };
+    setPlexWatchlistMirror(mirror);
+    return ratingKey;
+  } catch (e) { return null; }
+}
+
+// Remove one ratingKey from the remote watchlist and drop every mirror entry
+// pointing at it. Used by the setStatus hook and the orphan card's button.
+async function plexWatchlistRemove(ratingKey) {
+  try {
+    if (!ratingKey || !isWebhookConfigured()) return false;
+    const ok = await _plexWatchlistPut('remove', ratingKey);
+    const mirror = getPlexWatchlistMirror();
+    let changed = false;
+    for (const ref of Object.keys(mirror)) {
+      if (mirror[ref] && String(mirror[ref].ratingKey) === String(ratingKey)) { delete mirror[ref]; changed = true; }
+    }
+    if (changed) setPlexWatchlistMirror(mirror);
+    const orphans = _plexWlReadJson(PLEX_WL_ORPHANS_KEY, []);
+    if (Array.isArray(orphans) && orphans.some(o => o && String(o.ratingKey) === String(ratingKey))) {
+      setPlexWatchlistOrphans(orphans.filter(o => o && String(o.ratingKey) !== String(ratingKey)));
+    }
+    return ok;
+  } catch (e) { return false; }
+}
+
+// Status line under the Plex settings card.
+function plexWatchlistSetStatus(text) {
+  const el = document.getElementById('plex-watchlist-status');
+  if (!el) return;
+  if (text != null) { el.textContent = text; return; }
+  if (!isPlexWatchlistSyncEnabled()) { el.textContent = 'Off'; return; }
+  if (!isWebhookConfigured()) { el.textContent = 'On — needs the Cloudflare Worker.'; return; }
+  const s = _plexWlLastSummary;
+  if (!s || !_plexWlLastOkAt) { el.textContent = 'On — not synced yet.'; return; }
+  const when = new Date(_plexWlLastOkAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  el.textContent = `Synced ${when} · ${s.remote} on Plex · ${s.pushed} added · ${s.queued} queued here`
+    + `${s.unqueued ? ` · ${s.unqueued} un-queued` : ''}${s.orphans ? ` · ${s.orphans} not in a catalog` : ''}`;
+}
+
+// Toggle + status + the "Sync watchlist now" button (wired once).
+function refreshPlexWatchlistUI() {
+  const toggle = document.getElementById('plex-watchlist-sync-toggle');
+  if (toggle) toggle.checked = isPlexWatchlistSyncEnabled();
+  const btn = document.getElementById('plex-watchlist-sync-now');
+  if (btn && btn.dataset.wired !== '1') {
+    btn.dataset.wired = '1';
+    btn.addEventListener('click', () => {
+      plexWatchlistSetStatus('Syncing…');
+      plexWatchlistSyncNow({ reason: 'manual' }).then(() => render()).catch(() => {});
+    });
+  }
+  plexWatchlistSetStatus(null);
+}
+
+// Index every catalog item once: tmdbId → ref, normalized title+year → ref
+// (films, ±1 year fuzz applied on lookup) and title-only → ref (TV, which is
+// how lib/plex-match.js matches shows).
+function _plexWlBuildCatalogIndex() {
+  const byTmdb = new Map();
+  const byKey = new Map();
+  const byTitle = new Map();
+  for (const tabId in catalogs) {
+    if (tabId === 'watchlist' || tabId === 'auteur') continue;
+    const cat = catalogs[tabId];
+    if (!cat || !Array.isArray(cat.items)) continue;
+    for (const item of cat.items) {
+      if (!item || !item.id || item._ephemeral) continue;
+      if (isArchived(tabId, item.id)) continue;
+      const ref = `${tabId}|${item.id}`;
+      const enrich = getEnrichmentForItem(item.id);
+      if (enrich && enrich.tmdbId != null) {
+        const k = String(enrich.tmdbId);
+        if (!byTmdb.has(k)) byTmdb.set(k, ref);
+      }
+      const titles = [item.title].concat(Array.isArray(item.aliases) ? item.aliases : []);
+      for (const t of titles) {
+        const mk = plexNormalizeKey(t, item.year);
+        if (mk && !byKey.has(mk)) byKey.set(mk, ref);
+        const tk = plexNormalizeKeyTitleOnly(t);
+        if (tk && !byTitle.has(tk)) byTitle.set(tk, ref);
+      }
+    }
+  }
+  return { byTmdb, byKey, byTitle };
+}
+
+function _plexWlMatchRemote(remoteItem, idx) {
+  const guidTmdb = remoteItem.guids && remoteItem.guids.tmdb;
+  if (guidTmdb != null && idx.byTmdb.has(String(guidTmdb))) return idx.byTmdb.get(String(guidTmdb));
+  const type = String(remoteItem.type || '').toLowerCase();
+  const isTV = type === 'show' || type === 'tv' || type === 'series';
+  if (isTV) {
+    const tk = plexNormalizeKeyTitleOnly(remoteItem.title);
+    if (tk && idx.byTitle.has(tk)) return idx.byTitle.get(tk);
+    return null;
+  }
+  const year = Number(remoteItem.year) || null;
+  for (const dy of [0, -1, 1]) {
+    const mk = plexNormalizeKey(remoteItem.title, year == null ? year : year + dy);
+    if (mk && idx.byKey.has(mk)) return idx.byKey.get(mk);
+  }
+  return null;
+}
+
+// Every locally queued catalog item, in planWatchlistSync()'s shape.
+function _plexWlLocalQueued() {
+  const out = [];
+  for (const tabId in state) {
+    if (tabId === 'watchlist' || tabId === 'auteur') continue;
+    const tabState = state[tabId];
+    const cat = catalogs[tabId];
+    if (!tabState || !cat || !Array.isArray(cat.items)) continue;
+    for (const itemId of Object.keys(tabState)) {
+      const e = tabState[itemId];
+      if (!e || e.status !== 'queued') continue;
+      if (isArchived(tabId, itemId)) continue;
+      const item = cat.items.find(it => it.id === itemId);
+      if (!item) continue;
+      const enrich = getEnrichmentForItem(itemId);
+      out.push({
+        ref: `${tabId}|${itemId}`,
+        tmdbId: (enrich && enrich.tmdbId) || null,
+        title: item.title,
+        year: item.year || null,
+        type: plexDiscoverTypeForTab(tabId),
+        status: 'queued',
+      });
+    }
+  }
+  return out;
+}
+
+// Turn the unmatched remote rows into orphan records the Watchlist tab can
+// render — one batched TMDB lookup so the Watch buttons have a snapshot.
+async function _plexWlEnrichOrphans(rows) {
+  const list = rows.slice(0, PLEX_WL_ORPHAN_MAX).map(r => ({
+    ratingKey: String(r.ratingKey),
+    title: r.title || '',
+    year: r.year || null,
+    type: (String(r.type || '').toLowerCase() === 'show' || String(r.type || '').toLowerCase() === 'tv') ? 'tv' : 'movie',
+    tmdbId: (r.guids && r.guids.tmdb != null) ? Number(r.guids.tmdb) : null,
+    at: Date.now(),
+  }));
+  if (!list.length || !isWebhookConfigured()) return list;
+  let results = [];
+  try {
+    const bulk = await tmdbBulkLookup(list.map(o => ({ title: o.title, year: o.year || '', type: o.type })));
+    results = Array.isArray(bulk.results) ? bulk.results : [];
+  } catch { results = []; }
+  const byQuery = new Map();
+  for (const r of results) {
+    if (!r || !r.query || !r.result) continue;
+    byQuery.set(`${r.query.title}|${r.query.year || ''}|${r.query.type}`, r.result);
+  }
+  const regions = getStreamingRegions();
+  let wrote = 0;
+  for (const o of list) {
+    const hit = byQuery.get(`${o.title}|${o.year || ''}|${o.type}`);
+    if (!hit || hit.error || !hit.found) continue;
+    if (hit.tmdbId != null) o.tmdbId = hit.tmdbId;
+    if (!o.year && hit.year) o.year = hit.year;
+    if (hit.watchProviders) o.avail = snapshotFromTmdb(hit.watchProviders, regions);
+    // Mirror it onto the enrichment index under the ephemeral card id so the
+    // orphan's provider chips and Watch buttons resolve exactly like a real
+    // catalog item's. Written straight in (one save below) rather than
+    // through mergeEnrichmentForItem, which re-serializes the whole index.
+    const id = `plexwl:${o.ratingKey}`;
+    catalogEnrichmentIdx[id] = {
+      ...(catalogEnrichmentIdx[id] || {}),
+      tmdbId: o.tmdbId, type: o.type, year: o.year || null,
+      posterPath: hit.posterPath || null,
+      avail: o.avail || (catalogEnrichmentIdx[id] && catalogEnrichmentIdx[id].avail) || null,
+      lastEnriched: Date.now(),
+    };
+    wrote++;
+  }
+  if (wrote) saveCatalogEnrichment(catalogEnrichmentIdx);
+  return list;
+}
+
+// Reconcile the local queue with the Plex Universal Watchlist. Throttled to
+// once per 15 minutes unless the user asked for it. Never throws.
+async function plexWatchlistSyncNow(opts) {
+  opts = opts || {};
+  const forced = opts.reason === 'settings' || opts.reason === 'manual';
+  const summary = { ok: false, reason: '', remote: 0, pushed: 0, queued: 0, unqueued: 0, orphans: 0 };
+  if (_plexWlSyncInFlight) return _plexWlSyncInFlight;
+  if (!isPlexWatchlistSyncEnabled()) { summary.reason = 'off'; return summary; }
+  if (!isWebhookConfigured()) { summary.reason = 'no-webhook'; return summary; }
+  if (!forced && _plexWlSyncStartedAt && (Date.now() - _plexWlSyncStartedAt) < PLEX_WL_SYNC_THROTTLE_MS) {
+    summary.reason = 'throttled';
+    return summary;
+  }
+  _plexWlSyncStartedAt = Date.now();
+  const run = (async () => {
+    try {
+      const resp = await fetch(`${getWebhookUrl()}/plex/watchlist?secret=${encodeURIComponent(getWebhookSecret())}`);
+      if (!resp.ok) { summary.reason = `http-${resp.status}`; plexWatchlistSetStatus('Plex Watchlist sync failed.'); return summary; }
+      const data = await resp.json();
+      const remoteRaw = Array.isArray(data.items) ? data.items : [];
+      summary.remote = remoteRaw.length;
+
+      const idx = _plexWlBuildCatalogIndex();
+      const remote = remoteRaw.filter(r => r && r.ratingKey).map(r => {
+        const ref = _plexWlMatchRemote(r, idx);
+        let matchedStatus = null;
+        if (ref) {
+          const cut = ref.indexOf('|');
+          const tab = ref.slice(0, cut);
+          const id = ref.slice(cut + 1);
+          matchedStatus = (state[tab] && state[tab][id] && state[tab][id].status) || 'none';
+        }
+        return { ...r, ratingKey: String(r.ratingKey), matchedRef: ref, matchedStatus };
+      });
+
+      const mirrorPrev = getPlexWatchlistMirror();
+      const plan = planWatchlistSync({
+        localQueued: _plexWlLocalQueued(),
+        remote,
+        mirror: mirrorPrev,
+      });
+      const mirrorNext = { ...(plan.mirrorNext || {}) };
+      const now = Date.now();
+
+      // 1. Push locally queued titles Plex doesn't have yet. A title Discover
+      //    can't find gets a mirror entry with an empty ratingKey, so we try
+      //    again no sooner than the miss retry window.
+      for (const ref of (plan.push || [])) {
+        const cut = ref.indexOf('|');
+        const tab = ref.slice(0, cut);
+        const id = ref.slice(cut + 1);
+        const prev = mirrorPrev[ref];
+        if (prev && !prev.ratingKey && (now - (Number(prev.syncedAt) || 0)) < PLEX_DISCOVER_MISS_TTL_MS) {
+          mirrorNext[ref] = prev;   // remembered miss, still fresh
+          continue;
+        }
+        const cat = catalogs[tab];
+        const item = cat && Array.isArray(cat.items) ? cat.items.find(it => it.id === id) : null;
+        if (!item) continue;
+        const ratingKey = await plexDiscoverResolveRatingKey(item, tab);
+        if (!ratingKey) { mirrorNext[ref] = { ratingKey: '', syncedAt: now, origin: 'miss' }; continue; }
+        const ok = await _plexWatchlistPut('add', ratingKey);
+        if (ok) {
+          mirrorNext[ref] = { ratingKey, syncedAt: now, origin: 'local' };
+          summary.pushed++;
+        }
+      }
+
+      // 2. Adopt remote-only additions into the local queue, and honour
+      //    remote removals (mirror-gated by planWatchlistSync). Both write
+      //    through setStatus under the guard so the hook doesn't echo them
+      //    straight back to Plex.
+      _plexSyncing = true;
+      try {
+        for (const row of (plan.queueLocally || [])) {
+          const ref = row && row.ref;
+          if (!ref) continue;
+          const cut = ref.indexOf('|');
+          setStatus(ref.slice(cut + 1), 'queued', ref.slice(0, cut));
+          summary.queued++;
+        }
+        for (const ref of (plan.unqueueLocally || [])) {
+          if (!isPlexWatchlistTwoWay()) {
+            // Escape hatch is on: keep the item queued here AND keep its
+            // mirror entry, so the next sync doesn't push it back to Plex.
+            if (mirrorPrev[ref]) mirrorNext[ref] = mirrorPrev[ref];
+            continue;
+          }
+          const cut = ref.indexOf('|');
+          setStatus(ref.slice(cut + 1), 'none', ref.slice(0, cut));
+          summary.unqueued++;
+        }
+      } finally {
+        _plexSyncing = false;
+      }
+
+      // 3. Watchlist titles that live in no catalog become the ephemeral
+      //    "D. Plex Watchlist" section.
+      const orphanRows = (plan.orphans || []).filter(o => o && o.ratingKey);
+      const orphans = orphanRows.length ? await _plexWlEnrichOrphans(orphanRows) : [];
+      setPlexWatchlistOrphans(orphans);
+      summary.orphans = orphans.length;
+
+      setPlexWatchlistMirror(mirrorNext);
+      summary.ok = true;
+      _plexWlLastOkAt = Date.now();
+      _plexWlLastSummary = summary;
+      plexWatchlistSetStatus(null);
+      return summary;
+    } catch (e) {
+      summary.reason = e && e.message ? e.message : 'error';
+      try { plexWatchlistSetStatus('Plex Watchlist sync failed.'); } catch {}
+      return summary;
+    } finally {
+      _plexWlSyncInFlight = null;
+    }
+  })();
+  _plexWlSyncInFlight = run;
+  return run;
 }
 
 async function traktPullSync() {
@@ -3627,10 +4136,15 @@ function itemMatchesCategory(item) {
 function filterCount(filterKey) {
   const cat = activeTab === 'watchlist' ? buildWatchlistCatalog() : catalogs[activeTab];
   if (!cat || !cat.items) return 0;
-  const COUNTED = new Set(['all','watching','queued','watched','loved','unwatched']);
+  const COUNTED = new Set(['all','watching','queued','watched','loved','unwatched','on-my-services']);
   if (!COUNTED.has(filterKey)) return 0;
   let count = 0;
   cat.items.forEach(item => {
+    // v8.1.0: Plex Watchlist orphans carry no local state — never read it.
+    if (item._ephemeral) {
+      if (filterKey === 'all' || filterKey === 'unwatched') count++;
+      return;
+    }
     const tab = item._watchlist_source_tab || activeTab;
     const status = getStatus(item.id, tab);
     const rating = getRating(item.id, tab);
@@ -3640,6 +4154,7 @@ function filterCount(filterKey) {
     else if (filterKey === 'watched'  && status === 'watched')  count++;
     else if (filterKey === 'loved'    && rating === 'loved')    count++;
     else if (filterKey === 'unwatched' && (status === 'none' || status === 'queued')) count++;
+    else if (filterKey === 'on-my-services' && itemIsOnMyServices(item)) count++;
   });
   return count;
 }
@@ -3653,6 +4168,7 @@ function buildFilters() {
     { key: 'priority-med', label: 'Med priority' },
     { key: 'watching', label: 'Watching' },
     { key: 'unwatched', label: 'Unseen' },
+    { key: 'on-my-services', label: 'On my services' },
     { key: 'queued', label: 'Queued' },
     { key: 'watched', label: 'Watched' },
     { key: 'loved', label: 'Loved' },
@@ -3819,7 +4335,20 @@ function buildTagPills() {
   }
 }
 
+// v8.1.0: the "On my services" predicate — the title streams on a provider the
+// user enabled in one of their regions, or it already sits on their own Plex
+// server. Shared by the filter pill, its count badge and the Tonight row so
+// the three can never disagree.
+function itemIsOnMyServices(item) {
+  if (!item || !item.id) return false;
+  const e = getEnrichmentForItem(item.id);
+  if (e && e.avail && isPlayableOnMyServices(e.avail, getStreamingRegions(), getMySubscriptions())) return true;
+  return isPlexConfigured() && !!plexHasItem(item);
+}
+
 function itemMatchesFilter(item) {
+  // Ephemeral rows (Plex Watchlist orphans) have no status, rating or tags.
+  if (item._ephemeral) return activeFilter === 'all' || activeFilter === 'unwatched';
   const tab = item._watchlist_source_tab || activeTab;
   const status = getStatus(item.id, tab);
   const rating = getRating(item.id, tab);
@@ -3831,6 +4360,7 @@ function itemMatchesFilter(item) {
     case 'priority-med': statusMatch = item.priority === 'med'; break;
     case 'watching': statusMatch = status === 'watching'; break;
     case 'unwatched': statusMatch = status === 'none' || status === 'queued'; break;
+    case 'on-my-services': statusMatch = itemIsOnMyServices(item); break;
     case 'queued': statusMatch = status === 'queued'; break;
     case 'watched': statusMatch = status === 'watched'; break;
     case 'loved': statusMatch = rating === 'loved'; break;
@@ -3911,22 +4441,42 @@ function buildWatchlistCatalog() {
     return a.title.localeCompare(b.title);
   });
 
+  // v8.1.0 section D: titles on the Plex Universal Watchlist that aren't in
+  // any catalog. These are EPHEMERAL — no local state, rating, tags or notes
+  // are ever written for them, so their cards are deliberately reduced.
+  // getPlexWatchlistOrphans() lands with Stream A3; until then this is empty.
+  const orphanRows = (typeof getPlexWatchlistOrphans === 'function' ? getPlexWatchlistOrphans() : null) || [];
+  const plexWatchlist = orphanRows.filter(o => o && o.ratingKey).map((o, i) => ({
+    id: 'plexwl:' + o.ratingKey,
+    title: o.title || '(untitled)',
+    year: o.year || '',
+    order: i + 1,
+    _ephemeral: true,
+    _plexRatingKey: o.ratingKey,
+    _tmdbId: o.tmdbId || null,
+    _watchlist_source_tab: 'watchlist',
+    _watchlist_source_label: 'Plex Watchlist',
+    categories: ['plex-watchlist'],
+  }));
+
   // Distinct categories present in result for the category filter row
   const sectionA = { name: 'A. Currently Watching', desc: 'Items you marked as in-progress.', items: watching, categories: ['watching'] };
   const sectionB = { name: 'B. Your Queue', desc: 'Items you marked as queued, sorted most-recently-touched first.', items: queued, categories: ['queued'] };
   const sectionC = { name: 'C. System Suggestions', desc: 'Curated high/medium-priority recommendations across genres you have not yet engaged with.', items: suggested, categories: ['suggested'] };
+  const sectionD = { name: 'D. Plex Watchlist', desc: 'On your Plex Universal Watchlist but not in any catalog here.', items: plexWatchlist, categories: ['plex-watchlist'] };
 
   // Each item gets the section-level category for filter purposes
   watching.forEach(it => { it.section = sectionA.name; it.sectionDesc = sectionA.desc; it.categories = (it.categories || []).concat(['watching']); });
   queued.forEach(it => { it.section = sectionB.name; it.sectionDesc = sectionB.desc; it.categories = (it.categories || []).concat(['queued']); });
   suggested.forEach(it => { it.section = sectionC.name; it.sectionDesc = sectionC.desc; it.categories = (it.categories || []).concat(['suggested']); });
+  plexWatchlist.forEach(it => { it.section = sectionD.name; it.sectionDesc = sectionD.desc; });
 
-  const allItems = [...watching, ...queued, ...suggested];
+  const allItems = [...watching, ...queued, ...suggested, ...plexWatchlist];
   return {
     type: 'watchlist',
     title: 'Watchlist',
     subtitle: `${watching.length} watching · ${queued.length} queued · ${suggested.length} suggested`,
-    sections: [sectionA, sectionB, sectionC].filter(s => s.items.length > 0),
+    sections: [sectionA, sectionB, sectionC, sectionD].filter(s => s.items.length > 0),
     items: allItems
   };
 }
@@ -3978,6 +4528,205 @@ function renderWatchingNowBanner() {
   const firstSection = main.querySelector('.section-header');
   if (firstSection) main.insertBefore(banner, firstSection);
   else main.prepend(banner);
+}
+
+// =====================================================================
+// v8.1.0 Watchlist strips — Tonight, then "now streaming on your services"
+// =====================================================================
+// Both sit under the watching-now banner and above the first section header.
+// Rendered in call order, so whichever runs first ends up on top.
+function insertWatchlistStrip(main, el) {
+  const firstSection = main.querySelector('.section-header');
+  if (firstSection) main.insertBefore(el, firstSection);
+  else main.appendChild(el);
+}
+
+// v8.1.0: the Tonight row — everything queued or in progress that the user
+// could actually press play on right now, best option first. Returns a bare
+// array (renderTonightStrip() and the wizard both map over it); whether the
+// queue had anything in it at all is exposed separately by tonightHasQueued()
+// so the wizard can tell "nothing queued" from "nothing on your services".
+let _tonightHasQueued = false;
+
+function buildTonightList(limit) {
+  const max = Number.isFinite(limit) && limit > 0 ? limit : (isTVMode() ? 6 : 4);
+  const regions = getStreamingRegions();
+  const subIds = getMySubscriptions();
+  const liveNames = liveNamesForRegions(regions);
+  const plexOn = isPlexConfigured();
+  const entries = [];
+  let hasQueued = false;
+  for (const tabId in catalogs) {
+    if (tabId === 'watchlist' || tabId === 'auteur') continue;
+    const cat = catalogs[tabId];
+    if (!cat || !Array.isArray(cat.items)) continue;
+    for (const item of cat.items) {
+      if (!item || !item.id || item._ephemeral) continue;
+      if (isArchived(tabId, item.id)) continue;
+      const status = getStatus(item.id, tabId);
+      if (status !== 'watching' && status !== 'queued') continue;
+      hasQueued = true;
+      const enrich = getEnrichmentForItem(item.id);
+      const plexItem = plexOn ? plexHasItem(item) : null;
+      const ranked = rankAvailability({
+        avail: (enrich && enrich.avail) || null,
+        regions,
+        subIds,
+        registry: PROVIDER_BY_ID,
+        plexServer: plexItem,
+        plexDiscover: (enrich && enrich.plexDiscover) || null,
+        liveNames,
+      });
+      const best = ranked.best;
+      if (!best || !(Number(best.score) >= PLAYABLE_SCORE)) continue;
+      entries.push({
+        ref: `${tabId}|${item.id}`,
+        item,
+        tab: tabId,
+        title: item.title,
+        year: item.year || '',
+        lastUpdated: getLastUpdated(item.id, tabId),
+        ranked,
+        best,
+        // rankAvailability() doesn't carry the Plex rating key through, so
+        // hand it to tonightCardHtml() on the entry instead.
+        ratingKey: plexItem ? plexItem.ratingKey : '',
+      });
+    }
+  }
+  _tonightHasQueued = hasQueued;
+  return rankTonight(entries).slice(0, max);
+}
+
+// True when at least one title was queued/watching the last time
+// buildTonightList() ran — drives which empty state the wizard shows.
+function tonightHasQueued() { return _tonightHasQueued; }
+
+// Markup for ONE Tonight card, shared by the wizard's Tonight row (Stream A3)
+// and the phone strip below so the two can't drift apart.
+//
+//   tonightCardHtml(entry) -> string
+//
+// `entry` is one row from buildTonightList(limit) and may be shaped either as
+//   { item, tab, ranked: { best }, title?, year?, meta?, ratingKey? }
+// or with the ranked entry hoisted as `entry.best`. `best` is one
+// rankAvailability() entry ({ providerId, region, tier, name, deepUrl, home });
+// for a Plex-server hit (providerId 'plex-server') put the rating key on
+// `best.ratingKey` or `entry.ratingKey` so the launch ladder can use it.
+// Returns '' when there is nothing playable — callers should filter those out.
+function tonightCardHtml(entry) {
+  if (!entry) return '';
+  const item = entry.item || entry;
+  const best = entry.best || (entry.ranked && entry.ranked.best) || null;
+  if (!best) return '';
+  const title = entry.title || item.title || '';
+  const tab = entry.tab || item._watchlist_source_tab || '';
+  const isPlex = best.providerId === 'plex-server';
+  const metaParts = [entry.year || item.year || ''];
+  if (entry.meta) metaParts.push(entry.meta);
+  else if (!best.home && best.region) metaParts.push(best.region);
+  const meta = metaParts.filter(Boolean).join(' · ');
+  const deep = /^https:\/\//i.test(String(best.deepUrl || '')) ? String(best.deepUrl) : '';
+  const ratingKey = best.ratingKey || entry.ratingKey || '';
+  return `<button type="button" class="wizard-btn tonight-card${isPlex ? ' plex' : ''}"`
+    + ` data-action="tonight-play"`
+    + ` data-id="${escapeHtml(item.id || '')}"`
+    + ` data-tab="${escapeHtml(tab)}"`
+    + ` data-launch-provider="${escapeHtml(best.providerId || '')}"`
+    + ` data-launch-region="${escapeHtml(best.region || '')}"`
+    + ` data-launch-tier="${escapeHtml(best.tier || '')}"`
+    + ` data-launch-title="${escapeHtml(title)}"`
+    + (deep ? ` data-deep-url="${escapeHtml(deep)}"` : '')
+    + (isPlex ? ` data-plex-key="${escapeHtml(ratingKey)}"` : '')
+    + `><span class="tonight-card-title">${escapeHtml(title)}</span>`
+    + (meta ? `<span class="tonight-card-meta">${escapeHtml(meta)}</span>` : '')
+    + `<span class="tonight-card-play">▶ Play on ${escapeHtml(best.name || 'your service')}</span>`
+    + `</button>`;
+}
+
+// Phone-sized Tonight row on the Watchlist tab. buildTonightList() lands with
+// Stream A3; without it this renders nothing.
+function renderTonightStrip() {
+  const main = document.getElementById('items-container');
+  if (!main) return;
+  const existing = document.getElementById('watchlist-tonight');
+  if (existing) existing.remove();
+  if (activeTab !== 'watchlist') return;
+  if (typeof buildTonightList !== 'function') return;
+  let list = [];
+  try { list = buildTonightList(3) || []; } catch (e) { return; }
+  if (!Array.isArray(list) || !list.length) return;
+  const cards = list.map(e => tonightCardHtml(e)).join('');
+  if (!cards) return;
+  const row = document.createElement('div');
+  row.id = 'watchlist-tonight';
+  row.className = 'tonight-row tonight-strip';
+  row.innerHTML = `<div class="tonight-title">Tonight</div><div class="tonight-cards">${cards}</div>`;
+  row.querySelectorAll('.tonight-card').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const tab = btn.dataset.tab;
+      const { candidates } = launchCandidatesFromDataset(btn, { id, title: btn.dataset.launchTitle || '' });
+      if (id && tab) { try { setStatus(id, 'watching', tab); } catch (e) { console.warn('Tonight status write failed:', e); } }
+      launchExternal(candidates);
+    });
+  });
+  insertWatchlistStrip(main, row);
+}
+
+// "Now streaming on your services" — titles that newly landed on one of the
+// user's own providers, from the arrivals log (cron alerts + local diffs).
+function renderArrivalsStrip() {
+  const main = document.getElementById('items-container');
+  if (!main) return;
+  const existing = document.getElementById('watchlist-arrivals');
+  if (existing) existing.remove();
+  if (activeTab !== 'watchlist') return;
+  const arrivals = getAvailArrivals();
+  if (!arrivals.length) return;
+  // One button per item, however many services it arrived on.
+  const byItem = new Map();
+  for (const a of arrivals) {
+    const key = `${a.tab || ''}|${a.id}`;
+    let row = byItem.get(key);
+    if (!row) {
+      const cat = a.tab ? catalogs[a.tab] : null;
+      const item = cat && cat.items ? cat.items.find(it => it.id === a.id) : null;
+      if (!item) continue;   // arrival for an item we can no longer resolve
+      row = { tab: a.tab, id: a.id, title: item.title, names: [] };
+      byItem.set(key, row);
+    }
+    const reg = PROVIDER_BY_ID.get(a.providerId);
+    const name = (reg && reg.name) || a.providerId;
+    if (!row.names.includes(name)) row.names.push(name);
+  }
+  const rows = Array.from(byItem.values());
+  if (!rows.length) return;
+  const strip = document.createElement('div');
+  strip.id = 'watchlist-arrivals';
+  strip.className = 'arrivals-strip';
+  strip.setAttribute('aria-label', 'Now streaming on your services');
+  strip.innerHTML = `
+    <span class="arrivals-title">Now streaming on your services</span>
+    <div class="arrivals-items">
+      ${rows.map(r => `<button type="button" class="arrivals-item" data-tab="${escapeHtml(r.tab || '')}" data-id="${escapeHtml(r.id)}">
+        ${escapeHtml(r.title)}<span class="now-banner-source">${escapeHtml(r.names.join(' · '))}</span>
+      </button>`).join('')}
+    </div>`;
+  strip.querySelectorAll('.arrivals-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      wizardHide();
+      switchTab(btn.dataset.tab);
+      setTimeout(() => {
+        const target = document.querySelector(`.item[data-id="${btn.dataset.id}"]`);
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          target.classList.add('expanded');
+        }
+      }, 100);
+    });
+  });
+  insertWatchlistStrip(main, strip);
 }
 
 // === Auteur (virtual tab) generator ===
@@ -4074,6 +4823,28 @@ function _attachItemDelegation() {
       archiveItem(itemTab, id, 'finished');
       return;
     }
+    // v8.1.0: any button stamped with data-launch-provider opens the real
+    // streaming app (intent:// ladder) instead of navigating an href.
+    const launchEl = e.target.closest('[data-launch-provider]');
+    if (launchEl) {
+      e.preventDefault();
+      e.stopPropagation();
+      const { candidates } = launchCandidatesFromDataset(launchEl, item);
+      if (!item._ephemeral) setStatus(id, 'watching', itemTab);
+      launchExternal(candidates);
+      return;
+    }
+    // v8.1.0: Plex Watchlist orphan card — drop the title on the Plex side.
+    // plexWatchlistRemove() lands with Stream A3.
+    const wlRemoveBtn = e.target.closest('[data-action="plexwl-remove"]');
+    if (wlRemoveBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (typeof plexWatchlistRemove === 'function') {
+        Promise.resolve(plexWatchlistRemove(wlRemoveBtn.dataset.ratingKey)).catch(() => {}).then(() => render());
+      }
+      return;
+    }
     const actionBtn = e.target.closest('.action-btn[data-action]');
     if (actionBtn) {
       e.stopPropagation();
@@ -4090,12 +4861,9 @@ function _attachItemDelegation() {
       e.stopPropagation();
       const ratingKey = plexBtn.dataset.plexKey;
       setStatus(id, 'watching', itemTab);
-      const deepLink = plexDeepLinkUrl(ratingKey);
-      window.location.href = deepLink;
-      setTimeout(() => {
-        const fallbackUrl = `${getPlexServerUrl()}/web/index.html#!/server/${getPlexClientId() || ''}/details?key=%2Flibrary%2Fmetadata%2F${ratingKey}`;
-        window.open(fallbackUrl, '_blank');
-      }, 1000);
+      // v8.1.0: the blind 1s window.open is gone — launchExternal() only
+      // drops to the web fallback if the page is still visible.
+      launchExternal(plexLaunchCandidates(ratingKey));
       return;
     }
     const ratingBtn = e.target.closest('.rating-btn');
@@ -4195,6 +4963,11 @@ function _renderImpl() {
     }
   }
 
+  // v8.1.0: hoisted out of the per-item loop — both parse JSON out of storage,
+  // and the provider chips below need them for every card.
+  const chipRegions = getStreamingRegions();
+  const chipSubs = getMySubscriptions();
+
   renderItems.forEach(item => {
     if (item.section !== lastSection) {
       if ((visibleCountBySection.get(item.section) || 0) > 0) {
@@ -4223,6 +4996,34 @@ function _renderImpl() {
 
     // A2: register so the delegated handlers can dispatch on this id
     _itemRegistry.set(item.id, { item, itemTab });
+
+    // v8.1.0: Plex Watchlist orphans (section D). No local state exists for
+    // these ids, so the card is reduced to title + the two actions that make
+    // sense: start watching, or drop it from the Plex watchlist.
+    if (item._ephemeral) {
+      const ghostEl = document.createElement('div');
+      ghostEl.className = 'item';
+      ghostEl.dataset.id = item.id;
+      ghostEl.tabIndex = 0;
+      if (expandedIds.has(item.id)) ghostEl.classList.add('expanded');
+      ghostEl.innerHTML = `
+        <div class="item-head">
+          <div class="order-num">${String(item.order || 0).padStart(2, '0')}</div>
+          <div class="item-info">
+            <h3 class="item-title">${escapeHtml(item.title)}</h3>
+            <div class="item-meta">${escapeHtml(item.year || '')}</div>
+            <div class="badge-row"><span class="source-badge">${escapeHtml(item._watchlist_source_label || 'Plex Watchlist')}</span></div>
+          </div>
+        </div>
+        <div class="item-body">
+          <div class="actions">
+            <button class="action-btn watch-start-btn">▶ Start Watching</button>
+            <button class="action-btn" data-action="plexwl-remove" data-rating-key="${escapeHtml(item._plexRatingKey || '')}">Remove from Plex Watchlist</button>
+          </div>
+        </div>`;
+      container.appendChild(ghostEl);
+      return;
+    }
 
     const status = getStatus(item.id, itemTab);
     const rating = getRating(item.id, itemTab);
@@ -4258,6 +5059,19 @@ function _renderImpl() {
     const auteurBadge = auteurDirectorSet.has(item.dir) ? `<span class="auteur-badge">Auteur</span>` : '';
     const plexMatch = isPlexConfigured() ? plexHasItem(item) : null;
     const plexBadge = plexMatch ? `<span class="plex-badge" title="In your Plex library">⊕ Plex</span>` : '';
+    // v8.1.0: up to three chips for the user's own services carrying this
+    // title. Runs per card, so it does nothing at all without a snapshot.
+    const availEnrich = getEnrichmentForItem(item.id);
+    const providerChipsHtml = (availEnrich && availEnrich.avail)
+      ? providerChips(availEnrich.avail, chipRegions, chipSubs, 3).map(c => {
+          const logo = providerLogoPath(c.tmdbId, c.region);
+          const inner = logo
+            ? `<img src="https://image.tmdb.org/t/p/w45${escapeHtml(logo)}" alt="${escapeHtml(c.name)}" loading="lazy">`
+            : escapeHtml(c.name);
+          const tip = c.home ? c.name : `${c.name} — ${c.region}`;
+          return `<span class="provider-chip${c.home ? ' home' : ' vpn'}" title="${escapeHtml(tip)}">${inner}</span>`;
+        }).join('')
+      : '';
     const whyHtml = item.whyPriority ? `<div class="why-priority"><strong>Why this priority:</strong> ${escapeHtml(item.whyPriority)}</div>` : '';
 
     // A5: getTagSetForItem(item) and getTagSetForItem(item, itemTab) resolve to
@@ -4290,7 +5104,7 @@ function _renderImpl() {
           <h3 class="item-title">${escapeHtml(item.title)}</h3>
           <div class="item-meta">${metaLine}</div>
           ${seasonsLine}
-          <div class="badge-row">${sourceBadge}${auteurBadge}${plexBadge}${commitmentBadge}${priorityBadge}${ratingBadge}${reactionIndicator}</div>
+          <div class="badge-row">${sourceBadge}${auteurBadge}${plexBadge}${providerChipsHtml}${commitmentBadge}${priorityBadge}${ratingBadge}${reactionIndicator}</div>
         </div>
         <div class="status-pill ${status === 'none' ? '' : status}">${statusIcon(status)}</div>
       </div>
@@ -4334,6 +5148,9 @@ function _renderImpl() {
   updateStats();
   // v7.6.0: refresh the "Now watching" strip at top of Watchlist (no-op elsewhere)
   renderWatchingNowBanner();
+  // v8.1.0: Tonight row, then the arrivals strip, under the banner.
+  renderTonightStrip();
+  renderArrivalsStrip();
 }
 
 // v5.37.0 B1: Voice dictation for TV mode. The notes textarea is hidden
@@ -4772,6 +5589,10 @@ function setupModals() {
   // colored badge on the card. Sync card is a placeholder until Phase 2.
   const SETTINGS_CARDS = [
     { id: 'display', title: 'Display', desc: 'Phone vs TV layout', statusFn: () => ({ label: 'AUTO', cls: 'ok' }) },
+    { id: 'streaming', title: 'Streaming services', desc: 'Subscriptions & regions', statusFn: () => {
+      const n = getMySubscriptions().length;
+      return { label: `${n} ON · ${getStreamingRegions().join(' ')}`, cls: n ? 'ok' : 'empty' };
+    } },
     { id: 'plex', title: 'Plex', desc: 'Media server connection', statusFn: () => isPlexConfigured() ? { label: 'CONFIGURED', cls: 'ok' } : { label: 'EMPTY', cls: 'empty' } },
     { id: 'webhook', title: 'Worker', desc: 'TMDB & scrobble bridge', statusFn: () => isWebhookConfigured() ? { label: 'CONFIGURED', cls: 'ok' } : { label: 'EMPTY', cls: 'empty' } },
     { id: 'trakt', title: 'Trakt', desc: 'Watch history sync', statusFn: () => (typeof getTraktAccessToken === 'function' && getTraktAccessToken()) ? { label: 'CONNECTED', cls: 'ok' } : { label: 'EMPTY', cls: 'empty' } },
@@ -4875,6 +5696,10 @@ function setupModals() {
       });
     }
   }
+  // v8.1.0: the wizard's "Set up streaming services" card opens Settings
+  // straight at the streaming panel; setSettingsView is scoped to
+  // setupModals(), so publish the one entry point it needs.
+  window._setSettingsView = setSettingsView;
   const settingsModal = document.getElementById('settings-modal');
   // V5.27.0: Settings card grid + detail panels.
   // V5.31.2: buildSettingsCardGrid moved INSIDE the click handler so cards
@@ -4900,6 +5725,17 @@ function setupModals() {
     updateWebhookStatusLine();
     updateTraktStatusLine();
     updateDisplayModePicker();
+    // v8.1.0: Streaming services section — region chips, provider toggles and
+    // the two device toggles.
+    renderStreamingSettings();
+    const launchToggle = document.getElementById('launch-apps-toggle');
+    if (launchToggle) launchToggle.checked = isLaunchAppsEnabled();
+    const wlToggle = document.getElementById('plex-watchlist-sync-toggle');
+    // Stream A3 owns the Plex Watchlist sync state; guard until it lands.
+    if (wlToggle && typeof isPlexWatchlistSyncEnabled === 'function') {
+      wlToggle.checked = isPlexWatchlistSyncEnabled();
+    }
+    if (typeof refreshPlexWatchlistUI === 'function') refreshPlexWatchlistUI();
     // v8.0.0: render the promote-button row from cached state, then refresh
     // from /bootstrap/status async so it reflects any recent server change
     // (e.g. another device promoted; we want this device to know).
@@ -4932,6 +5768,19 @@ function setupModals() {
     setWebhookSecret(document.getElementById('webhook-secret').value.trim());
     setTraktClientId(document.getElementById('trakt-client-id').value.trim());
     setTraktClientSecret(document.getElementById('trakt-client-secret').value.trim());
+    // v8.1.0: the two Streaming services device toggles. Provider/region
+    // changes save themselves as they are made, so there is nothing else here.
+    const launchToggle = document.getElementById('launch-apps-toggle');
+    if (launchToggle) setLaunchAppsEnabled(launchToggle.checked);
+    const wlToggle = document.getElementById('plex-watchlist-sync-toggle');
+    if (wlToggle && typeof setPlexWatchlistSyncEnabled === 'function') {
+      const wasOn = typeof isPlexWatchlistSyncEnabled === 'function' && isPlexWatchlistSyncEnabled();
+      setPlexWatchlistSyncEnabled(wlToggle.checked);
+      // Turning it ON pulls the remote watchlist straight away.
+      if (wlToggle.checked && !wasOn && typeof plexWatchlistSyncNow === 'function') {
+        plexWatchlistSyncNow({ reason: 'settings' });
+      }
+    }
     applyDisplayMode();
     settingsModal.close();
     if (isPlexConfigured()) fetchPlexLibrary();
@@ -5358,7 +6207,7 @@ function setupModals() {
       else if (!getPlexToken()) status.textContent = 'Set your Plex token first (used as the user identifier).';
       else if (!('Notification' in window)) status.textContent = 'Notifications API not available on this device.';
       else if (Notification.permission === 'denied') status.textContent = 'Notification permission was denied. Re-enable it in your browser site settings.';
-      else if (enabled) status.textContent = `On — region ${getStreamingRegion()}.`;
+      else if (enabled) status.textContent = `On — regions ${getStreamingRegions().join(', ')}.`;
       else status.textContent = 'Off.';
     }
   }
@@ -5388,7 +6237,77 @@ function setupModals() {
     const status = document.getElementById('alerts-status');
     status.textContent = 'Checking for notifications…';
     await alertsCheckNotifications();
-    status.textContent = isAlertsEnabled() ? `Checked. On — region ${getStreamingRegion()}.` : 'Off.';
+    status.textContent = isAlertsEnabled() ? `Checked. On — regions ${getStreamingRegions().join(', ')}.` : 'Off.';
+  });
+
+  // === v8.1.0: Streaming services section ===
+  // One delegated listener per container — renderStreamingSettings() replaces
+  // the innerHTML of all three on every change, so per-element handlers would
+  // have to be re-bound constantly.
+  const regionAddBtn = document.getElementById('streaming-region-add-btn');
+  if (regionAddBtn) regionAddBtn.addEventListener('click', () => {
+    const sel = document.getElementById('streaming-region-add');
+    const code = sel && sel.value ? String(sel.value).trim().toUpperCase() : '';
+    if (!/^[A-Z]{2}$/.test(code)) return;
+    if (getStreamingRegions().includes(code)) return;
+    // Claim the fetch before painting so renderStreamingProviderGroups()
+    // doesn't kick off a second request for the same region.
+    _providerCatalogFetching.add(code);
+    setStreamingRegions([...getStreamingRegions(), code]);
+    // Every stored snapshot covered the old region list — re-slice it.
+    afterStreamingRegionsChanged();
+    // The new region's provider list is almost certainly not cached yet.
+    fetchProviderCatalog(code)
+      .catch(() => {})
+      .then(() => { _providerCatalogFetching.delete(code); renderStreamingSettings(); });
+  });
+
+  const regionChips = document.getElementById('streaming-regions');
+  if (regionChips) regionChips.addEventListener('click', (e) => {
+    const homeBtn = e.target.closest('[data-region-home]');
+    if (homeBtn) {
+      setStreamingRegion(homeBtn.dataset.regionHome);
+      afterStreamingRegionsChanged();
+      return;
+    }
+    const removeBtn = e.target.closest('[data-region-remove]');
+    if (removeBtn) {
+      const code = removeBtn.dataset.regionRemove;
+      const rest = getStreamingRegions().filter(c => c !== code);
+      if (!rest.length) return;   // never leave the user with no region
+      setStreamingRegions(rest);
+      afterStreamingRegionsChanged();
+    }
+  });
+
+  const providerGroups = document.getElementById('streaming-provider-groups');
+  if (providerGroups) providerGroups.addEventListener('change', (e) => {
+    const input = e.target.closest('.toggle-input[data-provider-id]');
+    if (!input) return;
+    const providerId = input.dataset.providerId;
+    if (!providerId) return;
+    const on = input.checked;
+    const next = getMySubscriptions().filter(id => id !== providerId);
+    if (on) next.push(providerId);
+    setMySubscriptions(next);
+    // The same service can appear under more than one region — keep every
+    // copy of the switch (and its row) in step without a full re-render.
+    providerGroups.querySelectorAll('.toggle-input[data-provider-id]').forEach(other => {
+      if (other.dataset.providerId !== providerId) return;
+      other.checked = on;
+      const row = other.closest('.provider-row');
+      if (row) row.classList.toggle('enabled', on);
+    });
+    updateStreamingStatusLine();
+    refreshAvailSnapshotsFromCache();
+    if (typeof alertsRefreshSubscription === 'function') alertsRefreshSubscription();
+    scheduleStreamingRender();
+    scheduleStreamingSettingsSync();
+  });
+
+  const providerSearch = document.getElementById('streaming-provider-search');
+  if (providerSearch) providerSearch.addEventListener('input', () => {
+    filterStreamingProviderRows(providerSearch.value);
   });
 
   // === Plex History modal ===
@@ -5411,6 +6330,188 @@ function setupModals() {
     document.getElementById('promote-modal').close();
   });
   document.getElementById('promote-confirm').addEventListener('click', confirmPromote);
+}
+
+// =====================================================================
+// Settings → Streaming services (v8.1.0)
+// =====================================================================
+// Renders the region chips, the add-region select and the grouped provider
+// toggles. Everything here saves as it is changed (there is no "Save" step for
+// providers/regions); the two switches at the bottom of the section are read
+// by the Settings Save handler instead.
+//
+// The delegated click / change / input listeners live in setupModals(); this
+// half only paints and exposes the small helpers those listeners call.
+const PROVIDER_KIND_LABELS = {
+  subscription: 'Subscriptions',
+  free: 'Free & ad-supported',
+  addon: 'Add-ons',
+  store: 'Rent & buy',
+};
+// Regions whose catalog fetch is already in flight — without this the
+// "not cached yet" branch below would re-render, re-fetch and loop.
+const _providerCatalogFetching = new Set();
+let _providerRegionRows = null;      // resolved fetchProviderRegions() rows
+let _providerRegionsRequested = false;
+let _streamingRenderTimer = null;
+let _streamingSyncTimer = null;
+
+function regionDisplayName(code) {
+  const rows = _providerRegionRows || STREAMING_REGIONS;
+  const hit = rows.find(r => r && r.code === code);
+  if (hit && hit.name) return String(hit.name);
+  const known = STREAMING_REGIONS.find(r => r.code === code);
+  return (known && known.name) || code;
+}
+
+// The catalog list re-renders on a debounce: toggling five services in a row
+// should repaint once, not five times.
+function scheduleStreamingRender() {
+  if (_streamingRenderTimer) clearTimeout(_streamingRenderTimer);
+  _streamingRenderTimer = setTimeout(() => { _streamingRenderTimer = null; render(); }, 300);
+}
+// Settings changes ride the normal cross-device sync debounce (5s).
+function scheduleStreamingSettingsSync() {
+  if (typeof syncMarkDirty === 'function') { syncMarkDirty(); return; }
+  if (_streamingSyncTimer) clearTimeout(_streamingSyncTimer);
+  _streamingSyncTimer = setTimeout(() => {
+    _streamingSyncTimer = null;
+    if (typeof syncPush === 'function') syncPush('settings');
+  }, 5000);
+}
+
+// Shared tail of every region edit: stored availability snapshots are sliced
+// per region list, so they all have to be rebuilt.
+function afterStreamingRegionsChanged() {
+  renderStreamingSettings();
+  refreshAvailSnapshotsFromCache();
+  if (typeof alertsRefreshSubscription === 'function') alertsRefreshSubscription();
+  scheduleStreamingSettingsSync();
+  render();
+}
+
+function updateStreamingStatusLine() {
+  const el = document.getElementById('streaming-status');
+  if (!el) return;
+  const n = getMySubscriptions().length;
+  el.textContent = `${n} services on · ${getStreamingRegions().join(', ')}`;
+  el.className = 'settings-status' + (n ? ' ok' : '');
+}
+
+function renderStreamingRegionChips(regions) {
+  const box = document.getElementById('streaming-regions');
+  if (!box) return;
+  const removable = regions.length > 1;
+  box.innerHTML = regions.map((code, i) => {
+    const name = regionDisplayName(code);
+    let html = `<span class="chip${i === 0 ? ' home' : ''}" data-region="${escapeHtml(code)}">${escapeHtml(name)}`;
+    if (i !== 0) {
+      html += `<button type="button" class="chip-btn" data-region-home="${escapeHtml(code)}"`
+        + ` title="Make ${escapeHtml(name)} the home region">★</button>`;
+    }
+    if (removable) {
+      html += `<button type="button" class="chip-btn" data-region-remove="${escapeHtml(code)}"`
+        + ` title="Stop following ${escapeHtml(name)}">×</button>`;
+    }
+    return html + '</span>';
+  }).join('');
+}
+
+function renderStreamingRegionAdd(regions) {
+  const sel = document.getElementById('streaming-region-add');
+  if (!sel) return;
+  const rows = (_providerRegionRows || STREAMING_REGIONS)
+    .filter(r => r && /^[A-Z]{2}$/.test(String(r.code || '')) && !regions.includes(r.code));
+  sel.innerHTML = '<option value="">Add a region…</option>'
+    + rows.map(r => `<option value="${escapeHtml(r.code)}">${escapeHtml(r.name || r.code)}</option>`).join('');
+  // TMDB's full region list replaces the hardcoded fallback once it arrives.
+  if (!_providerRegionsRequested) {
+    _providerRegionsRequested = true;
+    fetchProviderRegions().then(list => {
+      if (!Array.isArray(list) || !list.length) return;
+      _providerRegionRows = list;
+      renderStreamingSettings();
+    }).catch(() => {});
+  }
+}
+
+function providerRowHtml(row) {
+  const logo = typeof row.logoPath === 'string' && PROVIDER_LOGO_PATH_RE.test(row.logoPath) ? row.logoPath : '';
+  const art = logo
+    ? `<img class="provider-logo" src="https://image.tmdb.org/t/p/w45${escapeHtml(logo)}" alt="" loading="lazy">`
+    : `<div class="provider-logo-fallback">${escapeHtml(String(row.name || '?').charAt(0).toUpperCase())}</div>`;
+  return `<div class="provider-row${row.enabled ? ' enabled' : ''}" data-provider-id="${escapeHtml(row.id)}">
+    ${art}
+    <span class="provider-name">${escapeHtml(row.name)}</span>
+    <label class="toggle"><input type="checkbox" role="switch" class="toggle-input"`
+      + ` data-provider-id="${escapeHtml(row.id)}"`
+      + ` aria-label="${escapeHtml(row.name)}"${row.enabled ? ' checked' : ''}>`
+      + `<span class="toggle-track"><span class="toggle-thumb"></span></span></label>
+  </div>`;
+}
+
+function renderStreamingProviderGroups(regions, subs) {
+  const box = document.getElementById('streaming-provider-groups');
+  if (!box) return;
+  let html = '';
+  const pending = [];
+  for (const region of regions) {
+    html += `<h4 class="provider-region-title">${escapeHtml(regionDisplayName(region))}</h4>`;
+    const cat = getProviderCatalog(region);
+    if (!cat) {
+      html += `<div class="provider-meta" data-region-loading="${escapeHtml(region)}">Loading services…</div>`;
+      if (!_providerCatalogFetching.has(region)) pending.push(region);
+      // The curated registry still renders below, so the list is usable
+      // offline — the fetch only adds the region-specific services.
+    }
+    const rows = providersForRegion(region, (cat && cat.providers) || [], subs);
+    for (const kind of KIND_ORDER) {
+      const group = rows.filter(r => r.kind === kind);
+      if (!group.length) continue;
+      html += `<div class="provider-group" data-region="${escapeHtml(region)}" data-kind="${escapeHtml(kind)}">`
+        + `<h5>${escapeHtml(PROVIDER_KIND_LABELS[kind] || kind)}</h5>`
+        + group.map(providerRowHtml).join('')
+        + '</div>';
+    }
+  }
+  box.innerHTML = html;
+  // Fire the missing catalogs AFTER painting, and only once per region.
+  for (const region of pending) {
+    _providerCatalogFetching.add(region);
+    fetchProviderCatalog(region)
+      .then(() => { renderStreamingSettings(); })
+      .catch(() => {})
+      .then(() => { _providerCatalogFetching.delete(region); });
+  }
+  const search = document.getElementById('streaming-provider-search');
+  if (search && search.value) filterStreamingProviderRows(search.value);
+}
+
+// Search box: hide non-matching rows, then any group left with nothing in it.
+function filterStreamingProviderRows(query) {
+  const box = document.getElementById('streaming-provider-groups');
+  if (!box) return;
+  const q = String(query == null ? '' : query).trim().toLowerCase();
+  box.querySelectorAll('.provider-group').forEach(group => {
+    let visible = 0;
+    group.querySelectorAll('.provider-row').forEach(row => {
+      const nameEl = row.querySelector('.provider-name');
+      const name = (nameEl ? nameEl.textContent : '').toLowerCase();
+      const hit = !q || name.includes(q);
+      row.hidden = !hit;
+      if (hit) visible++;
+    });
+    group.hidden = visible === 0;
+  });
+}
+
+function renderStreamingSettings() {
+  const regions = getStreamingRegions();
+  const subs = getMySubscriptions();
+  renderStreamingRegionChips(regions);
+  renderStreamingRegionAdd(regions);
+  renderStreamingProviderGroups(regions, subs);
+  updateStreamingStatusLine();
 }
 
 // =====================================================================
@@ -6897,7 +7998,7 @@ function alertsBuildItemsManifest() {
       const item = cat.items.find(it => it.id === itemId);
       if (!item) return;
       const isTV = tabId.endsWith('-tv') || tabId === 'british-comedy';
-      const enriched = (typeof getEnrichmentForItem === 'function') ? getEnrichmentForItem(item) : null;
+      const enriched = getEnrichmentForItem(item.id);
       items.push({
         tabId, itemId,
         title: item.title,
@@ -6969,6 +8070,10 @@ async function alertsSubscribe() {
   if (!userHash) return { ok: false, reason: 'no-user-hash' };
   const items = alertsBuildItemsManifest();
   const region = getStreamingRegion();
+  // v8.1.0: the cron now watches every region the user follows and only the
+  // providers they actually enabled. `region` stays for older Workers.
+  const regions = getStreamingRegions();
+  const providerIds = getEnabledTmdbIds();
   // v5.44.0: best-effort Web Push subscription. If it succeeds, the
   // Worker stores the push endpoint+keys and the cron sends real Web
   // Pushes. If push acquisition fails, the polling path still works.
@@ -6977,11 +8082,11 @@ async function alertsSubscribe() {
     const resp = await fetch(`${getWebhookUrl()}/alerts/subscribe`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ secret: getWebhookSecret(), userHash, region, items, push }),
+      body: JSON.stringify({ secret: getWebhookSecret(), userHash, region, regions, providerIds, items, push }),
     });
     if (!resp.ok) return { ok: false, reason: `${resp.status}` };
     lsSet(ALERTS_ENABLED_KEY, '1');
-    return { ok: true, itemCount: items.length, region, hasPush: !!push };
+    return { ok: true, itemCount: items.length, region, regions, providerCount: providerIds.length, hasPush: !!push };
   } catch (e) {
     return { ok: false, reason: e.message };
   }
@@ -7031,16 +8136,34 @@ async function alertsCheckNotifications() {
     const notifications = data.notifications || [];
     if (notifications.length === 0) return;
     const seenKeys = [];
+    let arrived = 0;
     for (const n of notifications) {
       try {
+        // v8.1.0: the tag keys on item AND kind so an arrival and a departure
+        // for the same title don't collapse into one notification.
         new Notification(n.title, {
           body: n.body,
           icon: 'icons/icon-192.png',
-          tag: n.itemRef,
-          data: { tabId: n.tabId, itemId: n.itemId },
+          tag: `${n.itemRef}:${n.kind || 'leaving'}`,
+          data: { tabId: n.tabId, itemId: n.itemId, kind: n.kind || 'leaving' },
         });
         seenKeys.push(n.key);
       } catch {}
+      // Cron-detected arrivals feed the same store the local snapshot diff
+      // writes to, so the "Now streaming on your services" strip shows them.
+      if (n.kind === 'arrived' && n.itemId) {
+        const ids = Array.isArray(n.providerIds) ? n.providerIds : [];
+        const region = n.region || getHomeRegion();
+        if (ids.length) {
+          recordAvailArrivals(n.tabId || null, n.itemId, {
+            arrived: ids.map(tmdbId => ({ region, tmdbId })),
+          });
+          arrived++;
+        }
+      }
+    }
+    if (arrived && typeof renderArrivalsStrip === 'function') {
+      try { renderArrivalsStrip(); } catch (e) { console.warn('Arrivals strip refresh failed:', e); }
     }
     lsSet(ALERTS_LAST_POLL_KEY, String(Date.now()));
     if (seenKeys.length > 0) {
@@ -7059,7 +8182,11 @@ function syncSettingsSnapshot() {
     plexToken: getPlexToken(),
     plexClientId: getPlexClientId(),
     streamingRegion: getStreamingRegion(),
+    // v8.1.0: the full ordered region list (index 0 = home). streamingRegion
+    // stays in the payload so pre-8.1 clients keep working.
+    streamingRegions: getStreamingRegions(),
     mySubscriptions: getMySubscriptions(),
+    plexWatchlistSync: isPlexWatchlistSyncEnabled(),
     displayMode: getDisplayModePref(),
     traktClientId: typeof getTraktClientId === 'function' ? getTraktClientId() : '',
     traktClientSecret: typeof getTraktClientSecret === 'function' ? getTraktClientSecret() : '',
@@ -7144,8 +8271,12 @@ function syncApplyRemote(remote) {
     if (s.plexServerUrl) setPlexServerUrl(s.plexServerUrl);
     if (s.plexToken) setPlexToken(s.plexToken);
     if (s.plexClientId) setPlexClientId(s.plexClientId);
-    if (s.streamingRegion) setStreamingRegion(s.streamingRegion);
+    // Prefer the v8.1.0 region list; fall back to the single-region field.
+    if (Array.isArray(s.streamingRegions) && s.streamingRegions.length) setStreamingRegions(s.streamingRegions);
+    else if (s.streamingRegion) setStreamingRegion(s.streamingRegion);
     if (s.mySubscriptions && Array.isArray(s.mySubscriptions)) setMySubscriptions(s.mySubscriptions);
+    if (s.plexWatchlistSync !== undefined) setPlexWatchlistSyncEnabled(!!s.plexWatchlistSync);
+    // launchApps stays per-device (like displayMode) — never synced.
     if (s.displayMode) setDisplayModePref(s.displayMode);
     if (s.traktClientId && typeof setTraktClientId === 'function') setTraktClientId(s.traktClientId);
     if (s.traktClientSecret && typeof setTraktClientSecret === 'function') setTraktClientSecret(s.traktClientSecret);
@@ -7200,9 +8331,16 @@ async function pullFillFromKV() {
     if (s.plexServerUrl && !getPlexServerUrl()) setPlexServerUrl(s.plexServerUrl);
     if (s.plexToken && !getPlexToken()) setPlexToken(s.plexToken);
     if (s.plexClientId && !getPlexClientId()) setPlexClientId(s.plexClientId);
-    if (s.streamingRegion && !getStreamingRegion()) setStreamingRegion(s.streamingRegion);
+    if (Array.isArray(s.streamingRegions) && s.streamingRegions.length && !lsGet(REGIONS_KEY)) {
+      setStreamingRegions(s.streamingRegions);
+    } else if (s.streamingRegion && !getStreamingRegion()) {
+      setStreamingRegion(s.streamingRegion);
+    }
     if (s.mySubscriptions && Array.isArray(s.mySubscriptions) && !lsGet(MY_SUBS_KEY)) {
       setMySubscriptions(s.mySubscriptions);
+    }
+    if (s.plexWatchlistSync !== undefined && !lsGet(PLEX_WL_SYNC_KEY)) {
+      setPlexWatchlistSyncEnabled(!!s.plexWatchlistSync);
     }
     // displayMode stays per-device; never fill.
     if (typeof setTraktClientId === 'function') {
@@ -7619,7 +8757,9 @@ function generatePairUrl() {
     plexServerUrl: getPlexServerUrl(),
     plexClientId: getPlexClientId(),
     streamingRegion: getStreamingRegion(),
+    streamingRegions: getStreamingRegions(),
     mySubscriptions: getMySubscriptions(),
+    plexWatchlistSync: isPlexWatchlistSyncEnabled(),
     v: 1,
   };
   const encoded = btoa(JSON.stringify(data));
@@ -7705,8 +8845,10 @@ function applyConfigPayload(b64) {
     if (data.plexToken) setPlexToken(data.plexToken);
     if (data.plexServerUrl) setPlexServerUrl(data.plexServerUrl);
     if (data.plexClientId) setPlexClientId(data.plexClientId);
-    if (data.streamingRegion) setStreamingRegion(data.streamingRegion);
+    if (Array.isArray(data.streamingRegions) && data.streamingRegions.length) setStreamingRegions(data.streamingRegions);
+    else if (data.streamingRegion) setStreamingRegion(data.streamingRegion);
     if (data.mySubscriptions && Array.isArray(data.mySubscriptions)) setMySubscriptions(data.mySubscriptions);
+    if (data.plexWatchlistSync !== undefined) setPlexWatchlistSyncEnabled(!!data.plexWatchlistSync);
     return true;
   } catch (e) {
     console.error('Invalid pair payload:', e);
@@ -7732,12 +8874,13 @@ async function openWatchModal(item, sourceTab) {
     plexMatch = plexHasItem(item);
   }
   if (plexMatch && plexMatch.ratingKey) {
-    const plexUrl = plexDeepLinkUrl(plexMatch.ratingKey);
+    // v8.1.0: a button, not an anchor — wireWatchModalActions() runs the full
+    // plex:// -> app.plex.tv launch ladder instead of navigating an href.
     body.innerHTML = `
       <div class="watch-section watch-plex-section">
         <h5>On your Plex server</h5>
         <div class="watch-buttons">
-          <a href="${escapeHtml(plexUrl)}" class="watch-btn-large plex-btn" data-watch-launch>Open in Plex</a>
+          <button type="button" class="watch-btn-large plex-btn" data-watch-launch data-plex-key="${escapeHtml(plexMatch.ratingKey)}">Open in Plex</button>
         </div>
       </div>
       <details class="watch-others">
@@ -7751,6 +8894,9 @@ async function openWatchModal(item, sourceTab) {
       if (detailsEl.open && !othersLoaded) {
         othersLoaded = true;
         await renderWatchProviders(item, document.getElementById('watch-others-body'), { skipPlex: true });
+        // These buttons appear after the first wiring pass — bind them too
+        // (wireWatchModalActions is idempotent).
+        wireWatchModalActions(item, sourceTab);
       }
     });
     wireWatchModalActions(item, sourceTab);
@@ -7784,46 +8930,70 @@ async function renderWatchProviders(item, container, opts) {
     container.innerHTML = '<div class="streaming-none">No streaming availability data.</div>';
     return;
   }
-  const region = getStreamingRegion();
-  const regionData = data.watchProviders[region];
-  const otherRegions = Object.keys(data.watchProviders).filter(k => k !== region && data.watchProviders[k]);
+  const region = getStreamingRegions()[0];
+  // Keep the stored snapshot in step with what we just fetched — the Watch
+  // modal is usually the freshest availability read in the app — and log
+  // anything that newly landed on one of the user's own services.
+  if (!item._ephemeral) writeAvailForItem(item.id, data, sourceTab);
 
-  // Home region: subscription tier only (flatrate). No rent, buy, or ad-supported.
-  let mySubsHtml = '';
-  if (regionData && regionData.flatrate) {
-    regionData.flatrate.forEach(p => {
-      if (!isMySub(p.provider_name)) return;
-      const url = streamingSearchUrl(p.provider_name, item.title);
-      mySubsHtml += `<a href="${url}" class="watch-btn-large my-sub" data-watch-launch target="_blank" rel="noopener">${escapeHtml(p.provider_name)}</a>`;
-    });
+  // Plex Discover contributes per-title deep URLs when Stream A3's helper is
+  // present; without it (or on any failure) ranking falls back to TMDB alone.
+  let plexDiscover = null;
+  if (typeof getPlexDiscoverAvailability === 'function') {
+    try { plexDiscover = await getPlexDiscoverAvailability(item); } catch (e) { plexDiscover = null; }
   }
+  const regions = getStreamingRegions();
+  const ranked = rankAvailability({
+    avail: snapshotFromTmdb(data.watchProviders, regions),
+    regions,
+    subIds: getMySubscriptions(),
+    registry: PROVIDER_BY_ID,
+    plexServer: null,
+    plexDiscover,
+    liveNames: liveNamesForRegions(regions),
+  });
+
+  const launchBtn = (entry) => {
+    const logo = providerLogoPath(entry.tmdbId, entry.region);
+    const img = logo
+      ? `<img class="provider-logo-sm" src="https://image.tmdb.org/t/p/w45${escapeHtml(logo)}" alt="" loading="lazy">`
+      : '';
+    const deep = /^https:\/\//i.test(String(entry.deepUrl || '')) ? String(entry.deepUrl) : '';
+    const regionTag = (!entry.home && entry.region)
+      ? `<span class="watch-region">${escapeHtml(entry.region)}</span>` : '';
+    return `<button type="button" class="watch-btn-large my-sub launch-app" data-watch-launch`
+      + ` data-launch-provider="${escapeHtml(entry.providerId || '')}"`
+      + ` data-launch-region="${escapeHtml(entry.region || '')}"`
+      + ` data-launch-tier="${escapeHtml(entry.tier || '')}"`
+      + ` data-launch-title="${escapeHtml(item.title || '')}"`
+      + (deep ? ` data-deep-url="${escapeHtml(deep)}"` : '')
+      + `>${img}${escapeHtml(entry.name)}${regionTag}</button>`;
+  };
 
   let html = '';
-  if (mySubsHtml) {
-    html += `<div class="watch-section"><h5>On your subscriptions — ${escapeHtml(region)}</h5><div class="watch-buttons">${mySubsHtml}</div></div>`;
+  // 1. Playable right now, at home.
+  const here = ranked.playable.filter(e => e.home);
+  if (here.length) {
+    html += `<div class="watch-section"><h5>On your services — ${escapeHtml(regionDisplayName(region))}</h5>`
+      + `<div class="watch-buttons">${here.map(launchBtn).join('')}</div></div>`;
   } else {
     html += `<div class="streaming-none">Not on your subscriptions in ${escapeHtml(region)}.</div>`;
   }
 
-  // VPN section: other regions where user's own subscriptions carry it on flatrate.
-  // Group by provider so the user knows which VPN country to pick for each service.
-  const vpnByProvider = {};
-  otherRegions.forEach(r => {
-    const rd = data.watchProviders[r];
-    if (!rd || !rd.flatrate) return;
-    rd.flatrate.forEach(p => {
-      if (!isMySub(p.provider_name)) return;
-      if (!vpnByProvider[p.provider_name]) vpnByProvider[p.provider_name] = [];
-      vpnByProvider[p.provider_name].push(r);
-    });
+  // 2. Your own services, but in another region you follow — VPN territory.
+  // Grouped by provider so the user knows which country to pick per service.
+  const vpnByProvider = new Map();
+  ranked.playable.filter(e => !e.home).forEach(e => {
+    if (!vpnByProvider.has(e.name)) vpnByProvider.set(e.name, []);
+    const list = vpnByProvider.get(e.name);
+    if (!list.includes(e.region)) list.push(e.region);
   });
-  const vpnEntries = Object.entries(vpnByProvider);
-  if (vpnEntries.length > 0) {
-    const rows = vpnEntries.map(([provider, regions]) => {
-      const names = regions.map(r => (STREAMING_REGIONS.find(x => x.code === r) || {}).name || r).join(' · ');
+  if (vpnByProvider.size) {
+    const rows = Array.from(vpnByProvider.entries()).map(([provider, regionCodes]) => {
+      const names = regionCodes.map(r => regionDisplayName(r)).join(' · ');
       return `<div class="watch-vpn-row"><span class="watch-vpn-provider">${escapeHtml(provider)}</span><span class="watch-vpn-regions">${escapeHtml(names)}</span></div>`;
     }).join('');
-    const label = vpnEntries.length === 1 ? '1 service' : `${vpnEntries.length} services`;
+    const label = vpnByProvider.size === 1 ? '1 service' : `${vpnByProvider.size} services`;
     html += `
       <details class="watch-vpn-section">
         <summary>Available on your subs abroad — ${label} (VPN)</summary>
@@ -7831,13 +9001,29 @@ async function renderWatchProviders(item, container, opts) {
         <div class="watch-vpn-tip">Your home region is <strong>${escapeHtml(region)}</strong>. Set PIA to any listed country and open the service normally.</div>
       </details>`;
   }
+
+  // 3. Everything else — not on your services, or rent/buy.
+  if (ranked.elsewhere.length) {
+    const TIER_LABELS = { flatrate: 'Subscription', free: 'Free', ads: 'Ads', rent: 'Rent', buy: 'Buy' };
+    let tiersHtml = '';
+    for (const tier of ['flatrate', 'free', 'ads', 'rent', 'buy']) {
+      const group = ranked.elsewhere.filter(e => e.tier === tier);
+      if (!group.length) continue;
+      tiersHtml += `<div class="watch-section"><h5>${escapeHtml(TIER_LABELS[tier])}</h5>`
+        + `<div class="watch-buttons">${group.map(launchBtn).join('')}</div></div>`;
+    }
+    if (tiersHtml) {
+      html += `<details class="watch-others"><summary>Other ways to watch</summary>${tiersHtml}</details>`;
+    }
+  }
   container.innerHTML = html;
 }
 
 function wireWatchModalActions(item, sourceTab) {
   const modal = document.getElementById('watch-modal');
   const advance = () => {
-    setStatus(item.id, 'watching', sourceTab);
+    // Plex Watchlist orphans are ephemeral — no local state exists for them.
+    if (!item._ephemeral) setStatus(item.id, 'watching', sourceTab);
     modal.close();
     if (triageState && triageState.queue && triageState.queue[triageState.idx] === item) {
       triageState.idx++;
@@ -7846,10 +9032,18 @@ function wireWatchModalActions(item, sourceTab) {
       render();
     }
   };
-  // Provider/Plex launch buttons: open URL, then mark + advance
+  // Provider/Plex launch buttons: walk the launch ladder, then mark + advance.
+  // Idempotent — the lazily-loaded "other ways" body re-runs this to pick up
+  // buttons that did not exist on the first pass.
   modal.querySelectorAll('[data-watch-launch]').forEach((el) => {
-    el.addEventListener('click', () => {
-      // Don't preventDefault — let the link/deep-link fire. Set status afterwards.
+    if (el.dataset.watchWired === '1') return;
+    el.dataset.watchWired = '1';
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      const candidates = el.dataset.plexKey
+        ? plexLaunchCandidates(el.dataset.plexKey)
+        : launchCandidatesFromDataset(el, item).candidates;
+      launchExternal(candidates);
       setTimeout(advance, 150);
     });
   });
@@ -8029,29 +9223,28 @@ function appendWatchCard(pick) {
   }
   const trailerKey = (typeof getTrailerKey === 'function') ? getTrailerKey(item.id) : null;
   const enrich = (typeof getEnrichmentForItem === 'function') ? getEnrichmentForItem(item.id) : null;
-  const region = (typeof getStreamingRegion === 'function') ? getStreamingRegion() : 'US';
-  const providers = enrich && enrich.watchProviders && enrich.watchProviders[region];
-  const flatrate = (providers && providers.flatrate) || [];
+  const regions = getStreamingRegions();
+  const region = regions[0];
 
-  // v6.6.0: "Play Now" target. Priority order:
-  //   1. Item is in user's Plex library — Plex deep link (best, opens
-  //      directly into native client on Bravia / Android TV).
-  //   2. Item has streaming providers in the user's region — JustWatch
-  //      redirect via TMDB's region.link.
-  //   3. Neither — button is hidden.
+  // v8.1.0: "Play Now" comes off the same ranking ladder as everywhere else.
+  // Plex stays first because plexServer scores above every streaming option;
+  // the old read of enrich.watchProviders was of a field nothing ever wrote.
   const plexMatch = (typeof isPlexConfigured === 'function' && isPlexConfigured() && typeof plexHasItem === 'function')
     ? plexHasItem(item) : null;
-  let playUrl = null;
-  let playLabel = '';
-  if (plexMatch && typeof plexDeepLinkUrl === 'function') {
-    playUrl = plexDeepLinkUrl(plexMatch.ratingKey);
-    playLabel = '▶ Play on Plex';
-  } else if (providers && typeof providers.link === 'string' && /^https:\/\//i.test(providers.link)) {
-    // XSS audit: providers.link is a TMDB-supplied URL — only accept https
-    // so a poisoned enrichment cache can't smuggle a javascript: URL.
-    playUrl = providers.link;
-    playLabel = `▶ Play Now${flatrate[0] ? ' on ' + flatrate[0].provider_name : ''}`;
-  }
+  const ranked = rankAvailability({
+    avail: enrich && enrich.avail,
+    regions,
+    subIds: getMySubscriptions(),
+    registry: PROVIDER_BY_ID,
+    plexServer: plexMatch && plexMatch.ratingKey ? { ratingKey: plexMatch.ratingKey } : null,
+    liveNames: liveNamesForRegions(regions),
+  });
+  const best = ranked.best;
+  if (best && best.providerId === 'plex-server' && plexMatch) best.ratingKey = plexMatch.ratingKey;
+  const playLabel = best ? `▶ Play on ${best.name}` : '';
+  const homeNames = ranked.playable
+    .filter(e => e.home && e.providerId !== 'plex-server')
+    .map(e => e.name);
 
   const card = document.createElement('div');
   card.className = 'watch-card';
@@ -8061,22 +9254,24 @@ function appendWatchCard(pick) {
     <div class="watch-card-meta">${escapeHtml(metaParts.join(' · '))}</div>
     ${item.pitch ? `<p class="watch-card-pitch">${escapeHtml(item.pitch)}</p>` : ''}
     <div class="watch-card-why"><strong>Why:</strong> ${escapeHtml(pick.why || '')}</div>
-    ${flatrate.length ? `<div class="watch-card-providers"><strong>Streaming in ${escapeHtml(region)}:</strong> ${flatrate.map(p => escapeHtml(p.provider_name)).join(', ')}</div>` : ''}
+    ${homeNames.length ? `<div class="watch-card-providers"><strong>Streaming in ${escapeHtml(region)}:</strong> ${homeNames.map(n => escapeHtml(n)).join(', ')}</div>` : ''}
     <div class="watch-card-actions">
       ${trailerKey ? `<a class="action-btn trailer-btn" href="${trailerYouTubeUrl(trailerKey)}" target="_blank" rel="noopener">▶ Watch Trailer</a>` : ''}
-      ${playUrl ? `<a class="action-btn watch-card-play" href="${escapeHtml(playUrl)}" target="_blank" rel="noopener">${escapeHtml(playLabel)}</a>` : ''}
+      ${best ? `<button type="button" class="action-btn watch-card-play">${escapeHtml(playLabel)}</button>` : ''}
       <button class="action-btn" data-card-action="pass">Pass</button>
     </div>
   `;
   history.appendChild(card);
   history.scrollTop = history.scrollHeight;
 
-  // v6.6.0: Plex deep-link side effect — when the user clicks Play on
-  // Plex, also flip status to 'watching' so the rest of the app reflects
-  // the action. Same as the existing Plex play button on item cards.
+  // v8.1.0: launchRankedEntry marks the item as watching and then walks the
+  // plex:// / intent:// / https ladder for whichever service won the ranking.
   const playEl = card.querySelector('.watch-card-play');
-  if (playEl && plexMatch) {
-    playEl.addEventListener('click', () => setStatus(item.id, 'watching', pick.tabId));
+  if (playEl && best) {
+    playEl.addEventListener('click', (e) => {
+      e.preventDefault();
+      launchRankedEntry(best, item, pick.tabId);
+    });
   }
 
   // Pass: increment per-item pass count. Two passes promotes to status=skip
@@ -8996,6 +10191,32 @@ function _wizardSetBreadcrumb(el, stepLabel) {
   });
 }
 
+// v8.1.0: "Tonight" — the TV landing row. Every card is a single press that
+// launches the right app; both classes matter, `.wizard-btn` so the existing
+// step wiring picks it up for clicks and D-pad focus, `.tonight-card` for the
+// styling and the focus ring. Never throws: a broken availability snapshot
+// must not take the wizard down with it.
+function wizardTonightRowHtml() {
+  let cards = '';
+  let queued = false;
+  try {
+    cards = buildTonightList().map(e => tonightCardHtml(e)).filter(Boolean).join('');
+    queued = tonightHasQueued();
+  } catch (e) {
+    console.warn('Tonight row failed:', e);
+    return '';
+  }
+  let body;
+  if (cards) body = `<div class="tonight-cards">${cards}</div>`;
+  else if (!queued) body = '<div class="wizard-empty">Queue something and it shows up here</div>';
+  else {
+    body = '<div class="wizard-empty">Nothing in your queue is on your services</div>'
+      + '<button class="wizard-btn" data-action="tonight-settings">Set up streaming services'
+      + '<span class="wizard-btn-meta">Pick your regions and the services you pay for</span></button>';
+  }
+  return `<div class="tonight-row"><div class="tonight-title">Tonight</div>${body}</div>`;
+}
+
 function wizardRender() {
   const breadcrumbEl = document.getElementById('wizard-breadcrumb');
   const subtitle = { set textContent(v) { _wizardSetBreadcrumb(breadcrumbEl, v); } };
@@ -9009,7 +10230,7 @@ function wizardRender() {
     // straight to the in-progress list; "Rating" is unchanged.
     subtitle.textContent = 'What are you doing?';
     backBtn.style.display = 'none';
-    stepEl.innerHTML = `
+    stepEl.innerHTML = wizardTonightRowHtml() + `
       <button class="wizard-btn" data-action="watch-chat">
         Tell me what to watch
         <span class="wizard-btn-meta">Talk to the bot — it picks one for you</span>
@@ -9234,6 +10455,31 @@ function wizardGoBack() {
 
 function wizardHandleAction(btn) {
   const action = btn.dataset.action;
+  // v8.1.0: Tonight row. One press marks the title as watching and walks the
+  // launch ladder; the wizard deliberately stays open so a failed launch
+  // leaves the user where they were.
+  if (action === 'tonight-play') {
+    const tab = btn.dataset.tab || '';
+    const id = btn.dataset.id || '';
+    const cat = tab ? catalogs[tab] : null;
+    const item = (cat && Array.isArray(cat.items) ? cat.items.find(it => it.id === id) : null)
+      || { id, title: btn.dataset.launchTitle || '' };
+    const plexKey = btn.dataset.plexKey || '';
+    const candidates = plexKey
+      ? plexLaunchCandidates(plexKey)
+      : launchCandidatesFromDataset(btn, item).candidates;
+    if (id && tab) {
+      try { setStatus(id, 'watching', tab); } catch (e) { console.warn('Tonight status write failed:', e); }
+    }
+    launchExternal(candidates);
+    return;
+  }
+  if (action === 'tonight-settings') {
+    const settingsBtn = document.getElementById('settings-btn');
+    if (settingsBtn) settingsBtn.click();
+    if (typeof window._setSettingsView === 'function') window._setSettingsView('streaming');
+    return;
+  }
   // Root step
   if (action === 'rate') { wizardState.step = 'rate'; wizardRender(); return; }
   if (action === 'watch') { wizardState.step = 'film-tv'; wizardRender(); return; }
@@ -9865,6 +11111,22 @@ function triageAction(act) {
   refreshBootstrapStatus().then(() => wipeLocalSecretsIfBootstrapped()).catch(() => {});
   await loadCatalogs();
   catalogEnrichmentIdx = loadCatalogEnrichment();
+  // v8.1.0: an availability snapshot is only valid for the region list it was
+  // sliced for. Every record is written with the same region list, so sampling
+  // the first one that carries a snapshot is enough to spot a region change.
+  try {
+    let sample = null;
+    for (const key in catalogEnrichmentIdx) {
+      const rec = catalogEnrichmentIdx[key];
+      if (rec && rec.avail) { sample = rec.avail; break; }
+    }
+    if (sample && !availRegionsMatch(sample)) refreshAvailSnapshotsFromCache();
+  } catch (e) { console.warn('Availability re-slice failed:', e); }
+  // Pull the Plex Universal Watchlist in the background — never awaited, so a
+  // Plex outage can't slow down (or break) boot.
+  if (isPlexWatchlistSyncEnabled() && isWebhookConfigured()) {
+    plexWatchlistSyncNow({ reason: 'launch' }).catch(() => {});
+  }
   // Fetch + merge promotions (cross-device persistence)
   if (isWebhookConfigured()) {
     await fetchPromotions();
@@ -10089,6 +11351,13 @@ function triageAction(act) {
       // V5.26.7: dispatch click on .item-head, falling back to .item itself
       // for compatibility with any items that don't have an .item-head child.
       const focused = document.activeElement;
+      // v8.1.0: the Settings toggles are visually-hidden checkboxes, so the
+      // default Enter-activates-a-button behaviour doesn't reach them.
+      if (focused && focused.matches('input[type="checkbox"]')) {
+        e.preventDefault();
+        focused.click();
+        return;
+      }
       if (focused && focused.classList.contains('item')) {
         e.preventDefault();
         const head = focused.querySelector('.item-head');
@@ -10114,7 +11383,7 @@ function triageAction(act) {
         return;
       }
       const candidates = Array.from(searchRoot.querySelectorAll(
-        '.wizard-btn, .item, .tab-btn, .header-btn, button:not(.modal-back), a, input, textarea, select, [tabindex]:not([tabindex="-1"])'
+        '.wizard-btn, .tonight-card, .item, .tab-btn, .header-btn, button:not(.modal-back), a, input, textarea, select, [tabindex]:not([tabindex="-1"])'
       )).filter(el => el.offsetParent !== null && !el.disabled);
       if (candidates.length > 0) candidates[0].focus();
       return;
@@ -10125,7 +11394,7 @@ function triageAction(act) {
     // dropdowns are reachable via D-pad (the new pair-receive-input was a
     // <textarea> and was being skipped entirely).
     const focusables = Array.from(searchRoot.querySelectorAll(
-      '.modal-back, .wizard-btn, .tab-btn, .filter-btn, .category-btn, .header-btn, .item, .action-btn, .rating-btn, .tag-btn, .plex-play-btn, .sort-select, button, a, input, textarea, select, [tabindex]:not([tabindex="-1"])'
+      '.modal-back, .wizard-btn, .tonight-card, .tab-btn, .filter-btn, .category-btn, .header-btn, .item, .action-btn, .rating-btn, .tag-btn, .plex-play-btn, .toggle-input, .chip-btn, [data-launch-provider], .sort-select, button, a, input, textarea, select, [tabindex]:not([tabindex="-1"])'
     )).filter(el => el.offsetParent !== null && !el.disabled);
     if (focusables.length === 0) return;
 
