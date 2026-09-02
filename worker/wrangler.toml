@@ -62,13 +62,9 @@ id = "7fc3279a95e247398db43fa3bd65733b"
 #   reconnect:{reconnectCode}       { targetUserId, createdAt, expiresAt, consumed }
 #   pair:{pairSessionId}            { createdAt, expiresAt, consumed, fulfillment, ownedByUserId? }
 #   ratelimit:{userId}:{bucket}:{m} per-user sliding-window counter
-# Lincoln must create this namespace via the Cloudflare dashboard
-# (Workers & Pages → KV → Create namespace, name it
-# `watchtrack-users` or similar) and paste the 32-char hex namespace ID
-# below before the first v9.0.0 deploy.
 [[kv_namespaces]]
 binding = "USERS"
-id = "REPLACE_WITH_USERS_NAMESPACE_ID"
+id = "48fbbfc89a5542fe93ec2d34898106e0"
 
 # === R2 buckets (v5.10) ===
 # Daily compressed state snapshots. Free tier: 10 GB storage + 1M
