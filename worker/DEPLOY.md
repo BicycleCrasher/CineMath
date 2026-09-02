@@ -131,6 +131,40 @@ Settings → Plex Webhook Bridge:
 - Test poll → should say "Worker reachable, secret accepted."
 - Save.
 
+## Required secrets
+
+`worker/wrangler.toml` declares a `[secrets] required` list. **Wrangler refuses
+to deploy while any of them is unset** — the run fails with
+`The following required secrets have not been set: <NAME>` after the bindings
+resolve, so a green bindings table earlier in the log does not mean the deploy
+succeeded. Set them once per Worker; they persist across deploys.
+
+| Secret | Purpose | Value |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | Reaction-tag prediction (`/palate/predict-tags`) | Your Anthropic API key |
+| `TRAKT_ENCRYPTION_KEY` | AES-GCM encryption of Trakt access/refresh tokens at rest in D1 (added v9.0.0) | 32 random bytes, base64: `openssl rand -base64 32` |
+
+Set either one with:
+
+```bash
+cd worker
+npx wrangler secret put TRAKT_ENCRYPTION_KEY
+# paste the value when prompted
+```
+
+or in the dashboard: Workers & Pages → `watchtrack-plex` → Settings → Variables
+and Secrets → Add → type **Secret**.
+
+`TRAKT_ENCRYPTION_KEY` must decode to exactly 32 bytes; the Worker validates
+this on first use and throws if it is missing, not base64, or the wrong length.
+Base64 and base64url are both accepted. Rotating it makes every stored Trakt
+token undecryptable — connected users have to reconnect Trakt.
+
+Secrets deliberately **not** in the required list: `ADMIN_API_TOKEN` and
+`CF_ACCOUNT_ID` (ephemeral — deleted after the first promote), and
+`PLEX_TOKEN` / `TRAKT_CLIENT_*` (they do not exist before the first promote;
+the Worker guards for them internally).
+
 ## Endpoints reference
 
 - `GET /health` — Health check (no auth)

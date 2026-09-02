@@ -486,6 +486,14 @@ body.tv-mode .modal-back { width: 56px; height: 56px; font-size: 26px; }
   color: var(--ink-dim); font-size: 12px;
   font-style: italic; padding: 12px 0; text-align: center;
 }
+/* Fallback action rendered beneath every recs empty state. Sized down from a
+   primary wizard button — it is a way out, not the main choice — but it stays
+   a real .wizard-btn so D-pad focus and the wizard click wiring both find it. */
+.wizard-recs-fallback {
+  display: block; width: 100%; box-sizing: border-box;
+  font-size: 13px; padding: 10px 14px; margin-top: 4px;
+}
+body.tv-mode .wizard-recs-fallback { font-size: 16px; padding: 14px 18px; }
 body.tv-mode .wizard-recs-context { font-size: 13px; }
 body.tv-mode .wizard-recs-coltitle { font-size: 22px; }
 body.tv-mode .wizard-recs-split { grid-template-columns: 1fr; }

@@ -10,6 +10,36 @@ The `service-worker.js` cache name tracks deployments rather than semantic versi
 
 ---
 
+## 8.1.1 — 2026-09-02
+**Service worker cache:** `cinemath-v14` → bumped by the `sw-cache-bump` action on merge
+
+### Fixed
+
+- **Wizard recs: no way forward on TV (#2).** When the recs step produced
+  nothing — no catalogs in the family, nothing rated, no TMDB enrichment, or
+  nothing matching the time and mood filter — the panel rendered plain text
+  with no focusable element. On the Bravia the D-pad had nowhere to go but
+  the header Back button, and a new install landed there immediately. Every
+  empty state now carries a real `.wizard-btn`: "Browse all unrated films/TV"
+  wired to the existing `recs-fallback` triage flow, or "Open Settings to
+  pre-enrich" for the no-enrichment case, which is the one the button could
+  not fix on its own.
+
+- **Worker `/chat`: unbounded candidate strings (#4).** Candidate fields are
+  interpolated straight into the AI prompt, and only `pitch` was capped. An
+  over-long `title`, `dir`, `runtime`, `tabId`, `itemId`, or individual tag
+  inflated the token budget, crowded out the prompt and could push the reply
+  past the 400-token output cap into truncated JSON. All of them are now
+  length-capped before insertion (title 300, dir/tabId/itemId 100, pitch 200,
+  runtime and each tag 40, tags still limited to 5). A malformed or null
+  candidate entry no longer throws.
+
+New `tests/worker-chat.test.mjs` covers the caps, including a hostile payload
+that rendered roughly 2 MB of prompt before the fix and now stays under 64 KB.
+Six of its seven cases fail against the previous Worker.
+
+---
+
 ## 8.1.0 — 2026-09-02
 **Service worker cache:** `cinemath-v13` → bumped by the `sw-cache-bump` action on merge
 

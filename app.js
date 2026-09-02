@@ -10373,11 +10373,20 @@ function wizardRender() {
     }
     const filmRecs = filmTabs.length > 0 ? computeRecsForTab(filmTabs, opts) : null;
     const tvRecs   = tvTabs.length   > 0 ? computeRecsForTab(tvTabs,   opts) : null;
+    // Every empty state carries a .wizard-btn. The recs panel is otherwise a
+    // dead end on TV: the D-pad has nothing to focus in the content area and
+    // the only way out is the header Back button, which new installs hit
+    // immediately because nothing is rated or enriched yet.
+    const recsEmpty = (message, action, actionLabel) => `
+      <div class="wizard-recs-empty">${escapeHtml(message)}</div>
+      <button class="wizard-btn wizard-recs-fallback" data-action="${escapeHtml(action)}">${escapeHtml(actionLabel)}</button>
+    `;
     const renderRecsCol = (recs, kindLabel) => {
-      if (!recs) return `<div class="wizard-recs-empty">No ${kindLabel} catalogs in this family.</div>`;
-      if (recs.sourceCount === 0) return `<div class="wizard-recs-empty">No Loved/Liked ${kindLabel} yet — rate some first.</div>`;
-      if (!recs.anyEnriched) return `<div class="wizard-recs-empty">${kindLabel}: no TMDB enrichment yet. Run Pre-enrich.</div>`;
-      if (recs.recommended.length === 0 && recs.discover.length === 0) return `<div class="wizard-recs-empty">No ${kindLabel} matched time + mood.</div>`;
+      const browse = `Browse all unrated ${kindLabel}`;
+      if (!recs) return recsEmpty(`No ${kindLabel} catalogs in this family.`, 'recs-fallback', browse);
+      if (recs.sourceCount === 0) return recsEmpty(`No Loved/Liked ${kindLabel} yet — rate some first.`, 'recs-fallback', browse);
+      if (!recs.anyEnriched) return recsEmpty(`${kindLabel}: no TMDB enrichment yet. Run Pre-enrich.`, 'recs-enrich', 'Open Settings to pre-enrich');
+      if (recs.recommended.length === 0 && recs.discover.length === 0) return recsEmpty(`No ${kindLabel} matched time + mood.`, 'recs-fallback', browse);
       let h = '';
       if (recs.recommended.length > 0) {
         h += `<div class="wizard-recs-heading">Recommended · ${recs.recommended.length}</div>`;
@@ -10594,6 +10603,13 @@ function wizardHandleAction(btn) {
   // Recs step → "Browse all unrated items" fallback to existing triage flow
   if (action === 'recs-fallback') {
     wizardLaunchTriage('watch');
+    return;
+  }
+  // Recs step → nothing is enriched yet; Pre-enrich lives in Settings → Plex.
+  if (action === 'recs-enrich') {
+    const settingsBtn = document.getElementById('settings-btn');
+    if (settingsBtn) settingsBtn.click();
+    if (typeof window._setSettingsView === 'function') window._setSettingsView('plex');
     return;
   }
 }
