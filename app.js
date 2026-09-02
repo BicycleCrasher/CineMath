@@ -11,6 +11,17 @@ import {
 } from './lib/content-type.js';
 import { TIME_BUDGETS, parseRuntimeMin, fitsTimeBudget } from './lib/runtime.js';
 import { computeRecsForTab as computeRecsForTabCore, moodScoreFromTags } from './lib/recs.js';
+import {
+  PROVIDERS, PROVIDER_BY_ID, DEFAULT_SUB_IDS, KIND_ORDER,
+  matchTmdbProvider, providerIdForTmdb, resolveEnabled, isEnabledTmdb,
+  providersForRegion, migrateLegacySubs, webSearchUrl,
+} from './lib/providers.js';
+import {
+  snapshotFromTmdb, rankAvailability, isPlayableOnMyServices,
+  providerChips, rankTonight, diffSnapshots, PLAYABLE_SCORE,
+} from './lib/availability.js';
+import { detectLaunchPlatform, buildLaunchCandidates } from './lib/launch.js';
+import { parseGuids, pickBestSearchHit, planWatchlistSync } from './lib/plex-discover.js';
 
 // NOTE: escapeHtml used to be declared twice (here and before
 // wireDevicesHandlers). Function hoisting meant the LATER declaration won
@@ -536,6 +547,133 @@ function plexDeepLinkUrl(ratingKey) {
   const serverUrl = getPlexServerUrl();
   // The standard deep link format
   return `plex://play?metadataKey=/library/metadata/${ratingKey}&server=${encodeURIComponent(serverUrl)}`;
+}
+
+// =====================================================================
+// Launch ladder runtime (v8.1.0)
+// =====================================================================
+// lib/launch.js decides WHAT to open (an ordered list of plex:// / intent:// /
+// https candidates); this half performs the navigation. Android can't tell us
+// whether an app is installed, so we fire the first candidate and watch for
+// the page going away — if we are still visible ~1.2s later the app almost
+// certainly didn't take it, and we drop to the next rung of the ladder.
+const LAUNCH_APPS_KEY = 'watchtrack-launch-apps';
+const LAUNCH_FALLBACK_MS = 1200;
+const LAUNCH_MAX_CANDIDATES = 3;
+
+function getLaunchPlatform() {
+  return detectLaunchPlatform({
+    ua: (typeof navigator !== 'undefined' && navigator.userAgent) || '',
+    isTV: isTVMode(),
+  });
+}
+// "Open titles in installed apps" — on by default, so a fresh TV install
+// launches the real app rather than a browser tab.
+function isLaunchAppsEnabled() { return lsGet(LAUNCH_APPS_KEY) !== '0'; }
+function setLaunchAppsEnabled(on) { lsSet(LAUNCH_APPS_KEY, on ? '1' : '0'); }
+
+// Walk the candidate ladder. Resolves { launched: kind|null } where `kind` is
+// the candidate that appeared to take ('plex' | 'intent' | 'https'), or null
+// when every rung was tried and the page never went away.
+function launchExternal(candidates) {
+  const list = Array.isArray(candidates) ? candidates.filter(c => c && c.url) : [];
+  if (!list.length) return Promise.resolve({ launched: null });
+  return new Promise((resolve) => {
+    const attempt = (i) => {
+      if (i >= list.length || i >= LAUNCH_MAX_CANDIDATES) { resolve({ launched: null }); return; }
+      const cand = list[i];
+      let left = false;
+      let timer = null;
+      const onLeave = () => { left = true; };
+      const onVisibility = () => {
+        if (document.visibilityState === 'hidden') left = true;
+      };
+      const cleanup = () => {
+        try {
+          window.removeEventListener('pagehide', onLeave);
+          window.removeEventListener('blur', onLeave);
+          document.removeEventListener('visibilitychange', onVisibility);
+        } catch {}
+        if (timer) { clearTimeout(timer); timer = null; }
+      };
+      try {
+        window.addEventListener('pagehide', onLeave);
+        window.addEventListener('blur', onLeave);
+        document.addEventListener('visibilitychange', onVisibility);
+      } catch {}
+      try {
+        if (cand.kind === 'https' && getLaunchPlatform() === 'web') {
+          window.open(cand.url, '_blank', 'noopener');
+        } else {
+          window.location.href = cand.url;
+        }
+      } catch (e) {
+        // A blocked navigation is not fatal — the timer below advances us.
+        console.warn('Launch candidate failed:', e);
+      }
+      timer = setTimeout(() => {
+        cleanup();
+        const stillHere = !left && document.visibilityState === 'visible';
+        if (stillHere) attempt(i + 1);
+        else resolve({ launched: cand.kind });
+      }, LAUNCH_FALLBACK_MS);
+    };
+    attempt(0);
+  });
+}
+
+// The user's own Plex server: plex:// first, then app.plex.tv / the server's
+// own web UI.
+function plexLaunchCandidates(ratingKey) {
+  return buildLaunchCandidates(null, {
+    platform: getLaunchPlatform(),
+    plex: { ratingKey, serverUrl: getPlexServerUrl(), clientId: getPlexClientId() },
+    launchApps: isLaunchAppsEnabled(),
+  });
+}
+
+// `entry` is one ranked availability entry from rankAvailability().
+function providerLaunchCandidates(entry, item) {
+  if (!entry) return [];
+  if (entry.providerId === 'plex-server') return plexLaunchCandidates(entry.ratingKey);
+  return buildLaunchCandidates(PROVIDER_BY_ID.get(entry.providerId) || null, {
+    platform: getLaunchPlatform(),
+    title: (item && item.title) || '',
+    deepUrl: entry.deepUrl || null,
+    launchApps: isLaunchAppsEnabled(),
+  });
+}
+
+// The single call site every "play this" button funnels through: mark the
+// title as watching, then walk the ladder. Ephemeral items (Plex Watchlist
+// orphans) have no catalog id, so they get no state write.
+function launchRankedEntry(entry, item, tab) {
+  if (item && item.id && !item._ephemeral) {
+    try { setStatus(item.id, 'watching', tab); } catch (e) { console.warn('Launch status write failed:', e); }
+  }
+  return launchExternal(providerLaunchCandidates(entry, item));
+}
+
+// Rebuild a ranked entry (and its ladder) from the data-* attributes
+// renderStreamingProviders / the watch modal / the Tonight row stamp onto a
+// button, so delegated click handlers don't need the original object.
+// `item` is optional and only supplies the title for search URLs.
+function launchCandidatesFromDataset(el, item) {
+  const empty = { entry: null, candidates: [] };
+  if (!el || !el.dataset) return empty;
+  const d = el.dataset;
+  const providerId = d.launchProvider || '';
+  if (!providerId) return empty;
+  const deep = String(d.deepUrl || '').trim();
+  const entry = {
+    providerId,
+    region: d.launchRegion || '',
+    tier: d.launchTier || '',
+    deepUrl: /^https:\/\//i.test(deep) ? deep : null,
+    ratingKey: d.plexKey || '',
+  };
+  const ctxItem = item || { title: d.launchTitle || '' };
+  return { entry, candidates: providerLaunchCandidates(entry, ctxItem) };
 }
 async function plexMarkWatched(ratingKey) {
   if (!isPlexConfigured()) return false;
@@ -1724,11 +1862,48 @@ async function tmdbBulkLookup(items, progressCb) {
 // Region selection for streaming-provider data
 // =====================================================================
 const REGION_KEY = 'watchtrack-streaming-region';
+// v8.1.0: the user can follow several regions at once (home + "I'd VPN for
+// this"). REGIONS_KEY holds the ordered list, index 0 = home; REGION_KEY is
+// always kept equal to that first entry so older clients, the alerts payload
+// and the pair/sync snapshot keep working unchanged.
+const REGIONS_KEY = 'watchtrack-streaming-regions';
+
 function getStreamingRegion() {
   return lsGet(REGION_KEY) || 'US';
 }
+// Unique uppercase ISO 3166-1 alpha-2 codes; anything else is dropped.
+function normalizeRegionList(arr) {
+  const out = [];
+  for (const raw of Array.isArray(arr) ? arr : []) {
+    const code = String(raw == null ? '' : raw).trim().toUpperCase();
+    if (/^[A-Z]{2}$/.test(code) && !out.includes(code)) out.push(code);
+  }
+  return out;
+}
+function getStreamingRegions() {
+  let list = [];
+  try {
+    const raw = lsGet(REGIONS_KEY);
+    if (raw) list = normalizeRegionList(JSON.parse(raw));
+  } catch {}
+  if (!list.length) list = normalizeRegionList([getStreamingRegion()]);
+  return list.length ? list : ['US'];
+}
+function setStreamingRegions(arr) {
+  const list = normalizeRegionList(arr);
+  const next = list.length ? list : ['US'];
+  lsSet(REGIONS_KEY, JSON.stringify(next));
+  lsSet(REGION_KEY, next[0]);
+  return next;
+}
+// The region availability ranking treats as "can play right now".
+function getHomeRegion() { return getStreamingRegions()[0]; }
+// Same one-arg signature as before; now it promotes `r` to home instead of
+// discarding the rest of the list.
 function setStreamingRegion(r) {
-  lsSet(REGION_KEY, r || 'US');
+  const code = String(r == null ? '' : r).trim().toUpperCase();
+  const home = /^[A-Z]{2}$/.test(code) ? code : 'US';
+  return setStreamingRegions([home].concat(getStreamingRegions().filter(c => c !== home)));
 }
 // All regions TMDB supports for watch providers (ISO 3166-1 alpha-2 country codes).
 // Sorted, with common ones at top for the dropdown.
@@ -1757,112 +1932,178 @@ const STREAMING_REGIONS = [
   { code: 'ZA', name: 'South Africa' },
 ];
 
-// Search-on-service URL templates (used when user clicks a provider badge).
-// Maps TMDB provider name → URL template with {q} placeholder for search query.
-const STREAMING_SEARCH_TEMPLATES = {
-  'Netflix': 'https://www.netflix.com/search?q={q}',
-  'Hulu': 'https://www.hulu.com/search?q={q}',
-  'Max': 'https://play.max.com/search?q={q}',
-  'HBO Max': 'https://play.max.com/search?q={q}',
-  'Disney Plus': 'https://www.disneyplus.com/search?q={q}',
-  'Disney+': 'https://www.disneyplus.com/search?q={q}',
-  'Amazon Prime Video': 'https://www.amazon.com/s?k={q}&i=instant-video',
-  'Apple TV Plus': 'https://tv.apple.com/search?term={q}',
-  'Apple TV+': 'https://tv.apple.com/search?term={q}',
-  'Apple TV': 'https://tv.apple.com/search?term={q}',
-  'Paramount Plus': 'https://www.paramountplus.com/search/{q}',
-  'Paramount+': 'https://www.paramountplus.com/search/{q}',
-  'Paramount Plus with Showtime': 'https://www.paramountplus.com/search/{q}',
-  'Peacock': 'https://www.peacocktv.com/search?q={q}',
-  'BBC iPlayer': 'https://www.bbc.co.uk/iplayer/search?q={q}',
-  'Crunchyroll': 'https://www.crunchyroll.com/search?q={q}',
-  'YouTube': 'https://www.youtube.com/results?search_query={q}',
-  'Google Play Movies': 'https://play.google.com/store/search?q={q}&c=movies',
-  'Vudu': 'https://www.vudu.com/content/movies/search?searchString={q}',
-  'PBS Masterpiece Amazon Channel': 'https://www.amazon.com/s?k={q}+pbs+masterpiece&i=instant-video',
-  'PBS Masterpiece': 'https://www.pbs.org/search/?q={q}',
-  'National Theatre at Home': 'https://www.ntathome.com/search/{q}',
-  'Dropout': 'https://www.dropout.tv/search?q={q}',
-  '2nd Try': 'https://www.youtube.com/@2ndTry/search?query={q}',
-  'Mubi': 'https://mubi.com/search/films?query={q}',
-  'Criterion Channel': 'https://www.criterionchannel.com/search?q={q}',
-  'Shudder': 'https://www.shudder.com/search?q={q}',
-  'BritBox': 'https://www.britbox.com/us/search?q={q}',
-  'Acorn TV': 'https://acorn.tv/search/{q}',
-  'AMC+': 'https://www.amcplus.com/search?q={q}',
-  'Starz': 'https://www.starz.com/us/en/search?q={q}',
-  // For unknown providers, fall back to Google search
-};
-
 // === V5.21.0: My Subscriptions (TMDB watch-provider prioritization) ===
+// v8.1.0: stored as registry ids ('netflix', 'tmdb:39') rather than display
+// names. lib/providers.js now owns the name aliases, the per-service search
+// URL templates and the default subscription profile — three hardcoded tables
+// that used to live right here.
 const MY_SUBS_KEY = 'watchtrack-my-subscriptions';
 
-// Default profile (Lincoln's, configured 2026-05-08). User can edit in Settings.
-const DEFAULT_MY_SUBS = [
-  'Hulu',
-  'Disney+',
-  'Max',
-  'Amazon Prime Video',
-  'Apple TV+',
-  'Paramount+',
-  'PBS Masterpiece (via Prime)',
-  'National Theatre at Home',
-  'Dropout',
-  '2nd Try'
-];
-
-// Canonical name → list of TMDB-style aliases. Used by isMySub() to match.
-// Niche services without TMDB representation (Dropout, 2nd Try, NT at Home)
-// stay in the user's list but won't match TMDB results — they show in Settings
-// as "owned" without ever appearing as a Watch button.
-const PROVIDER_ALIASES = {
-  'Netflix': ['Netflix'],
-  'Hulu': ['Hulu'],
-  'Disney+': ['Disney Plus', 'Disney+'],
-  'Max': ['Max', 'HBO Max'],
-  'Amazon Prime Video': ['Amazon Prime Video', 'Amazon Video'],
-  'Apple TV+': ['Apple TV Plus', 'Apple TV+', 'Apple TV'],
-  'Paramount+': ['Paramount Plus', 'Paramount+', 'Paramount Plus with Showtime'],
-  'Peacock': ['Peacock', 'Peacock Premium', 'Peacock Premium Plus'],
-  'PBS Masterpiece (via Prime)': ['PBS Masterpiece Amazon Channel', 'PBS Masterpiece'],
-  'Criterion Channel': ['Criterion Channel'],
-  'Mubi': ['Mubi'],
-  'Shudder': ['Shudder'],
-  'BritBox': ['BritBox'],
-  'Acorn TV': ['Acorn TV'],
-  'AMC+': ['AMC+'],
-  'Starz': ['Starz'],
-  'Crunchyroll': ['Crunchyroll'],
-  'National Theatre at Home': ['National Theatre at Home'],
-  'Dropout': ['Dropout', 'Dropout TV'],
-  '2nd Try': ['2nd Try', 'Second Try'],
-};
-
 function getMySubscriptions() {
-  try {
-    const raw = lsGet(MY_SUBS_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch {}
-  return DEFAULT_MY_SUBS.slice();
+  let raw = null;
+  try { raw = lsGet(MY_SUBS_KEY); } catch {}
+  if (!raw) return DEFAULT_SUB_IDS.slice();
+  let parsed = null;
+  try { parsed = JSON.parse(raw); } catch { return DEFAULT_SUB_IDS.slice(); }
+  if (!Array.isArray(parsed)) return DEFAULT_SUB_IDS.slice();
+  const migrated = migrateLegacySubs(parsed);
+  // Old installs stored display names. Rewrite once so the migration is not
+  // re-run on every read (migrateLegacySubs is idempotent either way).
+  if (JSON.stringify(migrated) !== JSON.stringify(parsed)) {
+    try { lsSet(MY_SUBS_KEY, JSON.stringify(migrated)); } catch {}
+  }
+  return migrated;
 }
 function setMySubscriptions(arr) {
   lsSet(MY_SUBS_KEY, JSON.stringify(arr));
 }
-// Returns true if the TMDB-returned provider name matches one of the user's subs
+// { curated:Set, tmdbIds:Set, names:Set } for everything the user enabled.
+function getEnabledProviderSet() {
+  return resolveEnabled(getMySubscriptions());
+}
+// Every TMDB numeric provider id the user's services cover, sorted — this is
+// what the alerts subscription sends to the Worker.
+function getEnabledTmdbIds() {
+  return Array.from(resolveEnabled(getMySubscriptions()).tmdbIds).sort((a, b) => a - b);
+}
+// True when a TMDB-returned provider name is one of the user's own services.
 function isMySub(providerName) {
-  const subs = new Set(getMySubscriptions());
-  if (subs.has(providerName)) return true;
-  for (const [canonical, aliases] of Object.entries(PROVIDER_ALIASES)) {
-    if (aliases.includes(providerName) && subs.has(canonical)) return true;
-  }
-  return false;
+  const name = String(providerName == null ? '' : providerName).trim();
+  if (!name) return false;
+  const enabled = resolveEnabled(getMySubscriptions());
+  if (enabled.names.has(name.toLowerCase())) return true;
+  const entry = matchTmdbProvider({ provider_name: name });
+  return Boolean(entry && enabled.curated.has(entry.id));
 }
 
 function streamingSearchUrl(providerName, title) {
-  const template = STREAMING_SEARCH_TEMPLATES[providerName];
-  const q = encodeURIComponent(title);
-  if (template) return template.replace('{q}', q);
-  return `https://www.google.com/search?q=${encodeURIComponent(providerName + ' ' + title)}`;
+  return webSearchUrl(matchTmdbProvider({ provider_name: providerName }), title, providerName);
+}
+
+// =====================================================================
+// Provider catalog cache — TMDB's live per-region provider list, proxied by
+// the Worker (/providers, /providers/regions). Cached in IDB because the
+// Settings list, the provider logos and the region picker all have to render
+// with no network.
+// =====================================================================
+const PROVIDER_CATALOG_PREFIX = 'watchtrack-provider-catalog-';
+const PROVIDER_CATALOG_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const PROVIDER_REGIONS_KEY = 'watchtrack-provider-regions';
+const PROVIDER_REGIONS_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+// logo_path is interpolated into an image.tmdb.org URL, so it is whitelisted
+// rather than merely escaped.
+const PROVIDER_LOGO_PATH_RE = /^\/[A-Za-z0-9._-]+$/;
+
+// The cached { cachedAt, providers } record for a region, however stale —
+// freshness is fetchProviderCatalog's job, callers just want something to
+// render right now.
+function getProviderCatalog(region) {
+  const code = String(region == null ? '' : region).trim().toUpperCase();
+  if (!/^[A-Z]{2}$/.test(code)) return null;
+  try {
+    const raw = lsGet(PROVIDER_CATALOG_PREFIX + code);
+    if (!raw) return null;
+    const obj = JSON.parse(raw);
+    if (!obj || !Array.isArray(obj.providers)) return null;
+    return obj;
+  } catch { return null; }
+}
+
+// Never throws: on any failure the stale cache (or null) comes back so the
+// Settings list degrades to the curated registry instead of erroring.
+async function fetchProviderCatalog(region, opts) {
+  const code = String(region == null ? '' : region).trim().toUpperCase();
+  if (!/^[A-Z]{2}$/.test(code)) return null;
+  const cached = getProviderCatalog(code);
+  const force = Boolean(opts && opts.force);
+  const fresh = cached && cached.cachedAt && (Date.now() - cached.cachedAt < PROVIDER_CATALOG_TTL_MS);
+  if (fresh && !force) return cached;
+  if (!isWebhookConfigured()) return cached;
+  try {
+    const url = `${getWebhookUrl()}/providers?region=${encodeURIComponent(code)}`
+      + `&secret=${encodeURIComponent(getWebhookSecret())}`;
+    const resp = await fetch(url);
+    if (!resp.ok) return cached;
+    const data = await resp.json();
+    if (!data || data.error) return cached;
+    const rec = { cachedAt: Date.now(), providers: Array.isArray(data.providers) ? data.providers : [] };
+    try { lsSet(PROVIDER_CATALOG_PREFIX + code, JSON.stringify(rec)); } catch {}
+    return rec;
+  } catch { return cached; }
+}
+
+// TMDB's list of regions that have watch-provider data. Falls back to the
+// hardcoded STREAMING_REGIONS when the Worker is unreachable.
+async function fetchProviderRegions() {
+  const fallback = () => STREAMING_REGIONS.map(r => ({ code: r.code, name: r.name }));
+  let cached = null;
+  try {
+    const raw = lsGet(PROVIDER_REGIONS_KEY);
+    if (raw) {
+      const obj = JSON.parse(raw);
+      if (obj && Array.isArray(obj.regions) && obj.regions.length) cached = obj;
+    }
+  } catch {}
+  const fresh = cached && cached.cachedAt && (Date.now() - cached.cachedAt < PROVIDER_REGIONS_TTL_MS);
+  if (fresh) return cached.regions;
+  if (!isWebhookConfigured()) return cached ? cached.regions : fallback();
+  try {
+    const resp = await fetch(`${getWebhookUrl()}/providers/regions?secret=${encodeURIComponent(getWebhookSecret())}`);
+    if (!resp.ok) return cached ? cached.regions : fallback();
+    const data = await resp.json();
+    const regions = Array.isArray(data && data.regions) ? data.regions : [];
+    if (!regions.length) return cached ? cached.regions : fallback();
+    try { lsSet(PROVIDER_REGIONS_KEY, JSON.stringify({ cachedAt: Date.now(), regions })); } catch {}
+    return regions;
+  } catch { return cached ? cached.regions : fallback(); }
+}
+
+// { tmdbProviderId: 'Provider Name' } for one region — the `liveNames` input
+// to rankAvailability(), so a region-only service shows its real name instead
+// of "tmdb:<id>".
+function providerNameMap(region) {
+  const out = {};
+  const cat = getProviderCatalog(region);
+  if (!cat) return out;
+  for (const prov of cat.providers) {
+    if (!prov || prov.provider_id == null || !prov.provider_name) continue;
+    out[prov.provider_id] = String(prov.provider_name);
+  }
+  return out;
+}
+function liveNamesForRegions(regions) {
+  const out = {};
+  for (const region of Array.isArray(regions) ? regions : []) out[region] = providerNameMap(region);
+  return out;
+}
+
+// TMDB logo path for a provider: the requested region's catalog first, then
+// any other cached region (logos are region-independent, but a service may
+// only appear in one region's list).
+function providerLogoPath(tmdbId, region) {
+  const id = Number(tmdbId);
+  if (!Number.isFinite(id)) return null;
+  const seen = new Set();
+  const inRegion = (code) => {
+    if (!code || seen.has(code)) return null;
+    seen.add(code);
+    const cat = getProviderCatalog(code);
+    if (!cat) return null;
+    for (const prov of cat.providers) {
+      if (!prov || Number(prov.provider_id) !== id) continue;
+      const path = typeof prov.logo_path === 'string' ? prov.logo_path : '';
+      if (PROVIDER_LOGO_PATH_RE.test(path)) return path;
+    }
+    return null;
+  };
+  const direct = inRegion(String(region == null ? '' : region).trim().toUpperCase());
+  if (direct) return direct;
+  for (const key of lsKeys()) {
+    if (!key.startsWith(PROVIDER_CATALOG_PREFIX)) continue;
+    const hit = inRegion(key.slice(PROVIDER_CATALOG_PREFIX.length));
+    if (hit) return hit;
+  }
+  return null;
 }
 
 // =====================================================================
@@ -1982,6 +2223,137 @@ function setEnrichmentForItem(itemId, payload) {
   catalogEnrichmentIdx[itemId] = { ...payload, lastEnriched: Date.now() };
   saveCatalogEnrichment(catalogEnrichmentIdx);
 }
+// Merge a partial record instead of replacing it — the availability snapshot,
+// the rec arrays and the poster path are written by different passes and used
+// to clobber each other. `lastEnriched` only advances on a real TMDB lookup
+// (a tmdbId in the partial), so an availability-only write does not make a
+// stale record look fresh to enrichEntireCatalog().
+function mergeEnrichmentForItem(itemId, partial) {
+  const existing = catalogEnrichmentIdx[itemId] || null;
+  const merged = { ...(existing || {}), ...(partial || {}) };
+  merged.lastEnriched = (partial && partial.tmdbId != null)
+    ? Date.now()
+    : ((existing && existing.lastEnriched) || Date.now());
+  catalogEnrichmentIdx[itemId] = merged;
+  saveCatalogEnrichment(catalogEnrichmentIdx);
+  return merged;
+}
+
+// =====================================================================
+// Availability snapshots (v8.1.0)
+// =====================================================================
+// lib/availability.js does the slicing, ranking and diffing; this half owns
+// storage. The snapshot rides along on the enrichment record so filters,
+// provider chips and the Tonight row work with no network, and anything that
+// newly turned up on one of the user's own services is logged for the
+// arrivals strip.
+const ARRIVALS_KEY = 'watchtrack-avail-arrivals';
+const ARRIVALS_TTL_MS = 14 * 24 * 60 * 60 * 1000;
+const ARRIVALS_MAX = 50;
+
+// Newest first; entries older than the TTL are dropped on read.
+function getAvailArrivals() {
+  let list = [];
+  try {
+    const raw = lsGet(ARRIVALS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) list = parsed;
+    }
+  } catch {}
+  const cutoff = Date.now() - ARRIVALS_TTL_MS;
+  return list.filter(a => a && a.id && a.providerId && Number(a.at) >= cutoff);
+}
+
+// Append the `arrived` half of a diffSnapshots() result. Deduped by
+// tab|id|provider|region so a repeated refresh doesn't re-announce anything.
+function recordAvailArrivals(tab, id, diff) {
+  const arrived = diff && Array.isArray(diff.arrived) ? diff.arrived : [];
+  if (!arrived.length) return getAvailArrivals();
+  const list = getAvailArrivals();
+  const seen = new Set(list.map(a => `${a.tab}|${a.id}|${a.providerId}|${a.region}`));
+  const at = Date.now();
+  for (const hit of arrived) {
+    if (!hit) continue;
+    const providerId = providerIdForTmdb({ provider_id: hit.tmdbId });
+    if (!providerId) continue;
+    const key = `${tab}|${id}|${providerId}|${hit.region}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    list.push({ tab: tab || null, id, providerId, region: hit.region, at });
+  }
+  const next = list
+    .sort((a, b) => (Number(b.at) || 0) - (Number(a.at) || 0))
+    .slice(0, ARRIVALS_MAX);
+  try { lsSet(ARRIVALS_KEY, JSON.stringify(next)); } catch {}
+  return next;
+}
+
+// A stored snapshot is only usable while it covers exactly the regions the
+// user follows today — adding or removing a region invalidates every slice.
+function availRegionsMatch(avail) {
+  if (!avail || !Array.isArray(avail.regions)) return false;
+  const stored = avail.regions.slice().sort().join(',');
+  const current = getStreamingRegions().slice().sort().join(',');
+  return stored === current;
+}
+
+// Slice a fresh TMDB payload into the stored snapshot and log any arrivals.
+// Returns the new snapshot, or null when the payload carries no providers.
+function writeAvailForItem(itemId, tmdbData, tabId) {
+  if (!tmdbData || !tmdbData.watchProviders) return null;
+  const existing = getEnrichmentForItem(itemId);
+  const prev = (existing && existing.avail) || null;
+  const next = snapshotFromTmdb(tmdbData.watchProviders, getStreamingRegions());
+  mergeEnrichmentForItem(itemId, { avail: next });
+  if (prev) recordAvailArrivals(tabId, itemId, diffSnapshots(prev, next, getMySubscriptions()));
+  return next;
+}
+
+// Re-slice every stored snapshot straight out of the client TMDB cache — no
+// network, no throwing. Called when the region list changes so filters, chips
+// and the Tonight row update immediately instead of after the next enrich
+// pass. Returns the number of records rewritten.
+function refreshAvailSnapshotsFromCache() {
+  const regions = getStreamingRegions();
+  const itemsById = new Map();
+  try {
+    for (const tabId in catalogs) {
+      const cat = catalogs[tabId];
+      if (!cat || !Array.isArray(cat.items)) continue;
+      for (const it of cat.items) if (it && it.id && !itemsById.has(it.id)) itemsById.set(it.id, it);
+    }
+  } catch {}
+  let updated = 0;
+  for (const itemId of Object.keys(catalogEnrichmentIdx)) {
+    const rec = catalogEnrichmentIdx[itemId];
+    if (!rec || !rec.tmdbId) continue;
+    const type = rec.type === 'tv' ? 'tv' : 'movie';
+    let payload = null;
+    // tmdbLookupById caches under an id key; tmdbLookup under a title key.
+    const keys = [`${TMDB_CACHE_PREFIX}${type}-id:${rec.tmdbId}`];
+    const item = itemsById.get(itemId);
+    if (item) keys.push(tmdbCacheKey(item.title, item.year || rec.year || '', type));
+    for (const key of keys) {
+      try {
+        const raw = lsGet(key);
+        if (!raw) continue;
+        const obj = JSON.parse(raw);
+        if (obj && obj.data && obj.data.watchProviders) { payload = obj.data; break; }
+      } catch {}
+    }
+    if (!payload) continue;
+    // Written straight into the index (one save at the end) — going through
+    // mergeEnrichmentForItem would re-serialize the whole index per item.
+    catalogEnrichmentIdx[itemId] = {
+      ...rec,
+      avail: snapshotFromTmdb(payload.watchProviders, regions),
+    };
+    updated++;
+  }
+  if (updated) saveCatalogEnrichment(catalogEnrichmentIdx);
+  return updated;
+}
 
 // Run a full enrichment pass over every loaded catalog item.
 // Calls Worker /metadata/bulk in batches of 20.
@@ -2001,12 +2373,18 @@ async function enrichEntireCatalog(progressCb) {
       // Skip only if fresh AND has tmdbId AND has rec arrays (added in v5.14 for Stage 5e).
       // Older enrichment records without rec arrays will be re-fetched.
       const hasRecs = existing && (existing.recommendations || existing.similar);
-      if (existing && existing.lastEnriched && (Date.now() - existing.lastEnriched < STALE_MS) && existing.tmdbId && hasRecs) return;
+      // v8.1.0: a record with no availability snapshot — or one sliced for a
+      // different region list — is stale too. That is how a region change
+      // backfills from the network for items the TMDB cache has expired.
+      const hasAvail = existing && existing.avail && availRegionsMatch(existing.avail);
+      if (existing && existing.lastEnriched && (Date.now() - existing.lastEnriched < STALE_MS) && existing.tmdbId && hasRecs && hasAvail) return;
       lookups.push({
         itemId: item.id,
+        tabId,
         title: item.title,
         year: item.year || null,
         type: isTvTab ? 'tv' : 'movie',
+        tmdbId: (existing && existing.tmdbId) || undefined,
       });
     });
   }
@@ -2027,7 +2405,8 @@ async function enrichEntireCatalog(progressCb) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           secret,
-          items: slice.map(s => ({ title: s.title, year: s.year, type: s.type })),
+          // The Worker skips its search step when a tmdbId comes along.
+          items: slice.map(s => ({ title: s.title, year: s.year, type: s.type, tmdbId: s.tmdbId })),
         }),
       });
       if (!resp.ok) { errors += slice.length; continue; }
@@ -2047,6 +2426,10 @@ async function enrichEntireCatalog(progressCb) {
             recommendations: r.result.recommendations || [],
             similar: r.result.similar || [],
           });
+          // setEnrichmentForItem replaces the record, so this write seeds a
+          // fresh snapshot rather than diffing against the old one — the
+          // arrivals strip is fed by loadStreamingProviders and the cron.
+          writeAvailForItem(lookup.itemId, r.result, lookup.tabId);
           found++;
         }
       });
@@ -2086,14 +2469,14 @@ async function loadStreamingProviders(itemEl, item) {
     slot.innerHTML = '';
     return;
   }
-  // Cache the tmdbId on the enrichment index if not already there
-  if (!enrich || !enrich.tmdbId) {
-    setEnrichmentForItem(item.id, {
-      tmdbId: data.tmdbId, type, year: data.year,
-      posterPath: data.posterPath, numberOfEpisodes: data.numberOfEpisodes,
-      genres: data.genres,
-    });
-  }
+  // Merge, never replace: the record may already carry rec arrays and a
+  // previous availability snapshot we want to diff against.
+  mergeEnrichmentForItem(item.id, {
+    tmdbId: data.tmdbId, type, year: data.year,
+    posterPath: data.posterPath, numberOfEpisodes: data.numberOfEpisodes,
+    genres: data.genres,
+  });
+  writeAvailForItem(item.id, data, sourceTab);
   renderStreamingProviders(slot, data, item.title);
 }
 
@@ -2129,12 +2512,28 @@ function renderStreamingProviders(slot, tmdbData, title) {
   const providers = tmdbData.watchProviders || {};
   const region = getStreamingRegion();
   const regionData = providers[region];
+  const enabledProviders = resolveEnabled(getMySubscriptions());
 
-  // Build the region selector
-  const regionOptions = STREAMING_REGIONS.map(r => {
-    const has = providers[r.code] ? '' : ' (none)';
-    return `<option value="${r.code}" ${r.code === region ? 'selected' : ''}>${r.name}${has}</option>`;
-  }).join('');
+  // Build the region selector: the regions the user follows first (home
+  // marked with a star), then everything else TMDB knows about.
+  const selectedRegions = getStreamingRegions();
+  const regionName = (code) => {
+    const known = STREAMING_REGIONS.find(r => r.code === code);
+    return known ? known.name : code;
+  };
+  const regionOption = (code, label) => {
+    const has = providers[code] ? '' : ' (none)';
+    const sel = code === region ? ' selected' : '';
+    return `<option value="${escapeHtml(code)}"${sel}>${escapeHtml(label + has)}</option>`;
+  };
+  const regionOptions = selectedRegions
+    .map((code, i) => regionOption(code, (i === 0 ? '\u2605 ' : '') + regionName(code)))
+    .concat(
+      STREAMING_REGIONS
+        .filter(r => !selectedRegions.includes(r.code))
+        .map(r => regionOption(r.code, r.name))
+    )
+    .join('');
 
   // Get providers for selected region. TMDB groups by flatrate / rent / buy / free / ads.
   // We prefer flatrate (subscription) and free, then ads, then rent/buy.
@@ -2159,8 +2558,21 @@ function renderStreamingProviders(slot, tmdbData, title) {
       if (!provs || provs.length === 0) return;
       any = true;
       const buttons = provs.map(p => {
+        // href stays the plain https search URL so the anchor still works
+        // without JS; the data-launch-* attributes let the delegated handler
+        // build the full app-launch ladder instead.
         const search = streamingSearchUrl(p.provider_name, title);
-        return `<a class="streaming-btn" href="${search}" target="_blank" rel="noopener">${escapeHtml(p.provider_name)}</a>`;
+        const providerId = providerIdForTmdb(p) || '';
+        const logo = providerLogoPath(p.provider_id, region);
+        const img = logo
+          ? `<img class="provider-logo-sm" src="https://image.tmdb.org/t/p/w45${escapeHtml(logo)}" alt="" loading="lazy">`
+          : '';
+        const mine = isEnabledTmdb(p, enabledProviders) ? ' my-sub' : '';
+        return `<a class="streaming-btn${mine}" href="${escapeHtml(search)}" target="_blank" rel="noopener"`
+          + ` data-launch-provider="${escapeHtml(providerId)}"`
+          + ` data-launch-region="${escapeHtml(region)}"`
+          + ` data-launch-tier="${escapeHtml(t.key)}"`
+          + ` data-launch-title="${escapeHtml(title)}">${img}${escapeHtml(p.provider_name)}</a>`;
       }).join('');
       html += `<div class="streaming-tier"><span class="streaming-tier-label">${t.label}:</span> ${buttons}</div>`;
     });

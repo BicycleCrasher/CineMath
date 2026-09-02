@@ -1,0 +1,1223 @@
+{
+  "description": "Golden cases for lib/availability.js.",
+  "tmdb": {
+    "results": {
+      "US": {
+        "link": "https://www.themoviedb.org/movie/1-heat/watch?locale=US",
+        "flatrate": [
+          {
+            "provider_id": 8,
+            "provider_name": "Netflix"
+          },
+          {
+            "provider_id": 337,
+            "provider_name": "Disney Plus"
+          },
+          {
+            "provider_id": 15,
+            "provider_name": "Hulu"
+          }
+        ],
+        "free": [
+          {
+            "provider_id": 73,
+            "provider_name": "Tubi TV"
+          }
+        ],
+        "rent": [
+          {
+            "provider_id": 2,
+            "provider_name": "Apple TV"
+          }
+        ],
+        "buy": [
+          {
+            "provider_id": 2,
+            "provider_name": "Apple TV"
+          },
+          {
+            "provider_id": 3,
+            "provider_name": "Google Play Movies"
+          }
+        ]
+      },
+      "GB": {
+        "link": "http://insecure.example.com/gb",
+        "flatrate": [
+          {
+            "provider_id": 39,
+            "provider_name": "Now TV"
+          },
+          {
+            "provider_id": 8,
+            "provider_name": "Netflix"
+          }
+        ],
+        "ads": [
+          {
+            "provider_id": 73,
+            "provider_name": "Tubi TV"
+          }
+        ],
+        "rent": []
+      },
+      "CA": {
+        "flatrate": [
+          {
+            "provider_id": 230,
+            "provider_name": "Crave"
+          }
+        ]
+      },
+      "DE": {
+        "flatrate": [
+          {
+            "provider_id": 8,
+            "provider_name": "Netflix"
+          }
+        ]
+      }
+    }
+  },
+  "regions": [
+    "US",
+    "GB"
+  ],
+  "liveNames": {
+    "US": {
+      "2": "Apple TV",
+      "3": "Google Play Movies",
+      "8": "Netflix",
+      "15": "Hulu",
+      "73": "Tubi TV",
+      "337": "Disney Plus"
+    },
+    "GB": {
+      "8": "Netflix",
+      "39": "Now TV",
+      "73": "Tubi TV"
+    }
+  },
+  "plexDiscover": {
+    "availability": [
+      {
+        "platform": "netflix",
+        "title": "Heat",
+        "url": "https://www.netflix.com/title/60021793",
+        "offerType": "subscription",
+        "country": "us"
+      },
+      {
+        "platform": "hulu",
+        "title": "Heat",
+        "url": "http://insecure.hulu.com/x",
+        "offerType": "subscription",
+        "country": "us"
+      },
+      {
+        "platform": "amcplus",
+        "title": "Heat",
+        "url": "https://www.amcplus.com/movies/heat",
+        "offerType": "subscription",
+        "country": "us"
+      },
+      {
+        "platform": "now",
+        "title": "Heat",
+        "url": "https://www.nowtv.com/heat",
+        "offerType": "subscription",
+        "country": "gb"
+      },
+      {
+        "platform": "netflix",
+        "title": "Heat",
+        "url": "https://www.netflix.com/de/heat",
+        "offerType": "subscription",
+        "country": "de"
+      }
+    ]
+  },
+  "profiles": {
+    "home-subs": {
+      "subIds": [
+        "netflix",
+        "hulu",
+        "appletv-store"
+      ]
+    },
+    "vpn": {
+      "subIds": [
+        "tmdb:39"
+      ]
+    },
+    "none": {
+      "subIds": []
+    },
+    "plex-server": {
+      "subIds": [
+        "netflix"
+      ],
+      "plexServer": {
+        "ratingKey": "12345"
+      }
+    },
+    "discover": {
+      "subIds": [
+        "netflix",
+        "amc"
+      ],
+      "plexDiscover": {
+        "availability": [
+          {
+            "platform": "netflix",
+            "title": "Heat",
+            "url": "https://www.netflix.com/title/60021793",
+            "offerType": "subscription",
+            "country": "us"
+          },
+          {
+            "platform": "hulu",
+            "title": "Heat",
+            "url": "http://insecure.hulu.com/x",
+            "offerType": "subscription",
+            "country": "us"
+          },
+          {
+            "platform": "amcplus",
+            "title": "Heat",
+            "url": "https://www.amcplus.com/movies/heat",
+            "offerType": "subscription",
+            "country": "us"
+          },
+          {
+            "platform": "now",
+            "title": "Heat",
+            "url": "https://www.nowtv.com/heat",
+            "offerType": "subscription",
+            "country": "gb"
+          },
+          {
+            "platform": "netflix",
+            "title": "Heat",
+            "url": "https://www.netflix.com/de/heat",
+            "offerType": "subscription",
+            "country": "de"
+          }
+        ]
+      },
+      "liveNames": {
+        "US": {
+          "2": "Apple TV",
+          "3": "Google Play Movies",
+          "8": "Netflix",
+          "15": "Hulu",
+          "73": "Tubi TV",
+          "337": "Disney Plus"
+        },
+        "GB": {
+          "8": "Netflix",
+          "39": "Now TV",
+          "73": "Tubi TV"
+        }
+      }
+    }
+  },
+  "diff": {
+    "prev": {
+      "at": 1,
+      "regions": [
+        "US",
+        "GB"
+      ],
+      "byRegion": {
+        "US": {
+          "flatrate": [
+            8,
+            15
+          ],
+          "free": [
+            73
+          ]
+        },
+        "GB": {
+          "flatrate": [
+            39
+          ]
+        }
+      }
+    },
+    "next": {
+      "at": 2,
+      "regions": [
+        "US",
+        "GB"
+      ],
+      "byRegion": {
+        "US": {
+          "flatrate": [
+            8,
+            337
+          ],
+          "ads": [
+            73
+          ]
+        },
+        "GB": {
+          "flatrate": [
+            39,
+            8
+          ]
+        }
+      }
+    },
+    "subIds": [
+      "netflix",
+      "hulu",
+      "disney",
+      "tmdb:39"
+    ]
+  },
+  "tonight": [
+    {
+      "ref": "scifi|a",
+      "title": "Arrival",
+      "lastUpdated": 10,
+      "ranked": {
+        "best": {
+          "score": 900
+        }
+      }
+    },
+    {
+      "ref": "scifi|b",
+      "title": "Moon",
+      "lastUpdated": 50,
+      "ranked": {
+        "best": {
+          "score": 900
+        }
+      }
+    },
+    {
+      "ref": "scifi|c",
+      "title": "Alien",
+      "lastUpdated": 50,
+      "ranked": {
+        "best": {
+          "score": 900
+        }
+      }
+    },
+    {
+      "ref": "scifi|d",
+      "title": "Dune",
+      "lastUpdated": 99,
+      "ranked": {
+        "best": {
+          "score": 590
+        }
+      }
+    },
+    {
+      "ref": "scifi|e",
+      "title": "Elysium",
+      "lastUpdated": 99,
+      "ranked": null
+    }
+  ],
+  "expected": {
+    "snapshot": {
+      "at": 0,
+      "regions": [
+        "US",
+        "GB"
+      ],
+      "byRegion": {
+        "US": {
+          "flatrate": [
+            8,
+            337,
+            15
+          ],
+          "free": [
+            73
+          ],
+          "rent": [
+            2
+          ],
+          "buy": [
+            2,
+            3
+          ],
+          "link": "https://www.themoviedb.org/movie/1-heat/watch?locale=US"
+        },
+        "GB": {
+          "flatrate": [
+            39,
+            8
+          ],
+          "ads": [
+            73
+          ]
+        }
+      }
+    },
+    "ranked": {
+      "home-subs": {
+        "best": {
+          "providerId": "netflix",
+          "tmdbId": 8,
+          "name": "Netflix",
+          "region": "US",
+          "tier": "flatrate",
+          "source": "tmdb",
+          "deepUrl": null,
+          "logoPath": null,
+          "score": 900,
+          "home": true
+        },
+        "playable": [
+          {
+            "providerId": "netflix",
+            "tmdbId": 8,
+            "name": "Netflix",
+            "region": "US",
+            "tier": "flatrate",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 900,
+            "home": true
+          },
+          {
+            "providerId": "hulu",
+            "tmdbId": 15,
+            "name": "Hulu",
+            "region": "US",
+            "tier": "flatrate",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 900,
+            "home": true
+          },
+          {
+            "providerId": "netflix",
+            "tmdbId": 8,
+            "name": "Netflix",
+            "region": "GB",
+            "tier": "flatrate",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 600,
+            "home": false
+          }
+        ],
+        "elsewhere": [
+          {
+            "providerId": "tubi",
+            "tmdbId": 73,
+            "name": "Tubi",
+            "region": "US",
+            "tier": "free",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 400,
+            "home": true
+          },
+          {
+            "providerId": "disney",
+            "tmdbId": 337,
+            "name": "Disney+",
+            "region": "US",
+            "tier": "flatrate",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 300,
+            "home": true
+          },
+          {
+            "providerId": "tmdb:39",
+            "tmdbId": 39,
+            "name": "tmdb:39",
+            "region": "GB",
+            "tier": "flatrate",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 250,
+            "home": false
+          },
+          {
+            "providerId": "appletv-store",
+            "tmdbId": 2,
+            "name": "Apple TV (rent/buy)",
+            "region": "US",
+            "tier": "rent",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 220,
+            "home": true
+          },
+          {
+            "providerId": "appletv-store",
+            "tmdbId": 2,
+            "name": "Apple TV (rent/buy)",
+            "region": "US",
+            "tier": "buy",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 220,
+            "home": true
+          },
+          {
+            "providerId": "googleplay",
+            "tmdbId": 3,
+            "name": "Google TV (Play Movies)",
+            "region": "US",
+            "tier": "buy",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 200,
+            "home": true
+          },
+          {
+            "providerId": "tubi",
+            "tmdbId": 73,
+            "name": "Tubi",
+            "region": "GB",
+            "tier": "ads",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 150,
+            "home": false
+          }
+        ],
+        "byRegion": {
+          "US": [
+            "netflix:flatrate",
+            "hulu:flatrate",
+            "tubi:free",
+            "disney:flatrate",
+            "appletv-store:rent",
+            "appletv-store:buy",
+            "googleplay:buy"
+          ],
+          "GB": [
+            "netflix:flatrate",
+            "tmdb:39:flatrate",
+            "tubi:ads"
+          ]
+        }
+      },
+      "vpn": {
+        "best": {
+          "providerId": "tmdb:39",
+          "tmdbId": 39,
+          "name": "tmdb:39",
+          "region": "GB",
+          "tier": "flatrate",
+          "source": "tmdb",
+          "deepUrl": null,
+          "logoPath": null,
+          "score": 600,
+          "home": false
+        },
+        "playable": [
+          {
+            "providerId": "tmdb:39",
+            "tmdbId": 39,
+            "name": "tmdb:39",
+            "region": "GB",
+            "tier": "flatrate",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 600,
+            "home": false
+          }
+        ],
+        "elsewhere": [
+          {
+            "providerId": "tubi",
+            "tmdbId": 73,
+            "name": "Tubi",
+            "region": "US",
+            "tier": "free",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 400,
+            "home": true
+          },
+          {
+            "providerId": "netflix",
+            "tmdbId": 8,
+            "name": "Netflix",
+            "region": "US",
+            "tier": "flatrate",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 300,
+            "home": true
+          },
+          {
+            "providerId": "disney",
+            "tmdbId": 337,
+            "name": "Disney+",
+            "region": "US",
+            "tier": "flatrate",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 300,
+            "home": true
+          },
+          {
+            "providerId": "hulu",
+            "tmdbId": 15,
+            "name": "Hulu",
+            "region": "US",
+            "tier": "flatrate",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 300,
+            "home": true
+          },
+          {
+            "providerId": "netflix",
+            "tmdbId": 8,
+            "name": "Netflix",
+            "region": "GB",
+            "tier": "flatrate",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 250,
+            "home": false
+          },
+          {
+            "providerId": "appletv-store",
+            "tmdbId": 2,
+            "name": "Apple TV (rent/buy)",
+            "region": "US",
+            "tier": "rent",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 200,
+            "home": true
+          },
+          {
+            "providerId": "appletv-store",
+            "tmdbId": 2,
+            "name": "Apple TV (rent/buy)",
+            "region": "US",
+            "tier": "buy",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 200,
+            "home": true
+          },
+          {
+            "providerId": "googleplay",
+            "tmdbId": 3,
+            "name": "Google TV (Play Movies)",
+            "region": "US",
+            "tier": "buy",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 200,
+            "home": true
+          },
+          {
+            "providerId": "tubi",
+            "tmdbId": 73,
+            "name": "Tubi",
+            "region": "GB",
+            "tier": "ads",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 150,
+            "home": false
+          }
+        ],
+        "byRegion": {
+          "GB": [
+            "tmdb:39:flatrate",
+            "netflix:flatrate",
+            "tubi:ads"
+          ],
+          "US": [
+            "tubi:free",
+            "netflix:flatrate",
+            "disney:flatrate",
+            "hulu:flatrate",
+            "appletv-store:rent",
+            "appletv-store:buy",
+            "googleplay:buy"
+          ]
+        }
+      },
+      "none": {
+        "best": null,
+        "playable": [],
+        "elsewhere": [
+          {
+            "providerId": "tubi",
+            "tmdbId": 73,
+            "name": "Tubi",
+            "region": "US",
+            "tier": "free",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 400,
+            "home": true
+          },
+          {
+            "providerId": "netflix",
+            "tmdbId": 8,
+            "name": "Netflix",
+            "region": "US",
+            "tier": "flatrate",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 300,
+            "home": true
+          },
+          {
+            "providerId": "disney",
+            "tmdbId": 337,
+            "name": "Disney+",
+            "region": "US",
+            "tier": "flatrate",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 300,
+            "home": true
+          },
+          {
+            "providerId": "hulu",
+            "tmdbId": 15,
+            "name": "Hulu",
+            "region": "US",
+            "tier": "flatrate",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 300,
+            "home": true
+          },
+          {
+            "providerId": "netflix",
+            "tmdbId": 8,
+            "name": "Netflix",
+            "region": "GB",
+            "tier": "flatrate",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 250,
+            "home": false
+          },
+          {
+            "providerId": "tmdb:39",
+            "tmdbId": 39,
+            "name": "tmdb:39",
+            "region": "GB",
+            "tier": "flatrate",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 250,
+            "home": false
+          },
+          {
+            "providerId": "appletv-store",
+            "tmdbId": 2,
+            "name": "Apple TV (rent/buy)",
+            "region": "US",
+            "tier": "rent",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 200,
+            "home": true
+          },
+          {
+            "providerId": "appletv-store",
+            "tmdbId": 2,
+            "name": "Apple TV (rent/buy)",
+            "region": "US",
+            "tier": "buy",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 200,
+            "home": true
+          },
+          {
+            "providerId": "googleplay",
+            "tmdbId": 3,
+            "name": "Google TV (Play Movies)",
+            "region": "US",
+            "tier": "buy",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 200,
+            "home": true
+          },
+          {
+            "providerId": "tubi",
+            "tmdbId": 73,
+            "name": "Tubi",
+            "region": "GB",
+            "tier": "ads",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 150,
+            "home": false
+          }
+        ],
+        "byRegion": {
+          "US": [
+            "tubi:free",
+            "netflix:flatrate",
+            "disney:flatrate",
+            "hulu:flatrate",
+            "appletv-store:rent",
+            "appletv-store:buy",
+            "googleplay:buy"
+          ],
+          "GB": [
+            "netflix:flatrate",
+            "tmdb:39:flatrate",
+            "tubi:ads"
+          ]
+        }
+      },
+      "plex-server": {
+        "best": {
+          "providerId": "plex-server",
+          "tmdbId": null,
+          "name": "Plex",
+          "region": "US",
+          "tier": "plex",
+          "source": "plex-server",
+          "deepUrl": null,
+          "logoPath": null,
+          "score": 1000,
+          "home": true
+        },
+        "playable": [
+          {
+            "providerId": "plex-server",
+            "tmdbId": null,
+            "name": "Plex",
+            "region": "US",
+            "tier": "plex",
+            "source": "plex-server",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 1000,
+            "home": true
+          },
+          {
+            "providerId": "netflix",
+            "tmdbId": 8,
+            "name": "Netflix",
+            "region": "US",
+            "tier": "flatrate",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 900,
+            "home": true
+          },
+          {
+            "providerId": "netflix",
+            "tmdbId": 8,
+            "name": "Netflix",
+            "region": "GB",
+            "tier": "flatrate",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 600,
+            "home": false
+          }
+        ],
+        "elsewhere": [
+          {
+            "providerId": "tubi",
+            "tmdbId": 73,
+            "name": "Tubi",
+            "region": "US",
+            "tier": "free",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 400,
+            "home": true
+          },
+          {
+            "providerId": "disney",
+            "tmdbId": 337,
+            "name": "Disney+",
+            "region": "US",
+            "tier": "flatrate",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 300,
+            "home": true
+          },
+          {
+            "providerId": "hulu",
+            "tmdbId": 15,
+            "name": "Hulu",
+            "region": "US",
+            "tier": "flatrate",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 300,
+            "home": true
+          },
+          {
+            "providerId": "tmdb:39",
+            "tmdbId": 39,
+            "name": "tmdb:39",
+            "region": "GB",
+            "tier": "flatrate",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 250,
+            "home": false
+          },
+          {
+            "providerId": "appletv-store",
+            "tmdbId": 2,
+            "name": "Apple TV (rent/buy)",
+            "region": "US",
+            "tier": "rent",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 200,
+            "home": true
+          },
+          {
+            "providerId": "appletv-store",
+            "tmdbId": 2,
+            "name": "Apple TV (rent/buy)",
+            "region": "US",
+            "tier": "buy",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 200,
+            "home": true
+          },
+          {
+            "providerId": "googleplay",
+            "tmdbId": 3,
+            "name": "Google TV (Play Movies)",
+            "region": "US",
+            "tier": "buy",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 200,
+            "home": true
+          },
+          {
+            "providerId": "tubi",
+            "tmdbId": 73,
+            "name": "Tubi",
+            "region": "GB",
+            "tier": "ads",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 150,
+            "home": false
+          }
+        ],
+        "byRegion": {
+          "US": [
+            "plex-server:plex",
+            "netflix:flatrate",
+            "tubi:free",
+            "disney:flatrate",
+            "hulu:flatrate",
+            "appletv-store:rent",
+            "appletv-store:buy",
+            "googleplay:buy"
+          ],
+          "GB": [
+            "netflix:flatrate",
+            "tmdb:39:flatrate",
+            "tubi:ads"
+          ]
+        }
+      },
+      "discover": {
+        "best": {
+          "providerId": "netflix",
+          "tmdbId": 8,
+          "name": "Netflix",
+          "region": "US",
+          "tier": "flatrate",
+          "source": "tmdb",
+          "deepUrl": "https://www.netflix.com/title/60021793",
+          "logoPath": null,
+          "score": 950,
+          "home": true
+        },
+        "playable": [
+          {
+            "providerId": "netflix",
+            "tmdbId": 8,
+            "name": "Netflix",
+            "region": "US",
+            "tier": "flatrate",
+            "source": "tmdb",
+            "deepUrl": "https://www.netflix.com/title/60021793",
+            "logoPath": null,
+            "score": 950,
+            "home": true
+          },
+          {
+            "providerId": "amc",
+            "tmdbId": 526,
+            "name": "AMC+",
+            "region": "US",
+            "tier": "flatrate",
+            "source": "plex-discover",
+            "deepUrl": "https://www.amcplus.com/movies/heat",
+            "logoPath": null,
+            "score": 950,
+            "home": true
+          },
+          {
+            "providerId": "netflix",
+            "tmdbId": 8,
+            "name": "Netflix",
+            "region": "GB",
+            "tier": "flatrate",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 600,
+            "home": false
+          }
+        ],
+        "elsewhere": [
+          {
+            "providerId": "tubi",
+            "tmdbId": 73,
+            "name": "Tubi TV",
+            "region": "US",
+            "tier": "free",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 400,
+            "home": true
+          },
+          {
+            "providerId": "disney",
+            "tmdbId": 337,
+            "name": "Disney Plus",
+            "region": "US",
+            "tier": "flatrate",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 300,
+            "home": true
+          },
+          {
+            "providerId": "hulu",
+            "tmdbId": 15,
+            "name": "Hulu",
+            "region": "US",
+            "tier": "flatrate",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 300,
+            "home": true
+          },
+          {
+            "providerId": "tmdb:39",
+            "tmdbId": 39,
+            "name": "Now TV",
+            "region": "GB",
+            "tier": "flatrate",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 250,
+            "home": false
+          },
+          {
+            "providerId": "appletv-store",
+            "tmdbId": 2,
+            "name": "Apple TV",
+            "region": "US",
+            "tier": "rent",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 200,
+            "home": true
+          },
+          {
+            "providerId": "appletv-store",
+            "tmdbId": 2,
+            "name": "Apple TV",
+            "region": "US",
+            "tier": "buy",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 200,
+            "home": true
+          },
+          {
+            "providerId": "googleplay",
+            "tmdbId": 3,
+            "name": "Google Play Movies",
+            "region": "US",
+            "tier": "buy",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 200,
+            "home": true
+          },
+          {
+            "providerId": "tubi",
+            "tmdbId": 73,
+            "name": "Tubi TV",
+            "region": "GB",
+            "tier": "ads",
+            "source": "tmdb",
+            "deepUrl": null,
+            "logoPath": null,
+            "score": 150,
+            "home": false
+          }
+        ],
+        "byRegion": {
+          "US": [
+            "netflix:flatrate",
+            "amc:flatrate",
+            "tubi:free",
+            "disney:flatrate",
+            "hulu:flatrate",
+            "appletv-store:rent",
+            "appletv-store:buy",
+            "googleplay:buy"
+          ],
+          "GB": [
+            "netflix:flatrate",
+            "tmdb:39:flatrate",
+            "tubi:ads"
+          ]
+        }
+      }
+    },
+    "chips": {
+      "home-subs": [
+        {
+          "providerId": "netflix",
+          "tmdbId": 8,
+          "name": "Netflix",
+          "region": "US",
+          "home": true
+        },
+        {
+          "providerId": "hulu",
+          "tmdbId": 15,
+          "name": "Hulu",
+          "region": "US",
+          "home": true
+        }
+      ],
+      "vpn": [
+        {
+          "providerId": "tmdb:39",
+          "tmdbId": 39,
+          "name": "tmdb:39",
+          "region": "GB",
+          "home": false
+        }
+      ],
+      "none": [],
+      "plex-server": [
+        {
+          "providerId": "netflix",
+          "tmdbId": 8,
+          "name": "Netflix",
+          "region": "US",
+          "home": true
+        }
+      ],
+      "discover": [
+        {
+          "providerId": "netflix",
+          "tmdbId": 8,
+          "name": "Netflix",
+          "region": "US",
+          "home": true
+        }
+      ]
+    },
+    "playableOnMyServices": {
+      "home-subs": true,
+      "vpn": true,
+      "none": false,
+      "plex-server": true,
+      "discover": true
+    },
+    "diff": {
+      "arrived": [
+        {
+          "region": "US",
+          "tmdbId": 337
+        },
+        {
+          "region": "GB",
+          "tmdbId": 8
+        }
+      ],
+      "left": [
+        {
+          "region": "US",
+          "tmdbId": 15
+        }
+      ]
+    }
+  }
+}

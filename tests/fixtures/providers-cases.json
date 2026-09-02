@@ -1,0 +1,1323 @@
+{
+  "description": "Golden cases for lib/providers.js.",
+  "live": {
+    "US": [
+      {
+        "provider_id": 8,
+        "provider_name": "Netflix",
+        "logo_path": "/netflix.jpg",
+        "display_priority": 0
+      },
+      {
+        "provider_id": 1796,
+        "provider_name": "Netflix basic with Ads",
+        "logo_path": "/netflix-ads.jpg",
+        "display_priority": 12
+      },
+      {
+        "provider_id": 337,
+        "provider_name": "Disney Plus",
+        "logo_path": "/disney.jpg",
+        "display_priority": 2
+      },
+      {
+        "provider_id": 15,
+        "provider_name": "Hulu",
+        "logo_path": "/hulu.jpg",
+        "display_priority": 3
+      },
+      {
+        "provider_id": 2,
+        "provider_name": "Apple TV",
+        "logo_path": "/appletv.jpg",
+        "display_priority": 5
+      },
+      {
+        "provider_id": 73,
+        "provider_name": "Tubi TV",
+        "logo_path": "/tubi.jpg",
+        "display_priority": 8
+      },
+      {
+        "provider_id": 257,
+        "provider_name": "fuboTV",
+        "logo_path": "/fubo.jpg",
+        "display_priority": 7
+      }
+    ],
+    "GB": [
+      {
+        "provider_id": 8,
+        "provider_name": "Netflix",
+        "logo_path": "/netflix.jpg",
+        "display_priority": 0
+      },
+      {
+        "provider_id": 39,
+        "provider_name": "Now TV",
+        "logo_path": "/now.jpg",
+        "display_priority": 4
+      },
+      {
+        "provider_id": 38,
+        "provider_name": "BBC iPlayer",
+        "logo_path": "/iplayer.jpg",
+        "display_priority": 6
+      }
+    ]
+  },
+  "subIds": [
+    "hulu",
+    "disney",
+    "tmdb:257"
+  ],
+  "tmdbMatch": [
+    {
+      "in": {
+        "provider_id": 8,
+        "provider_name": "Netflix"
+      },
+      "why": "id match"
+    },
+    {
+      "in": {
+        "provider_id": 1796,
+        "provider_name": "Netflix basic with Ads"
+      },
+      "why": "ad tier collapses to netflix"
+    },
+    {
+      "in": {
+        "provider_id": 9999,
+        "provider_name": "Disney Plus"
+      },
+      "why": "unknown id, exact alias"
+    },
+    {
+      "in": {
+        "provider_id": null,
+        "provider_name": "Paramount+ with Showtime"
+      },
+      "why": "normalized alias"
+    },
+    {
+      "in": {
+        "provider_id": null,
+        "provider_name": "HBO MAX"
+      },
+      "why": "case-insensitive alias"
+    },
+    {
+      "in": {
+        "provider_id": 2,
+        "provider_name": "Apple TV"
+      },
+      "why": "store entry, not Apple TV+"
+    },
+    {
+      "in": {
+        "provider_id": null,
+        "provider_name": "Apple TV"
+      },
+      "why": "exact alias wins over normalized"
+    },
+    {
+      "in": {
+        "provider_id": 10,
+        "provider_name": "Amazon Video"
+      },
+      "why": "store tier of prime"
+    },
+    {
+      "in": {
+        "provider_id": 257,
+        "provider_name": "fuboTV"
+      },
+      "why": "uncurated"
+    },
+    {
+      "in": {
+        "provider_id": null,
+        "provider_name": "Totally Unknown"
+      },
+      "why": "no id, no name match"
+    }
+  ],
+  "plexPlatform": [
+    "netflix",
+    "HBO-Max",
+    "paramount_plus",
+    "disneyPlus",
+    "amazon-prime-video",
+    "itunes",
+    "nope",
+    ""
+  ],
+  "migrate": [
+    {
+      "in": [
+        "Hulu",
+        "Disney+",
+        "Max",
+        "Amazon Prime Video",
+        "Apple TV+",
+        "Paramount+",
+        "PBS Masterpiece (via Prime)",
+        "National Theatre at Home",
+        "Dropout",
+        "2nd Try"
+      ],
+      "why": "legacy DEFAULT_MY_SUBS"
+    },
+    {
+      "in": [
+        "netflix",
+        "tmdb:39",
+        "hulu"
+      ],
+      "why": "already migrated"
+    },
+    {
+      "in": [
+        "HBO Max",
+        "Max",
+        "max"
+      ],
+      "why": "aliases dedupe"
+    },
+    {
+      "in": [
+        "Netflix",
+        "Blockbuster",
+        "",
+        "tmdb:abc",
+        "tmdb:12"
+      ],
+      "why": "unknown dropped"
+    },
+    {
+      "in": [],
+      "why": "empty"
+    }
+  ],
+  "webSearch": [
+    {
+      "id": "netflix",
+      "title": "Heat",
+      "name": null
+    },
+    {
+      "id": "paramount",
+      "title": "The Godfather Part II",
+      "name": null
+    },
+    {
+      "id": "pluto",
+      "title": "Heat",
+      "name": null
+    },
+    {
+      "id": null,
+      "title": "Heat",
+      "name": "fuboTV"
+    },
+    {
+      "id": null,
+      "title": "Heat",
+      "name": null
+    }
+  ],
+  "expected": {
+    "tmdbMatch": [
+      "netflix",
+      "netflix",
+      "disney",
+      "paramount",
+      "max",
+      "appletv-store",
+      "appletv-store",
+      "prime",
+      null,
+      null
+    ],
+    "plexPlatform": [
+      "netflix",
+      "max",
+      "paramount",
+      "disney",
+      "prime",
+      "appletv-store",
+      null,
+      null
+    ],
+    "migrate": [
+      [
+        "hulu",
+        "disney",
+        "max",
+        "prime",
+        "appletv",
+        "paramount",
+        "pbs-masterpiece",
+        "nt-at-home",
+        "dropout",
+        "2ndtry"
+      ],
+      [
+        "netflix",
+        "tmdb:39",
+        "hulu"
+      ],
+      [
+        "max"
+      ],
+      [
+        "netflix",
+        "tmdb:12"
+      ],
+      []
+    ],
+    "webSearch": [
+      "https://www.netflix.com/search?q=Heat",
+      "https://www.paramountplus.com/search/The%20Godfather%20Part%20II",
+      "https://www.google.com/search?q=Heat",
+      "https://www.google.com/search?q=fuboTV%20Heat",
+      "https://www.google.com/search?q=Heat"
+    ],
+    "providersForRegion": {
+      "US": [
+        {
+          "id": "disney",
+          "name": "Disney+",
+          "logoPath": "/disney.jpg",
+          "tmdbIds": [
+            337
+          ],
+          "kind": "subscription",
+          "enabled": true,
+          "curated": true,
+          "priority": 2
+        },
+        {
+          "id": "hulu",
+          "name": "Hulu",
+          "logoPath": "/hulu.jpg",
+          "tmdbIds": [
+            15
+          ],
+          "kind": "subscription",
+          "enabled": true,
+          "curated": true,
+          "priority": 3
+        },
+        {
+          "id": "tmdb:257",
+          "name": "fuboTV",
+          "logoPath": "/fubo.jpg",
+          "tmdbIds": [
+            257
+          ],
+          "kind": "subscription",
+          "enabled": true,
+          "curated": false,
+          "priority": 7
+        },
+        {
+          "id": "netflix",
+          "name": "Netflix",
+          "logoPath": "/netflix.jpg",
+          "tmdbIds": [
+            8,
+            1796
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 0
+        },
+        {
+          "id": "2ndtry",
+          "name": "2nd Try",
+          "logoPath": null,
+          "tmdbIds": [],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "acorn",
+          "name": "Acorn TV",
+          "logoPath": null,
+          "tmdbIds": [
+            87
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "prime",
+          "name": "Amazon Prime Video",
+          "logoPath": null,
+          "tmdbIds": [
+            9,
+            119,
+            10
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "amc",
+          "name": "AMC+",
+          "logoPath": null,
+          "tmdbIds": [
+            526
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "appletv",
+          "name": "Apple TV+",
+          "logoPath": null,
+          "tmdbIds": [
+            350
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "britbox",
+          "name": "BritBox",
+          "logoPath": null,
+          "tmdbIds": [
+            151
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "criterion",
+          "name": "Criterion Channel",
+          "logoPath": null,
+          "tmdbIds": [
+            258
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "crunchyroll",
+          "name": "Crunchyroll",
+          "logoPath": null,
+          "tmdbIds": [
+            283
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "discovery",
+          "name": "Discovery+",
+          "logoPath": null,
+          "tmdbIds": [
+            520
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "dropout",
+          "name": "Dropout",
+          "logoPath": null,
+          "tmdbIds": [],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "max",
+          "name": "Max",
+          "logoPath": null,
+          "tmdbIds": [
+            1899,
+            384
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "mgm",
+          "name": "MGM+",
+          "logoPath": null,
+          "tmdbIds": [
+            34
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "mubi",
+          "name": "Mubi",
+          "logoPath": null,
+          "tmdbIds": [
+            11
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "nt-at-home",
+          "name": "National Theatre at Home",
+          "logoPath": null,
+          "tmdbIds": [],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "paramount",
+          "name": "Paramount+",
+          "logoPath": null,
+          "tmdbIds": [
+            531,
+            1770
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "peacock",
+          "name": "Peacock",
+          "logoPath": null,
+          "tmdbIds": [
+            386,
+            387
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "shudder",
+          "name": "Shudder",
+          "logoPath": null,
+          "tmdbIds": [
+            99
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "starz",
+          "name": "Starz",
+          "logoPath": null,
+          "tmdbIds": [
+            43
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "tubi",
+          "name": "Tubi",
+          "logoPath": "/tubi.jpg",
+          "tmdbIds": [
+            73
+          ],
+          "kind": "free",
+          "enabled": false,
+          "curated": true,
+          "priority": 8
+        },
+        {
+          "id": "hoopla",
+          "name": "Hoopla",
+          "logoPath": null,
+          "tmdbIds": [
+            212
+          ],
+          "kind": "free",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "kanopy",
+          "name": "Kanopy",
+          "logoPath": null,
+          "tmdbIds": [
+            191
+          ],
+          "kind": "free",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "plex",
+          "name": "Plex (free)",
+          "logoPath": null,
+          "tmdbIds": [
+            538
+          ],
+          "kind": "free",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "pluto",
+          "name": "Pluto TV",
+          "logoPath": null,
+          "tmdbIds": [
+            300
+          ],
+          "kind": "free",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "pbs-masterpiece",
+          "name": "PBS Masterpiece (via Prime)",
+          "logoPath": null,
+          "tmdbIds": [],
+          "kind": "addon",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "appletv-store",
+          "name": "Apple TV (rent/buy)",
+          "logoPath": "/appletv.jpg",
+          "tmdbIds": [
+            2
+          ],
+          "kind": "store",
+          "enabled": false,
+          "curated": true,
+          "priority": 5
+        },
+        {
+          "id": "fandango",
+          "name": "Fandango at Home (Vudu)",
+          "logoPath": null,
+          "tmdbIds": [
+            7
+          ],
+          "kind": "store",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "googleplay",
+          "name": "Google TV (Play Movies)",
+          "logoPath": null,
+          "tmdbIds": [
+            3
+          ],
+          "kind": "store",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "youtube",
+          "name": "YouTube",
+          "logoPath": null,
+          "tmdbIds": [
+            192
+          ],
+          "kind": "store",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        }
+      ],
+      "GB": [
+        {
+          "id": "disney",
+          "name": "Disney+",
+          "logoPath": null,
+          "tmdbIds": [
+            337
+          ],
+          "kind": "subscription",
+          "enabled": true,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "netflix",
+          "name": "Netflix",
+          "logoPath": "/netflix.jpg",
+          "tmdbIds": [
+            8,
+            1796
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 0
+        },
+        {
+          "id": "tmdb:39",
+          "name": "Now TV",
+          "logoPath": "/now.jpg",
+          "tmdbIds": [
+            39
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": false,
+          "priority": 4
+        },
+        {
+          "id": "2ndtry",
+          "name": "2nd Try",
+          "logoPath": null,
+          "tmdbIds": [],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "acorn",
+          "name": "Acorn TV",
+          "logoPath": null,
+          "tmdbIds": [
+            87
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "prime",
+          "name": "Amazon Prime Video",
+          "logoPath": null,
+          "tmdbIds": [
+            9,
+            119,
+            10
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "appletv",
+          "name": "Apple TV+",
+          "logoPath": null,
+          "tmdbIds": [
+            350
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "crunchyroll",
+          "name": "Crunchyroll",
+          "logoPath": null,
+          "tmdbIds": [
+            283
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "discovery",
+          "name": "Discovery+",
+          "logoPath": null,
+          "tmdbIds": [
+            520
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "dropout",
+          "name": "Dropout",
+          "logoPath": null,
+          "tmdbIds": [],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "max",
+          "name": "Max",
+          "logoPath": null,
+          "tmdbIds": [
+            1899,
+            384
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "mubi",
+          "name": "Mubi",
+          "logoPath": null,
+          "tmdbIds": [
+            11
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "nt-at-home",
+          "name": "National Theatre at Home",
+          "logoPath": null,
+          "tmdbIds": [],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "paramount",
+          "name": "Paramount+",
+          "logoPath": null,
+          "tmdbIds": [
+            531,
+            1770
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "shudder",
+          "name": "Shudder",
+          "logoPath": null,
+          "tmdbIds": [
+            99
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "iplayer",
+          "name": "BBC iPlayer",
+          "logoPath": "/iplayer.jpg",
+          "tmdbIds": [
+            38
+          ],
+          "kind": "free",
+          "enabled": false,
+          "curated": true,
+          "priority": 6
+        },
+        {
+          "id": "kanopy",
+          "name": "Kanopy",
+          "logoPath": null,
+          "tmdbIds": [
+            191
+          ],
+          "kind": "free",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "plex",
+          "name": "Plex (free)",
+          "logoPath": null,
+          "tmdbIds": [
+            538
+          ],
+          "kind": "free",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "pluto",
+          "name": "Pluto TV",
+          "logoPath": null,
+          "tmdbIds": [
+            300
+          ],
+          "kind": "free",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "tubi",
+          "name": "Tubi",
+          "logoPath": null,
+          "tmdbIds": [
+            73
+          ],
+          "kind": "free",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "appletv-store",
+          "name": "Apple TV (rent/buy)",
+          "logoPath": null,
+          "tmdbIds": [
+            2
+          ],
+          "kind": "store",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "googleplay",
+          "name": "Google TV (Play Movies)",
+          "logoPath": null,
+          "tmdbIds": [
+            3
+          ],
+          "kind": "store",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "youtube",
+          "name": "YouTube",
+          "logoPath": null,
+          "tmdbIds": [
+            192
+          ],
+          "kind": "store",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        }
+      ],
+      "US-offline": [
+        {
+          "id": "disney",
+          "name": "Disney+",
+          "logoPath": null,
+          "tmdbIds": [
+            337
+          ],
+          "kind": "subscription",
+          "enabled": true,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "hulu",
+          "name": "Hulu",
+          "logoPath": null,
+          "tmdbIds": [
+            15
+          ],
+          "kind": "subscription",
+          "enabled": true,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "2ndtry",
+          "name": "2nd Try",
+          "logoPath": null,
+          "tmdbIds": [],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "acorn",
+          "name": "Acorn TV",
+          "logoPath": null,
+          "tmdbIds": [
+            87
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "prime",
+          "name": "Amazon Prime Video",
+          "logoPath": null,
+          "tmdbIds": [
+            9,
+            119,
+            10
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "amc",
+          "name": "AMC+",
+          "logoPath": null,
+          "tmdbIds": [
+            526
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "appletv",
+          "name": "Apple TV+",
+          "logoPath": null,
+          "tmdbIds": [
+            350
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "britbox",
+          "name": "BritBox",
+          "logoPath": null,
+          "tmdbIds": [
+            151
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "criterion",
+          "name": "Criterion Channel",
+          "logoPath": null,
+          "tmdbIds": [
+            258
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "crunchyroll",
+          "name": "Crunchyroll",
+          "logoPath": null,
+          "tmdbIds": [
+            283
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "discovery",
+          "name": "Discovery+",
+          "logoPath": null,
+          "tmdbIds": [
+            520
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "dropout",
+          "name": "Dropout",
+          "logoPath": null,
+          "tmdbIds": [],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "max",
+          "name": "Max",
+          "logoPath": null,
+          "tmdbIds": [
+            1899,
+            384
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "mgm",
+          "name": "MGM+",
+          "logoPath": null,
+          "tmdbIds": [
+            34
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "mubi",
+          "name": "Mubi",
+          "logoPath": null,
+          "tmdbIds": [
+            11
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "nt-at-home",
+          "name": "National Theatre at Home",
+          "logoPath": null,
+          "tmdbIds": [],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "netflix",
+          "name": "Netflix",
+          "logoPath": null,
+          "tmdbIds": [
+            8,
+            1796
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "paramount",
+          "name": "Paramount+",
+          "logoPath": null,
+          "tmdbIds": [
+            531,
+            1770
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "peacock",
+          "name": "Peacock",
+          "logoPath": null,
+          "tmdbIds": [
+            386,
+            387
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "shudder",
+          "name": "Shudder",
+          "logoPath": null,
+          "tmdbIds": [
+            99
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "starz",
+          "name": "Starz",
+          "logoPath": null,
+          "tmdbIds": [
+            43
+          ],
+          "kind": "subscription",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "hoopla",
+          "name": "Hoopla",
+          "logoPath": null,
+          "tmdbIds": [
+            212
+          ],
+          "kind": "free",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "kanopy",
+          "name": "Kanopy",
+          "logoPath": null,
+          "tmdbIds": [
+            191
+          ],
+          "kind": "free",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "plex",
+          "name": "Plex (free)",
+          "logoPath": null,
+          "tmdbIds": [
+            538
+          ],
+          "kind": "free",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "pluto",
+          "name": "Pluto TV",
+          "logoPath": null,
+          "tmdbIds": [
+            300
+          ],
+          "kind": "free",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "tubi",
+          "name": "Tubi",
+          "logoPath": null,
+          "tmdbIds": [
+            73
+          ],
+          "kind": "free",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "pbs-masterpiece",
+          "name": "PBS Masterpiece (via Prime)",
+          "logoPath": null,
+          "tmdbIds": [],
+          "kind": "addon",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "appletv-store",
+          "name": "Apple TV (rent/buy)",
+          "logoPath": null,
+          "tmdbIds": [
+            2
+          ],
+          "kind": "store",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "fandango",
+          "name": "Fandango at Home (Vudu)",
+          "logoPath": null,
+          "tmdbIds": [
+            7
+          ],
+          "kind": "store",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "googleplay",
+          "name": "Google TV (Play Movies)",
+          "logoPath": null,
+          "tmdbIds": [
+            3
+          ],
+          "kind": "store",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        },
+        {
+          "id": "youtube",
+          "name": "YouTube",
+          "logoPath": null,
+          "tmdbIds": [
+            192
+          ],
+          "kind": "store",
+          "enabled": false,
+          "curated": true,
+          "priority": 999
+        }
+      ]
+    }
+  }
+}

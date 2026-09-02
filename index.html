@@ -449,6 +449,11 @@
         <button class="action-btn" id="promotions-manage">Manage promotions</button>
       </div>
       <p class="settings-status" id="plex-status">Not configured.</p>
+      <div class="settings-row settings-row-divider">
+        <label class="toggle"><input type="checkbox" role="switch" class="toggle-input" id="plex-watchlist-sync-toggle"><span class="toggle-track"><span class="toggle-thumb"></span></span><span class="toggle-label">Sync Plex Watchlist (two-way)</span></label>
+        <button class="action-btn" id="plex-watchlist-sync-now">Sync watchlist now</button>
+      </div>
+      <p class="settings-status" id="plex-watchlist-status"></p>
     </div>
     <div class="settings-section" data-section="webhook">
       <h4>Plex Webhook Bridge</h4>
@@ -570,9 +575,24 @@
       <h5 style="margin-top:16px">Current invites</h5>
       <ul id="admin-invite-list" style="list-style:none;padding:0;margin:0;font-size:13px"></ul>
     </div>
+    <div class="settings-section" data-section="streaming">
+      <h4>Streaming services</h4>
+      <p class="settings-help">Toggle the services you pay for. Add regions if you use a VPN or a multi-region account; the first region (★) is home. Availability data by JustWatch via TMDB.</p>
+      <div class="settings-row"><label>Regions</label><div id="streaming-regions" class="chip-row"></div></div>
+      <div class="settings-row">
+        <select class="modal-input" id="streaming-region-add"><option value="">Add a region…</option></select>
+        <button class="action-btn" id="streaming-region-add-btn">Add region</button>
+      </div>
+      <div class="settings-row"><input type="search" class="modal-input" id="streaming-provider-search" placeholder="Filter services" autocomplete="off"></div>
+      <div id="streaming-provider-groups"></div>
+      <p class="settings-status" id="streaming-status"></p>
+      <div class="settings-row settings-row-divider">
+        <label class="toggle"><input type="checkbox" role="switch" class="toggle-input" id="launch-apps-toggle"><span class="toggle-track"><span class="toggle-thumb"></span></span><span class="toggle-label">Open titles in installed apps (Android / Android TV)</span></label>
+      </div>
+    </div>
     <div class="settings-section" data-section="alerts">
       <h4>Streaming-leaving alerts</h4>
-      <p class="settings-help">Daily check against TMDB for items you have queued or marked as watching. If a title is about to leave a streaming service in your region, you get a notification next time the app is open. Requires a Cloudflare Worker with a Cron Trigger configured (see worker/DEPLOY.md). Region uses your existing Streaming providers setting.</p>
+      <p class="settings-help">Daily check against TMDB for items you have queued or marked as watching, across your selected regions. You'll be notified both when a title is about to leave a service and when it newly arrives on one of your services. Requires a Cloudflare Worker with a Cron Trigger configured (see worker/DEPLOY.md). Uses your Streaming services regions and toggles above.</p>
       <div class="settings-row">
         <button class="action-btn" id="alerts-enable">Enable alerts</button>
         <button class="action-btn" id="alerts-disable" style="display:none">Disable alerts</button>

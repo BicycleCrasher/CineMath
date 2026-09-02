@@ -149,6 +149,136 @@ Settings → Plex Webhook Bridge:
 - `GET /plex/library?secret=X` — Returns `{ items: [{title, year, ratingKey, type, librarySectionID}, ...] }` aggregated across every movie/show section.
 - `POST /plex/scrobble` — Body `{ secret, ratingKey }`. Marks the item watched on Plex.
 - `GET /plex/history?secret=X&start=N&size=N` — Returns Plex's raw paginated `MediaContainer` for `/status/sessions/history/all`.
+- `GET /providers?secret=X&region=XX` — TMDB watch-provider catalog for one region (movie + tv lists unioned). Cached 7 days.
+- `GET /providers/regions?secret=X` — Every region TMDB has provider data for. Cached 30 days.
+- `GET /plex/discover/whoami?secret=X` — plex.tv account probe. Confirms the stored token is an **account** token.
+- `GET /plex/discover/search?secret=X&query=Q&type=movie|tv&year=YYYY` — Plex Discover search (10 hits). Cached 24 hours.
+- `GET /plex/discover/metadata?secret=X&ratingKey=K&debug=1` — Discover metadata + per-title streaming availability. Cached 24 hours unless `debug=1`.
+- `GET /plex/watchlist?secret=X` — The Plex Universal Watchlist, paginated server-side into one response. Never cached.
+- `PUT /plex/watchlist/add?secret=X&ratingKey=K` — Add a title to the Universal Watchlist.
+- `PUT /plex/watchlist/remove?secret=X&ratingKey=K` — Remove a title from the Universal Watchlist.
+
+## v8.1.0 — Streaming providers & Plex Discover
+
+Two additions, both read-only against services the Worker already talks
+to. **No new bindings, no new secrets, no wrangler.toml change** — the
+provider routes reuse `tmdb_token` in CONFIG KV and the `METADATA` cache,
+and the Plex Discover routes reuse the Plex token the Worker already
+holds.
+
+### Streaming provider catalog
+
+`GET /providers?secret=X&region=US` returns
+
+```json
+{ "region": "US",
+  "providers": [ { "provider_id": 8, "provider_name": "Netflix",
+                   "logo_path": "/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg",
+                   "display_priority": 0 } ],
+  "cachedAt": 1756700000000, "cached": false }
+```
+
+It unions TMDB's `/watch/providers/movie` and `/watch/providers/tv` lists
+for the region, de-duplicates by `provider_id`, prefers the region's own
+`display_priorities[REGION]` over the global `display_priority` (falling
+back to `999`), and sorts by priority then name. `region` must be two
+letters; it is upper-cased for you, and anything else is a `400`. Results
+are cached in `METADATA` under `providers:XX` for 7 days — a second call
+returns the same body with `"cached": true`. `GET /providers/regions`
+returns `{ regions: [{ code, name }] }` sorted by name, cached 30 days
+under `providers:regions`. A missing `tmdb_token` is a `400`; a non-200
+from TMDB is a `502`.
+
+### Plex Discover
+
+These routes talk to `https://discover.provider.plex.tv` and
+`https://plex.tv` — Plex's *cloud* services, not your server.
+
+**The stored Plex token must be the plex.tv account token.** A
+server-scoped token authenticates against your Plex Media Server but is
+rejected by the cloud endpoints, and the failure looks like an empty
+watchlist rather than an error. Verify with:
+
+```bash
+curl -s "https://watchtrack-plex.lincoln-e-crowder.workers.dev/plex/discover/whoami?secret=$SECRET"
+# → {"ok":true,"username":"lincoln","id":123456}
+```
+
+If that 502s, re-run `/bootstrap/credentials` (or `/plex/configure`) with
+the token from <https://app.plex.tv> → any item → **Get Info → View XML**,
+`X-Plex-Token` in the URL. The Worker sends a stable
+`X-Plex-Client-Identifier` derived from the shared secret (`sha256(secret)`,
+first 12 hex, prefixed `cinemath-worker-`), so Plex sees one client for
+this deployment; rotating the shared secret changes it, which Plex treats
+as a new client — harmless for reads, and watchlist writes keep working.
+
+Watchlist reads are never cached (sync diffs against them); search and
+metadata are cached 24 hours in `METADATA` under `plexsearch:…` /
+`plexmeta:<ratingKey>`.
+
+### The `debug=1` availability probe
+
+Plex has never documented the field that carries per-title streaming
+availability, so `lib/plex-discover.js` reads several candidates and the
+metadata route can report what the API actually returned:
+
+```bash
+curl -s "$WORKER/plex/discover/search?secret=$SECRET&query=Heat&type=movie&year=1995" | jq '.hits[0]'
+curl -s "$WORKER/plex/discover/metadata?secret=$SECRET&ratingKey=<ratingKey>&debug=1" | jq '{availability, _rawKeys}'
+```
+
+`_rawKeys` is the list of key names present on `MediaContainer.Metadata[0]`
+in Plex's response — the raw shape, not our parse of it. It appears **only**
+with `debug=1`, and `debug=1` also bypasses the 24-hour cache so repeated
+probes always hit Plex.
+
+Read it like this:
+
+- `availability` non-empty → the parser found the field; nothing to do.
+- `availability` empty but `_rawKeys` contains something like
+  `Availability`, `Availabilities`, or `streamingServices` → point
+  `parseAvailability` at that key (a one-line change plus a fixture in
+  `tests/fixtures/`) before the app starts offering per-title deep links.
+- `_rawKeys` missing the concept entirely → the account or title has no
+  availability data; try a widely-streamed title before concluding the
+  parser is wrong.
+
+Everything else (watchlist read/add/remove, search, guid matching) is
+independent of that field and works regardless.
+
+### Alerts: regions and arrivals
+
+`POST /alerts/subscribe` accepts two optional fields alongside the
+existing ones: `regions` (up to 6 two-letter codes; the home `region`
+stays for old clients) and `providerIds` (up to 200 TMDB numeric provider
+ids — the services the user actually subscribes to). Both are stored only
+when the client sends usable values, so a pre-v8.1.0 device keeps its
+exact v5.6 behavior.
+
+The daily cron now emits two kinds of notification, tagged with `kind`:
+
+- `leaving` — unchanged v5.6 semantics: a service drops the title from
+  the **home region's** flatrate tier.
+- `arrived` — a provider in `providerIds` newly carries the title
+  (flatrate, free, or ads) in any of the user's `regions`. The payload
+  adds `region` and `providerIds`.
+
+The `snap:{userHash}` snapshot moved to a v2 shape that stores provider
+**ids** per tier per region plus an id → name map. v1 snapshots are still
+read for the leaving check and are rewritten as v2 on the first run after
+deploy; because arrivals require a v2 record for that item and region,
+that first run seeds silently instead of announcing everything already
+streaming. **Run the cron twice after deploying** — the second run should
+report zero notifications:
+
+```bash
+curl -s "$WORKER/cron/check-alerts?secret=$SECRET"
+curl -s "$WORKER/cron/check-alerts?secret=$SECRET"   # → notificationsQueued: 0
+```
+
+`GET /alerts/test-fire?secret=X&user=HASH&kind=arrived` sends an
+arrival-shaped test notification; the response now echoes the `kind` and
+the full `notification` payload alongside the push result.
 
 ## v5.11 — VIEWED migrated to D1
 

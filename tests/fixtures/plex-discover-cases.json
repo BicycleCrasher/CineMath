@@ -1,0 +1,325 @@
+{
+  "description": "Golden cases for lib/plex-discover.js. Plex Discover returns search hits under three different container shapes and its availability rows under an unverified key, so every parser case here is a shape variant.",
+  "now": 1700000000000,
+  "search": {
+    "nested": {
+      "MediaContainer": {
+        "size": 3,
+        "SearchResults": [
+          {
+            "id": "external",
+            "SearchResult": [
+              {
+                "score": 0.92,
+                "Metadata": {
+                  "ratingKey": "5d776831",
+                  "title": "Heat",
+                  "year": 1995,
+                  "type": "movie",
+                  "thumb": "/library/metadata/5d776831/thumb",
+                  "guid": "plex://movie/5d776831",
+                  "Guid": [
+                    { "id": "tmdb://949" },
+                    { "id": "imdb://tt0113277" }
+                  ]
+                }
+              },
+              {
+                "score": 0.41,
+                "Metadata": {
+                  "ratingKey": "5d776999",
+                  "title": "Heat",
+                  "year": 1986,
+                  "type": "movie",
+                  "Guid": [{ "id": "tmdb://31445" }]
+                }
+              }
+            ]
+          },
+          {
+            "id": "tv",
+            "SearchResult": [
+              {
+                "Metadata": {
+                  "ratingKey": "5d9c08",
+                  "title": "The Bear",
+                  "year": 2022,
+                  "type": "show",
+                  "Guid": [{ "id": "tvdb://409391" }, { "id": "tmdb://136315" }]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "flat": {
+      "MediaContainer": {
+        "SearchResult": [
+          {
+            "Metadata": {
+              "ratingKey": "1",
+              "title": "Heat",
+              "year": 1995,
+              "type": "movie",
+              "Guid": [{ "id": "tmdb://949" }]
+            }
+          }
+        ]
+      }
+    },
+    "metadataOnly": {
+      "MediaContainer": {
+        "Metadata": [
+          {
+            "ratingKey": 2,
+            "title": "Heat",
+            "year": "1995",
+            "type": "tv",
+            "guid": "tmdb://949"
+          }
+        ]
+      }
+    },
+    "emptyContainer": { "MediaContainer": {} },
+    "garbage": { "nope": true }
+  },
+  "expected": {
+    "search": {
+      "nested": {
+        "ratingKeys": ["5d776831", "5d776999", "5d9c08"],
+        "types": ["movie", "movie", "show"],
+        "firstGuids": { "tmdb": 949, "imdb": "tt0113277", "tvdb": null },
+        "lastGuids": { "tmdb": 136315, "imdb": null, "tvdb": 409391 },
+        "firstThumb": "/library/metadata/5d776831/thumb"
+      },
+      "flat": { "ratingKeys": ["1"] },
+      "metadataOnly": {
+        "ratingKeys": ["2"],
+        "types": ["show"],
+        "firstGuids": { "tmdb": 949, "imdb": null, "tvdb": null },
+        "firstYear": 1995,
+        "firstThumb": null
+      },
+      "emptyContainer": { "ratingKeys": [] },
+      "garbage": { "ratingKeys": [] }
+    },
+    "watchlist": {
+      "paged": { "count": 2, "totalSize": 37, "ratingKeys": ["a1", "a2"] },
+      "sizeOnly": { "count": 1, "totalSize": 9 },
+      "noCounts": { "count": 1, "totalSize": 1 },
+      "empty": { "count": 0, "totalSize": 0 }
+    },
+    "availability": {
+      "singular": {
+        "availability": [
+          {
+            "platform": "netflix",
+            "title": "Netflix",
+            "url": "https://www.netflix.com/title/60021793",
+            "offerType": "subscription",
+            "country": "us"
+          },
+          {
+            "platform": "appletv",
+            "title": "Apple TV",
+            "url": null,
+            "offerType": "rent",
+            "country": "us"
+          }
+        ],
+        "_rawKeys": ["ratingKey", "title", "type", "Availability"]
+      },
+      "plural": {
+        "availability": [
+          {
+            "platform": "hulu",
+            "title": "Hulu",
+            "url": "https://www.hulu.com/movie/heat",
+            "offerType": "subscription",
+            "country": "us"
+          }
+        ],
+        "_rawKeys": ["ratingKey", "title", "Availabilities"]
+      },
+      "unknownShape": {
+        "availability": [],
+        "_rawKeys": ["ratingKey", "title", "Streams"]
+      },
+      "empty": { "availability": [], "_rawKeys": [] }
+    }
+  },
+  "watchlist": {
+    "paged": {
+      "MediaContainer": {
+        "size": 2,
+        "totalSize": 37,
+        "Metadata": [
+          { "ratingKey": "a1", "title": "Dune", "year": 2021, "type": "movie", "Guid": [{ "id": "tmdb://438631" }] },
+          { "ratingKey": "a2", "title": "Severance", "year": 2022, "type": "show", "Guid": [{ "id": "tmdb://95396" }] }
+        ]
+      }
+    },
+    "sizeOnly": {
+      "MediaContainer": {
+        "size": 9,
+        "Metadata": [{ "ratingKey": "b1", "title": "Moon", "year": 2009, "type": "movie" }]
+      }
+    },
+    "noCounts": {
+      "MediaContainer": {
+        "Metadata": [{ "ratingKey": "c1", "title": "Arrival", "year": 2016, "type": "movie" }]
+      }
+    },
+    "empty": { "MediaContainer": { "Metadata": [] } }
+  },
+  "availability": {
+    "singular": {
+      "MediaContainer": {
+        "Metadata": [
+          {
+            "ratingKey": "5d776831",
+            "title": "Heat",
+            "type": "movie",
+            "Availability": [
+              {
+                "platform": "netflix",
+                "platformColors": { "primary": "#e50914" },
+                "title": "Netflix",
+                "url": "https://www.netflix.com/title/60021793",
+                "offerType": "subscription",
+                "country": "US"
+              },
+              {
+                "platform": "appletv",
+                "title": "Apple TV",
+                "url": "http://tv.apple.com/insecure",
+                "offerType": "rent",
+                "country": "US"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "plural": {
+      "MediaContainer": {
+        "Metadata": [
+          {
+            "ratingKey": "5d776831",
+            "title": "Heat",
+            "Availabilities": [
+              {
+                "platform": "hulu",
+                "title": "Hulu",
+                "url": "https://www.hulu.com/movie/heat",
+                "offerType": "subscription",
+                "country": "us"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "unknownShape": {
+      "MediaContainer": {
+        "Metadata": [
+          { "ratingKey": "5d776831", "title": "Heat", "Streams": [{ "platform": "netflix" }] }
+        ]
+      }
+    },
+    "empty": { "MediaContainer": {} }
+  },
+  "pick": [
+    { "why": "tmdb guid wins over title", "want": { "tmdbId": 31445, "title": "Heat", "year": 1995 }, "expect": "5d776999" },
+    { "why": "exact title+year", "want": { "title": "Heat", "year": 1995, "type": "movie" }, "expect": "5d776831" },
+    { "why": "year off by one", "want": { "title": "Heat", "year": 1996, "type": "movie" }, "expect": "5d776831" },
+    { "why": "type must agree", "want": { "title": "Heat", "year": 1995, "type": "show" }, "expect": null },
+    { "why": "tv type normalizes to show", "want": { "title": "The Bear", "year": 2022, "type": "tv" }, "expect": "5d9c08" },
+    { "why": "no type given matches anything", "want": { "title": "The Bear", "year": 2022 }, "expect": "5d9c08" },
+    { "why": "unknown tmdb id falls back to title", "want": { "tmdbId": 999999, "title": "Heat", "year": 1995 }, "expect": "5d776831" },
+    { "why": "no match at all", "want": { "title": "Nope", "year": 2022 }, "expect": null },
+    { "why": "no title and no id", "want": {}, "expect": null }
+  ],
+  "sync": [
+    {
+      "why": "queued locally, absent from Plex, never mirrored -> push",
+      "in": {
+        "localQueued": [{ "ref": "scifi|arrival", "tmdbId": 329865, "title": "Arrival", "year": 2016, "type": "movie", "status": "queued" }],
+        "remote": [],
+        "mirror": {}
+      },
+      "expect": {
+        "push": ["scifi|arrival"],
+        "queueLocally": [],
+        "unqueueLocally": [],
+        "orphanKeys": [],
+        "mirrorNext": {}
+      }
+    },
+    {
+      "why": "on Plex, matched to an untracked catalog item -> queue locally and adopt the mirror",
+      "in": {
+        "localQueued": [],
+        "remote": [{ "ratingKey": "r1", "title": "Dune", "year": 2021, "type": "movie", "guids": { "tmdb": 438631 }, "matchedRef": "scifi|dune", "matchedStatus": "none" }],
+        "mirror": {}
+      },
+      "expect": {
+        "push": [],
+        "queueLocally": [{ "ref": "scifi|dune", "ratingKey": "r1" }],
+        "unqueueLocally": [],
+        "orphanKeys": [],
+        "mirrorNext": { "scifi|dune": { "ratingKey": "r1", "syncedAt": 1700000000000, "origin": "plex" } }
+      }
+    },
+    {
+      "why": "we pushed it, Plex no longer has it -> un-queue locally",
+      "in": {
+        "localQueued": [{ "ref": "crime|heat", "tmdbId": 949, "title": "Heat", "year": 1995, "type": "movie", "status": "queued" }],
+        "remote": [],
+        "mirror": { "crime|heat": { "ratingKey": "r2", "syncedAt": 1699000000000, "origin": "app" } }
+      },
+      "expect": {
+        "push": [],
+        "queueLocally": [],
+        "unqueueLocally": ["crime|heat"],
+        "orphanKeys": [],
+        "mirrorNext": {}
+      }
+    },
+    {
+      "why": "unmatched remote items become orphans; already-watched matches are left alone and un-mirrored",
+      "in": {
+        "localQueued": [],
+        "remote": [
+          { "ratingKey": "r3", "title": "Some Plex Original", "year": 2024, "type": "movie", "guids": { "tmdb": null }, "matchedRef": null },
+          { "ratingKey": "r4", "title": "Moon", "year": 2009, "type": "movie", "guids": { "tmdb": 17431 }, "matchedRef": "scifi|moon", "matchedStatus": "watched" },
+          { "ratingKey": "r5", "title": "Alien", "year": 1979, "type": "movie", "guids": { "tmdb": 348 }, "matchedRef": "scifi|alien", "matchedStatus": "skip" }
+        ],
+        "mirror": { "scifi|moon": { "ratingKey": "r4", "syncedAt": 1699000000000, "origin": "app" } }
+      },
+      "expect": {
+        "push": [],
+        "queueLocally": [],
+        "unqueueLocally": [],
+        "orphanKeys": ["r3"],
+        "mirrorNext": {}
+      }
+    },
+    {
+      "why": "steady state: queued on both sides, mirror origin preserved, nothing to do",
+      "in": {
+        "localQueued": [{ "ref": "scifi|dune", "tmdbId": 438631, "title": "Dune", "year": 2021, "type": "movie", "status": "queued" }],
+        "remote": [{ "ratingKey": "r1", "title": "Dune", "year": 2021, "type": "movie", "guids": { "tmdb": 438631 }, "matchedRef": "scifi|dune", "matchedStatus": "queued" }],
+        "mirror": { "scifi|dune": { "ratingKey": "r1", "syncedAt": 1699000000000, "origin": "app" } }
+      },
+      "expect": {
+        "push": [],
+        "queueLocally": [],
+        "unqueueLocally": [],
+        "orphanKeys": [],
+        "mirrorNext": { "scifi|dune": { "ratingKey": "r1", "syncedAt": 1700000000000, "origin": "app" } }
+      }
+    }
+  ]
+}
