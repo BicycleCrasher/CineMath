@@ -1,0 +1,288 @@
+{
+  "description": "Golden cases for lib/launch.js.",
+  "platform": [
+    {
+      "ua": "Mozilla/5.0 (Linux; Android 12; BRAVIA 4K GB) AppleWebKit",
+      "isTV": false
+    },
+    {
+      "ua": "Mozilla/5.0 (Linux; Android 9; AFTMM Build/PS7233) AppleWebKit",
+      "isTV": false
+    },
+    {
+      "ua": "Mozilla/5.0 (Linux; Android 11; Pixel 6) AppleWebKit",
+      "isTV": false
+    },
+    {
+      "ua": "Mozilla/5.0 (Linux; Android 11; Pixel 6) AppleWebKit",
+      "isTV": true
+    },
+    {
+      "ua": "Mozilla/5.0 (Linux; Android 10; SHIELD Android TV)",
+      "isTV": false
+    },
+    {
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+      "isTV": true
+    },
+    {
+      "ua": "",
+      "isTV": false
+    }
+  ],
+  "cases": [
+    {
+      "name": "netflix on android-tv with deep url",
+      "id": "netflix",
+      "ctx": {
+        "platform": "android-tv",
+        "title": "Heat",
+        "deepUrl": "https://www.netflix.com/title/60021793"
+      }
+    },
+    {
+      "name": "netflix on android phone",
+      "id": "netflix",
+      "ctx": {
+        "platform": "android",
+        "title": "Heat"
+      }
+    },
+    {
+      "name": "netflix on web",
+      "id": "netflix",
+      "ctx": {
+        "platform": "web",
+        "title": "Heat"
+      }
+    },
+    {
+      "name": "netflix on android-tv with apps disabled",
+      "id": "netflix",
+      "ctx": {
+        "platform": "android-tv",
+        "title": "Heat",
+        "launchApps": false
+      }
+    },
+    {
+      "name": "fandango has no tv package",
+      "id": "fandango",
+      "ctx": {
+        "platform": "android-tv",
+        "title": "Heat"
+      }
+    },
+    {
+      "name": "shudder has no android packages",
+      "id": "shudder",
+      "ctx": {
+        "platform": "android-tv",
+        "title": "Heat"
+      }
+    },
+    {
+      "name": "pluto has no search template",
+      "id": "pluto",
+      "ctx": {
+        "platform": "android",
+        "title": "Heat"
+      }
+    },
+    {
+      "name": "uncurated tmdb provider",
+      "id": null,
+      "ctx": {
+        "platform": "android-tv",
+        "title": "Heat"
+      }
+    },
+    {
+      "name": "insecure deep url is ignored",
+      "id": "netflix",
+      "ctx": {
+        "platform": "web",
+        "title": "Heat",
+        "deepUrl": "http://evil.example/x"
+      }
+    },
+    {
+      "name": "plex with client id and server",
+      "id": null,
+      "ctx": {
+        "platform": "android-tv",
+        "title": "Heat",
+        "plex": {
+          "ratingKey": "4242",
+          "serverUrl": "https://plex.example.com:32400",
+          "clientId": "abc123"
+        }
+      }
+    },
+    {
+      "name": "plex without client id",
+      "id": null,
+      "ctx": {
+        "platform": "android-tv",
+        "title": "Heat",
+        "plex": {
+          "ratingKey": "4242",
+          "serverUrl": "https://plex.example.com:32400"
+        }
+      }
+    },
+    {
+      "name": "plex with nothing but a rating key",
+      "id": "netflix",
+      "ctx": {
+        "platform": "web",
+        "title": "Heat",
+        "plex": {
+          "ratingKey": "4242"
+        }
+      }
+    }
+  ],
+  "expected": {
+    "platform": [
+      "android-tv",
+      "android-tv",
+      "android",
+      "android-tv",
+      "android-tv",
+      "web",
+      "web"
+    ],
+    "cases": [
+      [
+        {
+          "kind": "intent",
+          "url": "intent://www.netflix.com/title/60021793#Intent;scheme=https;package=com.netflix.ninja;S.browser_fallback_url=https%3A%2F%2Fwww.netflix.com%2Ftitle%2F60021793;end",
+          "label": "Open in app"
+        },
+        {
+          "kind": "https",
+          "url": "https://www.netflix.com/title/60021793",
+          "label": "Open website"
+        },
+        {
+          "kind": "https",
+          "url": "https://www.netflix.com/search?q=Heat",
+          "label": "Open website"
+        }
+      ],
+      [
+        {
+          "kind": "intent",
+          "url": "intent://www.netflix.com/search?q=Heat#Intent;scheme=https;package=com.netflix.mediaclient;S.browser_fallback_url=https%3A%2F%2Fwww.netflix.com%2Fsearch%3Fq%3DHeat;end",
+          "label": "Open in app"
+        },
+        {
+          "kind": "https",
+          "url": "https://www.netflix.com/search?q=Heat",
+          "label": "Open website"
+        }
+      ],
+      [
+        {
+          "kind": "https",
+          "url": "https://www.netflix.com/search?q=Heat",
+          "label": "Open website"
+        }
+      ],
+      [
+        {
+          "kind": "https",
+          "url": "https://www.netflix.com/search?q=Heat",
+          "label": "Open website"
+        }
+      ],
+      [
+        {
+          "kind": "intent",
+          "url": "intent://www.vudu.com/content/movies/search?searchString=Heat#Intent;scheme=https;package=air.com.vudu.air.DownloaderTablet;S.browser_fallback_url=https%3A%2F%2Fwww.vudu.com%2Fcontent%2Fmovies%2Fsearch%3FsearchString%3DHeat;end",
+          "label": "Open in app"
+        },
+        {
+          "kind": "https",
+          "url": "https://www.vudu.com/content/movies/search?searchString=Heat",
+          "label": "Open website"
+        }
+      ],
+      [
+        {
+          "kind": "https",
+          "url": "https://www.shudder.com/search?q=Heat",
+          "label": "Open website"
+        }
+      ],
+      [
+        {
+          "kind": "intent",
+          "url": "intent://www.google.com/search?q=Pluto%20TV%20Heat#Intent;scheme=https;package=tv.pluto.android;S.browser_fallback_url=https%3A%2F%2Fwww.google.com%2Fsearch%3Fq%3DPluto%2520TV%2520Heat;end",
+          "label": "Open in app"
+        },
+        {
+          "kind": "https",
+          "url": "https://www.google.com/search?q=Pluto%20TV%20Heat",
+          "label": "Open website"
+        }
+      ],
+      [
+        {
+          "kind": "https",
+          "url": "https://www.google.com/search?q=Heat",
+          "label": "Open website"
+        }
+      ],
+      [
+        {
+          "kind": "https",
+          "url": "https://www.netflix.com/search?q=Heat",
+          "label": "Open website"
+        }
+      ],
+      [
+        {
+          "kind": "plex",
+          "url": "plex://play?metadataKey=/library/metadata/4242&server=https%3A%2F%2Fplex.example.com%3A32400",
+          "label": "Open in Plex"
+        },
+        {
+          "kind": "https",
+          "url": "https://app.plex.tv/desktop/#!/server/abc123/details?key=%2Flibrary%2Fmetadata%2F4242",
+          "label": "Open website"
+        },
+        {
+          "kind": "https",
+          "url": "https://plex.example.com:32400/web/index.html#!/server/abc123/details?key=%2Flibrary%2Fmetadata%2F4242",
+          "label": "Open website"
+        }
+      ],
+      [
+        {
+          "kind": "plex",
+          "url": "plex://play?metadataKey=/library/metadata/4242&server=https%3A%2F%2Fplex.example.com%3A32400",
+          "label": "Open in Plex"
+        },
+        {
+          "kind": "https",
+          "url": "https://plex.example.com:32400/web/index.html#!/server//details?key=%2Flibrary%2Fmetadata%2F4242",
+          "label": "Open website"
+        }
+      ],
+      [
+        {
+          "kind": "plex",
+          "url": "plex://play?metadataKey=/library/metadata/4242&server=",
+          "label": "Open in Plex"
+        },
+        {
+          "kind": "https",
+          "url": "https://www.netflix.com/search?q=Heat",
+          "label": "Open website"
+        }
+      ]
+    ]
+  }
+}

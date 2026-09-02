@@ -2238,4 +2238,217 @@ body.tv-mode .pair-qr {
   user-select: none;
 }
 .pair-url-disclosure summary:hover { color: var(--ink); }
+
+/* === v8.1.0: Streaming services settings, availability chips, Tonight === */
+
+/* Divider for a sub-group within a settings section (e.g. a toggle row
+   tacked onto the end of the Plex card, or the launch-apps toggle at the
+   end of Streaming services). */
+.settings-row-divider {
+  margin-top: 14px;
+  border-top: 1px solid var(--rule);
+  padding-top: 12px;
+}
+
+/* Toggle switch — reusable D-pad-friendly on/off control.
+   The checkbox itself stays in the layout (position:absolute, 1x1px,
+   opacity:0) rather than display:none: the D-pad focus code filters
+   candidates on `offsetParent`, which is null for display:none elements. */
+.toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--ink);
+}
+.toggle-input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  pointer-events: none;
+}
+.toggle-track {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  border-radius: 11px;
+  background: var(--bg-elev);
+  border: 1px solid var(--rule);
+  transition: background 0.15s, border-color 0.15s;
+  flex: 0 0 auto;
+}
+.toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--ink-dim);
+  transition: transform 0.15s, background 0.15s;
+}
+.toggle-input:checked + .toggle-track {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.toggle-input:checked + .toggle-track .toggle-thumb {
+  transform: translateX(18px);
+  background: var(--bg);
+}
+.toggle-input:focus-visible + .toggle-track,
+.toggle:focus-within .toggle-track {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+.toggle-label { line-height: 1.3; }
+body.tv-mode .toggle-track { width: 56px; height: 30px; border-radius: 15px; }
+body.tv-mode .toggle-thumb { width: 24px; height: 24px; }
+body.tv-mode .toggle-input:checked + .toggle-track .toggle-thumb { transform: translateX(26px); }
+body.tv-mode .toggle-label { font-size: 16px; }
+
+/* Provider list — grouped, searchable rows in Settings → Streaming services */
+.provider-group { margin: 12px 0; }
+.provider-group h5 {
+  font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-dim); margin: 0 0 6px;
+}
+.provider-row {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.provider-row[hidden] { display: none; }
+.provider-logo {
+  width: 28px; height: 28px; border-radius: 6px;
+  object-fit: cover; background: var(--bg-elev);
+}
+.provider-logo-fallback {
+  width: 28px; height: 28px; border-radius: 6px;
+  background: var(--bg-elev); color: var(--ink-dim);
+  font-size: 11px; display: flex; align-items: center; justify-content: center;
+}
+.provider-name { color: var(--ink-dim); }
+.provider-row.enabled .provider-name { color: var(--ink); }
+.provider-meta {
+  font-size: 10px; color: var(--ink-faint);
+  letter-spacing: 0.06em; text-transform: uppercase;
+}
+body.tv-mode .provider-row { padding: 10px 0; }
+body.tv-mode .provider-name { font-size: 16px; }
+body.tv-mode .provider-logo,
+body.tv-mode .provider-logo-fallback { width: 36px; height: 36px; }
+
+/* Region chips — home region (★) + any VPN/multi-region additions */
+.chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border: 1px solid var(--rule); border-radius: 14px;
+  font-size: 12px; color: var(--ink); background: var(--bg-card);
+}
+.chip.home { border-color: var(--accent); }
+.chip.home::before { content: '★ '; color: var(--accent); }
+.chip-btn {
+  background: transparent; border: none; color: var(--ink-dim);
+  cursor: pointer; padding: 0 2px; font: inherit;
+}
+.chip-btn:hover, .chip-btn:focus-visible { color: var(--accent); }
+body.tv-mode .chip { font-size: 15px; padding: 6px 14px; }
+body.tv-mode .chip-btn { font-size: 15px; }
+
+/* Card-level provider chips — small "where to watch" badges on item cards */
+.provider-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; padding: 2px 6px;
+  border: 1px solid var(--rule); border-radius: 3px;
+  color: var(--ink-dim); letter-spacing: 0.04em;
+}
+.provider-chip img { width: 14px; height: 14px; border-radius: 3px; }
+.provider-chip.home { border-color: var(--accent); color: var(--ink); }
+.provider-chip.vpn { opacity: 0.7; }
+body.tv-mode .provider-chip { font-size: 13px; padding: 3px 8px; }
+body.tv-mode .provider-chip img { width: 18px; height: 18px; }
+
+/* Watch modal additions — provider logo + region on the big buttons,
+   and an affordance marking a button that will try an installed app first */
+.watch-btn-large img.provider-logo-sm { width: 18px; height: 18px; border-radius: 4px; }
+.watch-btn-large .watch-region { font-size: 10px; color: var(--ink-faint); letter-spacing: 0.06em; }
+.watch-btn-large.launch-app::after { content: '↗'; color: var(--ink-faint); font-size: 12px; }
+
+/* Tonight row — TV wizard root ("what to watch tonight, playable now")
+   and the compact phone strip on the Watchlist tab */
+.tonight-row { margin: 0 0 18px; }
+.tonight-title {
+  font-family: 'Didot', 'Bodoni 72', Georgia, serif;
+  font-size: 20px; color: var(--ink); margin: 0 0 8px;
+}
+.tonight-sub { font-size: 12px; color: var(--ink-dim); margin: 0 0 10px; }
+.tonight-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+.tonight-card {
+  display: flex; flex-direction: column; gap: 6px;
+  text-align: left; padding: 12px 14px;
+  border: 1px solid var(--rule); border-radius: 8px;
+  background: var(--bg-elev); color: var(--ink);
+  cursor: pointer; font: inherit;
+}
+.tonight-card:hover { border-color: var(--accent); }
+.tonight-card:focus, .tonight-card:focus-visible {
+  outline: 3px solid var(--accent); outline-offset: 2px;
+}
+.tonight-card-title { font-size: 15px; }
+.tonight-card-meta { font-size: 11px; color: var(--ink-dim); }
+.tonight-card-play { color: var(--accent); font-weight: 600; font-size: 13px; }
+.tonight-card.plex .tonight-card-play { color: var(--watching); }
+.tonight-empty { font-size: 12px; color: var(--ink-dim); font-style: italic; }
+body.tv-mode .tonight-title { font-size: 28px; }
+body.tv-mode .tonight-cards { grid-template-columns: repeat(3, 1fr); gap: 16px; }
+body.tv-mode .tonight-card { padding: 20px; }
+body.tv-mode .tonight-card-title { font-size: 20px; }
+body.tv-mode .tonight-card-play { font-size: 16px; }
+/* Phone strip variant: horizontal scroll instead of a grid */
+.tonight-strip .tonight-cards {
+  display: flex; overflow-x: auto; gap: 8px; padding-bottom: 4px;
+  scroll-snap-type: x mandatory;
+}
+.tonight-strip .tonight-card { flex: 0 0 200px; scroll-snap-align: start; }
+
+/* Arrivals strip — "now streaming on your services", styled to match
+   #watchlist-now-banner (the watching-now banner above it) */
+.arrivals-strip {
+  margin: 0;
+  padding: 10px 20px;
+  background: rgba(200, 163, 90, 0.08);
+  border-bottom: 1px solid rgba(200, 163, 90, 0.2);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.arrivals-strip.hidden { display: none; }
+.arrivals-title {
+  font-family: 'Helvetica Neue', sans-serif;
+  font-size: 9px; letter-spacing: 0.28em;
+  text-transform: uppercase; color: var(--accent);
+  font-weight: 600;
+}
+.arrivals-items { display: flex; flex-wrap: wrap; gap: 6px; }
+.arrivals-item {
+  background: transparent;
+  border: 1px solid rgba(200, 163, 90, 0.35);
+  border-radius: 3px;
+  padding: 5px 10px;
+  font-size: 13px; color: var(--ink);
+  cursor: pointer; font-family: inherit;
+  transition: background 0.15s;
+}
+.arrivals-item:hover { background: rgba(200, 163, 90, 0.12); }
+body.tv-mode .arrivals-title { font-size: 13px; }
+body.tv-mode .arrivals-item { font-size: 16px; padding: 8px 14px; }
 .pair-url-disclosure[open] summary { margin-bottom: 8px; }

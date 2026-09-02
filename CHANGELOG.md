@@ -10,6 +10,120 @@ The `service-worker.js` cache name tracks deployments rather than semantic versi
 
 ---
 
+## 8.1.0 — 2026-09-02
+**Service worker cache:** `cinemath-v13` → bumped by the `sw-cache-bump` action on merge
+
+### Streaming services — pick your platforms, open them directly
+
+CinéMath already knew, per title, which services carried it: the Worker has
+been pulling TMDB's watch-provider data since v5.21.0. What it could not do
+was ask you which of those services you actually pay for, and every "watch"
+button outside Plex dumped you into a browser tab on a search page. This
+release closes both gaps and builds the TV experience on top of them.
+
+#### Streaming services settings
+
+A new Settings card lists every platform TMDB reports for each of your
+regions, with logos, grouped by subscription / free and ad-supported /
+add-on / rent and buy, and a search box. Each row is a toggle switch — the
+first real toggle component in the app, sized for a TV remote and reachable
+by D-pad (Enter toggles it).
+
+Regions are now an ordered list rather than a single value. The first is
+home; add more for a VPN or a multi-region account. Availability is
+evaluated in all of them.
+
+Your subscription list used to be a hardcoded personal profile in the source
+with no way to edit it in-app. It is now stored as stable provider ids and
+migrated from the old name list on first read, so existing installs keep
+their services.
+
+#### Availability, ranked
+
+A new pure module slims TMDB's all-regions map into a per-title snapshot for
+your selected regions and stores it in the enrichment index, so filtering and
+badges work offline and without a network round trip. Everything that offers
+a way to watch now goes through one ranking function: your Plex server first,
+then your subscriptions at home, then free and ad-supported, then your
+subscriptions in other selected regions, then rent and buy.
+
+Consequences across the UI:
+- item cards carry a chip per service that currently streams the title
+- a new **On my services** status filter
+- the Watch sheet groups home, abroad, and other ways to watch
+- the chat concierge's Play button names the actual service
+
+#### Opening other apps
+
+On Android and Android TV, a Watch button now builds an `intent://` URL with
+the service's package name and a `browser_fallback_url`, so the Netflix or
+Disney+ app opens rather than a browser tab, and the website still opens when
+the app is not installed. Package names are recorded per platform for both
+the TV and mobile builds.
+
+The Plex button uses the same ladder. Its old fallback fired blindly one
+second after the deep link and opened a stray tab even when Plex had launched;
+it now fires only if the page is still visible.
+
+#### Tonight
+
+The wizard home screen — the TV landing surface — opens with a **Tonight**
+row: your queued and in-progress titles that are playable right now, ranked
+by how easy they are to start. Each card is a single focusable button that
+launches the service. The phone gets a compact strip on the Watchlist tab.
+
+#### Plex Universal Watchlist
+
+Two-way sync between your Plex watchlist and the app's queue, through new
+Worker routes over Plex Discover. Queue something here and it lands in Plex;
+add it in Plex and it arrives here as queued. Watchlist titles not in any
+catalogue appear in their own Watchlist section with Watch buttons of their
+own. Removing a title on Plex un-queues it here, limited to titles this app
+pushed, and the behaviour can be turned off.
+
+Plex Discover also supplies per-title deep links where it has them, which
+take priority over a service's search URL.
+
+#### Alerts now cover arrivals
+
+The daily cron only ever told you when something was leaving. It now also
+fires when a title newly appears on one of your services, in any of your
+regions, and new arrivals show as a strip at the top of the Watchlist tab.
+Alert subscriptions carry your region list and enabled providers.
+
+#### Worker
+
+New routes: `/providers` and `/providers/regions` (TMDB's provider catalogue,
+cached 7 and 30 days at the edge), `/plex/discover/search`,
+`/plex/discover/metadata`, `/plex/discover/whoami`, `/plex/watchlist`, and
+`/plex/watchlist/add|remove`. The four existing `/plex/*` handlers now read
+credentials through `getPlexCreds()`, closing a v8.0.0 follow-up.
+
+### Fixed
+
+- `enrichEntireCatalog` never stored `watchProviders`, so two readers that
+  expected it always saw nothing. Availability snapshots are now written on
+  every enrichment path.
+- The alerts manifest passed an item object where an id string was required,
+  so every monitored item was sent with a null TMDB id and the cron had to
+  re-search for it by title.
+- `setEnrichmentForItem` replaced the whole record; a merging variant now
+  exists for partial updates.
+- The region dropdown on an expanded card rewrote your home region as a side
+  effect of looking at another country. It is now display-only.
+
+### Notes
+
+- The minified bundle grows from 67 KB to 84 KB gzipped. Roughly half is the
+  provider registry (~35 platforms with ids, aliases, package names, and
+  URLs); the rest is the availability, launch, and Plex Discover logic.
+- Provider TMDB ids and Android package names are best-effort and flagged for
+  verification; the Plex Discover availability field name is unconfirmed and
+  gated behind a `debug=1` probe on the metadata route.
+- Test suite grows from 105 to 255.
+
+---
+
 ## 8.0.0 — 2026-05-13
 **Service worker cache:** `cinemath-v9` → `cinemath-v10`
 

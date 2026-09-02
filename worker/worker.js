@@ -32,6 +32,14 @@
 //   POST /cron/migrate-state-to-d1?secret=X     one-time backfill of SYNC_KV blobs into item_state (idempotent)
 //   GET  /alerts/test-fire?secret=X&user=HASH   v5.9: send a test push to verify delivery
 //   POST /chat                                  v5.12: natural-language watch concierge
+//   GET  /providers?secret=X&region=XX          v8.1.0: TMDB watch-provider catalog for one region
+//   GET  /providers/regions?secret=X            v8.1.0: TMDB list of watch-provider regions
+//   GET  /plex/discover/whoami?secret=X         v8.1.0: plex.tv account probe (Discover token check)
+//   GET  /plex/discover/search?secret=X&query=Q&type=movie|tv&year=Y   v8.1.0: Plex Discover search
+//   GET  /plex/discover/metadata?secret=X&ratingKey=K[&debug=1]        v8.1.0: Discover metadata + availability
+//   GET  /plex/watchlist?secret=X               v8.1.0: Plex Universal Watchlist (paginated server-side)
+//   PUT  /plex/watchlist/add?secret=X&ratingKey=K      v8.1.0: add to the Universal Watchlist
+//   PUT  /plex/watchlist/remove?secret=X&ratingKey=K   v8.1.0: remove from the Universal Watchlist
 //   GET  /                              health check
 //
 // v9.1.0: every shared-secret endpoint above ALSO accepts the secret as
@@ -50,12 +58,36 @@
 //   D1_VIEWED   — v5.11: D1 database holding Plex viewing history (migrated from VIEWED KV)
 //   AI          — v5.12: Workers AI binding for the natural-language chat endpoint
 
+// v8.1.0 — Plex Discover response parsers live in lib/plex-discover.js so
+// the app and the Worker parse the same shapes. wrangler bundles the module
+// into the deployed script; the deploy workflow watches that file too.
+//
+// Deferred rather than a top-level `import` on purpose: tests/worker-state
+// copies worker.js to a temp directory before importing it, and a relative
+// specifier would fail to resolve there at load time. Resolving on first
+// use keeps that harness working, costs one already-settled promise per
+// Discover request, and still gives the bundler a static specifier.
+let plexDiscoverModule = null;
+function plexDiscoverParsers() {
+  if (!plexDiscoverModule) plexDiscoverModule = import('../lib/plex-discover.js');
+  return plexDiscoverModule;
+}
+
 // Library whitelist — only ingest from these Plex library section IDs.
 // Adjust if your library config changes.
 const LIBRARY_WHITELIST = new Set(['1', '2']);
 
 const TMDB_BASE = 'https://api.themoviedb.org/3';
+// v8.1.0 — Plex's cloud services. PLEX_DISCOVER serves the Universal
+// Watchlist and the global metadata/search index; PLEX_TV serves the
+// account endpoints. Both authenticate with the plex.tv ACCOUNT token
+// (the same token a Plex server hands out), never a server-local one.
+const PLEX_DISCOVER = 'https://discover.provider.plex.tv';
+const PLEX_TV = 'https://plex.tv';
 const METADATA_TTL = 30 * 24 * 60 * 60;  // 30 days
+const PROVIDERS_TTL = 7 * 24 * 60 * 60;  // 7 days — per-region provider catalog
+const PROVIDER_REGIONS_TTL = 30 * 24 * 60 * 60;  // 30 days — TMDB's region list barely moves
+const PLEX_DISCOVER_TTL = 24 * 60 * 60;  // 1 day — Discover search + metadata cache
 const SYNC_TTL = 365 * 24 * 60 * 60;     // 1 year — auto-GC dormant users
 
 // v9.0.0 — CORS lockdown. Pre-v9 used '*' which let any browser origin
@@ -1134,6 +1166,282 @@ async function handleMetadataBulk(request, env, url, ctx) {
   }
 }
 
+// ════════════════════════════════════════════════════════════════════
+// === v8.1.0 — Streaming provider catalog (TMDB passthrough) ===
+// ════════════════════════════════════════════════════════════════════
+//
+// The app needs the live list of streaming services for a region to
+// build its "Streaming services" settings card. TMDB's provider lists
+// are large (300+ entries per region) and change slowly, so the Worker
+// unions the movie + tv lists once per region and caches the result for
+// a week. Keeping the call here (rather than in the browser) also keeps
+// the TMDB token where it already lives — CONFIG KV.
+
+// GET /providers?secret=X&region=XX
+// → { region, providers: [{ provider_id, provider_name, logo_path,
+//     display_priority }], cachedAt, cached }
+async function handleProviders(request, env, url, ctx) {
+  const region = (url.searchParams.get('region') || 'US').toUpperCase();
+  if (!/^[A-Z]{2}$/.test(region)) {
+    return jsonResponse({ error: 'Invalid region — expected a two-letter ISO 3166-1 code' }, 400);
+  }
+  const tmdbToken = await env.CONFIG.get('tmdb_token');
+  if (!tmdbToken) return jsonResponse({ error: 'TMDB token not configured' }, 400);
+
+  const cacheKey = `providers:${region}`;
+  const cached = await env.METADATA.get(cacheKey);
+  if (cached) {
+    try { return jsonResponse({ ...JSON.parse(cached), cached: true }); } catch {}
+  }
+
+  const headers = { 'Authorization': `Bearer ${tmdbToken}`, 'Accept': 'application/json' };
+  try {
+    const [movieResp, tvResp] = await Promise.all([
+      fetch(`${TMDB_BASE}/watch/providers/movie?watch_region=${region}`, { headers }),
+      fetch(`${TMDB_BASE}/watch/providers/tv?watch_region=${region}`, { headers }),
+    ]);
+    if (!movieResp.ok) return jsonResponse({ error: `TMDB providers ${movieResp.status}` }, 502);
+    if (!tvResp.ok) return jsonResponse({ error: `TMDB providers ${tvResp.status}` }, 502);
+    const [movieJson, tvJson] = await Promise.all([movieResp.json(), tvResp.json()]);
+
+    // Union by provider_id — a service that carries both films and shows
+    // appears in both lists with identical metadata.
+    const byId = new Map();
+    for (const p of [...(movieJson.results || []), ...(tvJson.results || [])]) {
+      if (!p || p.provider_id == null || byId.has(p.provider_id)) continue;
+      // TMDB ships a per-region priority map alongside the global one;
+      // the regional value is what the region's users expect to see.
+      const regional = p.display_priorities && p.display_priorities[region];
+      byId.set(p.provider_id, {
+        provider_id: p.provider_id,
+        provider_name: p.provider_name || '',
+        logo_path: p.logo_path || null,
+        display_priority: regional != null ? regional
+          : (p.display_priority != null ? p.display_priority : 999),
+      });
+    }
+    const providers = [...byId.values()].sort((a, b) =>
+      (a.display_priority - b.display_priority) || a.provider_name.localeCompare(b.provider_name));
+
+    const payload = { region, providers, cachedAt: Date.now() };
+    await env.METADATA.put(cacheKey, JSON.stringify(payload), { expirationTtl: PROVIDERS_TTL });
+    return jsonResponse({ ...payload, cached: false });
+  } catch (e) {
+    return jsonResponse({ error: e.message }, 502);
+  }
+}
+
+// GET /providers/regions?secret=X
+// → { regions: [{ code, name }], cachedAt, cached }
+async function handleProviderRegions(request, env, url, ctx) {
+  const tmdbToken = await env.CONFIG.get('tmdb_token');
+  if (!tmdbToken) return jsonResponse({ error: 'TMDB token not configured' }, 400);
+
+  const cacheKey = 'providers:regions';
+  const cached = await env.METADATA.get(cacheKey);
+  if (cached) {
+    try { return jsonResponse({ ...JSON.parse(cached), cached: true }); } catch {}
+  }
+  try {
+    const resp = await fetch(`${TMDB_BASE}/watch/providers/regions`, {
+      headers: { 'Authorization': `Bearer ${tmdbToken}`, 'Accept': 'application/json' },
+    });
+    if (!resp.ok) return jsonResponse({ error: `TMDB regions ${resp.status}` }, 502);
+    const json = await resp.json();
+    const regions = (json.results || [])
+      .filter(r => r && r.iso_3166_1)
+      .map(r => ({ code: r.iso_3166_1, name: r.english_name || r.native_name || r.iso_3166_1 }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    const payload = { regions, cachedAt: Date.now() };
+    await env.METADATA.put(cacheKey, JSON.stringify(payload), { expirationTtl: PROVIDER_REGIONS_TTL });
+    return jsonResponse({ ...payload, cached: false });
+  } catch (e) {
+    return jsonResponse({ error: e.message }, 502);
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════
+// === v8.1.0 — Plex Discover (cloud search, metadata, watchlist) ===
+// ════════════════════════════════════════════════════════════════════
+//
+// discover.provider.plex.tv and plex.tv want the plex.tv ACCOUNT token
+// plus a stable client identity. The identifier is derived from the
+// shared secret so every request from this deployment presents the same
+// value (Plex ties watchlist writes to the client id) without storing
+// another credential.
+async function plexTvHeaders(env) {
+  const { plexToken } = await getPlexCreds(env);
+  if (!plexToken) return null;
+  const secret = await env.CONFIG.get('secret');
+  const clientId = 'cinemath-worker-' + (await sha256Hex(secret || 'cinemath')).slice(0, 12);
+  return {
+    'X-Plex-Token': plexToken,
+    'X-Plex-Client-Identifier': clientId,
+    'X-Plex-Product': 'CineMath',
+    'X-Plex-Version': '8.1.0',
+    'X-Plex-Platform': 'Web',
+    'Accept': 'application/json',
+  };
+}
+
+const PLEX_NOT_CONFIGURED = { error: 'Plex not configured' };
+
+// GET /plex/discover/whoami?secret=X → { ok, username, id }
+async function handlePlexDiscoverWhoami(request, env, url, ctx) {
+  const headers = await plexTvHeaders(env);
+  if (!headers) return jsonResponse(PLEX_NOT_CONFIGURED, 400);
+  try {
+    const resp = await fetch(`${PLEX_TV}/api/v2/user`, { headers });
+    if (!resp.ok) return jsonResponse({ error: `Plex user ${resp.status}` }, 502);
+    const data = await resp.json();
+    return jsonResponse({
+      ok: true,
+      username: data.username || data.title || null,
+      id: data.id != null ? data.id : null,
+    });
+  } catch (e) {
+    return jsonResponse({ error: e.message }, 502);
+  }
+}
+
+// GET /plex/discover/search?secret=X&query=Q&type=movie|tv&year=YYYY
+// → { hits: [{ ratingKey, title, year, type, guids, thumb }], cachedAt, cached }
+async function handlePlexDiscoverSearch(request, env, url, ctx) {
+  const query = (url.searchParams.get('query') || '').trim();
+  if (!query) return jsonResponse({ error: 'Missing query' }, 400);
+  const type = url.searchParams.get('type') === 'tv' ? 'tv' : 'movie';
+  const year = (url.searchParams.get('year') || '').trim();
+  const headers = await plexTvHeaders(env);
+  if (!headers) return jsonResponse(PLEX_NOT_CONFIGURED, 400);
+
+  const cacheKey = `plexsearch:${type}:${normalizeTitle(query)}:${year}`;
+  const cached = await env.METADATA.get(cacheKey);
+  if (cached) {
+    try { return jsonResponse({ ...JSON.parse(cached), cached: true }); } catch {}
+  }
+  const searchTypes = type === 'tv' ? 'tv' : 'movies';
+  try {
+    const resp = await fetch(
+      `${PLEX_DISCOVER}/library/search?query=${encodeURIComponent(query)}&searchTypes=${searchTypes}&includeMetadata=1&limit=10`,
+      { headers });
+    if (!resp.ok) return jsonResponse({ error: `Plex search ${resp.status}` }, 502);
+    const json = await resp.json();
+    const { parseSearch } = await plexDiscoverParsers();
+    const payload = { hits: parseSearch(json), cachedAt: Date.now() };
+    await env.METADATA.put(cacheKey, JSON.stringify(payload), { expirationTtl: PLEX_DISCOVER_TTL });
+    return jsonResponse({ ...payload, cached: false });
+  } catch (e) {
+    return jsonResponse({ error: e.message }, 502);
+  }
+}
+
+// GET /plex/discover/metadata?secret=X&ratingKey=K[&debug=1]
+// → { ratingKey, availability, guids, title, year, type, cachedAt, cached }
+//
+// debug=1 adds `_rawKeys` (the key names Plex actually returned on the
+// metadata object) and bypasses the cache — that probe is how the real
+// availability field name gets confirmed against a live account.
+async function handlePlexDiscoverMetadata(request, env, url, ctx) {
+  const ratingKey = (url.searchParams.get('ratingKey') || '').trim();
+  if (!/^[A-Za-z0-9]+$/.test(ratingKey)) return jsonResponse({ error: 'Invalid ratingKey' }, 400);
+  const debug = url.searchParams.get('debug') === '1';
+  const headers = await plexTvHeaders(env);
+  if (!headers) return jsonResponse(PLEX_NOT_CONFIGURED, 400);
+
+  const cacheKey = `plexmeta:${ratingKey}`;
+  if (!debug) {
+    const cached = await env.METADATA.get(cacheKey);
+    if (cached) {
+      try { return jsonResponse({ ...JSON.parse(cached), cached: true }); } catch {}
+    }
+  }
+  try {
+    const resp = await fetch(`${PLEX_DISCOVER}/library/metadata/${ratingKey}?includeAvailabilities=1`, { headers });
+    if (!resp.ok) return jsonResponse({ error: `Plex metadata ${resp.status}` }, 502);
+    const json = await resp.json();
+    const meta = ((json && json.MediaContainer && json.MediaContainer.Metadata) || [])[0] || null;
+    const { parseGuids, parseAvailability } = await plexDiscoverParsers();
+    const parsed = parseAvailability(json);
+    const payload = {
+      ratingKey,
+      availability: parsed.availability || [],
+      guids: parseGuids(meta),
+      title: (meta && meta.title) || null,
+      year: (meta && meta.year) || null,
+      type: (meta && meta.type) || null,
+      cachedAt: Date.now(),
+    };
+    if (debug) return jsonResponse({ ...payload, _rawKeys: parsed._rawKeys || [], cached: false });
+    await env.METADATA.put(cacheKey, JSON.stringify(payload), { expirationTtl: PLEX_DISCOVER_TTL });
+    return jsonResponse({ ...payload, cached: false });
+  } catch (e) {
+    return jsonResponse({ error: e.message }, 502);
+  }
+}
+
+// GET /plex/watchlist?secret=X → { items, totalSize }
+//
+// Never cached: the watchlist is the thing two-way sync diffs against,
+// and a stale copy would resurrect items the user just removed. Plex
+// pages this endpoint via container headers, so walk until we have
+// totalSize entries (or a page comes back empty).
+async function handlePlexWatchlist(request, env, url, ctx) {
+  const headers = await plexTvHeaders(env);
+  if (!headers) return jsonResponse(PLEX_NOT_CONFIGURED, 400);
+  const PAGE_SIZE = 100;
+  const MAX_PAGES = 20;
+  const { parseWatchlist } = await plexDiscoverParsers();
+  const items = [];
+  let totalSize = 0;
+  try {
+    for (let page = 0; page < MAX_PAGES; page++) {
+      const resp = await fetch(
+        `${PLEX_DISCOVER}/library/sections/watchlist/all?includeExternalMedia=1&includeGuids=1`,
+        {
+          headers: {
+            ...headers,
+            'X-Plex-Container-Start': String(items.length),
+            'X-Plex-Container-Size': String(PAGE_SIZE),
+          },
+        });
+      if (!resp.ok) return jsonResponse({ error: `Plex watchlist ${resp.status}` }, 502);
+      const parsed = parseWatchlist(await resp.json());
+      if (parsed && parsed.totalSize) totalSize = parsed.totalSize;
+      const batch = (parsed && parsed.items) || [];
+      items.push(...batch);
+      if (batch.length === 0) break;
+      if (totalSize && items.length >= totalSize) break;
+    }
+    return jsonResponse({ items, totalSize: totalSize || items.length });
+  } catch (e) {
+    return jsonResponse({ error: e.message }, 502);
+  }
+}
+
+// PUT /plex/watchlist/add|remove?secret=X&ratingKey=K → { ok, status }
+async function plexWatchlistAction(env, url, action) {
+  const ratingKey = (url.searchParams.get('ratingKey') || '').trim();
+  if (!/^[A-Za-z0-9]+$/.test(ratingKey)) return jsonResponse({ error: 'Invalid ratingKey' }, 400);
+  const headers = await plexTvHeaders(env);
+  if (!headers) return jsonResponse(PLEX_NOT_CONFIGURED, 400);
+  try {
+    const resp = await fetch(
+      `${PLEX_DISCOVER}/actions/${action}?ratingKey=${encodeURIComponent(ratingKey)}`,
+      { method: 'PUT', headers });
+    return jsonResponse({ ok: resp.ok, status: resp.status });
+  } catch (e) {
+    return jsonResponse({ error: e.message }, 502);
+  }
+}
+
+async function handlePlexWatchlistAdd(request, env, url, ctx) {
+  return plexWatchlistAction(env, url, 'addToWatchlist');
+}
+
+async function handlePlexWatchlistRemove(request, env, url, ctx) {
+  return plexWatchlistAction(env, url, 'removeFromWatchlist');
+}
+
 // === Bulk-ingest historical Plex viewing data ===
 // POST { secret, entries: [{title, year, type, grandparentTitle, parentIndex, index, viewedAt, librarySectionID}, ...] }
 async function handleViewedIngest(request, env, url, ctx) {
@@ -1434,8 +1742,7 @@ async function handlePlexConfigure(request, env, url, ctx) {
 
 // === Plex proxy: server identity probe ===
 async function handlePlexIdentity(request, env, url, ctx) {
-  const plexUrl = await env.CONFIG.get('plex_url');
-  const plexToken = await env.CONFIG.get('plex_token');
+  const { plexToken, plexUrl } = await getPlexCreds(env);
   if (!plexUrl || !plexToken) return jsonResponse({ error: 'Plex not configured' }, 400);
   try {
     const resp = await fetch(`${plexUrl}/identity?X-Plex-Token=${encodeURIComponent(plexToken)}`, {
@@ -1451,8 +1758,7 @@ async function handlePlexIdentity(request, env, url, ctx) {
 
 // === Plex proxy: aggregated library (sections + items) ===
 async function handlePlexLibrary(request, env, url, ctx) {
-  const plexUrl = await env.CONFIG.get('plex_url');
-  const plexToken = await env.CONFIG.get('plex_token');
+  const { plexToken, plexUrl } = await getPlexCreds(env);
   if (!plexUrl || !plexToken) return jsonResponse({ error: 'Plex not configured' }, 400);
   try {
     const sectionsResp = await fetch(`${plexUrl}/library/sections?X-Plex-Token=${encodeURIComponent(plexToken)}`, {
@@ -1491,8 +1797,7 @@ async function handlePlexScrobble(request, env, url, ctx) {
   try {
     const body = ctx.body;
     if (!body.ratingKey) return new Response('Missing ratingKey', { status: 400, headers: cors });
-    const plexUrl = await env.CONFIG.get('plex_url');
-    const plexToken = await env.CONFIG.get('plex_token');
+    const { plexToken, plexUrl } = await getPlexCreds(env);
     if (!plexUrl || !plexToken) return jsonResponse({ error: 'Plex not configured' }, 400);
     const resp = await fetch(`${plexUrl}/:/scrobble?identifier=com.plexapp.plugins.library&key=${encodeURIComponent(body.ratingKey)}&X-Plex-Token=${encodeURIComponent(plexToken)}`);
     return jsonResponse({ ok: resp.ok, status: resp.status });
@@ -1505,8 +1810,7 @@ async function handlePlexScrobble(request, env, url, ctx) {
 async function handlePlexHistory(request, env, url, ctx) {
   const start = parseInt(url.searchParams.get('start') || '0');
   const size = parseInt(url.searchParams.get('size') || '500');
-  const plexUrl = await env.CONFIG.get('plex_url');
-  const plexToken = await env.CONFIG.get('plex_token');
+  const { plexToken, plexUrl } = await getPlexCreds(env);
   if (!plexUrl || !plexToken) return jsonResponse({ error: 'Plex not configured' }, 400);
   try {
     const resp = await fetch(`${plexUrl}/status/sessions/history/all?sort=viewedAt:asc&X-Plex-Token=${encodeURIComponent(plexToken)}&X-Plex-Container-Start=${start}&X-Plex-Container-Size=${size}`, {
@@ -1597,9 +1901,12 @@ async function handleSyncPut(request, env, url, ctx) {
 // API to display alerts that the queue surfaces).
 //
 // ALERTS KV layout:
-//   sub:{userHash}            JSON { region, enabled, subscribedAt }
-//   snap:{userHash}           JSON map: tmdbKey -> [provider names]
-//   notif:{userHash}:{ts}     JSON { title, body, itemRef, ts }
+//   sub:{userHash}            JSON { region, enabled, subscribedAt, items,
+//                             push, regions?, providerIds? }
+//   snap:{userHash}           JSON map: itemRef -> snapshot record
+//                             (v1 { providers: [name] } / v8.1.0 v2 —
+//                             see runAlertsCheck for both shapes)
+//   notif:{userHash}:{ts}     JSON { kind, title, body, itemRef, ts, … }
 
 // POST /alerts/subscribe — body { secret, userHash, region, items?, push? }
 // `items` is the per-device list of catalog entries the user wants
@@ -1617,6 +1924,21 @@ async function handleAlertsSubscribe(request, env, url, ctx) {
       return new Response('Bad user hash', { status: 400, headers: cors });
     }
     const region = (body.region || 'US').slice(0, 4).toUpperCase();
+    // v8.1.0 — a user can watch several regions and only cares about the
+    // services they actually pay for. Both fields are stored only when
+    // the client sends usable values; runAlertsCheck falls back to
+    // [region] / "no arrivals" when they are absent, so pre-v8.1.0
+    // clients keep their exact v5.6 behavior and stored shape.
+    const regions = Array.isArray(body.regions)
+      ? [...new Set(body.regions
+          .map(r => String(r || '').trim().toUpperCase())
+          .filter(r => /^[A-Z]{2}$/.test(r)))].slice(0, 6)
+      : [];
+    const providerIds = Array.isArray(body.providerIds)
+      ? [...new Set(body.providerIds
+          .map(n => parseInt(n, 10))
+          .filter(n => Number.isFinite(n)))].slice(0, 200)
+      : [];
     const items = Array.isArray(body.items) ? body.items.slice(0, 500) : [];
     const push = body.push && body.push.endpoint && body.push.keys ? {
       endpoint: String(body.push.endpoint),
@@ -1628,6 +1950,8 @@ async function handleAlertsSubscribe(request, env, url, ctx) {
       subscribedAt: Date.now(),
       items,
       push,
+      ...(regions.length ? { regions } : {}),
+      ...(providerIds.length ? { providerIds } : {}),
     }));
     return jsonResponse({ ok: true, region, itemCount: items.length, hasPush: !!push });
   } catch (e) {
@@ -1706,12 +2030,18 @@ async function handleAlertsNotificationsSeen(request, env, url, ctx) {
   }
 }
 
-// GET /alerts/test-fire?secret=X&user=HASH (v5.9)
+// GET /alerts/test-fire?secret=X&user=HASH[&kind=arrived] (v5.9)
 //
 // Sends a fake "test notification" through the user's stored push
 // subscription. Useful for end-to-end verification without waiting
-// for an organic TMDB provider drop. Returns the same shape sendWebPush
-// returns: { ok: bool, status?: number, error?: string }.
+// for an organic TMDB provider change. Returns what sendWebPush
+// returns — { ok: bool, status?: number, error?: string } — plus, since
+// v8.1.0, `kind` and the `notification` payload that was sent, so the
+// exact shape the client will receive can be inspected without a push
+// service round trip.
+//
+// kind=arrived exercises the v8.1.0 "now streaming" notification shape;
+// anything else sends the original generic test notification.
 async function handleAlertsTestFire(request, env, url, ctx) {
   const userHash = url.searchParams.get('user');
   if (!userHash) return new Response('Missing user', { status: 400, headers: cors });
@@ -1722,15 +2052,30 @@ async function handleAlertsTestFire(request, env, url, ctx) {
   if (!sub.push || !sub.push.endpoint || !sub.push.keys) {
     return jsonResponse({ error: 'Subscription has no push data — re-enable alerts on the device after VAPID is configured' }, 400);
   }
-  const result = await sendWebPush(sub.push, {
-    title: 'CinéMath test notification',
-    body: 'If you see this, Web Push is working end-to-end.',
-    itemRef: 'test',
-    tabId: '',
-    itemId: '',
-    ts: Date.now(),
-  }, env);
-  return jsonResponse(result);
+  const kind = url.searchParams.get('kind') === 'arrived' ? 'arrived' : 'test';
+  const region = (Array.isArray(sub.regions) && sub.regions[0]) || sub.region || 'US';
+  const notification = kind === 'arrived'
+    ? {
+        ts: Date.now(),
+        kind: 'arrived',
+        title: 'Blade Runner now on Netflix',
+        body: `Blade Runner (1982) is now streaming on Netflix in ${region}.`,
+        itemRef: 'test|test',
+        tabId: '',
+        itemId: '',
+        region,
+        providerIds: [8],
+      }
+    : {
+        title: 'CinéMath test notification',
+        body: 'If you see this, Web Push is working end-to-end.',
+        itemRef: 'test',
+        tabId: '',
+        itemId: '',
+        ts: Date.now(),
+      };
+  const result = await sendWebPush(sub.push, notification, env);
+  return jsonResponse({ ...result, kind, notification });
 }
 
 // GET /cron/backup-state — manual trigger of the daily R2 state
@@ -2681,9 +3026,12 @@ async function handleBootstrapCredentials(request, env, url, ctx) {
       now
     ).run();
 
-    // Step 3: persist plex_url + plex_token in CONFIG KV for legacy
-    // compat with /plex/* routes that still call env.CONFIG.get(…)
-    // directly. Remove in v8.1.0 once those routes use getPlexCreds().
+    // Step 3: persist plex_url + plex_token in CONFIG KV. Since v8.1.0
+    // every /plex/* route reads credentials through getPlexCreds(), which
+    // prefers the PLEX_TOKEN Worker secret and falls back to this KV copy
+    // — the fallback is what keeps a deployment working if the secret PUT
+    // below (or a later secret rotation) fails. plex_url is not a secret
+    // and lives only here.
     if (body.plexServerUrl) {
       await env.CONFIG.put('plex_url', body.plexServerUrl.replace(/\/$/, ''));
     }
@@ -3151,6 +3499,8 @@ const ROUTES = [
   { method: 'POST',   path: '/events/ack',                          auth: 'secret-body',       handler: handleEventsAck },
   { method: 'GET',    path: '/metadata/lookup',                     auth: 'secret',            handler: handleMetadataLookup },
   { method: 'POST',   path: '/metadata/bulk',                       auth: 'secret-body',       handler: handleMetadataBulk },
+  { method: 'GET',    path: '/providers',                           auth: 'secret',            handler: handleProviders },
+  { method: 'GET',    path: '/providers/regions',                   auth: 'secret',            handler: handleProviderRegions },
   { method: 'POST',   path: '/viewed/ingest',                       auth: 'secret-body',       handler: handleViewedIngest },
   { method: 'GET',    path: '/viewed/list',                         auth: 'secret',            handler: handleViewedList },
   { method: 'POST',   path: '/promotions/add',                      auth: 'secret-body',       handler: handlePromotionsAdd },
@@ -3165,6 +3515,12 @@ const ROUTES = [
   { method: 'GET',    path: '/plex/library',                        auth: 'secret',            handler: handlePlexLibrary },
   { method: 'POST',   path: '/plex/scrobble',                       auth: 'secret-body',       handler: handlePlexScrobble, badJson: 'json502' },
   { method: 'GET',    path: '/plex/history',                        auth: 'secret',            handler: handlePlexHistory },
+  { method: 'GET',    path: '/plex/discover/whoami',                auth: 'secret',            handler: handlePlexDiscoverWhoami },
+  { method: 'GET',    path: '/plex/discover/search',                auth: 'secret',            handler: handlePlexDiscoverSearch },
+  { method: 'GET',    path: '/plex/discover/metadata',              auth: 'secret',            handler: handlePlexDiscoverMetadata },
+  { method: 'GET',    path: '/plex/watchlist',                      auth: 'secret',            handler: handlePlexWatchlist },
+  { method: 'PUT',    path: '/plex/watchlist/add',                  auth: 'secret',            handler: handlePlexWatchlistAdd },
+  { method: 'PUT',    path: '/plex/watchlist/remove',               auth: 'secret',            handler: handlePlexWatchlistRemove },
   { method: 'GET',    path: '/sync/get',                            auth: 'custom',            handler: handleSyncGet },
   { method: 'PUT',    path: '/sync/put',                            auth: 'custom',            handler: handleSyncPut },
   { method: 'POST',   path: '/alerts/subscribe',                    auth: 'secret-body',       handler: handleAlertsSubscribe },
@@ -3343,7 +3699,29 @@ export default {
   },
 };
 
-// === v5.6: Alerts cron worker ===
+// === v5.6: Alerts cron worker (v8.1.0 — multi-region + arrivals) ===
+//
+// Snapshot format, `snap:{userHash}` → { "<tab>|<id>": record }:
+//   v1 (pre-8.1.0)  { providers: [name, …], ts }   home-region flatrate names
+//   v2              { v: 2, byRegion: { XX: { flatrate: [id], free: [id],
+//                     ads: [id] } }, names: { id: name }, ts }
+// v1 records are still read (they drive the leaving check exactly as
+// before) and are rewritten as v2 on the first run after the upgrade.
+// Arrivals need a v2 record for that item AND region, so the run that
+// upgrades a user seeds silently instead of announcing everything.
+function previousHomeFlatrateNames(previous, region) {
+  if (!previous) return null;
+  if (previous.v === 2) {
+    const tiers = previous.byRegion && previous.byRegion[region];
+    if (!tiers || !Array.isArray(tiers.flatrate)) return null;
+    return tiers.flatrate
+      .map(id => (previous.names && previous.names[id]) || null)
+      .filter(Boolean)
+      .sort();
+  }
+  return Array.isArray(previous.providers) ? previous.providers : null;
+}
+
 async function runAlertsCheck(env) {
   if (!env.ALERTS) {
     console.log('[alerts] ALERTS binding missing — skipping');
@@ -3361,6 +3739,16 @@ async function runAlertsCheck(env) {
     try { sub = JSON.parse(subRaw); } catch { continue; }
     if (!sub.enabled) continue;
     const region = sub.region || 'US';
+    // The home region is always part of the snapshot, even if the client
+    // sent a regions array without it, so the leaving check below always
+    // has data to compare.
+    const subRegions = Array.isArray(sub.regions) && sub.regions.length ? sub.regions : [region];
+    const regions = subRegions.includes(region) ? subRegions : [...subRegions, region];
+    const enabledProviders = new Set(
+      (Array.isArray(sub.providerIds) ? sub.providerIds : [])
+        .map(n => parseInt(n, 10))
+        .filter(n => Number.isFinite(n))
+    );
     const items = Array.isArray(sub.items) ? sub.items : [];
     if (items.length === 0) continue;
 
@@ -3391,6 +3779,32 @@ async function runAlertsCheck(env) {
     try { snapshot = snapRaw ? JSON.parse(snapRaw) : {}; } catch { snapshot = {}; }
     const newSnapshot = {};
 
+    // Queue one notification for the polling-fallback path and, when the
+    // subscriber has push data, deliver it too. Best-effort — a push
+    // failure never fails the cron; the queue catches up next time the
+    // app opens. Shared by the leaving and arrived paths.
+    const queueNotif = async (notif) => {
+      const notifKey = `notif:${userHash}:${notif.ts}_${Math.random().toString(36).slice(2, 8)}`;
+      await env.ALERTS.put(notifKey, JSON.stringify(notif), { expirationTtl: 30 * 24 * 60 * 60 });
+      notificationsQueued++;
+      if (sub.push && sub.push.endpoint && sub.push.keys && sub.push.keys.p256dh && sub.push.keys.auth) {
+        const pushResult = await sendWebPush(sub.push, notif, env);
+        if (pushResult.ok) {
+          pushesSent++;
+          console.log('[push] sent', pushResult.status, 'for', notif.itemRef);
+        } else if (pushResult.status === 410) {
+          // 410 Gone — subscription expired or unsubscribed at the push
+          // service. Drop our copy so the next cron run skips it.
+          pushesGone++;
+          console.log('[push] 410 Gone — dropping subscription for user', userHash.slice(0, 8));
+          const cleaned = { ...sub, push: null };
+          await env.ALERTS.put(`sub:${userHash}`, JSON.stringify(cleaned));
+        } else {
+          console.log('[push] failed', pushResult.status || 'no-status', pushResult.error || 'no-error');
+        }
+      }
+    };
+
     for (const it of items) {
       if (!it || !it.itemId || !it.tabId) continue;
       const ref = `${it.tabId}|${it.itemId}`;
@@ -3398,48 +3812,76 @@ async function runAlertsCheck(env) {
       const enrichment = await tmdbLookup(env, it.title, it.year, it.type === 'tv' ? 'tv' : 'movie', it.tmdbId || null);
       lookupsRun++;
       if (!enrichment || !enrichment.found) continue;
-      const regionProviders = enrichment.watchProviders && enrichment.watchProviders[region];
-      const flatrate = (regionProviders && regionProviders.flatrate) || [];
-      const currentNames = flatrate.map(p => p.provider_name).sort();
+
+      // Slim TMDB's all-regions map down to the regions this user
+      // watches: provider ids per tier, plus one id → name map so both
+      // checks below read from a single record.
+      const wp = enrichment.watchProviders || {};
+      const cur = { byRegion: {}, names: {} };
+      for (const rg of regions) {
+        const regionProviders = wp[rg] || {};
+        const tiers = { flatrate: [], free: [], ads: [] };
+        for (const tier of ['flatrate', 'free', 'ads']) {
+          const list = Array.isArray(regionProviders[tier]) ? regionProviders[tier] : [];
+          for (const p of list) {
+            if (!p || p.provider_id == null) continue;
+            tiers[tier].push(p.provider_id);
+            cur.names[p.provider_id] = p.provider_name || String(p.provider_id);
+          }
+        }
+        cur.byRegion[rg] = tiers;
+      }
+
       const previous = snapshot[ref] || null;
-      const previousNames = previous ? previous.providers : null;
-      newSnapshot[ref] = { providers: currentNames, ts: Date.now() };
+      newSnapshot[ref] = { v: 2, byRegion: cur.byRegion, names: cur.names, ts: Date.now() };
+
+      // --- leaving: home region, flatrate only (v5.6 semantics) ---
+      const currentNames = cur.byRegion[region].flatrate
+        .map(id => cur.names[id])
+        .filter(Boolean)
+        .sort();
+      const previousNames = previousHomeFlatrateNames(previous, region);
       if (previousNames && previousNames.length > 0) {
         const dropped = previousNames.filter(p => !currentNames.includes(p));
         if (dropped.length > 0) {
-          const ts = Date.now();
-          const notifKey = `notif:${userHash}:${ts}_${Math.random().toString(36).slice(2, 8)}`;
           const dropList = dropped.join(', ');
-          const notif = {
-            ts,
+          await queueNotif({
+            ts: Date.now(),
+            kind: 'leaving',
             title: `${it.title} leaving ${dropList}`,
             body: `${it.title} (${it.year}) is no longer streaming on ${dropList} in ${region}. Catch it before it's gone.`,
             itemRef: ref,
             tabId: it.tabId,
             itemId: it.itemId,
-          };
-          // Always queue for the polling-fallback path
-          await env.ALERTS.put(notifKey, JSON.stringify(notif), { expirationTtl: 30 * 24 * 60 * 60 });
-          notificationsQueued++;
-          // v5.8: also send a Web Push if the subscriber has a push
-          // subscription stored. Best-effort — failures don't fail the cron;
-          // the polling queue catches up next time the app opens.
-          if (sub.push && sub.push.endpoint && sub.push.keys && sub.push.keys.p256dh && sub.push.keys.auth) {
-            const pushResult = await sendWebPush(sub.push, notif, env);
-            if (pushResult.ok) {
-              pushesSent++;
-              console.log('[push] sent', pushResult.status, 'for', it.title);
-            } else if (pushResult.status === 410) {
-              // 410 Gone — subscription expired or unsubscribed at the push
-              // service. Drop our copy so the next cron run skips it.
-              pushesGone++;
-              console.log('[push] 410 Gone — dropping subscription for user', userHash.slice(0, 8));
-              const cleaned = { ...sub, push: null };
-              await env.ALERTS.put(`sub:${userHash}`, JSON.stringify(cleaned));
-            } else {
-              console.log('[push] failed', pushResult.status || 'no-status', pushResult.error || 'no-error');
-            }
-          }
+          });
+        }
+      }
+
+      // --- arrived: any watched region, any tier the user can play for
+      // free (flatrate/free/ads), restricted to services they enabled ---
+      if (enabledProviders.size > 0 && previous && previous.v === 2 && previous.byRegion) {
+        for (const rg of regions) {
+          const prevTiers = previous.byRegion[rg];
+          if (!prevTiers) continue;  // no prior data for this region — seed silently
+          const prevIds = new Set([
+            ...(prevTiers.flatrate || []), ...(prevTiers.free || []), ...(prevTiers.ads || []),
+          ]);
+          const tiers = cur.byRegion[rg];
+          const nowIds = [...new Set([...tiers.flatrate, ...tiers.free, ...tiers.ads])];
+          const arrived = nowIds.filter(id => !prevIds.has(id) && enabledProviders.has(id));
+          if (arrived.length === 0) continue;
+          const nameList = arrived.map(id => cur.names[id]).filter(Boolean).join(', ');
+          await queueNotif({
+            ts: Date.now(),
+            kind: 'arrived',
+            title: `${it.title} now on ${nameList}`,
+            body: `${it.title} (${it.year}) is now streaming on ${nameList} in ${rg}.`,
+            itemRef: ref,
+            tabId: it.tabId,
+            itemId: it.itemId,
+            region: rg,
+            providerIds: arrived,
+          });
         }
       }
     }

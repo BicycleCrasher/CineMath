@@ -21,6 +21,11 @@ on:
     paths:
       - 'worker/worker.js'
       - 'worker/wrangler.toml'
+      # v8.1.0: worker.js imports these shared modules and wrangler
+      # bundles them into the deployed script, so a change to either
+      # one has to trigger a redeploy.
+      - 'lib/plex-discover.js'
+      - 'lib/normalize.js'
       - '.github/workflows/deploy-worker.yml'
 
 permissions:
