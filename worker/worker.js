@@ -2117,7 +2117,24 @@ async function handleChat(request, env, url, ctx) {
     if (!body.userHash || !body.message) return new Response('Missing userHash or message', { status: 400, headers: cors });
     if (!env.AI) return jsonResponse({ error: 'AI binding missing' }, 500);
 
-    const candidates = Array.isArray(body.candidates) ? body.candidates.slice(0, 50) : [];
+    // Every candidate field below is interpolated into the AI prompt, so each
+    // one is length-capped here. Without the caps an over-long title, pitch or
+    // tag inflates the token budget, crowds out the real prompt and can push
+    // the reply past the 400-token output cap into truncated JSON.
+    const cap = (v, n) => String(v == null ? '' : v).slice(0, n);
+    const candidates = (Array.isArray(body.candidates) ? body.candidates : [])
+      .slice(0, 50)
+      .map(c => ({
+        tabId: cap(c && c.tabId, 100),
+        itemId: cap(c && c.itemId, 100),
+        title: cap(c && c.title, 300),
+        year: cap(c && c.year, 10),
+        type: cap(c && c.type, 20),
+        dir: cap(c && c.dir, 100),
+        runtime: cap(c && c.runtime, 40),
+        pitch: cap(c && c.pitch, 200),
+        tags: (Array.isArray(c && c.tags) ? c.tags : []).slice(0, 5).map(t => cap(t, 40)),
+      }));
     const history = Array.isArray(body.history) ? body.history.slice(-10) : [];
 
     // Pull last 30 viewing-history rows from D1 to ground recommendations.
@@ -2141,7 +2158,7 @@ async function handleChat(request, env, url, ctx) {
       const tagsBit = (c.tags && c.tags.length) ? ` — tags: ${c.tags.slice(0, 5).join(', ')}` : '';
       const dirBit = c.dir ? ` — dir: ${c.dir}` : '';
       const runtimeBit = c.runtime ? ` — ${c.runtime}` : '';
-      const pitchBit = c.pitch ? ` — pitch: ${String(c.pitch).slice(0, 200)}` : '';
+      const pitchBit = c.pitch ? ` — pitch: ${c.pitch}` : '';
       return `- {tabId:"${c.tabId}", itemId:"${c.itemId}"} ${c.title} (${c.year || '?'}, ${c.type || '?'})${dirBit}${runtimeBit}${tagsBit}${pitchBit}`;
     }).join('\n') || '(no candidates passed — ask the user to narrow their request)';
 
