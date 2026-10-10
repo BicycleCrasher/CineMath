@@ -5597,7 +5597,7 @@ function setupModals() {
     { id: 'webhook', title: 'Worker', desc: 'TMDB & scrobble bridge', statusFn: () => isWebhookConfigured() ? { label: 'CONFIGURED', cls: 'ok' } : { label: 'EMPTY', cls: 'empty' } },
     { id: 'trakt', title: 'Trakt', desc: 'Watch history sync', statusFn: () => (typeof getTraktAccessToken === 'function' && getTraktAccessToken()) ? { label: 'CONNECTED', cls: 'ok' } : { label: 'EMPTY', cls: 'empty' } },
     { id: 'sync', title: 'Cross-Device Sync', desc: 'Auto-sync settings & state via Worker', statusFn: () => {
-      if (!isWebhookConfigured() || !getPlexToken()) return { label: 'NEEDS PLEX + WORKER', cls: 'empty' };
+      if (!isWebhookConfigured() || (!getPlexToken() && !getCachedUserHash())) return { label: 'NEEDS PLEX + WORKER', cls: 'empty' };
       const lastPush = parseInt(lsGet(SYNC_LAST_PUSH_KEY) || '0');
       if (lastPush && (Date.now() - lastPush < 60000)) return { label: 'IN SYNC', cls: 'ok' };
       if (lastPush) return { label: 'ACTIVE', cls: 'ok' };
@@ -7969,13 +7969,22 @@ let syncDirty = false;
 let syncDebounceTimer = null;
 let syncBootstrapPromise = null;
 
+// Cached identity hash (SHA-256 of the Plex token). Set at bootstrap or pairing
+// so sync keeps working after wipeLocalSecretsIfBootstrapped() deletes the token.
+function getCachedUserHash() {
+  const c = lsGet(USER_ID_KEY);
+  return (typeof c === 'string' && /^[a-f0-9]{64}$/i.test(c)) ? c.toLowerCase() : null;
+}
+
 async function getUserHash() {
   const token = getPlexToken();
-  if (!token) return null;
+  if (!token) return getCachedUserHash();
   if (!('crypto' in window) || !crypto.subtle) return null;
   const enc = new TextEncoder().encode(token);
   const hashBuf = await crypto.subtle.digest('SHA-256', enc);
-  return Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  const hash = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  if (lsGet(USER_ID_KEY) !== hash) lsSet(USER_ID_KEY, hash);
+  return hash;
 }
 
 // === v5.39.0: Streaming-leaving alerts (C1) ===
@@ -8595,7 +8604,7 @@ function syncMarkDirty() {
 
 async function syncOnLaunch() {
   if (!isWebhookConfigured()) return;
-  if (!getPlexToken()) return;
+  if (!getPlexToken() && !getCachedUserHash()) return;
   // v7.8.0: If we just paired via QR, pullFillFromKV already ran with
   // fill-empty semantics before the reload. Skip the auto-pull this once
   // so syncApplyRemote's overwrite-from-remote doesn't clobber the
@@ -8754,6 +8763,7 @@ function generatePairUrl() {
     workerUrl: getWebhookUrl(),
     workerSecret: getWebhookSecret(),
     plexToken: getPlexToken(),
+    userHash: getCachedUserHash(),
     plexServerUrl: getPlexServerUrl(),
     plexClientId: getPlexClientId(),
     streamingRegion: getStreamingRegion(),
@@ -8843,6 +8853,7 @@ function applyConfigPayload(b64) {
     if (data.workerUrl) setWebhookUrl(data.workerUrl);
     if (data.workerSecret) setWebhookSecret(data.workerSecret);
     if (data.plexToken) setPlexToken(data.plexToken);
+    if (typeof data.userHash === 'string' && /^[a-f0-9]{64}$/i.test(data.userHash)) lsSet(USER_ID_KEY, data.userHash.toLowerCase());
     if (data.plexServerUrl) setPlexServerUrl(data.plexServerUrl);
     if (data.plexClientId) setPlexClientId(data.plexClientId);
     if (Array.isArray(data.streamingRegions) && data.streamingRegions.length) setStreamingRegions(data.streamingRegions);
